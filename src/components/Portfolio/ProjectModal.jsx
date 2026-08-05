@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProjectModal({ project, onClose }) {
+    const { t } = useLanguage();
     // Fecha com ESC
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -72,14 +74,14 @@ export default function ProjectModal({ project, onClose }) {
                                 </span>
                             ))}
                             <span className="text-xs font-semibold text-gray-500 bg-darker border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1">
-                                <i className="fas fa-lock text-[10px]" /> Repositório Privado
+                                <i className="fas fa-lock text-[10px]" /> {t('projects.privado')}
                             </span>
                         </div>
 
                         {/* Descrição completa */}
                         <div>
                             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
-                                Sobre o Projeto
+                                {t('projects.modalSobre')}
                             </h3>
                             <p className="text-gray-400 leading-relaxed">{fullDescription}</p>
                         </div>
@@ -88,7 +90,7 @@ export default function ProjectModal({ project, onClose }) {
                         <div>
                             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
                                 <i className="fas fa-microchip text-secondary mr-2" />
-                                Destaques Técnicos
+                                {t('projects.modalDestaques')}
                             </h3>
                             <ul className="space-y-3">
                                 {highlights.map((item, i) => (
@@ -115,7 +117,7 @@ export default function ProjectModal({ project, onClose }) {
                             onClick={onClose}
                             className="px-6 py-2 rounded-lg bg-secondary text-darker text-sm font-semibold hover:bg-accent transition-colors duration-200"
                         >
-                            Fechar
+                            {t('projects.modalFechar')}
                         </button>
                     </div>
                 </motion.div>

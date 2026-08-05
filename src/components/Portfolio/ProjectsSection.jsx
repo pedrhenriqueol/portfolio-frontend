@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TiltCard } from './InteractiveEffects';
 import ProjectModal from './ProjectModal';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProjectsSection({ projects }) {
     const [selected, setSelected] = useState(null);
+    const { t } = useLanguage();
 
     return (
         <section id="projetos" className="grid-bg py-24 bg-dark relative border-t border-primary/30">
@@ -19,9 +21,9 @@ export default function ProjectsSection({ projects }) {
                     transition={{ duration: 0.8 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Meus Projetos</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('projects.title')}</h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">
-                        Uma seleção dos meus trabalhos recentes em desenvolvimento front-end, back-end e design de interfaces.
+                        {t('projects.subtitle')}
                     </p>
                 </motion.div>
 
@@ -61,7 +63,7 @@ export default function ProjectsSection({ projects }) {
                                                 <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                     <span className="bg-secondary/90 text-darker text-sm font-bold px-5 py-2 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-sm">
                                                         <i className="fas fa-info-circle" />
-                                                        Saiba Mais
+                                                        {t('projects.saibaMais')}
                                                     </span>
                                                 </div>
                                             )}
@@ -97,7 +99,7 @@ export default function ProjectsSection({ projects }) {
                                                         className="flex-1 text-center py-2 px-4 bg-secondary/10 border border-secondary/40 text-secondary text-sm font-semibold rounded-lg hover:bg-secondary hover:text-darker transition-all duration-200 hover:shadow-[0_0_14px_rgba(102,252,241,0.35)] flex items-center justify-center gap-2"
                                                     >
                                                         <i className="fas fa-info-circle" />
-                                                        Saiba Mais
+                                                        {t('projects.saibaMais')}
                                                     </button>
                                                 )}
                                                 {project.repo_link && (
@@ -108,12 +110,12 @@ export default function ProjectsSection({ projects }) {
                                                         onClick={(e) => e.stopPropagation()}
                                                         className="flex-1 text-center py-2 px-4 bg-darker border border-secondary/50 text-secondary text-sm font-medium rounded-lg hover:bg-secondary hover:text-darker transition-all duration-200 hover:shadow-[0_0_14px_rgba(102,252,241,0.35)]"
                                                     >
-                                                        <i className="fas fa-code mr-2" />Código
+                                                        <i className="fas fa-code mr-2" />{t('projects.codigo')}
                                                     </a>
                                                 )}
                                                 {!hasDetails && isPrivate && (
                                                     <span className="flex-1 text-center py-2 px-4 bg-darker border border-primary/20 text-gray-600 text-sm font-medium rounded-lg cursor-not-allowed select-none">
-                                                        <i className="fas fa-lock mr-2" />Privado
+                                                        <i className="fas fa-lock mr-2" />{t('projects.privado')}
                                                     </span>
                                                 )}
                                                 {project.demo_link && (
@@ -124,7 +126,7 @@ export default function ProjectsSection({ projects }) {
                                                         onClick={(e) => e.stopPropagation()}
                                                         className="flex-1 text-center py-2 px-4 bg-secondary text-darker text-sm font-semibold rounded-lg hover:bg-accent hover:shadow-[0_0_14px_rgba(102,252,241,0.4)] transition-all duration-200"
                                                     >
-                                                        <i className="fas fa-external-link-alt mr-2" />Demo
+                                                        <i className="fas fa-external-link-alt mr-2" />{t('projects.demo')}
                                                     </a>
                                                 )}
                                             </div>
@@ -134,7 +136,7 @@ export default function ProjectsSection({ projects }) {
                             );
                         })
                     ) : (
-                        <p className="text-gray-500 col-span-3 text-center">Nenhum projeto cadastrado ainda.</p>
+                        <p className="text-gray-500 col-span-3 text-center">{t('projects.empty')}</p>
                     )}
                 </div>
             </div>

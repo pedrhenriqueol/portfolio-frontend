@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CATEGORY_CONFIG = {
     'Back-end':  { color: '#66FCF1' },
@@ -71,6 +72,7 @@ function SkillCard({ skill, config, index }) {
 
 
 export default function SkillsSection({ skills }) {
+    const { t } = useLanguage();
     return (
         <section id="conhecimentos" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,9 +85,9 @@ export default function SkillsSection({ skills }) {
                     transition={{ duration: 0.8 }}
                     className="text-center mb-14"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Meus Conhecimentos</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('skills.title')}</h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">
-                        Tecnologias e linguagens com as quais tenho experiência e estudo continuamente.
+                        {t('skills.subtitle')}
                     </p>
                 </motion.div>
 

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 /** Faz highlight de métricas numéricas e termos técnicos-chave no texto */
 function HighlightedText({ text }) {
@@ -22,6 +23,7 @@ function HighlightedText({ text }) {
 }
 
 export default function ExperienceSection({ experiences }) {
+    const { t } = useLanguage();
     return (
         <section id="experiencia" className="grid-bg py-24 bg-dark relative border-t border-primary/30">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,10 +37,10 @@ export default function ExperienceSection({ experiences }) {
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                        Experiência Profissional
+                        {t('experience.title')}
                     </h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">
-                        Minha trajetória no desenvolvimento de software e atuação no mercado.
+                        {t('experience.subtitle')}
                     </p>
                 </motion.div>
 
@@ -153,7 +155,7 @@ export default function ExperienceSection({ experiences }) {
                             </motion.div>
                         ))
                     ) : (
-                        <p className="text-gray-500 text-center">Nenhuma experiência cadastrada ainda.</p>
+                        <p className="text-gray-500 text-center">{t('experience.empty')}</p>
                     )}
                 </div>
             </div>

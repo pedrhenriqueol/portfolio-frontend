@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { MagneticButton } from './InteractiveEffects';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function HeroSection() {
+    const { t } = useLanguage();
     const sectionRef = useRef(null);
     const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
@@ -71,7 +73,7 @@ export default function HeroSection() {
                         style={{ x: parallax.x * 0.1, y: parallax.y * 0.1 }}
                     >
                         <h2 className="text-secondary font-semibold tracking-wider uppercase text-sm md:text-base">
-                            Olá, eu sou o
+                            {t('hero.ola')}
                         </h2>
 
                     <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white tracking-tight leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
@@ -86,12 +88,11 @@ export default function HeroSection() {
                         </h1>
 
                         <h3 className="text-xl md:text-3xl text-gray-300 font-light">
-                            Desenvolvedor <span className="text-secondary font-semibold">Back-End</span>
+                            {t('hero.developer')} <span className="text-secondary font-semibold">{t('hero.role')}</span>
                         </h3>
 
                         <p className="text-gray-400 max-w-lg mx-auto md:mx-0 text-lg leading-relaxed">
-                            Especialista na modernização de sistemas legados e desenvolvimento de soluções
-                            escaláveis utilizando{' '}
+                            {t('hero.description')}{' '}
                             <strong className="text-white font-semibold">Delphi (Desktop/UniGui)</strong>,{' '}
                             <strong className="text-white font-semibold">PHP/Laravel</strong> e{' '}
                             <strong className="text-white font-semibold">React</strong>.
@@ -103,7 +104,7 @@ export default function HeroSection() {
                                     href="#projetos"
                                     className="inline-block bg-secondary text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent hover:shadow-[0_0_28px_rgba(102,252,241,0.55)] transition-all duration-300"
                                 >
-                                    Ver Projetos
+                                    {t('hero.verProjetos')}
                                 </a>
                             </MagneticButton>
 
@@ -192,13 +193,13 @@ export default function HeroSection() {
                                     {[
                                         { text: 'const developer = {',           color: 'text-gray-300',      delay: 0.4 },
                                         { text: '  name: "Pedro Henrique",',     color: 'text-emerald-400/80',delay: 0.65 },
-                                        { text: '  role: "Back-End Dev",',       color: 'text-blue-400/80',   delay: 0.9 },
+                                        { text: `  role: "${t('hero.terminal.role')}",`, color: 'text-blue-400/80',   delay: 0.9 },
                                         { text: '  stack: [',                    color: 'text-gray-400',      delay: 1.1 },
                                         { text: '    "Delphi + UniGui",',        color: 'text-yellow-300/80', delay: 1.3 },
                                         { text: '    "PHP / Laravel",',          color: 'text-red-400/80',    delay: 1.5 },
                                         { text: '    "React + TypeScript",',     color: 'text-cyan-400/80',   delay: 1.7 },
                                         { text: '  ],',                          color: 'text-gray-400',      delay: 1.9 },
-                                        { text: '  available: true, ✓',          color: 'text-secondary',     delay: 2.1 },
+                                        { text: `  ${t('hero.terminal.available')}`,     color: 'text-secondary',     delay: 2.1 },
                                         { text: '}',                             color: 'text-gray-300',      delay: 2.3 },
                                     ].map(({ text, color, delay }) => (
                                         <motion.div

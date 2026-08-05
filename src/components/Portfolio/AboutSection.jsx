@@ -1,30 +1,10 @@
 import { motion } from 'framer-motion';
 import { TiltCard } from './InteractiveEffects';
-
-const CARDS = [
-    {
-        icon: 'fas fa-code',
-        title: 'Front-end',
-        items: ['React + TypeScript', 'Tailwind CSS', 'Framer Motion', 'HTML5 / CSS3'],
-    },
-    {
-        icon: 'fas fa-server',
-        title: 'Back-end',
-        items: ['PHP / Laravel', 'Node.js', 'Delphi (Desktop + UniGui)', 'REST APIs'],
-    },
-    {
-        icon: 'fas fa-database',
-        title: 'Database',
-        items: ['MySQL', 'SQL Server (cloud)', 'PostgreSQL', 'Otimização de queries'],
-    },
-    {
-        icon: 'fas fa-tools',
-        title: 'DevOps & Ferramentas',
-        items: ['Git / GitHub', 'Docker', 'Railway / Render', 'Linux CLI'],
-    },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AboutSection() {
+    const { t } = useLanguage();
+
     return (
         <section id="sobre" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,42 +23,39 @@ export default function AboutSection() {
 
                             <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-4">
                                 <span className="w-10 h-[2px] bg-secondary inline-block shrink-0" />
-                                Sobre Mim
+                                {t('about.title')}
                             </h2>
 
                             <div className="space-y-4 text-gray-400 leading-relaxed">
-                                <h3 className="text-xl font-bold text-white">Resumo Profissional</h3>
+                                <h3 className="text-xl font-bold text-white">{t('about.resumoTitle')}</h3>
                                 <p>
-                                    Desenvolvedor FullStack em estágio com{' '}
-                                    <span className="text-secondary font-semibold">10+ meses</span> de experiência
-                                    prática em sistemas PDV/ERP de alta carga, atuando diretamente em produção
-                                    com mais de <span className="text-secondary font-semibold">100 usuários diários</span>.
+                                    {t('about.resumo1')}{' '}
+                                    <span className="text-secondary font-semibold">{t('about.resumo1_highlight1')}</span>{' '}
+                                    {t('about.resumo1_rest')}{' '}
+                                    <span className="text-secondary font-semibold">{t('about.resumo1_highlight2')}</span>
                                 </p>
                                 <p>
-                                    Especializado em{' '}
+                                    {t('about.resumo2')}{' '}
                                     <span className="text-white font-semibold">Delphi (Desktop & UniGui)</span>,{' '}
                                     <span className="text-white font-semibold">PHP/Laravel</span>,{' '}
                                     <span className="text-white font-semibold">React + TypeScript</span> e{' '}
-                                    <span className="text-white font-semibold">Tailwind CSS</span>. Tenho experiência
-                                    com <span className="text-white font-semibold">Node.js</span> e com
-                                    otimizações críticas de banco de dados, reduzindo tempo de resposta de consultas
-                                    de <span className="text-secondary font-semibold">2 s → &lt; 500 ms</span> via
-                                    índices e refatoração de queries N+1.
+                                    <span className="text-white font-semibold">Tailwind CSS</span>. {t('about.resumo2_rest')}{' '}
+                                    <span className="text-secondary font-semibold">{t('about.resumo2_highlight')}</span>{' '}
+                                    {t('about.resumo2_final')}
                                 </p>
                                 <p>
-                                    Já integrei componentes fiscais (ACBR) e de relatórios (FortesReport) em
-                                    ambiente de produção, garantindo conformidade legal em{' '}
-                                    <span className="text-secondary font-semibold">100%</span> das transações
-                                    processadas.
+                                    {t('about.resumo3')}{' '}
+                                    <span className="text-secondary font-semibold">{t('about.resumo3_highlight')}</span>{' '}
+                                    {t('about.resumo3_final')}
                                 </p>
 
                                 {/* Destaques rápidos */}
                                 <div className="grid grid-cols-2 gap-3 pt-4">
                                     {[
-                                        { icon: 'fas fa-briefcase', label: '10+ meses de experiência' },
-                                        { icon: 'fas fa-users',     label: '100+ usuários em produção' },
-                                        { icon: 'fas fa-bug',       label: '8+ bugs críticos resolvidos' },
-                                        { icon: 'fas fa-tachometer-alt', label: 'Queries 4× mais rápidas' },
+                                        { icon: 'fas fa-briefcase', label: t('about.highlights')[0] },
+                                        { icon: 'fas fa-users',     label: t('about.highlights')[1] },
+                                        { icon: 'fas fa-bug',       label: t('about.highlights')[2] },
+                                        { icon: 'fas fa-tachometer-alt', label: t('about.highlights')[3] },
                                     ].map(({ icon, label }) => (
                                         <div key={label} className="flex items-center gap-2 text-sm text-gray-300 bg-darker/60 rounded-lg px-3 py-2 border border-primary/20">
                                             <i className={`${icon} text-secondary text-xs shrink-0`} />
@@ -89,15 +66,15 @@ export default function AboutSection() {
 
                                 {/* Educação */}
                                 <div className="pt-6 mt-2 border-t border-primary/20">
-                                    <h3 className="text-xl font-bold text-white mb-4">Educação</h3>
+                                    <h3 className="text-xl font-bold text-white mb-4">{t('about.educacaoTitle')}</h3>
                                     <div className="space-y-3">
                                         <div className="bg-darker/60 p-4 rounded-xl border border-primary/20 hover:border-secondary/30 transition-colors">
-                                            <h4 className="font-bold text-white text-sm">Bacharelado em Engenharia de Software</h4>
-                                            <p className="text-secondary text-xs mt-1">UNIFANOR WYDEN • Abr 2026 → Dez 2030</p>
+                                            <h4 className="font-bold text-white text-sm">{t('about.edu1Title')}</h4>
+                                            <p className="text-secondary text-xs mt-1">{t('about.edu1Desc')}</p>
                                         </div>
                                         <div className="bg-darker/60 p-4 rounded-xl border border-primary/20 hover:border-secondary/30 transition-colors">
-                                            <h4 className="font-bold text-white text-sm">Técnico em Informática</h4>
-                                            <p className="text-secondary text-xs mt-1">EEEP LUIZA DE TEODORO VIEIRA • Jan 2023 → Dez 2025</p>
+                                            <h4 className="font-bold text-white text-sm">{t('about.edu2Title')}</h4>
+                                            <p className="text-secondary text-xs mt-1">{t('about.edu2Desc')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -107,7 +84,7 @@ export default function AboutSection() {
 
                     {/* ─── Cards de especialidade ───────────────────────────── */}
                     <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        {CARDS.map(({ icon, title, items }, idx) => (
+                        {t('about.cards').map(({ icon, title, items }, idx) => (
                             <motion.div
                                 key={title}
                                 initial={{ opacity: 0, y: 30 }}

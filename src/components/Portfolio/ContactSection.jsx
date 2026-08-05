@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MagneticButton } from './InteractiveEffects';
+import { useLanguage } from '../../context/LanguageContext';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
 
@@ -36,6 +37,7 @@ const CONTACT_LINKS = [
 ];
 
 export default function ContactSection() {
+    const { t } = useLanguage();
     const [data, setData]     = useState({ name: '', email: '', subject: '', message: '' });
     const [processing, setProcessing] = useState(false);
     const [success, setSuccess]   = useState(false);
@@ -58,10 +60,10 @@ export default function ContactSection() {
                 setSuccess(true);
                 setData({ name: '', email: '', subject: '', message: '' });
             } else {
-                setError('Erro ao enviar. Tente pelo LinkedIn ou e-mail diretamente.');
+                setError(t('contact.errorMsg'));
             }
         } catch {
-            setError('Erro de conexão. Verifique sua internet e tente novamente.');
+            setError(t('contact.errorConn'));
         }
         setProcessing(false);
     };
@@ -84,13 +86,13 @@ export default function ContactSection() {
                     className="text-center mb-16"
                 >
                     <span className="inline-block text-secondary text-sm font-semibold tracking-widest uppercase mb-3">
-                        Entre em contato
+                        {t('contact.tag')}
                     </span>
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Vamos <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent">Conversar?</span>
+                        {t('contact.title1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent">{t('contact.title2')}</span>
                     </h2>
                     <p className="text-gray-400 max-w-xl mx-auto">
-                        Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.
+                        {t('contact.subtitle')}
                     </p>
                 </motion.div>
 
@@ -106,7 +108,7 @@ export default function ContactSection() {
                         className="lg:col-span-2 flex flex-col gap-4"
                     >
                         <p className="text-gray-400 leading-relaxed mb-2">
-                            Prefere ir direto ao ponto? Me encontre por qualquer um dos canais abaixo. Costumo responder em menos de 24h.
+                            {t('contact.directMessage')}
                         </p>
 
                         {CONTACT_LINKS.map(({ icon, label, value, href, color }, idx) => (
@@ -169,7 +171,7 @@ export default function ContactSection() {
                                     className="mb-6 bg-secondary/10 border border-secondary/40 text-secondary px-4 py-3 rounded-xl flex items-center gap-3"
                                 >
                                     <i className="fas fa-check-circle text-xl shrink-0" />
-                                    <span className="text-sm">Mensagem enviada! Entrarei em contato em breve.</span>
+                                    <span className="text-sm">{t('contact.successMsg')}</span>
                                 </motion.div>
                             )}
                             {error && (
@@ -186,9 +188,9 @@ export default function ContactSection() {
                             <form onSubmit={submit} className="space-y-5">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     {[
-                                        { id: 'name',  label: 'Nome',   type: 'text',  placeholder: 'Seu nome completo' },
-                                        { id: 'email', label: 'E-mail', type: 'email', placeholder: 'seu@email.com' },
-                                    ].map(({ id, label, type, placeholder }) => (
+                                        { id: 'name',  label: t('contact.formName'),   type: 'text',  placeholder: '' },
+                                        { id: 'email', label: t('contact.formEmail'), type: 'email', placeholder: '' },
+                                    ].map(({ id, label, type }) => (
                                         <div key={id}>
                                             <label htmlFor={id} className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                                                 {label}
@@ -199,9 +201,8 @@ export default function ContactSection() {
                                                 name={id}
                                                 value={data[id]}
                                                 onChange={handleChange}
-                                                placeholder={placeholder}
                                                 required
-                                                className="w-full bg-dark/80 border border-primary/25 text-white rounded-xl px-4 py-3 text-sm placeholder-gray-600 focus:outline-none focus:border-secondary/70 focus:ring-1 focus:ring-secondary/30 focus:bg-dark transition-all duration-200"
+                                                className="w-full bg-dark/80 border border-primary/25 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-secondary/70 focus:ring-1 focus:ring-secondary/30 focus:bg-dark transition-all duration-200"
                                             />
                                         </div>
                                     ))}
@@ -209,7 +210,7 @@ export default function ContactSection() {
 
                                 <div>
                                     <label htmlFor="subject" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                                        Assunto
+                                        {t('contact.formSubject')}
                                     </label>
                                     <input
                                         type="text"
@@ -217,7 +218,7 @@ export default function ContactSection() {
                                         name="subject"
                                         value={data.subject}
                                         onChange={handleChange}
-                                        placeholder="Oportunidade, colaboração, freelance..."
+                                        placeholder={t('contact.formSubjectPlaceholder')}
                                         required
                                         className="w-full bg-dark/80 border border-primary/25 text-white rounded-xl px-4 py-3 text-sm placeholder-gray-600 focus:outline-none focus:border-secondary/70 focus:ring-1 focus:ring-secondary/30 focus:bg-dark transition-all duration-200"
                                     />
@@ -225,7 +226,7 @@ export default function ContactSection() {
 
                                 <div>
                                     <label htmlFor="message" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                                        Mensagem
+                                        {t('contact.formMessage')}
                                     </label>
                                     <textarea
                                         id="message"
@@ -233,7 +234,7 @@ export default function ContactSection() {
                                         value={data.message}
                                         onChange={handleChange}
                                         rows="5"
-                                        placeholder="Escreva sua mensagem aqui..."
+                                        placeholder={t('contact.formMessagePlaceholder')}
                                         required
                                         className="w-full bg-dark/80 border border-primary/25 text-white rounded-xl px-4 py-3 text-sm placeholder-gray-600 focus:outline-none focus:border-secondary/70 focus:ring-1 focus:ring-secondary/30 focus:bg-dark transition-all duration-200 resize-none"
                                     />
@@ -249,9 +250,9 @@ export default function ContactSection() {
                                         {/* Shimmer effect */}
                                         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                                         {processing ? (
-                                            <><i className="fas fa-spinner fa-spin" /><span>Enviando...</span></>
+                                            <><i className="fas fa-spinner fa-spin" /><span>{t('contact.btnSending')}</span></>
                                         ) : (
-                                            <><span>Enviar Mensagem</span><i className="fas fa-paper-plane group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" /></>
+                                            <><span>{t('contact.btnSend')}</span><i className="fas fa-paper-plane group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" /></>
                                         )}
                                     </button>
                                 </MagneticButton>
