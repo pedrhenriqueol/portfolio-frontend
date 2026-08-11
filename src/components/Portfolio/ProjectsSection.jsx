@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TiltCard } from './InteractiveEffects';
 import ProjectModal from './ProjectModal';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -41,8 +40,7 @@ export default function ProjectsSection({ projects }) {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: index * 0.1 }}
                                 >
-                                    <TiltCard
-                                        intensity={8}
+                                    <div
                                         className={`bg-darker rounded-xl overflow-hidden border border-primary/30 group hover:border-secondary/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col h-full ${hasDetails ? 'cursor-pointer' : ''}`}
                                         onClick={hasDetails ? () => setSelected(project) : undefined}
                                     >
@@ -131,7 +129,7 @@ export default function ProjectsSection({ projects }) {
                                                 )}
                                             </div>
                                         </div>
-                                    </TiltCard>
+                                    </div>
                                 </motion.div>
                             );
                         })
