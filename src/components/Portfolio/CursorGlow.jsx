@@ -7,7 +7,7 @@ const isTouchDevice = () =>
 const SIZE = 20; // Diâmetro padrão da bolinha (px)
 
 const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const T_MORPH = `transform 0.35s ${BEZIER}, width 0.35s ${BEZIER}, height 0.35s ${BEZIER}, border-radius 0.35s ${BEZIER}, opacity 0.2s ease`;
+const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
 const T_FREE  = `width 0.3s ${BEZIER}, height 0.3s ${BEZIER}, border-radius 0.3s ${BEZIER}, opacity 0.2s ease`;
 
 function getZoomLevel() {
@@ -15,24 +15,32 @@ function getZoomLevel() {
     return parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
 }
 
-/** Busca automaticamente qualquer elemento que se comporte como um card */
+/** Busca automaticamente qualquer elemento que se comporte como um card (respeitando data-no-morph) */
 function findCardContainer(el, zoom) {
     if (!el || el === document.body || el === document.documentElement) return null;
+
+    // Se estiver dentro de um elemento explicitamente ignorado
+    if (el.closest('[data-no-morph="true"], .no-morph')) {
+        return null;
+    }
 
     let curr = el;
     while (curr && curr !== document.body && curr !== document.documentElement) {
         if (['SECTION', 'MAIN', 'NAV', 'HEADER', 'FOOTER', 'BODY', 'HTML'].includes(curr.tagName)) break;
 
-        // Se marcado explicitamente
+        if (curr.hasAttribute('data-no-morph') || curr.classList.contains('no-morph')) {
+            return null;
+        }
+
+        // Se marcado explicitamente para morphing
         if (curr.hasAttribute('data-cursor-morph') || curr.classList.contains('cursor-morph')) {
             return curr;
         }
 
         const className = typeof curr.className === 'string' ? curr.className : '';
         const isCardCandidate =
-            className.includes('rounded-') ||
-            className.includes('card') ||
-            className.includes('group');
+            (className.includes('rounded-xl') || className.includes('rounded-2xl') || className.includes('rounded-3xl')) &&
+            (className.includes('bg-') || className.includes('border') || className.includes('card'));
 
         if (isCardCandidate) {
             const style = getComputedStyle(curr);
@@ -46,8 +54,8 @@ function findCardContainer(el, zoom) {
                 const rect = curr.getBoundingClientRect();
                 const w = rect.width / zoom;
                 const h = rect.height / zoom;
-                // Garante dimensão de um card (não o site inteiro e nem uma tag minúscula)
-                if (w >= 70 && h >= 40 && w <= (window.innerWidth / zoom) * 0.95) {
+                // Garante dimensão ideal de card (evita grandes áreas de seção ou pequenas tags)
+                if (w >= 70 && h >= 40 && w <= (window.innerWidth / zoom) * 0.85 && h <= 650) {
                     return curr;
                 }
             }
@@ -78,7 +86,7 @@ export default function CursorMorph() {
             if (activeCard) {
                 const rect = activeCard.getBoundingClientRect();
                 const style = getComputedStyle(activeCard);
-                const radius = style.borderRadius || '12px';
+                const radius = style.borderRadius || '16px';
 
                 const left = rect.left / zoom;
                 const top  = rect.top / zoom;
@@ -91,7 +99,7 @@ export default function CursorMorph() {
                 el.style.borderRadius = radius;
                 el.style.transform    = `translate(${left}px, ${top}px)`;
             } else {
-                // Modo bolinha: compensa o zoom para alinhar 100% com a ponta do cursor
+                // Modo bolinha: segue o cursor diretamente 1:1 sem delay na posição
                 const curX = mouseX / zoom - SIZE / 2;
                 const curY = mouseY / zoom - SIZE / 2;
                 el.style.transform = `translate(${curX}px, ${curY}px)`;
@@ -110,8 +118,10 @@ export default function CursorMorph() {
                 if (returnTimeout) clearTimeout(returnTimeout);
 
                 if (activeCard) {
+                    // Ao entrar em um card válido, ativa transição completa para derreter no formato
                     updatePosition();
                 } else {
+                    // Ao sair do card, anima transição de volta para a bolinha no cursor atual
                     const curX = mouseX / zoom - SIZE / 2;
                     const curY = mouseY / zoom - SIZE / 2;
 
@@ -125,7 +135,7 @@ export default function CursorMorph() {
                         if (!activeCard) {
                             el.style.transition = T_FREE;
                         }
-                    }, 350);
+                    }, 380);
                 }
             } else if (!activeCard) {
                 // Movimento livre fora de cards: posição 1:1 sem lag

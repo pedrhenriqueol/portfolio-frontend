@@ -54,6 +54,7 @@ export default function ExperienceSection({ experiences }) {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.7, delay: expIdx * 0.15 }}
+                                data-no-morph="true"
                                 className="relative bg-darker rounded-2xl border border-primary/30 hover:border-secondary/30 transition-colors duration-500 shadow-2xl overflow-hidden group"
                             >
                                 {/* Glow accent bar no topo */}

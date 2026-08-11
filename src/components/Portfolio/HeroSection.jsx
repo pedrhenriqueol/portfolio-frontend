@@ -189,7 +189,7 @@ export default function HeroSection() {
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
 
                             {/* Terminal window */}
-                            <div className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(102,252,241,0.07),0_24px_60px_rgba(0,0,0,0.6)]">
+                            <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(102,252,241,0.07),0_24px_60px_rgba(0,0,0,0.6)]">
                                 {/* Title bar */}
                                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60">
                                     <span className="w-3 h-3 rounded-full bg-red-400/70" />
