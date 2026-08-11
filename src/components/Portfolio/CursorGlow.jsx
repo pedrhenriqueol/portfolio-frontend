@@ -4,13 +4,16 @@ const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-// Particle colors — cycling through the brand palette
-const COLORS = [
-    'rgba(102,252,241,ALPHA)',  // secondary (teal)
-    'rgba(69,162,158,ALPHA)',   // accent (muted teal)
-    'rgba(197,198,199,ALPHA)',  // primary (light grey)
-    'rgba(102,252,241,ALPHA)',  // secondary (repeat for bias)
-];
+// Throttle helper
+const throttle = (fn, ms) => {
+    let last = 0;
+    return (...args) => {
+        const now = Date.now();
+        if (now - last < ms) return;
+        last = now;
+        fn(...args);
+    };
+};
 
 export default function CursorTrail() {
     const canvasRef = useRef(null);
@@ -23,81 +26,76 @@ export default function CursorTrail() {
         const ctx = canvas.getContext('2d');
 
         let particles = [];
-        let animId = null;
-        let colorIdx = 0;
+        let animId    = null;
 
         const resize = () => {
             canvas.width  = window.innerWidth;
             canvas.height = window.innerHeight;
         };
         resize();
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', resize, { passive: true });
 
-        const onMove = (e) => {
+        // Throttled: máximo 60fps de emissão = mais leve
+        const onMove = throttle((e) => {
             const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
             const x = e.clientX / zoom;
             const y = e.clientY / zoom;
 
-            // Emit 2-3 particles per frame of movement
-            const count = 2 + Math.floor(Math.random() * 2);
-            for (let i = 0; i < count; i++) {
-                colorIdx = (colorIdx + 1) % COLORS.length;
-                const size = 2 + Math.random() * 3;
-                particles.push({
-                    x,
-                    y,
-                    vx: (Math.random() - 0.5) * 1.2,
-                    vy: (Math.random() - 0.5) * 1.2 - 0.4,
-                    size,
-                    alpha: 0.7 + Math.random() * 0.3,
-                    decay: 0.02 + Math.random() * 0.025,
-                    color: COLORS[colorIdx],
-                    glow: size * 3,
-                });
-            }
-        };
+            // Apenas 1 partícula por evento throttled — suave e leve
+            const size = 1.8 + Math.random() * 2.5;
+            particles.push({
+                x: x + (Math.random() - 0.5) * 6,
+                y: y + (Math.random() - 0.5) * 6,
+                vx: (Math.random() - 0.5) * 0.7,
+                vy: (Math.random() - 0.5) * 0.7 - 0.3,
+                size,
+                alpha: 0.55 + Math.random() * 0.25,
+                decay: 0.018 + Math.random() * 0.012,
+                // Cor aleatória entre teal suave e branco translúcido
+                r: Math.random() > 0.4 ? 102 : 200,
+                g: Math.random() > 0.4 ? 252 : 220,
+                b: Math.random() > 0.4 ? 241 : 255,
+            });
+
+            // Limita o pool de partículas para não explodir a memória
+            if (particles.length > 60) particles.splice(0, particles.length - 60);
+        }, 16); // ~60fps
 
         const draw = () => {
-            // Clear with full transparency each frame
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.025;        // slight gravity
+                p.x    += p.vx;
+                p.y    += p.vy;
+                p.vy   += 0.018;   // gravidade bem suave
                 p.alpha -= p.decay;
-                p.size  *= 0.97;      // slowly shrink
+                p.size  *= 0.985;  // encolhe devagar
 
-                if (p.alpha <= 0 || p.size < 0.3) {
+                if (p.alpha <= 0.02 || p.size < 0.4) {
                     particles.splice(i, 1);
                     continue;
                 }
 
-                const colorStr = p.color.replace('ALPHA', p.alpha.toFixed(3));
-                const glowStr  = p.color.replace('ALPHA', (p.alpha * 0.5).toFixed(3));
-
-                // Glow
-                ctx.save();
-                ctx.shadowBlur  = p.glow;
-                ctx.shadowColor = colorStr;
+                // Sem shadowBlur — usa apenas fillStyle com alpha baixo (muito mais leve)
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = colorStr;
+                ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.alpha.toFixed(3)})`;
                 ctx.fill();
-                ctx.restore();
 
-                // Inner bright core
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255,255,255,${(p.alpha * 0.6).toFixed(3)})`;
-                ctx.fill();
+                // Núcleo branco sutil — só um círculo menor, sem shadow
+                if (p.size > 1.2) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 0.35, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,255,${(p.alpha * 0.4).toFixed(3)})`;
+                    ctx.fill();
+                }
             }
 
             animId = requestAnimationFrame(draw);
         };
 
-        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mousemove', onMove, { passive: true });
         animId = requestAnimationFrame(draw);
 
         return () => {

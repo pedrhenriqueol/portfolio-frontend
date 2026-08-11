@@ -23,11 +23,7 @@ html {
   background-size: 64px 64px;
 }
 
-/* ── Click sparks ── */
-@keyframes spark-fly {
-  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-}
+
 
 /* ── Scrollbar personalizada ── */
 ::-webkit-scrollbar {
@@ -74,4 +70,21 @@ button, [role="button"] {
 /* ── Melhora legibilidade em telas pequenas ── */
 @media (max-width: 480px) {
   html { font-size: 15px; }
+}
+
+/* ── Performance: promove camadas compositing para elementos animados ── */
+.will-change-transform {
+  will-change: transform;
+}
+
+/* Otimiza renderização de seções fora da viewport */
+section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 800px;
+}
+
+/* A primeira seção não deve ter content-visibility (está sempre visível) */
+#home {
+  content-visibility: visible;
+  contain-intrinsic-size: unset;
 }

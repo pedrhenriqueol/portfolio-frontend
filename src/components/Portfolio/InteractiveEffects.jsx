@@ -1,27 +1,28 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 
 /**
- * TiltCard — wrapper que aplica perspectiva 3D baseada na posição do mouse.
+ * TiltCard — perspectiva 3D sem useState (manipula DOM direto).
  */
-export function TiltCard({ children, className = '', intensity = 12 }) {
+export function TiltCard({ children, className = '', intensity = 10, onClick }) {
     const cardRef = useRef(null);
-    const [transform, setTransform] = useState('');
 
     const onMove = (e) => {
         const card = cardRef.current;
         if (!card) return;
-        const rect   = card.getBoundingClientRect();
-        const cx     = rect.left + rect.width  / 2;
-        const cy     = rect.top  + rect.height / 2;
-        const dx     = (e.clientX - cx) / (rect.width  / 2);
-        const dy     = (e.clientY - cy) / (rect.height / 2);
-        const rotY   =  dx * intensity;
-        const rotX   = -dy * intensity;
-        setTransform(`perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.04,1.04,1.04)`);
+        const rect = card.getBoundingClientRect();
+        const dx   = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
+        const dy   = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
+        const rotY =  dx * intensity;
+        const rotX = -dy * intensity;
+        card.style.transform = `perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.03,1.03,1.03)`;
     };
 
-    const onLeave = () => setTransform('perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)');
+    const onLeave = () => {
+        const card = cardRef.current;
+        if (!card) return;
+        card.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+    };
 
     return (
         <div
@@ -29,7 +30,8 @@ export function TiltCard({ children, className = '', intensity = 12 }) {
             className={className}
             onMouseMove={onMove}
             onMouseLeave={onLeave}
-            style={{ transform, transition: 'transform 0.15s ease', transformStyle: 'preserve-3d' }}
+            onClick={onClick}
+            style={{ transition: 'transform 0.18s ease', transformStyle: 'preserve-3d' }}
         >
             {children}
         </div>
@@ -37,34 +39,50 @@ export function TiltCard({ children, className = '', intensity = 12 }) {
 }
 
 /**
- * MagneticButton — o elemento é atraído sutilmente pelo cursor.
+ * MagneticButton — atração magnética sem useState (RAF + DOM direto).
  */
 export function MagneticButton({ children, className = '', strength = 0.35, ...props }) {
-    const ref     = useRef(null);
-    const [pos, setPos] = useState({ x: 0, y: 0 });
+    const ref    = useRef(null);
+    const posRef = useRef({ x: 0, y: 0 });
+    const rafRef = useRef(null);
 
     const onMove = (e) => {
-        const el   = ref.current;
+        const el = ref.current;
         if (!el) return;
         const rect = el.getBoundingClientRect();
-        const dx   = e.clientX - (rect.left + rect.width  / 2);
-        const dy   = e.clientY - (rect.top  + rect.height / 2);
-        setPos({ x: dx * strength, y: dy * strength });
+        posRef.current = {
+            x: (e.clientX - (rect.left + rect.width  / 2)) * strength,
+            y: (e.clientY - (rect.top  + rect.height / 2)) * strength,
+        };
+        if (!rafRef.current) {
+            rafRef.current = requestAnimationFrame(applyPos);
+        }
     };
 
-    const onLeave = () => setPos({ x: 0, y: 0 });
+    const applyPos = () => {
+        rafRef.current = null;
+        const el = ref.current;
+        if (!el) return;
+        el.style.transform = `translate(${posRef.current.x}px, ${posRef.current.y}px)`;
+    };
+
+    const onLeave = () => {
+        posRef.current = { x: 0, y: 0 };
+        const el = ref.current;
+        if (el) el.style.transform = 'translate(0px, 0px)';
+        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    };
 
     return (
-        <motion.div
+        <div
             ref={ref}
             onMouseMove={onMove}
             onMouseLeave={onLeave}
-            animate={{ x: pos.x, y: pos.y }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className={className}
+            style={{ transition: 'transform 0.25s ease', display: 'inline-block' }}
             {...props}
         >
             {children}
-        </motion.div>
+        </div>
     );
 }

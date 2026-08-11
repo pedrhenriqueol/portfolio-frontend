@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { MagneticButton } from './InteractiveEffects';
@@ -6,57 +6,80 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export default function HeroSection() {
     const { t } = useLanguage();
-    const sectionRef = useRef(null);
-    const [parallax, setParallax] = useState({ x: 0, y: 0 });
+    const textRef   = useRef(null);
+    const termRef   = useRef(null);
+    const rafRef    = useRef(null);
+    const targetRef = useRef({ x: 0, y: 0 });
+    const currRef   = useRef({ x: 0, y: 0 });
 
+    // Parallax totalmente fora do React state — zero re-renders
     useEffect(() => {
         const onMove = (e) => {
             const { innerWidth: W, innerHeight: H } = window;
-            setParallax({
-                x: ((e.clientX / W) - 0.5) * 30,
-                y: ((e.clientY / H) - 0.5) * 20,
-            });
+            targetRef.current = {
+                x: ((e.clientX / W) - 0.5) * 24,
+                y: ((e.clientY / H) - 0.5) * 16,
+            };
         };
-        window.addEventListener('mousemove', onMove);
-        return () => window.removeEventListener('mousemove', onMove);
+
+        const lerp = (a, b, t) => a + (b - a) * t;
+
+        const tick = () => {
+            const tx = targetRef.current.x;
+            const ty = targetRef.current.y;
+            currRef.current.x = lerp(currRef.current.x, tx, 0.06);
+            currRef.current.y = lerp(currRef.current.y, ty, 0.06);
+            const cx = currRef.current.x;
+            const cy = currRef.current.y;
+
+            if (textRef.current) {
+                textRef.current.style.transform = `translate(${cx * 0.08}px, ${cy * 0.08}px)`;
+            }
+            if (termRef.current) {
+                termRef.current.style.transform = `translate(${cx * -0.14}px, ${cy * -0.10}px)`;
+            }
+            rafRef.current = requestAnimationFrame(tick);
+        };
+
+        window.addEventListener('mousemove', onMove, { passive: true });
+        rafRef.current = requestAnimationFrame(tick);
+        return () => {
+            window.removeEventListener('mousemove', onMove);
+            cancelAnimationFrame(rafRef.current);
+        };
     }, []);
 
     return (
         <section
-            ref={sectionRef}
             id="home"
             className="grid-bg pt-32 pb-20 md:pt-48 md:pb-32 bg-dark flex items-center justify-center min-h-[125vh] relative overflow-hidden"
         >
-            {/* Parallax background blobs */}
-            <motion.div
-                className="absolute inset-0 z-0 pointer-events-none"
-                animate={{ x: parallax.x * -0.5, y: parallax.y * -0.5 }}
-                transition={{ type: 'spring', stiffness: 60, damping: 20 }}
-            >
-                <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-secondary/10 blur-[140px] rounded-full" />
-                <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/10 blur-[140px] rounded-full" />
-            </motion.div>
+            {/* Background blobs — estáticos, sem parallax em React state */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-secondary/8 blur-[160px] rounded-full" />
+                <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/8 blur-[160px] rounded-full" />
+            </div>
 
-            {/* Floating particles */}
-            {[...Array(4)].map((_, i) => (
+            {/* Floating particles — apenas 3, mais leves */}
+            {[0, 1, 2].map((i) => (
                 <motion.div
                     key={i}
-                    className="absolute rounded-full bg-secondary/20 pointer-events-none"
+                    className="absolute rounded-full bg-secondary/15 pointer-events-none"
                     style={{
-                        width:  8 + i * 4,
-                        height: 8 + i * 4,
-                        left:   `${10 + i * 15}%`,
-                        top:    `${20 + (i % 3) * 25}%`,
+                        width:  8 + i * 5,
+                        height: 8 + i * 5,
+                        left:   `${12 + i * 18}%`,
+                        top:    `${22 + (i % 3) * 22}%`,
                     }}
                     animate={{
-                        y:       [0, -18, 0],
-                        opacity: [0.3, 0.7, 0.3],
-                        x:       parallax.x * (0.15 + i * 0.08),
+                        y:       [0, -16, 0],
+                        opacity: [0.25, 0.55, 0.25],
                     }}
                     transition={{
-                        y:        { duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut' },
-                        opacity:  { duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut' },
-                        x:        { type: 'spring', stiffness: 40, damping: 15 },
+                        duration: 3.5 + i * 0.6,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: i * 0.8,
                     }}
                 />
             ))}
@@ -64,19 +87,19 @@ export default function HeroSection() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
                 <div className="flex flex-col md:flex-row items-center gap-12">
 
-                    {/* Text */}
+                    {/* Text — parallax via DOM direto */}
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, ease: 'easeOut' }}
                         className="flex-1 text-center md:text-left space-y-6"
-                        style={{ x: parallax.x * 0.1, y: parallax.y * 0.1 }}
+                        ref={textRef}
                     >
                         <h2 className="text-secondary font-semibold tracking-wider uppercase text-sm md:text-base">
                             {t('hero.ola')}
                         </h2>
 
-                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white tracking-tight leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white tracking-tight leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
                             <TypeAnimation
                                 sequence={['PEDRO\nHENRIQUE', 7000, '', 500]}
                                 wrapper="span"
@@ -153,25 +176,20 @@ export default function HeroSection() {
                         </div>
                     </motion.div>
 
-                    {/* ── Decorative Code Terminal ── */}
+                    {/* Terminal — parallax via DOM direto */}
                     <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                         className="flex-1 flex justify-center md:justify-end"
-                        style={{ x: parallax.x * -0.18, y: parallax.y * -0.12 }}
+                        ref={termRef}
                     >
                         <div className="relative w-full max-w-[360px]">
-
                             {/* Ambient glow */}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-secondary/8 blur-[100px] rounded-full pointer-events-none" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
 
                             {/* Terminal window */}
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                                className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(102,252,241,0.08),0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-sm"
-                            >
+                            <div className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(102,252,241,0.07),0_24px_60px_rgba(0,0,0,0.6)]">
                                 {/* Title bar */}
                                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60">
                                     <span className="w-3 h-3 rounded-full bg-red-400/70" />
@@ -181,7 +199,7 @@ export default function HeroSection() {
                                     <span className="ml-auto flex items-center gap-1.5 text-xs font-mono">
                                         <motion.span
                                             animate={{ opacity: [1, 0.3, 1] }}
-                                            transition={{ duration: 2, repeat: Infinity }}
+                                            transition={{ duration: 2.5, repeat: Infinity }}
                                             className="w-1.5 h-1.5 rounded-full bg-secondary inline-block"
                                         />
                                         <span className="text-secondary/50">live</span>
@@ -223,7 +241,7 @@ export default function HeroSection() {
                                         <span className="text-secondary/40">{'>'}</span>
                                         <motion.span
                                             animate={{ opacity: [1, 0, 1] }}
-                                            transition={{ duration: 0.9, repeat: Infinity }}
+                                            transition={{ duration: 1, repeat: Infinity }}
                                             className="inline-block w-[7px] h-[15px] bg-secondary/70 rounded-[2px] align-middle"
                                         />
                                     </motion.div>
@@ -235,7 +253,7 @@ export default function HeroSection() {
                                     <span className="ml-auto">UTF-8</span>
                                     <span>Ln 10</span>
                                 </div>
-                            </motion.div>
+                            </div>
 
                             {/* Floating tech badges */}
                             {[
@@ -248,13 +266,13 @@ export default function HeroSection() {
                                     key={label}
                                     initial={{ opacity: 0, scale: 0.5, y: 8 }}
                                     animate={{ opacity: 1, scale: 1,   y: 0 }}
-                                    transition={{ delay, type: 'spring', stiffness: 280, damping: 22 }}
+                                    transition={{ delay, type: 'spring', stiffness: 260, damping: 24 }}
                                     className={`absolute ${pos} text-[11px] font-bold px-3 py-1 rounded-full border backdrop-blur-md`}
                                     style={{
                                         color,
                                         borderColor: `${color}50`,
                                         background:  `${color}15`,
-                                        boxShadow:   `0 0 14px ${color}20`,
+                                        boxShadow:   `0 0 12px ${color}18`,
                                     }}
                                 >
                                     {label}
