@@ -170,7 +170,12 @@ export const translations = {
             btnRepo: 'Ver Repositório',
             btnDemo: 'Acessar Demo',
             btnDetails: 'Detalhes',
+            privado: 'Repositório Privado',
+            empty: 'Nenhum projeto encontrado.',
             modalVoltar: 'Voltar',
+            modalFechar: 'Fechar',
+            modalSobre: 'Sobre o Projeto',
+            modalDestaques: 'Destaques Técnicos',
             modalPrincipais: 'Principais Funcionalidades',
             list: [
                 {
@@ -456,7 +461,12 @@ export const translations = {
             btnRepo: 'Repository',
             btnDemo: 'Live Demo',
             btnDetails: 'Details',
+            privado: 'Private Repository',
+            empty: 'No projects found.',
             modalVoltar: 'Back',
+            modalFechar: 'Close',
+            modalSobre: 'About the Project',
+            modalDestaques: 'Technical Highlights',
             modalPrincipais: 'Main Features',
             list: [
                 {
@@ -742,7 +752,12 @@ export const translations = {
             btnRepo: 'Ver Repositorio',
             btnDemo: 'Ver Demo',
             btnDetails: 'Detalles',
+            privado: 'Repositorio Privado',
+            empty: 'No se encontraron proyectos.',
             modalVoltar: 'Volver',
+            modalFechar: 'Cerrar',
+            modalSobre: 'Sobre el Proyecto',
+            modalDestaques: 'Aspectos Técnicos',
             modalPrincipais: 'Características Principales',
             list: [
                 {
