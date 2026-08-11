@@ -4,112 +4,155 @@ const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-// Throttle helper
-const throttle = (fn, ms) => {
-    let last = 0;
-    return (...args) => {
-        const now = Date.now();
-        if (now - last < ms) return;
-        last = now;
-        fn(...args);
-    };
-};
+const SIZE = 20; // Diâmetro padrão da bolinha (px)
 
-export default function CursorTrail() {
-    const canvasRef = useRef(null);
+const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const T_MORPH  = `transform 0.35s ${BEZIER}, width 0.35s ${BEZIER}, height 0.35s ${BEZIER}, border-radius 0.35s ${BEZIER}, opacity 0.2s ease`;
+const T_FREE   = `width 0.3s ${BEZIER}, height 0.3s ${BEZIER}, border-radius 0.3s ${BEZIER}, opacity 0.2s ease`;
 
-    if (isTouchDevice()) return null;
+/** Busca automaticamente qualquer elemento que se comporte como um card */
+function findCardContainer(el) {
+    if (!el || el === document.body || el === document.documentElement) return null;
 
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+    let curr = el;
+    while (curr && curr !== document.body && curr !== document.documentElement) {
+        if (['SECTION', 'MAIN', 'NAV', 'HEADER', 'FOOTER', 'BODY', 'HTML'].includes(curr.tagName)) break;
 
-        let particles = [];
-        let animId    = null;
+        // Se marcado explicitamente
+        if (curr.hasAttribute('data-cursor-morph') || curr.classList.contains('cursor-morph')) {
+            return curr;
+        }
 
-        const resize = () => {
-            canvas.width  = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        resize();
-        window.addEventListener('resize', resize, { passive: true });
+        const className = typeof curr.className === 'string' ? curr.className : '';
+        const isCardCandidate =
+            className.includes('rounded-') ||
+            className.includes('card') ||
+            className.includes('group');
 
-        // Throttled: máximo 60fps de emissão = mais leve
-        const onMove = throttle((e) => {
-            const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-            const x = e.clientX / zoom;
-            const y = e.clientY / zoom;
+        if (isCardCandidate) {
+            const style = getComputedStyle(curr);
+            const hasBgOrBorder =
+                style.backgroundColor !== 'rgba(0, 0, 0, 0)' ||
+                style.borderWidth !== '0px' ||
+                className.includes('bg-') ||
+                className.includes('border');
 
-            // Apenas 1 partícula por evento throttled — suave e leve
-            const size = 1.8 + Math.random() * 2.5;
-            particles.push({
-                x: x + (Math.random() - 0.5) * 6,
-                y: y + (Math.random() - 0.5) * 6,
-                vx: (Math.random() - 0.5) * 0.7,
-                vy: (Math.random() - 0.5) * 0.7 - 0.3,
-                size,
-                alpha: 0.55 + Math.random() * 0.25,
-                decay: 0.018 + Math.random() * 0.012,
-                // Cor aleatória entre teal suave e branco translúcido
-                r: Math.random() > 0.4 ? 102 : 200,
-                g: Math.random() > 0.4 ? 252 : 220,
-                b: Math.random() > 0.4 ? 241 : 255,
-            });
-
-            // Limita o pool de partículas para não explodir a memória
-            if (particles.length > 60) particles.splice(0, particles.length - 60);
-        }, 16); // ~60fps
-
-        const draw = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x    += p.vx;
-                p.y    += p.vy;
-                p.vy   += 0.018;   // gravidade bem suave
-                p.alpha -= p.decay;
-                p.size  *= 0.985;  // encolhe devagar
-
-                if (p.alpha <= 0.02 || p.size < 0.4) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-
-                // Sem shadowBlur — usa apenas fillStyle com alpha baixo (muito mais leve)
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.alpha.toFixed(3)})`;
-                ctx.fill();
-
-                // Núcleo branco sutil — só um círculo menor, sem shadow
-                if (p.size > 1.2) {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size * 0.35, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,255,255,${(p.alpha * 0.4).toFixed(3)})`;
-                    ctx.fill();
+            if (hasBgOrBorder) {
+                const rect = curr.getBoundingClientRect();
+                // Garante dimensão de um card (não o site inteiro e nem uma tag minúscula)
+                if (rect.width >= 70 && rect.height >= 40 && rect.width <= window.innerWidth * 0.95) {
+                    return curr;
                 }
             }
+        }
+        curr = curr.parentElement;
+    }
+    return null;
+}
 
-            animId = requestAnimationFrame(draw);
+export default function CursorMorph() {
+    const elRef = useRef(null);
+
+    useEffect(() => {
+        if (isTouchDevice()) return;
+
+        const el = elRef.current;
+        if (!el) return;
+
+        let mouseX = -200;
+        let mouseY = -200;
+        let activeCard = null;
+        let returnTimeout = null;
+
+        /* Atualiza a posição da bolinha (sem delay quando livre) */
+        const updatePosition = () => {
+            if (activeCard) {
+                const rect = activeCard.getBoundingClientRect();
+                const style = getComputedStyle(activeCard);
+                const radius = style.borderRadius || '12px';
+
+                el.style.transition   = T_MORPH;
+                el.style.width        = `${rect.width}px`;
+                el.style.height       = `${rect.height}px`;
+                el.style.borderRadius = radius;
+                el.style.transform    = `translate(${rect.left}px, ${rect.top}px)`;
+            } else {
+                // Modo bolinha: segue o cursor diretamente 1:1 sem delay na posição
+                el.style.transform = `translate(${mouseX - SIZE / 2}px, ${mouseY - SIZE / 2}px)`;
+            }
         };
 
-        window.addEventListener('mousemove', onMove, { passive: true });
-        animId = requestAnimationFrame(draw);
+        const onMouseMove = (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            const card = findCardContainer(e.target);
+
+            if (card !== activeCard) {
+                activeCard = card;
+                if (returnTimeout) clearTimeout(returnTimeout);
+
+                if (activeCard) {
+                    // Ao entrar em um card, ativa transição completa para derreter no formato
+                    updatePosition();
+                } else {
+                    // Ao sair do card, anima transição de volta para a bolinha no cursor atual
+                    el.style.transition   = T_MORPH;
+                    el.style.width        = `${SIZE}px`;
+                    el.style.height       = `${SIZE}px`;
+                    el.style.borderRadius = '50%';
+                    el.style.transform    = `translate(${mouseX - SIZE / 2}px, ${mouseY - SIZE / 2}px)`;
+
+                    // Assim que a animação de retorno termina, remove 'transform' da transição para voltar ao 1:1 instantâneo
+                    returnTimeout = setTimeout(() => {
+                        if (!activeCard) {
+                            el.style.transition = T_FREE;
+                        }
+                    }, 350);
+                }
+            } else if (!activeCard) {
+                // Movimento livre fora de cards: posição instantânea sem lag
+                el.style.transform = `translate(${mouseX - SIZE / 2}px, ${mouseY - SIZE / 2}px)`;
+            }
+        };
+
+        const onScroll = () => {
+            if (activeCard) {
+                updatePosition();
+            }
+        };
+
+        window.addEventListener('mousemove', onMouseMove, { passive: true });
+        window.addEventListener('scroll', onScroll, { passive: true });
 
         return () => {
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animId);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('scroll', onScroll);
+            if (returnTimeout) clearTimeout(returnTimeout);
         };
     }, []);
 
+    if (isTouchDevice()) return null;
+
     return (
-        <canvas
-            ref={canvasRef}
-            className="pointer-events-none fixed top-0 left-0 z-[9999]"
-            style={{ width: '100vw', height: '100vh' }}
+        <div
+            ref={elRef}
+            style={{
+                position:      'fixed',
+                top:           0,
+                left:          0,
+                width:         `${SIZE}px`,
+                height:        `${SIZE}px`,
+                borderRadius:  '50%',
+                border:        '1.5px solid rgba(102, 252, 241, 0.75)',
+                background:    'rgba(102, 252, 241, 0.04)',
+                boxShadow:     '0 0 16px rgba(102, 252, 241, 0.18)',
+                pointerEvents: 'none',
+                zIndex:        99998,
+                transition:    T_FREE,
+                willChange:    'transform, width, height, border-radius',
+                transform:     'translate(-200px, -200px)',
+            }}
         />
     );
 }
