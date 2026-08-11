@@ -7,11 +7,16 @@ const isTouchDevice = () =>
 const SIZE = 20; // Diâmetro padrão da bolinha (px)
 
 const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const T_MORPH  = `transform 0.35s ${BEZIER}, width 0.35s ${BEZIER}, height 0.35s ${BEZIER}, border-radius 0.35s ${BEZIER}, opacity 0.2s ease`;
-const T_FREE   = `width 0.3s ${BEZIER}, height 0.3s ${BEZIER}, border-radius 0.3s ${BEZIER}, opacity 0.2s ease`;
+const T_MORPH = `transform 0.35s ${BEZIER}, width 0.35s ${BEZIER}, height 0.35s ${BEZIER}, border-radius 0.35s ${BEZIER}, opacity 0.2s ease`;
+const T_FREE  = `width 0.3s ${BEZIER}, height 0.3s ${BEZIER}, border-radius 0.3s ${BEZIER}, opacity 0.2s ease`;
+
+function getZoomLevel() {
+    if (typeof window === 'undefined') return 1;
+    return parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+}
 
 /** Busca automaticamente qualquer elemento que se comporte como um card */
-function findCardContainer(el) {
+function findCardContainer(el, zoom) {
     if (!el || el === document.body || el === document.documentElement) return null;
 
     let curr = el;
@@ -39,8 +44,10 @@ function findCardContainer(el) {
 
             if (hasBgOrBorder) {
                 const rect = curr.getBoundingClientRect();
+                const w = rect.width / zoom;
+                const h = rect.height / zoom;
                 // Garante dimensão de um card (não o site inteiro e nem uma tag minúscula)
-                if (rect.width >= 70 && rect.height >= 40 && rect.width <= window.innerWidth * 0.95) {
+                if (w >= 70 && h >= 40 && w <= (window.innerWidth / zoom) * 0.95) {
                     return curr;
                 }
             }
@@ -64,46 +71,56 @@ export default function CursorMorph() {
         let activeCard = null;
         let returnTimeout = null;
 
-        /* Atualiza a posição da bolinha (sem delay quando livre) */
+        /* Atualiza a posição da bolinha/card (compensando o zoom: 0.8 do CSS) */
         const updatePosition = () => {
+            const zoom = getZoomLevel();
+
             if (activeCard) {
                 const rect = activeCard.getBoundingClientRect();
                 const style = getComputedStyle(activeCard);
                 const radius = style.borderRadius || '12px';
 
+                const left = rect.left / zoom;
+                const top  = rect.top / zoom;
+                const w    = rect.width / zoom;
+                const h    = rect.height / zoom;
+
                 el.style.transition   = T_MORPH;
-                el.style.width        = `${rect.width}px`;
-                el.style.height       = `${rect.height}px`;
+                el.style.width        = `${w}px`;
+                el.style.height       = `${h}px`;
                 el.style.borderRadius = radius;
-                el.style.transform    = `translate(${rect.left}px, ${rect.top}px)`;
+                el.style.transform    = `translate(${left}px, ${top}px)`;
             } else {
-                // Modo bolinha: segue o cursor diretamente 1:1 sem delay na posição
-                el.style.transform = `translate(${mouseX - SIZE / 2}px, ${mouseY - SIZE / 2}px)`;
+                // Modo bolinha: compensa o zoom para alinhar 100% com a ponta do cursor
+                const curX = mouseX / zoom - SIZE / 2;
+                const curY = mouseY / zoom - SIZE / 2;
+                el.style.transform = `translate(${curX}px, ${curY}px)`;
             }
         };
 
         const onMouseMove = (e) => {
+            const zoom = getZoomLevel();
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            const card = findCardContainer(e.target);
+            const card = findCardContainer(e.target, zoom);
 
             if (card !== activeCard) {
                 activeCard = card;
                 if (returnTimeout) clearTimeout(returnTimeout);
 
                 if (activeCard) {
-                    // Ao entrar em um card, ativa transição completa para derreter no formato
                     updatePosition();
                 } else {
-                    // Ao sair do card, anima transição de volta para a bolinha no cursor atual
+                    const curX = mouseX / zoom - SIZE / 2;
+                    const curY = mouseY / zoom - SIZE / 2;
+
                     el.style.transition   = T_MORPH;
                     el.style.width        = `${SIZE}px`;
                     el.style.height       = `${SIZE}px`;
                     el.style.borderRadius = '50%';
-                    el.style.transform    = `translate(${mouseX - SIZE / 2}px, ${mouseY - SIZE / 2}px)`;
+                    el.style.transform    = `translate(${curX}px, ${curY}px)`;
 
-                    // Assim que a animação de retorno termina, remove 'transform' da transição para voltar ao 1:1 instantâneo
                     returnTimeout = setTimeout(() => {
                         if (!activeCard) {
                             el.style.transition = T_FREE;
@@ -111,8 +128,10 @@ export default function CursorMorph() {
                     }, 350);
                 }
             } else if (!activeCard) {
-                // Movimento livre fora de cards: posição instantânea sem lag
-                el.style.transform = `translate(${mouseX - SIZE / 2}px, ${mouseY - SIZE / 2}px)`;
+                // Movimento livre fora de cards: posição 1:1 sem lag
+                const curX = mouseX / zoom - SIZE / 2;
+                const curY = mouseY / zoom - SIZE / 2;
+                el.style.transform = `translate(${curX}px, ${curY}px)`;
             }
         };
 
