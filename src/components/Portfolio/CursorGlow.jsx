@@ -8,6 +8,7 @@ const SIZE = 20; // Diâmetro padrão da bolinha (px)
 
 const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
+const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
 const T_FREE  = `width 0.3s ${BEZIER}, height 0.3s ${BEZIER}, border-radius 0.3s ${BEZIER}, opacity 0.2s ease`;
 
 function getZoomLevel() {
@@ -78,9 +79,10 @@ export default function CursorMorph() {
         let mouseY = -200;
         let activeCard = null;
         let returnTimeout = null;
+        let scrollRaf = null;
 
-        /* Atualiza a posição da bolinha/card (compensando o zoom: 0.8 do CSS) */
-        const updatePosition = () => {
+        /* Atualiza a posição da bolinha/card (isScroll = true faz o transform ser instantâneo sem lag) */
+        const updatePosition = (isScroll = false) => {
             const zoom = getZoomLevel();
 
             if (activeCard) {
@@ -93,7 +95,8 @@ export default function CursorMorph() {
                 const w    = rect.width / zoom;
                 const h    = rect.height / zoom;
 
-                el.style.transition   = T_MORPH;
+                // No scroll, remove a transição do transform para colar 100% no card sem lag
+                el.style.transition   = isScroll ? T_SCROLL : T_MORPH;
                 el.style.width        = `${w}px`;
                 el.style.height       = `${h}px`;
                 el.style.borderRadius = radius;
@@ -119,7 +122,7 @@ export default function CursorMorph() {
 
                 if (activeCard) {
                     // Ao entrar em um card válido, ativa transição completa para derreter no formato
-                    updatePosition();
+                    updatePosition(false);
                 } else {
                     // Ao sair do card, anima transição de volta para a bolinha no cursor atual
                     const curX = mouseX / zoom - SIZE / 2;
@@ -147,7 +150,12 @@ export default function CursorMorph() {
 
         const onScroll = () => {
             if (activeCard) {
-                updatePosition();
+                if (!scrollRaf) {
+                    scrollRaf = requestAnimationFrame(() => {
+                        scrollRaf = null;
+                        updatePosition(true); // Instant transform update on scroll!
+                    });
+                }
             }
         };
 
@@ -158,6 +166,7 @@ export default function CursorMorph() {
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('scroll', onScroll);
             if (returnTimeout) clearTimeout(returnTimeout);
+            if (scrollRaf) cancelAnimationFrame(scrollRaf);
         };
     }, []);
 
