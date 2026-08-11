@@ -54,8 +54,8 @@ function findCardContainer(el, zoom) {
                 const rect = curr.getBoundingClientRect();
                 const w = rect.width / zoom;
                 const h = rect.height / zoom;
-                // Garante dimensão ideal de card (evita grandes áreas de seção ou pequenas tags)
-                if (w >= 70 && h >= 40 && w <= (window.innerWidth / zoom) * 0.85 && h <= 650) {
+                // Garante dimensão ideal de card (permite cards grandes como Experiência e Bio, mas evita a página inteira)
+                if (w >= 60 && h >= 40 && w <= (window.innerWidth / zoom) * 0.98 && h <= 1600) {
                     return curr;
                 }
             }
