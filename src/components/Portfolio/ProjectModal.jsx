@@ -4,14 +4,19 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProjectModal({ project, onClose }) {
     const { t } = useLanguage();
-    // Fecha com ESC
+
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
         document.addEventListener('keydown', onKey);
+
+        // Bloqueia scroll, esconde navbar
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
+
         return () => {
             document.removeEventListener('keydown', onKey);
             document.body.style.overflow = '';
+            document.body.classList.remove('modal-open');
         };
     }, [onClose]);
 
@@ -20,32 +25,60 @@ export default function ProjectModal({ project, onClose }) {
 
     return (
         <AnimatePresence>
-            {/* Backdrop */}
+            {/* Backdrop — cobre 100% da viewport, ignora scroll */}
             <motion.div
                 key="backdrop"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.2 }}
                 onClick={onClose}
-                className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4"
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 99999,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '16px',
+                }}
             >
-                {/* Modal card */}
+                {/* Modal card — centralizado, nunca afetado por scroll */}
                 <motion.div
                     key="modal"
-                    initial={{ opacity: 0, y: 60 }}
-                    animate={{ opacity: 1, y: 0  }}
-                    exit={{   opacity: 0, y: 60  }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                    initial={{ opacity: 0, scale: 0.94, y: 24 }}
+                    animate={{ opacity: 1, scale: 1,    y: 0  }}
+                    exit={{   opacity: 0, scale: 0.94,  y: 24 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 30 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[88vh] overflow-y-auto bg-darker border-t sm:border border-secondary/30 rounded-t-3xl sm:rounded-2xl shadow-[0_0_80px_rgba(102,252,241,0.12)] flex flex-col"
+                    style={{
+                        position: 'relative',
+                        width: '100%',
+                        maxWidth: '640px',
+                        maxHeight: '85vh',
+                        overflowY: 'auto',
+                        backgroundColor: '#1F2833',
+                        border: '1px solid rgba(102,252,241,0.25)',
+                        borderRadius: '16px',
+                        boxShadow: '0 0 80px rgba(102,252,241,0.10), 0 32px 80px rgba(0,0,0,0.7)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
                 >
-                    {/* Mobile drag handle */}
-                    <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
-                        <div className="w-10 h-1 rounded-full bg-primary/30" />
-                    </div>
                     {/* Header */}
-                    <div className="sticky top-0 z-10 bg-darker border-b border-primary/20 px-8 py-5 flex items-start justify-between gap-4">
+                    <div style={{
+                        position: 'sticky', top: 0, zIndex: 10,
+                        backgroundColor: '#1F2833',
+                        borderBottom: '1px solid rgba(197,198,199,0.15)',
+                        padding: '20px 28px',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: '16px',
+                    }}>
                         <div>
                             <h2 className="text-xl md:text-2xl font-bold text-white leading-tight">
                                 {project.title}
@@ -62,7 +95,7 @@ export default function ProjectModal({ project, onClose }) {
                     </div>
 
                     {/* Body */}
-                    <div className="px-8 py-6 space-y-6">
+                    <div className="px-7 py-6 space-y-6">
                         {/* Tags */}
                         <div className="flex flex-wrap gap-2">
                             {project.tags.map((tag) => (
@@ -98,7 +131,7 @@ export default function ProjectModal({ project, onClose }) {
                                         key={i}
                                         initial={{ opacity: 0, x: -16 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.1 + i * 0.06 }}
+                                        transition={{ delay: 0.08 + i * 0.05 }}
                                         className="flex items-start gap-3 text-gray-300 text-sm leading-relaxed"
                                     >
                                         <span className="shrink-0 w-5 h-5 mt-0.5 rounded-full bg-secondary/10 border border-secondary/30 flex items-center justify-center">
@@ -112,7 +145,7 @@ export default function ProjectModal({ project, onClose }) {
                     </div>
 
                     {/* Footer */}
-                    <div className="px-8 py-4 border-t border-primary/20 flex justify-end">
+                    <div className="px-7 py-4 border-t border-primary/20 flex justify-end">
                         <button
                             onClick={onClose}
                             className="px-6 py-2 rounded-lg bg-secondary text-darker text-sm font-semibold hover:bg-accent transition-colors duration-200"

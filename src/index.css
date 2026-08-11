@@ -77,14 +77,9 @@ button, [role="button"] {
   will-change: transform;
 }
 
-/* Otimiza renderização de seções fora da viewport */
-section {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 800px;
-}
-
-/* A primeira seção não deve ter content-visibility (está sempre visível) */
-#home {
-  content-visibility: visible;
-  contain-intrinsic-size: unset;
+/* Esconde a navbar quando um modal está aberto */
+body.modal-open > div > nav,
+body.modal-open nav {
+  visibility: hidden;
+  pointer-events: none;
 }
