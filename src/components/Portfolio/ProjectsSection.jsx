@@ -63,7 +63,7 @@ export default function ProjectsSection({ projects }) {
                                                 <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                     <span className="bg-secondary/90 text-darker text-sm font-bold px-5 py-2 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-sm">
                                                         <i className="fas fa-info-circle" />
-                                                        {t('projects.saibaMais')}
+                                                        {t('projects.btnDetails')}
                                                     </span>
                                                 </div>
                                             )}
@@ -99,7 +99,7 @@ export default function ProjectsSection({ projects }) {
                                                         className="flex-1 text-center py-2 px-4 bg-secondary/10 border border-secondary/40 text-secondary text-sm font-semibold rounded-lg hover:bg-secondary hover:text-darker transition-all duration-200 hover:shadow-[0_0_14px_rgba(102,252,241,0.35)] flex items-center justify-center gap-2"
                                                     >
                                                         <i className="fas fa-info-circle" />
-                                                        {t('projects.saibaMais')}
+                                                        {t('projects.btnDetails')}
                                                     </button>
                                                 )}
                                                 {project.repo_link && (
@@ -110,12 +110,12 @@ export default function ProjectsSection({ projects }) {
                                                         onClick={(e) => e.stopPropagation()}
                                                         className="flex-1 text-center py-2 px-4 bg-darker border border-secondary/50 text-secondary text-sm font-medium rounded-lg hover:bg-secondary hover:text-darker transition-all duration-200 hover:shadow-[0_0_14px_rgba(102,252,241,0.35)]"
                                                     >
-                                                        <i className="fas fa-code mr-2" />{t('projects.codigo')}
+                                                        <i className="fas fa-code mr-2" />{t('projects.btnRepo')}
                                                     </a>
                                                 )}
                                                 {!hasDetails && isPrivate && (
                                                     <span className="flex-1 text-center py-2 px-4 bg-darker border border-primary/20 text-gray-600 text-sm font-medium rounded-lg cursor-not-allowed select-none">
-                                                        <i className="fas fa-lock mr-2" />{t('projects.privado')}
+                                                        <i className="fas fa-lock mr-2" />Privado
                                                     </span>
                                                 )}
                                                 {project.demo_link && (
@@ -126,7 +126,7 @@ export default function ProjectsSection({ projects }) {
                                                         onClick={(e) => e.stopPropagation()}
                                                         className="flex-1 text-center py-2 px-4 bg-secondary text-darker text-sm font-semibold rounded-lg hover:bg-accent hover:shadow-[0_0_14px_rgba(102,252,241,0.4)] transition-all duration-200"
                                                     >
-                                                        <i className="fas fa-external-link-alt mr-2" />{t('projects.demo')}
+                                                        <i className="fas fa-external-link-alt mr-2" />{t('projects.btnDemo')}
                                                     </a>
                                                 )}
                                             </div>
