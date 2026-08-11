@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { TiltCard } from './InteractiveEffects';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function AboutSection() {
@@ -98,8 +97,7 @@ export default function AboutSection() {
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                             >
-                                <TiltCard
-                                    intensity={10}
+                                <div
                                     className="group h-full bg-dark border border-primary/30 p-6 rounded-xl hover:border-secondary/50 hover:shadow-[0_0_24px_rgba(102,252,241,0.12)] transition-all duration-300 cursor-default"
                                 >
                                     <div className="flex items-center gap-3 mb-4">
@@ -118,7 +116,7 @@ export default function AboutSection() {
                                             </li>
                                         ))}
                                     </ul>
-                                </TiltCard>
+                                </div>
                             </motion.div>
                         ))}
                     </div>
