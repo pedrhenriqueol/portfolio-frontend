@@ -48,6 +48,12 @@ export default function AboutSection() {
                                     <span className="text-secondary font-semibold">{t('about.resumo3_highlight')}</span>{' '}
                                     {t('about.resumo3_final')}
                                 </p>
+                                <p>
+                                    {t('about.resumo4')}{' '}
+                                    <span className="text-secondary font-semibold">{t('about.resumo4_highlight1')}</span>{' '}
+                                    {t('about.resumo4_rest')}{' '}
+                                    <span className="text-white font-semibold">{t('about.resumo4_highlight2')}</span>
+                                </p>
 
                                 {/* Destaques rápidos */}
                                 <div className="grid grid-cols-2 gap-3 pt-4">

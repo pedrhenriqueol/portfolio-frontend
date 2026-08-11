@@ -33,10 +33,14 @@ export const translations = {
             resumo3: 'Já integrei componentes fiscais (ACBR) e de relatórios (FortesReport) em ambiente de produção, garantindo conformidade legal em',
             resumo3_highlight: '100%',
             resumo3_final: 'das transações processadas.',
+            resumo4: 'Atualmente, atuando também como',
+            resumo4_highlight1: 'Analista de QA',
+            resumo4_rest: 'na SETE Tecnologia, aplicando engenharia de requisitos e testes funcionais em sistemas de missão crítica (logística portuária / ZPEs), utilizando',
+            resumo4_highlight2: 'Postman, SQL Server e Scrum/Kanban.',
             highlights: [
                 '10+ meses de experiência',
                 '100+ usuários em produção',
-                '8+ bugs críticos resolvidos',
+                'QA em sistemas de missão crítica',
                 'Queries 4× mais rápidas'
             ],
             educacaoTitle: 'Educação',
@@ -64,6 +68,11 @@ export const translations = {
                     icon: 'fas fa-tools',
                     title: 'DevOps & Ferramentas',
                     items: ['Git / GitHub', 'Docker', 'Railway / Render', 'Linux CLI'],
+                },
+                {
+                    icon: 'fas fa-shield-alt',
+                    title: 'QA & Testes',
+                    items: ['Postman (APIs REST)', 'SQL Server (queries)', 'Testes de regressão', 'Scrum / Kanban'],
                 }
             ]
         },
@@ -310,10 +319,14 @@ export const translations = {
             resumo3: 'Integrated complex fiscal (ACBR) and reporting (FortesReport) components in production environments, ensuring legal compliance in',
             resumo3_highlight: '100%',
             resumo3_final: 'of processed transactions.',
+            resumo4: 'Currently also working as a',
+            resumo4_highlight1: 'QA Analyst',
+            resumo4_rest: 'at SETE Tecnologia, applying requirements engineering and functional testing on mission-critical systems (port logistics / ZPEs), using',
+            resumo4_highlight2: 'Postman, SQL Server and Scrum/Kanban.',
             highlights: [
                 '10+ months experience',
                 '100+ production users',
-                '8+ critical bugs fixed',
+                'QA on mission-critical systems',
                 '4× faster queries'
             ],
             educacaoTitle: 'Education',
@@ -341,6 +354,11 @@ export const translations = {
                     icon: 'fas fa-tools',
                     title: 'DevOps & Tools',
                     items: ['Git / GitHub', 'Docker', 'Railway / Render', 'Linux CLI'],
+                },
+                {
+                    icon: 'fas fa-shield-alt',
+                    title: 'QA & Testing',
+                    items: ['Postman (REST APIs)', 'SQL Server (queries)', 'Regression testing', 'Scrum / Kanban'],
                 }
             ]
         },
@@ -587,10 +605,14 @@ export const translations = {
             resumo3: 'He integrado componentes fiscales (ACBR) y de reportes (FortesReport) en ambientes de producción, asegurando cumplimiento legal en',
             resumo3_highlight: '100%',
             resumo3_final: 'de las transacciones procesadas.',
+            resumo4: 'Actualmente también me desempeño como',
+            resumo4_highlight1: 'Analista de QA',
+            resumo4_rest: 'en SETE Tecnología, aplicando ingeniería de requisitos y pruebas funcionales en sistemas de misión crítica (logística portuaria / ZPEs), usando',
+            resumo4_highlight2: 'Postman, SQL Server y Scrum/Kanban.',
             highlights: [
                 '10+ meses experiencia',
                 '100+ usuarios diarios',
-                '8+ bugs críticos resueltos',
+                'QA en sistemas de misión crítica',
                 'Consultas 4× más rápidas'
             ],
             educacaoTitle: 'Educación',
@@ -618,6 +640,11 @@ export const translations = {
                     icon: 'fas fa-tools',
                     title: 'DevOps & Herramientas',
                     items: ['Git / GitHub', 'Docker', 'Railway / Render', 'Linux CLI'],
+                },
+                {
+                    icon: 'fas fa-shield-alt',
+                    title: 'QA & Pruebas',
+                    items: ['Postman (APIs REST)', 'SQL Server (consultas)', 'Pruebas de regresión', 'Scrum / Kanban'],
                 }
             ]
         },

@@ -1,118 +1,117 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-// Touch devices don't have a cursor — skip entirely
 const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const TRAIL_LENGTH = 10;
+// Particle colors — cycling through the brand palette
+const COLORS = [
+    'rgba(102,252,241,ALPHA)',  // secondary (teal)
+    'rgba(69,162,158,ALPHA)',   // accent (muted teal)
+    'rgba(197,198,199,ALPHA)',  // primary (light grey)
+    'rgba(102,252,241,ALPHA)',  // secondary (repeat for bias)
+];
 
-export default function CursorGlow() {
-    const glowRef   = useRef(null);
-    const outerRef  = useRef(null);
-    const pos       = useRef({ x: -200, y: -200 });
-    const curr      = useRef({ x: -200, y: -200 });
-    const raf       = useRef(null);
-    const [trail, setTrail] = useState(() =>
-        Array.from({ length: TRAIL_LENGTH }, () => ({ x: -200, y: -200 }))
-    );
-    const trailPos  = useRef(Array.from({ length: TRAIL_LENGTH }, () => ({ x: -200, y: -200 })));
+export default function CursorTrail() {
+    const canvasRef = useRef(null);
 
     if (isTouchDevice()) return null;
 
     useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        let animId = null;
+        let colorIdx = 0;
+
+        const resize = () => {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
         const onMove = (e) => {
             const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-            pos.current = { x: e.clientX / zoom, y: e.clientY / zoom };
+            const x = e.clientX / zoom;
+            const y = e.clientY / zoom;
+
+            // Emit 2-3 particles per frame of movement
+            const count = 2 + Math.floor(Math.random() * 2);
+            for (let i = 0; i < count; i++) {
+                colorIdx = (colorIdx + 1) % COLORS.length;
+                const size = 2 + Math.random() * 3;
+                particles.push({
+                    x,
+                    y,
+                    vx: (Math.random() - 0.5) * 1.2,
+                    vy: (Math.random() - 0.5) * 1.2 - 0.4,
+                    size,
+                    alpha: 0.7 + Math.random() * 0.3,
+                    decay: 0.02 + Math.random() * 0.025,
+                    color: COLORS[colorIdx],
+                    glow: size * 3,
+                });
+            }
         };
 
-        const lerp = (a, b, t) => a + (b - a) * t;
+        const draw = () => {
+            // Clear with full transparency each frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const loop = () => {
-            // Lerp main cursor
-            curr.current.x = lerp(curr.current.x, pos.current.x, 0.12);
-            curr.current.y = lerp(curr.current.y, pos.current.y, 0.12);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.025;        // slight gravity
+                p.alpha -= p.decay;
+                p.size  *= 0.97;      // slowly shrink
 
-            const x = curr.current.x;
-            const y = curr.current.y;
+                if (p.alpha <= 0 || p.size < 0.3) {
+                    particles.splice(i, 1);
+                    continue;
+                }
 
-            if (glowRef.current) {
-                glowRef.current.style.transform = `translate(${x - 160}px, ${y - 160}px)`;
+                const colorStr = p.color.replace('ALPHA', p.alpha.toFixed(3));
+                const glowStr  = p.color.replace('ALPHA', (p.alpha * 0.5).toFixed(3));
+
+                // Glow
+                ctx.save();
+                ctx.shadowBlur  = p.glow;
+                ctx.shadowColor = colorStr;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = colorStr;
+                ctx.fill();
+                ctx.restore();
+
+                // Inner bright core
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,255,255,${(p.alpha * 0.6).toFixed(3)})`;
+                ctx.fill();
             }
-            if (outerRef.current) {
-                outerRef.current.style.transform = `translate(${x - 12}px, ${y - 12}px)`;
-            }
 
-            // Shift trail: each dot follows the one in front with more lag
-            const trail = trailPos.current;
-            for (let i = trail.length - 1; i > 0; i--) {
-                trail[i].x = lerp(trail[i].x, trail[i - 1].x, 0.4);
-                trail[i].y = lerp(trail[i].y, trail[i - 1].y, 0.4);
-            }
-            trail[0].x = lerp(trail[0].x, x, 0.5);
-            trail[0].y = lerp(trail[0].y, y, 0.5);
-
-            setTrail(trail.map(p => ({ ...p })));
-
-            raf.current = requestAnimationFrame(loop);
+            animId = requestAnimationFrame(draw);
         };
 
         window.addEventListener('mousemove', onMove);
-        raf.current = requestAnimationFrame(loop);
+        animId = requestAnimationFrame(draw);
 
         return () => {
             window.removeEventListener('mousemove', onMove);
-            cancelAnimationFrame(raf.current);
+            window.removeEventListener('resize', resize);
+            cancelAnimationFrame(animId);
         };
     }, []);
 
     return (
-        <>
-            {/* Grande halo suave */}
-            <div
-                ref={glowRef}
-                className="pointer-events-none fixed top-0 left-0 z-[9999] will-change-transform"
-                style={{
-                    width: 320,
-                    height: 320,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(102,252,241,0.07) 0%, transparent 70%)',
-                }}
-            />
-
-            {/* Cursor ring */}
-            <div
-                ref={outerRef}
-                className="pointer-events-none fixed top-0 left-0 z-[9999] will-change-transform"
-                style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    border: '1.5px solid rgba(102,252,241,0.5)',
-                    backdropFilter: 'blur(2px)',
-                }}
-            />
-
-            {/* Comet trail */}
-            {trail.map((p, i) => {
-                const scale  = 1 - i / TRAIL_LENGTH;
-                const opacity = (1 - i / TRAIL_LENGTH) * 0.55;
-                const size   = 6 * scale;
-                return (
-                    <div
-                        key={i}
-                        className="pointer-events-none fixed top-0 left-0 z-[9998] will-change-transform rounded-full"
-                        style={{
-                            width:  size,
-                            height: size,
-                            transform: `translate(${p.x - size / 2}px, ${p.y - size / 2}px)`,
-                            opacity,
-                            background: `rgba(102,252,241,${0.8 * scale})`,
-                            boxShadow: `0 0 ${size * 2}px rgba(102,252,241,${0.4 * scale})`,
-                        }}
-                    />
-                );
-            })}
-        </>
+        <canvas
+            ref={canvasRef}
+            className="pointer-events-none fixed top-0 left-0 z-[9999]"
+            style={{ width: '100vw', height: '100vh' }}
+        />
     );
 }

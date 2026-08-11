@@ -1,5 +1,4 @@
-import CursorGlow from './components/Portfolio/CursorGlow';
-import ClickSparks from './components/Portfolio/ClickSparks';
+import CursorTrail from './components/Portfolio/CursorGlow';
 import NavBar from './components/Portfolio/NavBar';
 import HeroSection from './components/Portfolio/HeroSection';
 import AboutSection from './components/Portfolio/AboutSection';
@@ -18,8 +17,7 @@ export default function App() {
 
     return (
         <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker">
-            <CursorGlow />
-            <ClickSparks />
+            <CursorTrail />
 
             <NavBar />
 
