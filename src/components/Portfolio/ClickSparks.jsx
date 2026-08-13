@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const COLORS = ['#7C8A5B', '#8F9E6C', '#3B4A2A', '#A3AD94', '#161C12'];
+const COLORS = ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
 
 export default function ClickSparks() {
     const [sparks, setSparks] = useState([]);
