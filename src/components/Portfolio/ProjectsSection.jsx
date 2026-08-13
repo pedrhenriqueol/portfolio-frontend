@@ -51,12 +51,12 @@ export default function ProjectsSection({ projects }) {
                                         <div className="h-44 overflow-hidden relative bg-dark">
                                             <div className="absolute inset-0 bg-darker/30 group-hover:bg-transparent transition-colors duration-500 z-10" />
                                             <img
-                                                src={project.image_url}
+                                                src={project.image_url || '/dashboard_placeholder.png'}
                                                 alt={project.title}
                                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                                 onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = `https://placehold.co/600x400/1E1D1A/A6A298?text=${encodeURIComponent(project.title)}`;
+                                                    e.target.src = '/dashboard_placeholder.png';
                                                 }}
                                             />
                                             {/* "Saiba Mais" badge for private+details projects */}
@@ -97,7 +97,7 @@ export default function ProjectsSection({ projects }) {
                                                 {hasDetails && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setSelected(project); }}
-                                                        className="flex-1 text-center py-2 px-4 bg-accent/10 border border-accent/40 text-accent text-sm font-semibold rounded-lg hover:bg-accent hover:text-darker transition-all duration-200 flex items-center justify-center gap-2"
+                                                        className="flex-1 text-center py-2 px-4 bg-darker border border-white/10 text-primary text-sm font-medium rounded-lg hover:border-accent/40 hover:text-accent transition-all duration-200 flex items-center justify-center gap-2"
                                                     >
                                                         <i className="fas fa-info-circle" />
                                                         {t('projects.btnDetails')}
