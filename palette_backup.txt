@@ -1,3 +1,4 @@
+=== PALETA 1: Claude (Terracota & Marrom Quente) ===
 --color-dark: #24221F;
 --color-darker: #1E1D1A;
 --color-primary: #A6A298;
@@ -6,5 +7,15 @@
 --color-accent-hover: #C66545;
 --color-light: #FAF9F7;
 --color-border: rgba(234, 232, 227, 0.08);
+COLORS (ClickSparks) = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
 
-COLORS = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
+=== PALETA 2: Café / Mocha (Tons Terrosos) ===
+--color-dark: #231B16;
+--color-darker: #1A1310;
+--color-primary: #D1C7BD;
+--color-secondary: #F5EBE1;
+--color-accent: #8C6A4A;
+--color-accent-hover: #A37E5A;
+--color-light: #FFFFFF;
+--color-border: rgba(140, 106, 74, 0.25);
+COLORS (ClickSparks) = ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
