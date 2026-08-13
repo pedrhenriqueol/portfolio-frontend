@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
 const CATEGORY_CONFIG = {
-    'Back-end':  { color: '#66FCF1' },
+    'Back-end':  { color: '#38BDF8' },
+    'Fullstack': { color: '#38BDF8' },
     'Front-end': { color: '#818CF8' },
     'Database':  { color: '#F59E0B' },
     'DevOps':    { color: '#34D399' },

@@ -6,45 +6,43 @@ html {
 }
 
 @theme {
-  --color-dark: #0B0C10;
-  --color-darker: #1F2833;
-  --color-primary: #C5C6C7;
-  --color-secondary: #66FCF1;
-  --color-accent: #45A29E;
-  --color-light: #E0E2E4;
+  --color-dark: #0B0F19;
+  --color-darker: #111827;
+  --color-primary: #94A3B8;
+  --color-secondary: #38BDF8;
+  --color-accent: #2563EB;
+  --color-light: #F1F5F9;
   --font-sans: 'Poppins', sans-serif;
 }
 
 /* Grid pattern — aplica background-image sem sobrescrever background-color do Tailwind */
 .grid-bg {
   background-image:
-    linear-gradient(rgba(102, 252, 241, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(102, 252, 241, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
   background-size: 64px 64px;
 }
-
-
 
 /* ── Scrollbar personalizada ── */
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B0C10;
+  background: #0B0F19;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #66FCF1, #45A29E);
+  background: linear-gradient(180deg, #38BDF8, #2563EB);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #88fdf8, #66FCF1);
-  box-shadow: 0 0 8px rgba(102, 252, 241, 0.6);
+  background: linear-gradient(180deg, #60A5FA, #38BDF8);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #45A29E #0B0C10;
+  scrollbar-color: #2563EB #0B0F19;
 }
 
 /* ── Mobile: tap feedback (substitui hover) ── */

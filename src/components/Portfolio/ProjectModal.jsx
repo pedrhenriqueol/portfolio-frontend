@@ -60,10 +60,10 @@ export default function ProjectModal({ project, onClose }) {
                         maxWidth: '640px',
                         maxHeight: '85vh',
                         overflowY: 'auto',
-                        backgroundColor: '#1F2833',
-                        border: '1px solid rgba(102,252,241,0.25)',
+                        backgroundColor: '#111827',
+                        border: '1px solid rgba(56,189,248,0.25)',
                         borderRadius: '16px',
-                        boxShadow: '0 0 80px rgba(102,252,241,0.10), 0 32px 80px rgba(0,0,0,0.7)',
+                        boxShadow: '0 0 80px rgba(56,189,248,0.10), 0 32px 80px rgba(0,0,0,0.7)',
                         display: 'flex',
                         flexDirection: 'column',
                     }}
@@ -71,7 +71,7 @@ export default function ProjectModal({ project, onClose }) {
                     {/* Header */}
                     <div style={{
                         position: 'sticky', top: 0, zIndex: 10,
-                        backgroundColor: '#1F2833',
+                        backgroundColor: '#111827',
                         borderBottom: '1px solid rgba(197,198,199,0.15)',
                         padding: '20px 28px',
                         display: 'flex',

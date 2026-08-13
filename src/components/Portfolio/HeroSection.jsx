@@ -125,7 +125,7 @@ export default function HeroSection() {
                             <MagneticButton strength={0.4}>
                                 <a
                                     href="#projetos"
-                                    className="inline-block bg-secondary text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent hover:shadow-[0_0_28px_rgba(102,252,241,0.55)] transition-all duration-300"
+                                    className="inline-block bg-secondary text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent hover:shadow-[0_0_28px_rgba(56,189,248,0.55)] transition-all duration-300"
                                 >
                                     {t('hero.verProjetos')}
                                 </a>
@@ -166,7 +166,7 @@ export default function HeroSection() {
                                             target="_blank"
                                             rel="noreferrer"
                                             aria-label={label}
-                                            className="flex items-center justify-center w-12 h-12 bg-dark border border-secondary/50 text-secondary rounded-lg hover:bg-secondary hover:text-darker transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(102,252,241,0.5)]"
+                                            className="flex items-center justify-center w-12 h-12 bg-dark border border-secondary/50 text-secondary rounded-lg hover:bg-secondary hover:text-darker transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(56,189,248,0.5)]"
                                         >
                                             {icon}
                                         </a>
@@ -189,7 +189,7 @@ export default function HeroSection() {
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
 
                             {/* Terminal window */}
-                            <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(102,252,241,0.07),0_24px_60px_rgba(0,0,0,0.6)]">
+                            <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(56,189,248,0.07),0_24px_60px_rgba(0,0,0,0.6)]">
                                 {/* Title bar */}
                                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60">
                                     <span className="w-3 h-3 rounded-full bg-red-400/70" />
@@ -257,7 +257,7 @@ export default function HeroSection() {
 
                             {/* Floating tech badges */}
                             {[
-                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#66FCF1' },
+                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#38BDF8' },
                                 { label: 'Laravel',     pos: '-top-4 right-6',    delay: 2.6, color: '#FF4444' },
                                 { label: 'React',       pos: '-bottom-4 left-6',  delay: 2.8, color: '#61DAFB' },
                                 { label: 'TypeScript',  pos: '-bottom-4 right-4', delay: 3.0, color: '#818CF8' },

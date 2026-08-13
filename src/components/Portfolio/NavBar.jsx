@@ -127,7 +127,7 @@ export default function NavBar() {
                 style={{
                     background:  scrolled ? 'rgba(15,17,24,0.92)' : 'rgba(31,40,51,0.65)',
                     backdropFilter: 'blur(20px)',
-                    borderColor: scrolled ? 'rgba(102,252,241,0.12)' : 'rgba(255,255,255,0.05)',
+                    borderColor: scrolled ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.05)',
                     boxShadow:   scrolled ? '0 4px 40px rgba(0,0,0,0.55)' : '0 4px 30px rgba(0,0,0,0.3)',
                 }}
             >
@@ -139,7 +139,7 @@ export default function NavBar() {
                         <span className="text-white font-black text-xl tracking-tight group-hover:text-secondary transition-colors duration-300">
                             PEDRO
                         </span>
-                        <span className="text-secondary font-black text-xl tracking-tight group-hover:drop-shadow-[0_0_10px_rgba(102,252,241,0.8)] transition-all duration-300">
+                        <span className="text-secondary font-black text-xl tracking-tight group-hover:drop-shadow-[0_0_10px_rgba(56,189,248,0.8)] transition-all duration-300">
                             .DEV
                         </span>
                         <span className="ml-1 w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
@@ -153,7 +153,7 @@ export default function NavBar() {
                                     key={id}
                                     onClick={() => scrollTo(id)}
                                     className="relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg group"
-                                    style={{ color: isActive ? '#66FCF1' : '#9CA3AF' }}
+                                    style={{ color: isActive ? '#38BDF8' : '#9CA3AF' }}
                                 >
                                     <span className="absolute inset-0 rounded-lg bg-secondary/0 group-hover:bg-secondary/8 transition-colors duration-200" />
                                     {label}
@@ -211,7 +211,7 @@ export default function NavBar() {
                             onClick={() => scrollTo('contato')}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.97 }}
-                            className="hidden sm:flex items-center gap-2 bg-secondary/10 border border-secondary/40 text-secondary text-sm font-semibold px-4 py-2 rounded-lg hover:bg-secondary hover:text-darker hover:shadow-[0_0_20px_rgba(102,252,241,0.4)] transition-all duration-300"
+                            className="hidden sm:flex items-center gap-2 bg-secondary/10 border border-secondary/40 text-secondary text-sm font-semibold px-4 py-2 rounded-lg hover:bg-secondary hover:text-darker hover:shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all duration-300"
                         >
                             <i className="fas fa-paper-plane text-xs" />
                             {t('nav.contato')}

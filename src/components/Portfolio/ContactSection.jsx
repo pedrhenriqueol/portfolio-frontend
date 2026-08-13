@@ -18,7 +18,7 @@ const CONTACT_LINKS = [
         label: 'GitHub',
         value: 'github.com/pedrhenriqueol',
         href: 'https://github.com/pedrhenriqueol',
-        color: '#66FCF1',
+        color: '#38BDF8',
     },
     {
         icon: 'fas fa-envelope',
@@ -245,7 +245,7 @@ export default function ContactSection() {
                                         type="submit"
                                         disabled={processing}
                                         id="btn-enviar-mensagem"
-                                        className={`w-full relative overflow-hidden bg-secondary text-darker font-bold py-4 rounded-xl text-sm hover:bg-accent transition-all duration-300 hover:shadow-[0_0_28px_rgba(102,252,241,0.45)] flex items-center justify-center gap-2 group ${processing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        className={`w-full relative overflow-hidden bg-secondary text-darker font-bold py-4 rounded-xl text-sm hover:bg-accent transition-all duration-300 hover:shadow-[0_0_28px_rgba(56,189,248,0.45)] flex items-center justify-center gap-2 group ${processing ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
                                         {/* Shimmer effect */}
                                         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
