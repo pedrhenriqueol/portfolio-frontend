@@ -6,14 +6,14 @@ html {
 }
 
 @theme {
-  --color-dark: #0A0A0B;
-  --color-darker: #141414;
-  --color-primary: #A1A1AA;
-  --color-secondary: #FAFAFA;
-  --color-accent: #C9A84C;
-  --color-accent-hover: #B8943B;
-  --color-light: #F4F4F5;
-  --color-border: rgba(255,255,255,0.08);
+  --color-dark: #24221F;
+  --color-darker: #1E1D1A;
+  --color-primary: #A6A298;
+  --color-secondary: #EAE8E3;
+  --color-accent: #D97757;
+  --color-accent-hover: #C66545;
+  --color-light: #FAF9F7;
+  --color-border: rgba(234, 232, 227, 0.08);
   --font-sans: 'Poppins', sans-serif;
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
 }
