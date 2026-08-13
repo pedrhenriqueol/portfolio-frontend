@@ -22,136 +22,136 @@ export default function ProjectModal({ project, onClose }) {
 
     if (!project?.details) return null;
     const { subtitle, fullDescription, highlights } = project.details;
+    const coverImage = project.image_url || '/dashboard_placeholder.png';
 
     return (
         <AnimatePresence>
-            {/* Backdrop — cobre 100% da viewport, ignora scroll */}
+            {/* Backdrop */}
             <motion.div
                 key="backdrop"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.3 }}
                 onClick={onClose}
-                style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 99999,
-                    backgroundColor: 'rgba(0,0,0,0.85)',
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '16px',
-                }}
+                className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md"
             >
-                {/* Modal card — centralizado, nunca afetado por scroll */}
+                {/* Modal Container */}
                 <motion.div
                     key="modal"
-                    initial={{ opacity: 0, scale: 0.94, y: 24 }}
-                    animate={{ opacity: 1, scale: 1,    y: 0  }}
-                    exit={{   opacity: 0, scale: 0.94,  y: 24 }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+                    initial={{ opacity: 0, scale: 0.96, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: 20 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     onClick={(e) => e.stopPropagation()}
-                    style={{
-                        position: 'relative',
-                        width: '100%',
-                        maxWidth: '640px',
-                        maxHeight: '85vh',
-                        overflowY: 'auto',
-                        backgroundColor: '#111827',
-                        border: '1px solid rgba(201,168,76,0.15)',
-                        borderRadius: '16px',
-                        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                    }}
+                    className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col"
                 >
-                    {/* Header */}
-                    <div style={{
-                        position: 'sticky', top: 0, zIndex: 10,
-                        backgroundColor: '#111827',
-                        borderBottom: '1px solid rgba(197,198,199,0.15)',
-                        padding: '20px 28px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: '16px',
-                    }}>
-                        <div>
-                            <h2 className="text-xl md:text-2xl font-bold text-white leading-tight">
+                    {/* Close button */}
+                    <button
+                        onClick={onClose}
+                        aria-label="Fechar"
+                        className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white/80 hover:text-white hover:bg-black/60 transition-all duration-300 group"
+                    >
+                        <i className="fas fa-times group-hover:rotate-90 transition-transform duration-300" />
+                    </button>
+
+                    {/* Banner Image */}
+                    <div className="relative w-full h-48 sm:h-72 shrink-0 overflow-hidden bg-darker">
+                        <img 
+                            src={coverImage} 
+                            alt={project.title} 
+                            className="w-full h-full object-cover opacity-60 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/dashboard_placeholder.png';
+                            }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/60 to-transparent" />
+                        
+                        {/* Title overlay */}
+                        <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 flex flex-col justify-end">
+                            <h2 className="text-3xl sm:text-5xl font-display font-bold text-secondary mb-2 sm:mb-3 tracking-wide drop-shadow-lg">
                                 {project.title}
                             </h2>
-                            <p className="text-secondary text-sm mt-1">{subtitle}</p>
+                            <p className="text-primary text-sm sm:text-lg font-medium max-w-2xl drop-shadow-md">
+                                {subtitle}
+                            </p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            aria-label="Fechar"
-                            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-primary/30 text-gray-400 hover:border-secondary/50 hover:text-secondary transition-all duration-200"
-                        >
-                            <i className="fas fa-times" />
-                        </button>
                     </div>
 
                     {/* Body */}
-                    <div className="px-7 py-6 space-y-6">
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2">
-                            {project.tags.map((tag) => (
-                                <span
-                                    key={tag}
-                                    className="text-xs font-semibold text-accent bg-accent/10 border border-accent/30 px-3 py-1 rounded-full"
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                            <span className="text-xs font-semibold text-gray-500 bg-darker border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1">
-                                <i className="fas fa-lock text-[10px]" /> {t('projects.privado')}
-                            </span>
-                        </div>
-
-                        {/* Descrição completa */}
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
-                                {t('projects.modalSobre')}
-                            </h3>
-                            <p className="text-gray-400 leading-relaxed">{fullDescription}</p>
-                        </div>
-
-                        {/* Destaques técnicos */}
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
-                                <i className="fas fa-microchip text-secondary mr-2" />
-                                {t('projects.modalDestaques')}
-                            </h3>
-                            <ul className="space-y-3">
-                                {highlights.map((item, i) => (
-                                    <motion.li
-                                        key={i}
-                                        initial={{ opacity: 0, x: -16 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.08 + i * 0.05 }}
-                                        className="flex items-start gap-3 text-gray-300 text-sm leading-relaxed"
+                    <div className="p-6 sm:p-8 space-y-8 flex-grow">
+                        
+                        {/* Tags & Actions */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-6">
+                            <div className="flex flex-wrap gap-2">
+                                {project.tags.map((tag) => (
+                                    <span
+                                        key={tag}
+                                        className="text-xs font-medium text-accent bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full"
                                     >
-                                        <span className="shrink-0 w-5 h-5 mt-0.5 rounded-full bg-secondary/10 border border-secondary/30 flex items-center justify-center">
-                                            <i className="fas fa-check text-secondary text-[9px]" />
-                                        </span>
-                                        {item}
-                                    </motion.li>
+                                        {tag}
+                                    </span>
                                 ))}
-                            </ul>
+                                {(!project.repo_link && !project.demo_link) && (
+                                    <span className="text-xs font-medium text-primary/70 bg-darker border border-primary/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                                        <i className="fas fa-lock text-[10px]" /> {t('projects.privado')}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex gap-3 shrink-0">
+                                {project.repo_link && (
+                                    <a href={project.repo_link} target="_blank" rel="noreferrer" className="px-5 py-2.5 bg-darker border border-white/10 rounded-lg text-primary text-sm font-medium hover:border-accent/40 hover:text-accent transition-all duration-200 flex items-center gap-2">
+                                        <i className="fas fa-code" /> {t('projects.btnRepo')}
+                                    </a>
+                                )}
+                                {project.demo_link && (
+                                    <a href={project.demo_link} target="_blank" rel="noreferrer" className="px-5 py-2.5 bg-accent text-darker rounded-lg text-sm font-semibold hover:bg-accent-hover transition-all duration-200 flex items-center gap-2 shadow-[0_0_15px_rgba(217,119,87,0.3)] hover:shadow-[0_0_25px_rgba(217,119,87,0.5)]">
+                                        <i className="fas fa-external-link-alt" /> {t('projects.btnDemo')}
+                                    </a>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Footer */}
-                    <div className="px-7 py-4 border-t border-primary/20 flex justify-end">
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-2 rounded-lg bg-secondary text-darker text-sm font-semibold hover:bg-accent transition-colors duration-200"
-                        >
-                            {t('projects.modalFechar')}
-                        </button>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Left Column: Description */}
+                            <div className="lg:col-span-1 space-y-4">
+                                <h3 className="text-xs font-bold text-accent uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span className="w-4 h-[1px] bg-accent" />
+                                    {t('projects.modalSobre')}
+                                </h3>
+                                <p className="text-primary/90 leading-relaxed text-sm">
+                                    {fullDescription}
+                                </p>
+                            </div>
+
+                            {/* Right Column: Highlights */}
+                            <div className="lg:col-span-2 space-y-5">
+                                <h3 className="text-xs font-bold text-accent uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span className="w-4 h-[1px] bg-accent" />
+                                    {t('projects.modalDestaques')}
+                                </h3>
+                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {highlights.map((item, i) => (
+                                        <motion.li
+                                            key={i}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.1 + i * 0.05 }}
+                                            className="flex items-start gap-3 bg-darker/50 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+                                        >
+                                            <span className="shrink-0 w-1.5 h-1.5 mt-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(217,119,87,0.8)]" />
+                                            <span className="text-primary/80 text-sm leading-relaxed">
+                                                {item}
+                                            </span>
+                                        </motion.li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
                     </div>
                 </motion.div>
             </motion.div>
