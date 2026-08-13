@@ -1,0 +1,10 @@
+--color-dark: #24221F;
+--color-darker: #1E1D1A;
+--color-primary: #A6A298;
+--color-secondary: #EAE8E3;
+--color-accent: #D97757;
+--color-accent-hover: #C66545;
+--color-light: #FAF9F7;
+--color-border: rgba(234, 232, 227, 0.08);
+
+COLORS = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
