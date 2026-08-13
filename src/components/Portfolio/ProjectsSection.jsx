@@ -53,6 +53,8 @@ export default function ProjectsSection({ projects }) {
                                             <img
                                                 src={project.image_url || '/dashboard_placeholder.png'}
                                                 alt={project.title}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                                 onError={(e) => {
                                                     e.target.onerror = null;

@@ -6,25 +6,25 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export default function HeroSection() {
     const { t } = useLanguage();
+    const sectionRef = useRef(null);
     const textRef   = useRef(null);
     const termRef   = useRef(null);
     const rafRef    = useRef(null);
+    const isVisibleRef = useRef(true);
+    const isRunningRef = useRef(false);
     const targetRef = useRef({ x: 0, y: 0 });
     const currRef   = useRef({ x: 0, y: 0 });
 
-    // Parallax totalmente fora do React state — zero re-renders
+    // Parallax sob demanda — pausa quando ocioso ou fora da tela
     useEffect(() => {
-        const onMove = (e) => {
-            const { innerWidth: W, innerHeight: H } = window;
-            targetRef.current = {
-                x: ((e.clientX / W) - 0.5) * 24,
-                y: ((e.clientY / H) - 0.5) * 16,
-            };
-        };
-
         const lerp = (a, b, t) => a + (b - a) * t;
 
         const tick = () => {
+            if (!isVisibleRef.current) {
+                isRunningRef.current = false;
+                return;
+            }
+
             const tx = targetRef.current.x;
             const ty = targetRef.current.y;
             currRef.current.x = lerp(currRef.current.x, tx, 0.06);
@@ -33,31 +33,75 @@ export default function HeroSection() {
             const cy = currRef.current.y;
 
             if (textRef.current) {
-                textRef.current.style.transform = `translate(${cx * 0.08}px, ${cy * 0.08}px)`;
+                textRef.current.style.transform = `translate3d(${cx * 0.08}px, ${cy * 0.08}px, 0)`;
             }
             if (termRef.current) {
-                termRef.current.style.transform = `translate(${cx * -0.14}px, ${cy * -0.10}px)`;
+                termRef.current.style.transform = `translate3d(${cx * -0.14}px, ${cy * -0.10}px, 0)`;
             }
-            rafRef.current = requestAnimationFrame(tick);
+
+            const dist = Math.abs(tx - cx) + Math.abs(ty - cy);
+            if (dist > 0.01) {
+                rafRef.current = requestAnimationFrame(tick);
+            } else {
+                isRunningRef.current = false;
+            }
         };
 
+        const startLoop = () => {
+            if (!isRunningRef.current && isVisibleRef.current) {
+                isRunningRef.current = true;
+                rafRef.current = requestAnimationFrame(tick);
+            }
+        };
+
+        const onMove = (e) => {
+            const W = window.innerWidth;
+            const H = window.innerHeight;
+            targetRef.current = {
+                x: ((e.clientX / W) - 0.5) * 24,
+                y: ((e.clientY / H) - 0.5) * 16,
+            };
+            startLoop();
+        };
+
+        // Pausa animações se o Hero sair da viewport
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                isVisibleRef.current = entry.isIntersecting;
+                if (entry.isIntersecting) {
+                    startLoop();
+                } else if (rafRef.current) {
+                    cancelAnimationFrame(rafRef.current);
+                    isRunningRef.current = false;
+                }
+            },
+            { threshold: 0.05 }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
         window.addEventListener('mousemove', onMove, { passive: true });
-        rafRef.current = requestAnimationFrame(tick);
+        startLoop();
+
         return () => {
             window.removeEventListener('mousemove', onMove);
-            cancelAnimationFrame(rafRef.current);
+            observer.disconnect();
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
     }, []);
 
     return (
         <section
             id="home"
-            className="grid-bg pt-32 pb-20 md:pt-48 md:pb-32 bg-dark flex items-center justify-center min-h-[125vh] relative overflow-hidden"
+            ref={sectionRef}
+            className="grid-bg pt-28 pb-16 md:pt-40 md:pb-24 bg-dark flex items-center justify-center min-h-[105vh] relative overflow-hidden contain-paint"
         >
-            {/* Background blobs — estáticos, sem parallax em React state */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-secondary/8 blur-[160px] rounded-full" />
-                <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/8 blur-[160px] rounded-full" />
+            {/* Background blobs — otimizados para GPU */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-secondary/8 blur-[100px] rounded-full transform-gpu" />
+                <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/8 blur-[100px] rounded-full transform-gpu" />
             </div>
 
             {/* Floating particles — apenas 3, mais leves */}

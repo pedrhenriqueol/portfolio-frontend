@@ -60,6 +60,7 @@ export default function ProjectModal({ project, onClose }) {
                         <img 
                             src={coverImage} 
                             alt={project.title} 
+                            decoding="async"
                             className="w-full h-full object-cover opacity-60 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700"
                             onError={(e) => {
                                 e.target.onerror = null;
@@ -108,7 +109,7 @@ export default function ProjectModal({ project, onClose }) {
                                     </a>
                                 )}
                                 {project.demo_link && (
-                                    <a href={project.demo_link} target="_blank" rel="noreferrer" className="px-5 py-2.5 bg-accent text-darker rounded-lg text-sm font-semibold hover:bg-accent-hover transition-all duration-200 flex items-center gap-2 shadow-[0_0_15px_rgba(217,119,87,0.3)] hover:shadow-[0_0_25px_rgba(217,119,87,0.5)]">
+                                    <a href={project.demo_link} target="_blank" rel="noreferrer" className="px-5 py-2.5 bg-accent text-darker rounded-lg text-sm font-semibold hover:bg-accent-hover transition-all duration-200 flex items-center gap-2 shadow-[0_0_15px_rgba(140,106,74,0.3)] hover:shadow-[0_0_25px_rgba(140,106,74,0.5)]">
                                         <i className="fas fa-external-link-alt" /> {t('projects.btnDemo')}
                                     </a>
                                 )}
@@ -142,7 +143,7 @@ export default function ProjectModal({ project, onClose }) {
                                             transition={{ delay: 0.1 + i * 0.05 }}
                                             className="flex items-start gap-3 bg-darker/50 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
                                         >
-                                            <span className="shrink-0 w-1.5 h-1.5 mt-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(217,119,87,0.8)]" />
+                                            <span className="shrink-0 w-1.5 h-1.5 mt-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(140,106,74,0.8)]" />
                                             <span className="text-primary/80 text-sm leading-relaxed">
                                                 {item}
                                             </span>

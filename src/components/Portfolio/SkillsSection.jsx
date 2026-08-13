@@ -17,13 +17,9 @@ function SkillCard({ skill, config, index }) {
     const onMouseMove = (e) => {
         const el = cardRef.current;
         if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-        const x = (e.clientX - rect.left) / zoom;
-        const y = (e.clientY - rect.top)  / zoom;
-        el.style.setProperty('--sx', `${x}px`);
-        el.style.setProperty('--sy', `${y}px`);
-        el.style.background    = `radial-gradient(140px circle at var(--sx) var(--sy), ${config.color}18, transparent 70%), rgba(11,12,16,0.7)`;
+        const x = e.nativeEvent.offsetX;
+        const y = e.nativeEvent.offsetY;
+        el.style.background    = `radial-gradient(140px circle at ${x}px ${y}px, ${config.color}18, transparent 70%), rgba(11,12,16,0.7)`;
         el.style.borderColor   = config.color;
         el.style.boxShadow     = `0 0 28px ${config.color}30`;
     };

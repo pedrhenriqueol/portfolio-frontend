@@ -1,26 +1,27 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function NavBar() {
     const { lang, setLang, t } = useLanguage();
     const [active, setActive]         = useState('home');
-    const [scrollPct, setScrollPct]   = useState(0);
     const [visible, setVisible]       = useState(true);
     const [scrolled, setScrolled]     = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const lastY      = useRef(0);
-    const hideTimer  = useRef(null);
-    const dropdownRef = useRef(null);
+    const lastY        = useRef(0);
+    const hideTimer    = useRef(null);
+    const dropdownRef  = useRef(null);
+    const progressRef  = useRef(null);
+    const activeRef    = useRef('home');
 
-    const navLinks = [
+    const navLinks = useMemo(() => [
         { id: 'home',          label: t('nav.home') },
         { id: 'sobre',         label: t('nav.sobre') },
         { id: 'experiencia',   label: t('nav.experiencia') },
         { id: 'conhecimentos', label: t('nav.conhecimentos') },
         { id: 'projetos',      label: t('nav.projetos') },
-    ];
+    ], [t]);
 
     const flags = { pt: '🇧🇷 PT', en: '🇺🇸 EN', es: '🇪🇸 ES' };
 
@@ -36,47 +37,63 @@ export default function NavBar() {
     useEffect(() => {
         const SHOW_THRESHOLD = 80;
         const JITTER_DELTA   = 6;
+        let scrollRaf = null;
+
         const onScroll = () => {
-            const y    = window.scrollY;
-            const maxY = document.body.scrollHeight - window.innerHeight;
-            setScrollPct(maxY > 0 ? (y / maxY) * 100 : 0);
-            setScrolled(y > 40);
-            const delta = y - lastY.current;
-            if (y < SHOW_THRESHOLD) {
-                setVisible(true);
-            } else if (Math.abs(delta) > JITTER_DELTA) {
-                if (delta > 0) {
-                    clearTimeout(hideTimer.current);
-                    hideTimer.current = setTimeout(() => setVisible(false), 80);
-                    setDropdownOpen(false);
-                } else {
-                    clearTimeout(hideTimer.current);
-                    setVisible(true);
+            if (scrollRaf) return;
+
+            scrollRaf = requestAnimationFrame(() => {
+                scrollRaf = null;
+                const y    = window.scrollY;
+                const maxY = document.documentElement.scrollHeight - window.innerHeight;
+                const pct  = maxY > 0 ? (y / maxY) * 100 : 0;
+
+                if (progressRef.current) {
+                    progressRef.current.style.width = `${pct}%`;
                 }
-            }
-            lastY.current = y;
+
+                const isScrolledNow = y > 40;
+                setScrolled(prev => prev !== isScrolledNow ? isScrolledNow : prev);
+
+                const delta = y - lastY.current;
+                if (y < SHOW_THRESHOLD) {
+                    setVisible(true);
+                } else if (Math.abs(delta) > JITTER_DELTA) {
+                    if (delta > 0) {
+                        clearTimeout(hideTimer.current);
+                        hideTimer.current = setTimeout(() => setVisible(false), 80);
+                        setDropdownOpen(false);
+                    } else {
+                        clearTimeout(hideTimer.current);
+                        setVisible(true);
+                    }
+                }
+                lastY.current = y;
+
+                // Detecção de seção ativa
+                const trigger = window.innerHeight * 0.4;
+                let current = navLinks[0].id;
+                for (let i = 0; i < navLinks.length; i++) {
+                    const el = document.getElementById(navLinks[i].id);
+                    if (el && el.getBoundingClientRect().top <= trigger) {
+                        current = navLinks[i].id;
+                    }
+                }
+                if (activeRef.current !== current) {
+                    activeRef.current = current;
+                    setActive(current);
+                }
+            });
         };
+
         window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
         return () => {
             window.removeEventListener('scroll', onScroll);
+            if (scrollRaf) cancelAnimationFrame(scrollRaf);
             clearTimeout(hideTimer.current);
         };
-    }, []);
-
-    useEffect(() => {
-        const detectActive = () => {
-            const trigger = window.innerHeight * 0.4;
-            let current = navLinks[0].id;
-            for (const { id } of navLinks) {
-                const el = document.getElementById(id);
-                if (!el) continue;
-                if (el.getBoundingClientRect().top <= trigger) current = id;
-            }
-            setActive(current);
-        };
-        window.addEventListener('scroll', detectActive, { passive: true });
-        detectActive();
-        return () => window.removeEventListener('scroll', detectActive);
     }, [navLinks]);
 
     const scrollTo = (id) => {
@@ -92,14 +109,14 @@ export default function NavBar() {
             initial={{ y: 0 }}
             animate={{ y: visible ? 0 : -100 }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed top-0 w-full z-50"
+            className="fixed top-0 w-full z-50 transform-gpu"
         >
             {/* Scroll progress bar */}
             <div className="absolute top-0 left-0 right-0 h-[1.5px] z-10 bg-white/5">
-                <motion.div
-                    className="h-full bg-accent"
-                    style={{ width: `${scrollPct}%` }}
-                    transition={{ duration: 0.1 }}
+                <div
+                    ref={progressRef}
+                    className="h-full bg-accent will-change-[width]"
+                    style={{ width: '0%' }}
                 />
             </div>
 
