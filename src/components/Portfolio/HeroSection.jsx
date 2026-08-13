@@ -192,10 +192,10 @@ export default function HeroSection() {
                             <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-white/8 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
                                 {/* Title bar */}
                                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60">
-                                    <span className="w-3 h-3 rounded-full bg-red-400/70" />
-                                    <span className="w-3 h-3 rounded-full bg-yellow-400/70" />
-                                    <span className="w-3 h-3 rounded-full bg-green-400/70" />
-                                    <span className="ml-2 text-xs text-gray-600 font-mono">portfolio.js</span>
+                                    <span className="w-3 h-3 rounded-full bg-white/20" />
+                                    <span className="w-3 h-3 rounded-full bg-white/20" />
+                                    <span className="w-3 h-3 rounded-full bg-white/20" />
+                                    <span className="ml-2 text-xs text-gray-500 font-mono">portfolio.js</span>
                                     <span className="ml-auto flex items-center gap-1.5 text-xs font-mono">
                                         <motion.span
                                             animate={{ opacity: [1, 0.3, 1] }}
@@ -209,16 +209,16 @@ export default function HeroSection() {
                                 {/* Code lines */}
                                 <div className="p-6 font-mono text-[13px] leading-relaxed space-y-0.5">
                                     {[
-                                        { text: 'const developer = {',           color: 'text-gray-300',      delay: 0.4 },
-                                        { text: '  name: "Pedro Henrique",',     color: 'text-emerald-400/80',delay: 0.65 },
-                                        { text: `  role: "${t('hero.terminal.role')}",`, color: 'text-blue-400/80',   delay: 0.9 },
-                                        { text: '  stack: [',                    color: 'text-gray-400',      delay: 1.1 },
-                                        { text: '    "Delphi + UniGui",',        color: 'text-yellow-300/80', delay: 1.3 },
-                                        { text: '    "PHP / Laravel",',          color: 'text-red-400/80',    delay: 1.5 },
-                                        { text: '    "React + TypeScript",',     color: 'text-cyan-400/80',   delay: 1.7 },
-                                        { text: '  ],',                          color: 'text-gray-400',      delay: 1.9 },
-                                        { text: `  ${t('hero.terminal.available')}`,     color: 'text-secondary',     delay: 2.1 },
-                                        { text: '}',                             color: 'text-gray-300',      delay: 2.3 },
+                                        { text: 'const developer = {',           color: 'text-primary', delay: 0.4 },
+                                        { text: '  name: "Pedro Henrique",',     color: 'text-accent', delay: 0.65 },
+                                        { text: `  role: "${t('hero.terminal.role')}",`, color: 'text-secondary', delay: 0.9 },
+                                        { text: '  stack: [',                    color: 'text-primary', delay: 1.1 },
+                                        { text: '    "Delphi + UniGui",',        color: 'text-secondary', delay: 1.3 },
+                                        { text: '    "PHP / Laravel",',          color: 'text-secondary', delay: 1.5 },
+                                        { text: '    "React + TypeScript",',     color: 'text-secondary', delay: 1.7 },
+                                        { text: '  ],',                          color: 'text-primary', delay: 1.9 },
+                                        { text: `  ${t('hero.terminal.available')}`,     color: 'text-accent', delay: 2.1 },
+                                        { text: '}',                             color: 'text-primary', delay: 2.3 },
                                     ].map(({ text, color, delay }) => (
                                         <motion.div
                                             key={text}
@@ -257,10 +257,10 @@ export default function HeroSection() {
 
                             {/* Floating tech badges */}
                             {[
-                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#C9A84C' },
-                                { label: 'Laravel',     pos: '-top-4 right-6',    delay: 2.6, color: '#FF4444' },
-                                { label: 'React',       pos: '-bottom-4 left-6',  delay: 2.8, color: '#61DAFB' },
-                                { label: 'TypeScript',  pos: '-bottom-4 right-4', delay: 3.0, color: '#A78BFA' },
+                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#A6A298' },
+                                { label: 'Laravel',     pos: '-top-4 right-6',    delay: 2.6, color: '#A6A298' },
+                                { label: 'React',       pos: '-bottom-4 left-6',  delay: 2.8, color: '#A6A298' },
+                                { label: 'TypeScript',  pos: '-bottom-4 right-4', delay: 3.0, color: '#A6A298' },
                             ].map(({ label, pos, delay, color }) => (
                                 <motion.span
                                     key={label}

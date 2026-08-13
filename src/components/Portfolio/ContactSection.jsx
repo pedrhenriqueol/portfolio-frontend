@@ -11,28 +11,28 @@ const CONTACT_LINKS = [
         label: 'LinkedIn',
         value: '/in/pedro-henrique-b0a015391',
         href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
-        color: '#0A66C2',
+        color: '#D97757',
     },
     {
         icon: 'fab fa-github',
         label: 'GitHub',
         value: 'github.com/pedrhenriqueol',
         href: 'https://github.com/pedrhenriqueol',
-        color: '#C9A84C',
+        color: '#D97757',
     },
     {
         icon: 'fas fa-envelope',
         label: 'E-mail',
         value: 'pedrohc.forza@gmail.com',
         href: 'https://mail.google.com/mail/?view=cm&fs=1&to=pedrohc.forza@gmail.com',
-        color: '#F59E0B',
+        color: '#D97757',
     },
     {
         icon: 'fab fa-instagram',
         label: 'Instagram',
         value: '@pedrherg',
         href: 'https://www.instagram.com/pedrherg',
-        color: '#E1306C',
+        color: '#D97757',
     },
 ];
 

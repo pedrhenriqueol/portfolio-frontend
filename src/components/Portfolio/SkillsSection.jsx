@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
 const CATEGORY_CONFIG = {
-    'Back-end':  { color: '#C9A84C' },
-    'Fullstack': { color: '#C9A84C' },
-    'Front-end': { color: '#818CF8' },
-    'Database':  { color: '#F59E0B' },
-    'DevOps':    { color: '#34D399' },
-    'Outros':    { color: '#94A3B8' },
+    'Back-end':  { color: 'var(--color-accent)' },
+    'Fullstack': { color: 'var(--color-accent)' },
+    'Front-end': { color: 'var(--color-primary)' },
+    'Database':  { color: 'var(--color-primary)' },
+    'DevOps':    { color: 'var(--color-primary)' },
+    'Outros':    { color: 'var(--color-primary)' },
 };
 
 function SkillCard({ skill, config, index }) {

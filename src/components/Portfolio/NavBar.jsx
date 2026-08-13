@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -136,7 +136,7 @@ export default function NavBar() {
                                     key={id}
                                     onClick={() => scrollTo(id)}
                                     className="relative group text-[11px] tracking-[0.22em] uppercase font-medium transition-colors duration-300 py-1"
-                                    style={{ color: isActive ? '#C9A84C' : '#A1A1AA' }}
+                                    style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-primary)' }}
                                     aria-current={isActive ? 'page' : undefined}
                                 >
                                     {label}
