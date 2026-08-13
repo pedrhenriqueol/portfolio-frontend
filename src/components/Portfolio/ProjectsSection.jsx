@@ -53,7 +53,7 @@ export default function ProjectsSection({ projects }) {
                                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                                 onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = `https://placehold.co/600x400/111827/38BDF8?text=${encodeURIComponent(project.title)}`;
+                                                    e.target.src = `https://placehold.co/600x400/141414/C9A84C?text=${encodeURIComponent(project.title)}`;
                                                 }}
                                             />
                                             {/* "Saiba Mais" badge for private+details projects */}
@@ -94,7 +94,7 @@ export default function ProjectsSection({ projects }) {
                                                 {hasDetails && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setSelected(project); }}
-                                                        className="flex-1 text-center py-2 px-4 bg-secondary/10 border border-secondary/40 text-secondary text-sm font-semibold rounded-lg hover:bg-secondary hover:text-darker transition-all duration-200 hover:shadow-[0_0_14px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2"
+                                                        className="flex-1 text-center py-2 px-4 bg-accent/10 border border-accent/40 text-accent text-sm font-semibold rounded-lg hover:bg-accent hover:text-darker transition-all duration-200 flex items-center justify-center gap-2"
                                                     >
                                                         <i className="fas fa-info-circle" />
                                                         {t('projects.btnDetails')}
@@ -106,7 +106,7 @@ export default function ProjectsSection({ projects }) {
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="flex-1 text-center py-2 px-4 bg-darker border border-secondary/50 text-secondary text-sm font-medium rounded-lg hover:bg-secondary hover:text-darker transition-all duration-200 hover:shadow-[0_0_14px_rgba(56,189,248,0.35)]"
+                                                        className="flex-1 text-center py-2 px-4 bg-darker border border-white/10 text-primary text-sm font-medium rounded-lg hover:border-accent/40 hover:text-accent transition-all duration-200"
                                                     >
                                                         <i className="fas fa-code mr-2" />{t('projects.btnRepo')}
                                                     </a>
@@ -122,7 +122,7 @@ export default function ProjectsSection({ projects }) {
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="flex-1 text-center py-2 px-4 bg-secondary text-darker text-sm font-semibold rounded-lg hover:bg-accent hover:shadow-[0_0_14px_rgba(56,189,248,0.4)] transition-all duration-200"
+                                                        className="flex-1 text-center py-2 px-4 bg-accent text-darker text-sm font-semibold rounded-lg hover:bg-accent-hover transition-all duration-200"
                                                     >
                                                         <i className="fas fa-external-link-alt mr-2" />{t('projects.btnDemo')}
                                                     </a>

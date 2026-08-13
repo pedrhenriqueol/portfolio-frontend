@@ -6,20 +6,22 @@ html {
 }
 
 @theme {
-  --color-dark: #0B0F19;
-  --color-darker: #111827;
-  --color-primary: #94A3B8;
-  --color-secondary: #38BDF8;
-  --color-accent: #2563EB;
-  --color-light: #F1F5F9;
+  --color-dark: #0A0A0B;
+  --color-darker: #141414;
+  --color-primary: #A1A1AA;
+  --color-secondary: #FAFAFA;
+  --color-accent: #C9A84C;
+  --color-accent-hover: #B8943B;
+  --color-light: #F4F4F5;
+  --color-border: rgba(255,255,255,0.08);
   --font-sans: 'Poppins', sans-serif;
 }
 
 /* Grid pattern — aplica background-image sem sobrescrever background-color do Tailwind */
 .grid-bg {
   background-image:
-    linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 
@@ -28,21 +30,20 @@ html {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B0F19;
+  background: #0A0A0B;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #38BDF8, #2563EB);
+  background: #2A2A2A;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #60A5FA, #38BDF8);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  background: #3A3A3A;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2563EB #0B0F19;
+  scrollbar-color: #2A2A2A #0A0A0B;
 }
 
 /* ── Mobile: tap feedback (substitui hover) ── */

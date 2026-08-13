@@ -125,9 +125,9 @@ export default function NavBar() {
             <div
                 className="border-b shadow-[0_4px_30px_rgba(0,0,0,0.4)] transition-all duration-300"
                 style={{
-                    background:  scrolled ? 'rgba(15,17,24,0.92)' : 'rgba(31,40,51,0.65)',
+                    background:  scrolled ? 'rgba(10,10,11,0.92)' : 'rgba(20,20,20,0.65)',
                     backdropFilter: 'blur(20px)',
-                    borderColor: scrolled ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.05)',
+                    borderColor: scrolled ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.05)',
                     boxShadow:   scrolled ? '0 4px 40px rgba(0,0,0,0.55)' : '0 4px 30px rgba(0,0,0,0.3)',
                 }}
             >
@@ -136,13 +136,13 @@ export default function NavBar() {
                         onClick={() => scrollTo('home')}
                         className="group flex items-center gap-1 shrink-0"
                     >
-                        <span className="text-white font-black text-xl tracking-tight group-hover:text-secondary transition-colors duration-300">
+                        <span className="text-white font-black text-xl tracking-tight group-hover:text-accent transition-colors duration-300">
                             PEDRO
                         </span>
-                        <span className="text-secondary font-black text-xl tracking-tight group-hover:drop-shadow-[0_0_10px_rgba(56,189,248,0.8)] transition-all duration-300">
+                        <span className="text-accent font-black text-xl tracking-tight transition-all duration-300">
                             .DEV
                         </span>
-                        <span className="ml-1 w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+                        <span className="ml-1 w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                     </button>
 
                     <div className="hidden md:flex items-center gap-1">
@@ -153,14 +153,14 @@ export default function NavBar() {
                                     key={id}
                                     onClick={() => scrollTo(id)}
                                     className="relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg group"
-                                    style={{ color: isActive ? '#38BDF8' : '#9CA3AF' }}
+                                    style={{ color: isActive ? '#C9A84C' : '#A1A1AA' }}
                                 >
-                                    <span className="absolute inset-0 rounded-lg bg-secondary/0 group-hover:bg-secondary/8 transition-colors duration-200" />
+                                    <span className="absolute inset-0 rounded-lg bg-accent/0 group-hover:bg-accent/8 transition-colors duration-200" />
                                     {label}
                                     {isActive && (
                                         <motion.span
                                             layoutId="nav-indicator"
-                                            className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-gradient-to-r from-secondary to-accent"
+                                            className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-accent"
                                             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                         />
                                     )}
@@ -174,7 +174,7 @@ export default function NavBar() {
                         <div className="relative hidden sm:block" ref={dropdownRef}>
                             <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 hover:border-secondary/50 text-gray-200 text-sm font-semibold px-3 py-2 rounded-lg transition-all duration-200"
+                                className="flex items-center gap-2 bg-accent/10 border border-accent/25 hover:border-accent/60 text-accent text-sm font-semibold px-3 py-2 rounded-lg transition-all duration-200"
                             >
                                 <span>{flags[lang]}</span>
                                 <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -211,7 +211,7 @@ export default function NavBar() {
                             onClick={() => scrollTo('contato')}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.97 }}
-                            className="hidden sm:flex items-center gap-2 bg-secondary/10 border border-secondary/40 text-secondary text-sm font-semibold px-4 py-2 rounded-lg hover:bg-secondary hover:text-darker hover:shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all duration-300"
+                            className="hidden sm:flex items-center gap-2 bg-accent/10 border border-accent/40 text-accent text-sm font-semibold px-4 py-2 rounded-lg hover:bg-accent hover:text-darker transition-all duration-300"
                         >
                             <i className="fas fa-paper-plane text-xs" />
                             {t('nav.contato')}
@@ -224,15 +224,15 @@ export default function NavBar() {
                         >
                             <motion.span
                                 animate={mobileOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                                className="block w-6 h-0.5 bg-gray-300 group-hover:bg-secondary transition-colors"
+                                className="block w-6 h-0.5 bg-gray-300 group-hover:bg-accent transition-colors"
                             />
                             <motion.span
                                 animate={mobileOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-                                className="block w-6 h-0.5 bg-gray-300 group-hover:bg-secondary transition-colors"
+                                className="block w-6 h-0.5 bg-gray-300 group-hover:bg-accent transition-colors"
                             />
                             <motion.span
                                 animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                                className="block w-6 h-0.5 bg-gray-300 group-hover:bg-secondary transition-colors"
+                                className="block w-6 h-0.5 bg-gray-300 group-hover:bg-accent transition-colors"
                             />
                         </button>
                     </div>
@@ -274,11 +274,11 @@ export default function NavBar() {
                                     onClick={() => scrollTo(id)}
                                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3 ${
                                         active === id
-                                            ? 'bg-secondary/10 text-secondary border border-secondary/20'
+                                            ? 'bg-accent/10 text-accent border border-accent/20'
                                             : 'text-gray-400 hover:bg-white/5 hover:text-white'
                                     }`}
                                 >
-                                    {active === id && <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
+                                    {active === id && <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
                                     {label}
                                 </motion.button>
                             ))}

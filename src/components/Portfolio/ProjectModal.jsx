@@ -61,9 +61,9 @@ export default function ProjectModal({ project, onClose }) {
                         maxHeight: '85vh',
                         overflowY: 'auto',
                         backgroundColor: '#111827',
-                        border: '1px solid rgba(56,189,248,0.25)',
+                        border: '1px solid rgba(201,168,76,0.15)',
                         borderRadius: '16px',
-                        boxShadow: '0 0 80px rgba(56,189,248,0.10), 0 32px 80px rgba(0,0,0,0.7)',
+                        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
                         display: 'flex',
                         flexDirection: 'column',
                     }}

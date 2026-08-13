@@ -98,7 +98,7 @@ export default function AboutSection() {
                                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                             >
                                 <div
-                                    className="group h-full bg-dark border border-primary/30 p-6 rounded-xl hover:border-secondary/50 hover:shadow-[0_0_24px_rgba(56,189,248,0.12)] transition-all duration-300 cursor-default"
+                                    className="group h-full bg-dark border border-primary/30 p-6 rounded-xl hover:border-accent/40 transition-all duration-300 cursor-default"
                                 >
                                     <div className="flex items-center gap-3 mb-4">
                                         <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-secondary/10 border border-secondary/20 group-hover:bg-secondary/20 transition-colors">

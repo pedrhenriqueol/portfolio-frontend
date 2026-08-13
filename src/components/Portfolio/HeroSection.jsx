@@ -95,7 +95,7 @@ export default function HeroSection() {
                         className="flex-1 text-center md:text-left space-y-6"
                         ref={textRef}
                     >
-                        <h2 className="text-secondary font-semibold tracking-wider uppercase text-sm md:text-base">
+                        <h2 className="text-accent font-semibold tracking-wider uppercase text-sm md:text-base">
                             {t('hero.ola')}
                         </h2>
 
@@ -106,12 +106,12 @@ export default function HeroSection() {
                                 cursor={true}
                                 repeat={Infinity}
                                 style={{ whiteSpace: 'pre-line' }}
-                                className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent inline-block"
+                                className="text-transparent bg-clip-text bg-gradient-to-r from-white to-accent inline-block"
                             />
                         </h1>
 
                         <h3 className="text-xl md:text-3xl text-gray-300 font-light">
-                            {t('hero.developer')} <span className="text-secondary font-semibold">{t('hero.role')}</span>
+                            {t('hero.developer')} <span className="text-accent font-semibold">{t('hero.role')}</span>
                         </h3>
 
                         <p className="text-gray-400 max-w-lg mx-auto md:mx-0 text-lg leading-relaxed">
@@ -125,7 +125,7 @@ export default function HeroSection() {
                             <MagneticButton strength={0.4}>
                                 <a
                                     href="#projetos"
-                                    className="inline-block bg-secondary text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent hover:shadow-[0_0_28px_rgba(56,189,248,0.55)] transition-all duration-300"
+                                    className="inline-block bg-accent text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent-hover transition-all duration-300"
                                 >
                                     {t('hero.verProjetos')}
                                 </a>
@@ -166,7 +166,7 @@ export default function HeroSection() {
                                             target="_blank"
                                             rel="noreferrer"
                                             aria-label={label}
-                                            className="flex items-center justify-center w-12 h-12 bg-dark border border-secondary/50 text-secondary rounded-lg hover:bg-secondary hover:text-darker transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(56,189,248,0.5)]"
+                                            className="flex items-center justify-center w-12 h-12 bg-darker border border-white/10 text-gray-300 rounded-lg hover:border-accent/60 hover:text-accent transition-all duration-300 shadow-lg"
                                         >
                                             {icon}
                                         </a>
@@ -189,7 +189,7 @@ export default function HeroSection() {
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
 
                             {/* Terminal window */}
-                            <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-secondary/20 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(56,189,248,0.07),0_24px_60px_rgba(0,0,0,0.6)]">
+                            <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-white/8 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
                                 {/* Title bar */}
                                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60">
                                     <span className="w-3 h-3 rounded-full bg-red-400/70" />
@@ -200,9 +200,9 @@ export default function HeroSection() {
                                         <motion.span
                                             animate={{ opacity: [1, 0.3, 1] }}
                                             transition={{ duration: 2.5, repeat: Infinity }}
-                                            className="w-1.5 h-1.5 rounded-full bg-secondary inline-block"
+                                            className="w-1.5 h-1.5 rounded-full bg-accent inline-block"
                                         />
-                                        <span className="text-secondary/50">live</span>
+                                        <span className="text-accent/50">live</span>
                                     </span>
                                 </div>
 
@@ -236,20 +236,20 @@ export default function HeroSection() {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 2.5 }}
-                                        className="flex items-center gap-1.5 pt-2 text-secondary/50 text-xs"
+                                        className="flex items-center gap-1.5 pt-2 text-accent/50 text-xs"
                                     >
-                                        <span className="text-secondary/40">{'>'}</span>
+                                        <span className="text-accent/40">{'>'}</span>
                                         <motion.span
                                             animate={{ opacity: [1, 0, 1] }}
                                             transition={{ duration: 1, repeat: Infinity }}
-                                            className="inline-block w-[7px] h-[15px] bg-secondary/70 rounded-[2px] align-middle"
+                                            className="inline-block w-[7px] h-[15px] bg-accent/70 rounded-[2px] align-middle"
                                         />
                                     </motion.div>
                                 </div>
 
                                 {/* Bottom status bar */}
                                 <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 bg-dark/40 text-[10px] font-mono text-gray-600">
-                                    <span className="text-secondary/50">⬡ JavaScript</span>
+                                    <span className="text-accent/50">⬡ JavaScript</span>
                                     <span className="ml-auto">UTF-8</span>
                                     <span>Ln 10</span>
                                 </div>
@@ -257,10 +257,10 @@ export default function HeroSection() {
 
                             {/* Floating tech badges */}
                             {[
-                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#38BDF8' },
+                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#C9A84C' },
                                 { label: 'Laravel',     pos: '-top-4 right-6',    delay: 2.6, color: '#FF4444' },
                                 { label: 'React',       pos: '-bottom-4 left-6',  delay: 2.8, color: '#61DAFB' },
-                                { label: 'TypeScript',  pos: '-bottom-4 right-4', delay: 3.0, color: '#818CF8' },
+                                { label: 'TypeScript',  pos: '-bottom-4 right-4', delay: 3.0, color: '#A78BFA' },
                             ].map(({ label, pos, delay, color }) => (
                                 <motion.span
                                     key={label}
@@ -270,9 +270,9 @@ export default function HeroSection() {
                                     className={`absolute ${pos} text-[11px] font-bold px-3 py-1 rounded-full border backdrop-blur-md`}
                                     style={{
                                         color,
-                                        borderColor: `${color}50`,
-                                        background:  `${color}15`,
-                                        boxShadow:   `0 0 12px ${color}18`,
+                                        borderColor: `${color}40`,
+                                        background:  `${color}12`,
+                                        boxShadow:   'none',
                                     }}
                                 >
                                     {label}
