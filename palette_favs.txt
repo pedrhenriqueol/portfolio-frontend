@@ -19,3 +19,14 @@ COLORS (ClickSparks) = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
 --color-light: #FFFFFF;
 --color-border: rgba(140, 106, 74, 0.25);
 COLORS (ClickSparks) = ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
+
+=== PALETA 3: Greige / Monocromática com Bege ===
+--color-dark: #1B1B1B;
+--color-darker: #141414;
+--color-primary: #8A8A8A;
+--color-secondary: #F4F2EC;
+--color-accent: #D6D2C4;
+--color-accent-hover: #E5E2D8;
+--color-light: #FFFFFF;
+--color-border: rgba(214, 210, 196, 0.15);
+COLORS (ClickSparks) = ['#D6D2C4', '#E5E2D8', '#8A8A8A', '#4A4A4A', '#1B1B1B'];
