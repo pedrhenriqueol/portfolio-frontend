@@ -56,7 +56,7 @@ export default function ProjectsSection({ projects }) {
                                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                                 onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = `https://placehold.co/600x400/141414/C9A84C?text=${encodeURIComponent(project.title)}`;
+                                                    e.target.src = `https://placehold.co/600x400/1E1D1A/A6A298?text=${encodeURIComponent(project.title)}`;
                                                 }}
                                             />
                                             {/* "Saiba Mais" badge for private+details projects */}
