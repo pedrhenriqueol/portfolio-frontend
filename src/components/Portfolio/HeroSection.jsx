@@ -95,23 +95,23 @@ export default function HeroSection() {
                         className="flex-1 text-center md:text-left space-y-6"
                         ref={textRef}
                     >
-                        <h2 className="text-accent font-semibold tracking-wider uppercase text-sm md:text-base">
+                        <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase block font-sans">
                             {t('hero.ola')}
-                        </h2>
+                        </span>
 
-                        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white tracking-tight leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
                             <TypeAnimation
                                 sequence={['PEDRO\nHENRIQUE', 7000, '', 500]}
                                 wrapper="span"
                                 cursor={true}
                                 repeat={Infinity}
                                 style={{ whiteSpace: 'pre-line' }}
-                                className="text-transparent bg-clip-text bg-gradient-to-r from-white to-accent inline-block"
+                                className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-accent inline-block font-serif"
                             />
                         </h1>
 
-                        <h3 className="text-xl md:text-3xl text-gray-300 font-light">
-                            {t('hero.developer')} <span className="text-accent font-semibold">{t('hero.role')}</span>
+                        <h3 className="text-xl md:text-2xl text-gray-300 font-serif font-light">
+                            {t('hero.developer')} <span className="text-accent italic font-serif">{t('hero.role')}</span>
                         </h3>
 
                         <p className="text-gray-400 max-w-lg mx-auto md:mx-0 text-lg leading-relaxed">

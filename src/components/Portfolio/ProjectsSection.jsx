@@ -20,8 +20,11 @@ export default function ProjectsSection({ projects }) {
                     transition={{ duration: 0.8 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('projects.title')}</h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto">
+                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
+                        PORTFÓLIO
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">{t('projects.title')}</h2>
+                    <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
                         {t('projects.subtitle')}
                     </p>
                 </motion.div>

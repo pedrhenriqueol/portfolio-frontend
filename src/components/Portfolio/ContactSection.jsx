@@ -85,13 +85,13 @@ export default function ContactSection() {
                     transition={{ duration: 0.8 }}
                     className="text-center mb-16"
                 >
-                    <span className="inline-block text-secondary text-sm font-semibold tracking-widest uppercase mb-3">
+                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
                         {t('contact.tag')}
                     </span>
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        {t('contact.title1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent">{t('contact.title2')}</span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
+                        {t('contact.title1')} <span className="text-accent italic font-serif">{t('contact.title2')}</span>
                     </h2>
-                    <p className="text-gray-400 max-w-xl mx-auto">
+                    <p className="text-gray-400 max-w-xl mx-auto font-sans text-sm sm:text-base">
                         {t('contact.subtitle')}
                     </p>
                 </motion.div>

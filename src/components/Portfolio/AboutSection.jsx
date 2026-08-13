@@ -20,8 +20,10 @@ export default function AboutSection() {
                         <div className="relative bg-dark border border-primary/40 p-8 md:p-10 rounded-2xl shadow-xl">
                             <i className="fas fa-quote-left text-4xl text-secondary/20 absolute top-6 left-6" />
 
-                            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-4">
-                                <span className="w-10 h-[2px] bg-secondary inline-block shrink-0" />
+                            <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
+                                BIOGRAFIA
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-serif text-white mb-6">
                                 {t('about.title')}
                             </h2>
 

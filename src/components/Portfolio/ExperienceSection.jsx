@@ -36,10 +36,13 @@ export default function ExperienceSection({ experiences }) {
                     transition={{ duration: 0.8 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
+                        TRAJETÓRIA
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
                         {t('experience.title')}
                     </h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto">
+                    <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
                         {t('experience.subtitle')}
                     </p>
                 </motion.div>
