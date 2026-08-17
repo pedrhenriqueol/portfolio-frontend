@@ -1,15 +1,4 @@
-=== PALETA 1: Claude (Terracota & Marrom Quente) ===
---color-dark: #24221F;
---color-darker: #1E1D1A;
---color-primary: #A6A298;
---color-secondary: #EAE8E3;
---color-accent: #D97757;
---color-accent-hover: #C66545;
---color-light: #FAF9F7;
---color-border: rgba(234, 232, 227, 0.08);
-COLORS (ClickSparks) = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
-
-=== PALETA 2: Café / Mocha (Tons Terrosos) ===
+=== PALETA 1: Café / Mocha (Tons Terrosos) ===
 --color-dark: #231B16;
 --color-darker: #1A1310;
 --color-primary: #D1C7BD;
@@ -20,7 +9,18 @@ COLORS (ClickSparks) = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
 --color-border: rgba(140, 106, 74, 0.25);
 COLORS (ClickSparks) = ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
 
-=== PALETA 3: Greige / Monocromática com Bege ===
+=== PALETA 2: Claude Editorial (Terracota & Marrom Quente) ===
+--color-dark: #24221F;
+--color-darker: #1E1D1A;
+--color-primary: #A6A298;
+--color-secondary: #EAE8E3;
+--color-accent: #D97757;
+--color-accent-hover: #C66545;
+--color-light: #FAF9F7;
+--color-border: rgba(234, 232, 227, 0.08);
+COLORS (ClickSparks) = ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'];
+
+=== PALETA 3: Greige Minimal (Monocromática com Bege) ===
 --color-dark: #1B1B1B;
 --color-darker: #141414;
 --color-primary: #8A8A8A;
@@ -30,3 +30,36 @@ COLORS (ClickSparks) = ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
 --color-light: #FFFFFF;
 --color-border: rgba(214, 210, 196, 0.15);
 COLORS (ClickSparks) = ['#D6D2C4', '#E5E2D8', '#8A8A8A', '#4A4A4A', '#1B1B1B'];
+
+=== PALETA 4: Verde Musgo (Floresta Orgânica) ===
+--color-dark: #161C12;
+--color-darker: #0D110B;
+--color-primary: #A3AD94;
+--color-secondary: #F0F2EB;
+--color-accent: #7C8A5B;
+--color-accent-hover: #8F9E6C;
+--color-light: #FFFFFF;
+--color-border: rgba(124, 138, 91, 0.2);
+COLORS (ClickSparks) = ['#7C8A5B', '#8F9E6C', '#3B4A2A', '#A3AD94', '#161C12'];
+
+=== PALETA 5: Midnight Slate (Azul Ardósia Noturno) ===
+--color-dark: #0F141C;
+--color-darker: #090D13;
+--color-primary: #8FA9C4;
+--color-secondary: #E8F1F5;
+--color-accent: #4F86C6;
+--color-accent-hover: #6BA0DC;
+--color-light: #FFFFFF;
+--color-border: rgba(79, 134, 198, 0.2);
+COLORS (ClickSparks) = ['#4F86C6', '#6BA0DC', '#1C293D', '#8FA9C4', '#0F141C'];
+
+=== PALETA 6: Obsidian Emerald (Preto Absoluto & Esmeralda) ===
+--color-dark: #101413;
+--color-darker: #0A0E0D;
+--color-primary: #8FAEA4;
+--color-secondary: #E6F4F0;
+--color-accent: #38B285;
+--color-accent-hover: #4CCBA0;
+--color-light: #FFFFFF;
+--color-border: rgba(56, 178, 133, 0.2);
+COLORS (ClickSparks) = ['#38B285', '#4CCBA0', '#1C2B26', '#8FAEA4', '#101413'];

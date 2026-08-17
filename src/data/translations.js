@@ -288,6 +288,15 @@ export const translations = {
             btnSending: 'Enviando...',
             btnSend: 'Enviar Mensagem',
             rights: 'Pedro Henrique. Todos os direitos reservados.'
+        },
+        palette: {
+            title: 'Paleta de Cores',
+            mocha: 'Café / Mocha',
+            claude: 'Claude Editorial',
+            greige: 'Greige Minimal',
+            forest: 'Verde Musgo',
+            slate: 'Midnight Slate',
+            emerald: 'Obsidian Emerald'
         }
     },
     en: {
@@ -579,6 +588,15 @@ export const translations = {
             btnSending: 'Sending...',
             btnSend: 'Send Message',
             rights: 'Pedro Henrique. All rights reserved.'
+        },
+        palette: {
+            title: 'Color Palette',
+            mocha: 'Coffee / Mocha',
+            claude: 'Claude Editorial',
+            greige: 'Greige Minimal',
+            forest: 'Moss Green',
+            slate: 'Midnight Slate',
+            emerald: 'Obsidian Emerald'
         }
     },
     es: {
@@ -870,6 +888,15 @@ export const translations = {
             btnSending: 'Enviando...',
             btnSend: 'Enviar Mensaje',
             rights: 'Pedro Henrique. Todos los derechos reservados.'
+        },
+        palette: {
+            title: 'Paleta de Colores',
+            mocha: 'Café / Mocha',
+            claude: 'Claude Editorial',
+            greige: 'Greige Minimal',
+            forest: 'Verde Musgo',
+            slate: 'Midnight Slate',
+            emerald: 'Obsidian Emerald'
         }
     }
 };

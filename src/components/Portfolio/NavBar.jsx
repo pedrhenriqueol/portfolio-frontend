@@ -1,19 +1,23 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function NavBar() {
     const { lang, setLang, t } = useLanguage();
-    const [active, setActive]         = useState('home');
-    const [visible, setVisible]       = useState(true);
-    const [scrolled, setScrolled]     = useState(false);
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const lastY        = useRef(0);
-    const hideTimer    = useRef(null);
-    const dropdownRef  = useRef(null);
-    const progressRef  = useRef(null);
-    const activeRef    = useRef('home');
+    const { palette, paletteData, palettes, setPalette } = useTheme();
+    const [active, setActive]                 = useState('home');
+    const [visible, setVisible]               = useState(true);
+    const [scrolled, setScrolled]             = useState(false);
+    const [mobileOpen, setMobileOpen]         = useState(false);
+    const [dropdownOpen, setDropdownOpen]     = useState(false);
+    const [paletteDropdown, setPaletteDropdown] = useState(false);
+    const lastY           = useRef(0);
+    const hideTimer       = useRef(null);
+    const dropdownRef     = useRef(null);
+    const paletteRef      = useRef(null);
+    const progressRef     = useRef(null);
+    const activeRef       = useRef('home');
 
     const navLinks = useMemo(() => [
         { id: 'home',          label: t('nav.home') },
@@ -29,6 +33,8 @@ export default function NavBar() {
         const handler = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target))
                 setDropdownOpen(false);
+            if (paletteRef.current && !paletteRef.current.contains(e.target))
+                setPaletteDropdown(false);
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
@@ -63,6 +69,7 @@ export default function NavBar() {
                         clearTimeout(hideTimer.current);
                         hideTimer.current = setTimeout(() => setVisible(false), 80);
                         setDropdownOpen(false);
+                        setPaletteDropdown(false);
                     } else {
                         clearTimeout(hideTimer.current);
                         setVisible(true);
@@ -168,7 +175,74 @@ export default function NavBar() {
                     </nav>
 
                     {/* Right side */}
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
+
+                        {/* Palette Selector Dropdown */}
+                        <div className="relative hidden sm:block" ref={paletteRef}>
+                            <button
+                                onClick={() => setPaletteDropdown(!paletteDropdown)}
+                                className="flex items-center gap-2 border border-white/10 hover:border-accent/40 text-primary hover:text-accent text-[10px] tracking-widest uppercase px-3 py-2 transition-all duration-200"
+                                style={{ borderRadius: '2px' }}
+                                aria-label="Selecionar paleta de cores"
+                                title={t('palette.title')}
+                            >
+                                <div className="flex items-center gap-1">
+                                    {paletteData?.preview?.map((c, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="w-2 h-2 rounded-full border border-black/30 shadow-xs"
+                                            style={{ backgroundColor: c }}
+                                        />
+                                    ))}
+                                </div>
+                                <i className={`fas fa-palette text-[10px] ml-0.5 text-accent`} />
+                                <i className={`fas fa-chevron-down text-[8px] transition-transform duration-200 ${paletteDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {paletteDropdown && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute right-0 mt-1.5 w-48 bg-[#0f0f0f] border border-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50"
+                                        style={{ borderRadius: '4px' }}
+                                    >
+                                        <div className="text-[9px] uppercase tracking-widest text-primary/60 px-2.5 py-1.5 font-semibold border-b border-white/5 mb-1 flex items-center justify-between">
+                                            <span>{t('palette.title')}</span>
+                                            <i className="fas fa-swatchbook text-accent/70" />
+                                        </div>
+                                        {Object.entries(palettes).map(([id, p]) => {
+                                            const isCurrent = palette === id;
+                                            const name = t(p.nameKey) !== p.nameKey ? t(p.nameKey) : p.defaultName;
+                                            return (
+                                                <button
+                                                    key={id}
+                                                    onClick={() => { setPalette(id); setPaletteDropdown(false); }}
+                                                    className={`w-full text-left px-2.5 py-2 text-[10px] tracking-wider uppercase font-medium transition-all duration-150 flex items-center justify-between rounded-xs ${
+                                                        isCurrent
+                                                            ? 'text-accent bg-accent/10 border border-accent/25'
+                                                            : 'text-primary hover:text-secondary hover:bg-white/5 border border-transparent'
+                                                    }`}
+                                                >
+                                                    <span className="truncate max-w-[105px]">{name}</span>
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        {p.preview.map((c, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="w-2.5 h-2.5 rounded-full border border-black/40 shadow-xs"
+                                                                style={{ backgroundColor: c }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
 
                         {/* Language Dropdown */}
                         <div className="relative hidden sm:block" ref={dropdownRef}>
@@ -189,7 +263,7 @@ export default function NavBar() {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-1.5 w-28 bg-[#0f0f0f] border border-white/8 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden"
+                                        className="absolute right-0 mt-1.5 w-28 bg-[#0f0f0f] border border-white/8 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50"
                                         style={{ borderRadius: '2px' }}
                                     >
                                         {['pt', 'en', 'es'].map((l) => (
@@ -213,7 +287,7 @@ export default function NavBar() {
                         {/* CTA — editorial flat */}
                         <button
                             onClick={() => scrollTo('contato')}
-                            className="hidden sm:inline-flex items-center uppercase text-[10px] tracking-[0.22em] font-semibold px-5 py-2.5 text-darker bg-accent hover:bg-accent-hover transition-colors duration-300"
+                            className="hidden sm:inline-flex items-center uppercase text-[10px] tracking-[0.22em] font-semibold px-5 py-2.5 text-darker bg-accent hover:bg-accent-hover transition-colors duration-300 shadow-sm"
                             style={{ borderRadius: '2px' }}
                         >
                             {t('nav.contato')}
@@ -255,7 +329,8 @@ export default function NavBar() {
                     >
                         <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col">
 
-                            <div className="flex gap-2 mb-6">
+                            {/* Mobile Language Selector */}
+                            <div className="flex gap-2 mb-4">
                                 {['pt', 'en', 'es'].map((l) => (
                                     <button
                                         key={l}
@@ -270,6 +345,42 @@ export default function NavBar() {
                                         {flags[l]}
                                     </button>
                                 ))}
+                            </div>
+
+                            {/* Mobile Palette Selector */}
+                            <div className="mb-6 p-3 bg-white/[0.02] border border-white/5 rounded-xs">
+                                <div className="text-[9px] uppercase tracking-widest text-primary/60 font-semibold mb-2.5 flex items-center justify-between">
+                                    <span>{t('palette.title')}</span>
+                                    <i className="fas fa-palette text-accent" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {Object.entries(palettes).map(([id, p]) => {
+                                        const isCurrent = palette === id;
+                                        const name = t(p.nameKey) !== p.nameKey ? t(p.nameKey) : p.defaultName;
+                                        return (
+                                            <button
+                                                key={id}
+                                                onClick={() => { setPalette(id); setMobileOpen(false); }}
+                                                className={`p-2 text-[9px] tracking-wider uppercase font-medium transition-all duration-150 flex items-center justify-between rounded-xs border ${
+                                                    isCurrent
+                                                        ? 'text-accent bg-accent/10 border-accent/30'
+                                                        : 'text-primary bg-black/30 border-white/5 hover:border-white/20'
+                                                }`}
+                                            >
+                                                <span className="truncate mr-1">{name}</span>
+                                                <div className="flex items-center gap-0.5 shrink-0">
+                                                    {p.preview.map((c, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            className="w-2 h-2 rounded-full"
+                                                            style={{ backgroundColor: c }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
                             {[...navLinks, { id: 'contato', label: t('nav.contato') }].map(({ id, label }, i) => (

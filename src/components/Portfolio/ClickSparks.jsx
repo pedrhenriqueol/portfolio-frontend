@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-
-const COLORS = ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
+import { useTheme } from '../../context/ThemeContext';
 
 export default function ClickSparks() {
+    const { paletteData } = useTheme();
     const [sparks, setSparks] = useState([]);
 
     useEffect(() => {
@@ -11,12 +11,14 @@ export default function ClickSparks() {
             const x = e.clientX / zoom;
             const y = e.clientY / zoom;
 
+            const colors = paletteData?.sparks || ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
+
             const newSparks = Array.from({ length: 10 }, (_, i) => ({
                 id: `${Date.now()}-${i}`,
                 x,
                 y,
                 angle: (360 / 10) * i + (Math.random() * 20 - 10),
-                color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                color: colors[Math.floor(Math.random() * colors.length)],
                 size: 2 + Math.random() * 4,
                 distance: 30 + Math.random() * 60,
                 duration: 0.35 + Math.random() * 0.3,
