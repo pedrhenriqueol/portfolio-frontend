@@ -14,7 +14,7 @@ export const translations = {
             role: 'Fullstack',
             description: 'Especialista na modernização de sistemas legados e desenvolvimento de soluções escaláveis utilizando',
             verProjetos: 'Ver Projetos',
-            downloadCV: 'Download CV',
+            downloadCV: 'Baixar CV',
             terminal: {
                 role: 'Fullstack Dev',
                 available: 'available: true, ✓'
@@ -23,6 +23,7 @@ export const translations = {
         about: {
             tag: 'BIOGRAFIA',
             title: 'Sobre Mim',
+            subtitle: 'Engenharia de software focada em modernização de sistemas, alta disponibilidade e impacto real.',
             resumoTitle: 'Resumo Profissional',
             resumo1: 'Desenvolvedor Fullstack em estágio com',
             resumo1_highlight1: '10+ meses',
@@ -115,7 +116,7 @@ export const translations = {
                     id: 1,
                     company: 'Qualisoft Sistemas',
                     role: 'Desenvolvedor Fullstack (Estágio)',
-                    period: 'Ago 2025 - Presente',
+                    period: 'Ago 2025 - Abr 2026',
                     techBadges: ['Delphi 11', 'UniGui', 'Laravel', 'React', 'TypeScript', 'Tailwind CSS', 'SQL Server', 'MySQL'],
                     groups: [
                         {
@@ -324,6 +325,7 @@ export const translations = {
             role: 'Fullstack',
             description: 'Specialist in legacy system modernization and scalable solutions development using',
             verProjetos: 'View Projects',
+            downloadCV: 'Download CV',
             terminal: {
                 role: 'Fullstack Dev',
                 available: 'available: true, ✓'
@@ -332,6 +334,7 @@ export const translations = {
         about: {
             tag: 'BIOGRAPHY',
             title: 'About Me',
+            subtitle: 'Software engineering focused on system modernization, high availability, and real-world impact.',
             resumoTitle: 'Professional Summary',
             resumo1: 'Fullstack Developer intern with',
             resumo1_highlight1: '10+ months',
@@ -424,7 +427,7 @@ export const translations = {
                     id: 1,
                     company: 'Qualisoft Sistemas',
                     role: 'Fullstack Developer (Intern)',
-                    period: 'Aug 2025 - Present',
+                    period: 'Aug 2025 - Apr 2026',
                     techBadges: ['Delphi 11', 'UniGui', 'Laravel', 'React', 'TypeScript', 'Tailwind CSS', 'SQL Server', 'MySQL'],
                     groups: [
                         {
@@ -633,6 +636,7 @@ export const translations = {
             role: 'Fullstack',
             description: 'Especialista en modernización de sistemas heredados y desarrollo de soluciones escalables usando',
             verProjetos: 'Ver Proyectos',
+            downloadCV: 'Descargar CV',
             terminal: {
                 role: 'Fullstack Dev',
                 available: 'available: true, ✓'
@@ -641,6 +645,7 @@ export const translations = {
         about: {
             tag: 'BIOGRAFÍA',
             title: 'Sobre Mí',
+            subtitle: 'Ingeniería de software enfocada en modernización de sistemas, alta disponibilidad e impacto real.',
             resumoTitle: 'Resumen Profesional',
             resumo1: 'Desarrollador Fullstack en pasantía con',
             resumo1_highlight1: '10+ meses',
@@ -733,7 +738,7 @@ export const translations = {
                     id: 1,
                     company: 'Qualisoft Sistemas',
                     role: 'Desarrollador Fullstack (Pasantía)',
-                    period: 'Ago 2025 - Presente',
+                    period: 'Ago 2025 - Abr 2026',
                     techBadges: ['Delphi 11', 'UniGui', 'Laravel', 'React', 'TypeScript', 'Tailwind CSS', 'SQL Server', 'MySQL'],
                     groups: [
                         {

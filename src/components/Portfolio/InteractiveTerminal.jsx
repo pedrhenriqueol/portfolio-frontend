@@ -37,7 +37,7 @@ const COMMANDS = [
             { text: '  - Testes funcionais em sistemas de logística portuária (ZPEs)', color: 'text-primary' },
             { text: '  - Postman · SQL Server · Scrum/Kanban', color: 'text-primary' },
             { text: '', color: '' },
-            { text: 'Qualisoft Sistemas  →  Dev Fullstack  (Ago 2025 - Presente)', color: 'text-secondary' },
+            { text: 'Qualisoft Sistemas  →  Dev Fullstack  (Ago 2025 - Abr 2026)', color: 'text-secondary' },
             { text: '  - ERP monolítico Delphi 6 → Delphi 11 + UniGui', color: 'text-primary' },
             { text: '  - Plataforma Multi-tenant Laravel + React + TypeScript', color: 'text-primary' },
             { text: '  - 100+ usuários diários em produção', color: 'text-primary' },
