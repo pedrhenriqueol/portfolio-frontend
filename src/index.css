@@ -14,13 +14,22 @@ html {
   --color-accent-hover: #A37E5A;
   --color-light: #FFFFFF;
   --color-border: rgba(140, 106, 74, 0.25);
-  --font-sans: 'Poppins', sans-serif;
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+:root {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
 }
 
-/* ── Tipografia Editorial: headings usam serif ── */
-h1, h2, h3, h4, h5, h6 {
+body {
+  font-family: var(--font-sans);
+}
+
+/* ── Tipografia Editorial: headings e classes serif ── */
+h1, h2, h3, h4, h5, h6, .font-serif {
   font-family: var(--font-serif);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
 }
 
 /* Grid pattern — aplica background-image sem sobrescrever background-color do Tailwind */
