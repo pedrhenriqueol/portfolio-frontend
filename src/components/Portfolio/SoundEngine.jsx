@@ -1,13 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 
-/* ── Sound Engine: sons sutis de UI ──
- * Usa Web Audio API — sem dependências externas.
- * O som começa mudo e precisa do usuário interagir primeiro (política do navegador).
- */
-
+/* ── Sound Engine: Web Audio API com limpeza de nós ── */
 const SOUNDS = {
-    click: (ctx, accent) => {
+    click: (ctx) => {
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.connect(g);
@@ -17,6 +13,10 @@ const SOUNDS = {
         g.gain.setValueAtTime(0.04, ctx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
         o.type = 'sine';
+        o.onended = () => {
+            o.disconnect();
+            g.disconnect();
+        };
         o.start(ctx.currentTime);
         o.stop(ctx.currentTime + 0.1);
     },
@@ -30,6 +30,10 @@ const SOUNDS = {
         g.gain.setValueAtTime(0.015, ctx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
         o.type = 'sine';
+        o.onended = () => {
+            o.disconnect();
+            g.disconnect();
+        };
         o.start(ctx.currentTime);
         o.stop(ctx.currentTime + 0.06);
     },
@@ -44,22 +48,13 @@ const SOUNDS = {
             g.gain.setValueAtTime(0.04, ctx.currentTime + delay);
             g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.08);
             o.type = 'triangle';
+            o.onended = () => {
+                o.disconnect();
+                g.disconnect();
+            };
             o.start(ctx.currentTime + delay);
             o.stop(ctx.currentTime + delay + 0.1);
         });
-    },
-    open: (ctx) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.frequency.setValueAtTime(400, ctx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12);
-        g.gain.setValueAtTime(0.04, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        o.type = 'triangle';
-        o.start(ctx.currentTime);
-        o.stop(ctx.currentTime + 0.18);
     },
 };
 
@@ -68,7 +63,9 @@ let _muted = false;
 
 function getCtx() {
     if (!_ctx) {
-        try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+        try {
+            _ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {}
     }
     return _ctx;
 }
@@ -90,27 +87,31 @@ export default function SoundEngine() {
 
     /* Toca som ao trocar de tema */
     useEffect(() => {
-        if (!initializedRef.current) { initializedRef.current = true; return; }
+        if (!initializedRef.current) {
+            initializedRef.current = true;
+            return;
+        }
         if (prevPaletteRef.current !== palette) {
             prevPaletteRef.current = palette;
             playSound('themeSwitch');
         }
     }, [palette]);
 
-    /* Intercepta clicks globais para som */
+    /* Intercepta clicks globais com delegação leve */
     useEffect(() => {
         const onClick = (e) => {
-            const el = e.target.closest('button, a, [role="button"]');
+            const target = e.target;
+            if (!target) return;
+            const el = target.closest('button, a[href], [role="button"]');
             if (el) playSound('click');
         };
         window.addEventListener('click', onClick, { passive: true });
         return () => window.removeEventListener('click', onClick);
     }, []);
 
-    return null; // sem UI
+    return null;
 }
 
-/** Hook utilitário para tocar som de hover */
 export function useSoundHover() {
     return useCallback(() => playSound('hover'), []);
 }

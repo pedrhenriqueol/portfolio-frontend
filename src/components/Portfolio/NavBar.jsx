@@ -40,9 +40,35 @@ export default function NavBar() {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    // Detecção de seção ativa via IntersectionObserver (processado off-main-thread pelo browser)
+    useEffect(() => {
+        const observers = [];
+        const ids = ['home', 'sobre', 'experiencia', 'conhecimentos', 'projetos'];
+
+        ids.forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            const obs = new IntersectionObserver(
+                ([entry]) => {
+                    if (entry.isIntersecting) {
+                        activeRef.current = id;
+                        setActive(id);
+                    }
+                },
+                { threshold: 0.25, rootMargin: '-10% 0px -50% 0px' }
+            );
+
+            obs.observe(el);
+            observers.push(obs);
+        });
+
+        return () => observers.forEach((obs) => obs.disconnect());
+    }, [navLinks]);
+
     useEffect(() => {
         const SHOW_THRESHOLD = 80;
-        const JITTER_DELTA   = 6;
+        const JITTER_DELTA   = 8;
         let scrollRaf = null;
 
         const onScroll = () => {
@@ -76,20 +102,6 @@ export default function NavBar() {
                     }
                 }
                 lastY.current = y;
-
-                // Detecção de seção ativa
-                const trigger = window.innerHeight * 0.4;
-                let current = navLinks[0].id;
-                for (let i = 0; i < navLinks.length; i++) {
-                    const el = document.getElementById(navLinks[i].id);
-                    if (el && el.getBoundingClientRect().top <= trigger) {
-                        current = navLinks[i].id;
-                    }
-                }
-                if (activeRef.current !== current) {
-                    activeRef.current = current;
-                    setActive(current);
-                }
             });
         };
 
@@ -101,7 +113,7 @@ export default function NavBar() {
             if (scrollRaf) cancelAnimationFrame(scrollRaf);
             clearTimeout(hideTimer.current);
         };
-    }, [navLinks]);
+    }, []);
 
     const scrollTo = (id) => {
         setMobileOpen(false);

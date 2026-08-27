@@ -1,65 +1,104 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function ClickSparks() {
     const { paletteData } = useTheme();
-    const [sparks, setSparks] = useState([]);
+    const canvasRef = useRef(null);
+    const sparksRef = useRef([]);
+    const rafRef    = useRef(null);
 
     useEffect(() => {
-        const handleClick = (e) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d', { alpha: true });
+
+        const resize = () => {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const now = performance.now();
+            const active = [];
+
+            for (let i = 0; i < sparksRef.current.length; i++) {
+                const s = sparksRef.current[i];
+                const elapsed = (now - s.start) / 1000;
+                const progress = elapsed / s.duration;
+
+                if (progress < 1) {
+                    const currentDist = s.distance * (1 - Math.pow(1 - progress, 3));
+                    const px = s.x + Math.cos(s.angle) * currentDist;
+                    const py = s.y + Math.sin(s.angle) * currentDist;
+                    const alpha = 1 - progress;
+
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = s.color;
+                    ctx.beginPath();
+                    ctx.arc(px, py, s.size * (1 - progress * 0.5), 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    active.push(s);
+                }
+            }
+
+            sparksRef.current = active;
+
+            if (active.length > 0) {
+                rafRef.current = requestAnimationFrame(draw);
+            } else {
+                rafRef.current = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        };
+
+        const onClick = (e) => {
             const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
             const x = e.clientX / zoom;
             const y = e.clientY / zoom;
-
             const colors = paletteData?.sparks || ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
+            const now = performance.now();
 
-            const newSparks = Array.from({ length: 10 }, (_, i) => ({
-                id: `${Date.now()}-${i}`,
-                x,
-                y,
-                angle: (360 / 10) * i + (Math.random() * 20 - 10),
-                color: colors[Math.floor(Math.random() * colors.length)],
-                size: 2 + Math.random() * 4,
-                distance: 30 + Math.random() * 60,
-                duration: 0.35 + Math.random() * 0.3,
-            }));
+            const count = 8;
+            for (let i = 0; i < count; i++) {
+                const angle = ((Math.PI * 2) / count) * i + (Math.random() * 0.4 - 0.2);
+                sparksRef.current.push({
+                    x,
+                    y,
+                    angle,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: 2 + Math.random() * 3,
+                    distance: 35 + Math.random() * 50,
+                    duration: 0.35 + Math.random() * 0.25,
+                    start: now,
+                });
+            }
 
-            setSparks(prev => [...prev, ...newSparks]);
-
-            setTimeout(() => {
-                setSparks(prev => prev.filter(s => !newSparks.some(n => n.id === s.id)));
-            }, 800);
+            if (!rafRef.current) {
+                rafRef.current = requestAnimationFrame(draw);
+            }
         };
 
-        window.addEventListener('click', handleClick);
-        return () => window.removeEventListener('click', handleClick);
+        window.addEventListener('click', onClick, { passive: true });
+
+        return () => {
+            window.removeEventListener('click', onClick);
+            window.removeEventListener('resize', resize);
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        };
     }, [paletteData]);
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-[9996] overflow-hidden">
-            {sparks.map(({ id, x, y, angle, color, size, distance, duration }) => {
-                const rad = (angle * Math.PI) / 180;
-                const tx = Math.cos(rad) * distance;
-                const ty = Math.sin(rad) * distance;
-
-                return (
-                    <div
-                        key={id}
-                        className="absolute rounded-full"
-                        style={{
-                            left: x - size / 2,
-                            top: y - size / 2,
-                            width: size,
-                            height: size,
-                            backgroundColor: color,
-                            boxShadow: `0 0 ${size * 3}px ${color}`,
-                            animation: `spark-fly ${duration}s ease-out forwards`,
-                            '--tx': `${tx}px`,
-                            '--ty': `${ty}px`,
-                        }}
-                    />
-                );
-            })}
-        </div>
+        <canvas
+            ref={canvasRef}
+            className="fixed inset-0 pointer-events-none z-[9996]"
+            style={{ contain: 'strict' }}
+        />
     );
 }

@@ -116,3 +116,16 @@ body.modal-open nav {
     opacity: 0;
   }
 }
+
+/* ── Floating particles pura via GPU ── */
+@keyframes float-particle {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate3d(0, -16px, 0);
+    opacity: 0.55;
+  }
+}
+

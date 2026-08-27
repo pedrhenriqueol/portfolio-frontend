@@ -105,26 +105,19 @@ export default function HeroSection() {
                 <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/8 blur-[100px] rounded-full transform-gpu" />
             </div>
 
-            {/* Floating particles — apenas 3, mais leves */}
+            {/* Floating particles — 100% aceleradas por GPU via CSS */}
             {[0, 1, 2].map((i) => (
-                <motion.div
+                <div
                     key={i}
-                    className="absolute rounded-full bg-secondary/15 pointer-events-none"
+                    className="absolute rounded-full bg-secondary/15 pointer-events-none transform-gpu"
                     style={{
-                        width:  8 + i * 5,
+                        width: 8 + i * 5,
                         height: 8 + i * 5,
-                        left:   `${12 + i * 18}%`,
-                        top:    `${22 + (i % 3) * 22}%`,
-                    }}
-                    animate={{
-                        y:       [0, -16, 0],
-                        opacity: [0.25, 0.55, 0.25],
-                    }}
-                    transition={{
-                        duration: 3.5 + i * 0.6,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                        delay: i * 0.8,
+                        left: `${12 + i * 18}%`,
+                        top: `${22 + (i % 3) * 22}%`,
+                        animation: `float-particle ${3.5 + i * 0.6}s ease-in-out infinite`,
+                        animationDelay: `${i * 0.8}s`,
+                        willChange: 'transform, opacity',
                     }}
                 />
             ))}

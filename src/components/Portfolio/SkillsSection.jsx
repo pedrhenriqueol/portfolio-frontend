@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -12,51 +11,24 @@ const CATEGORY_CONFIG = {
 };
 
 function SkillCard({ skill, config, index }) {
-    const cardRef = useRef(null);
-
-    const onMouseMove = (e) => {
-        const el = cardRef.current;
-        if (!el) return;
-        const x = e.nativeEvent.offsetX;
-        const y = e.nativeEvent.offsetY;
-        el.style.background    = `radial-gradient(140px circle at ${x}px ${y}px, ${config.color}18, transparent 70%), var(--color-darker)`;
-        el.style.borderColor   = config.color;
-        el.style.boxShadow     = `0 0 28px ${config.color}30`;
-    };
-
-    const onMouseLeave = (e) => {
-        const el = e.currentTarget;
-        el.style.background  = 'var(--color-darker)';
-        el.style.borderColor = 'var(--color-border)';
-        el.style.boxShadow   = 'none';
-    };
-
     return (
         <motion.div
-            ref={cardRef}
-            initial={{ opacity: 0, scale: 0.85 }}
+            initial={{ opacity: 0, scale: 0.88 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.05, type: 'spring', stiffness: 260, damping: 20 }}
-            whileHover={{ y: -6, scale: 1.05 }}
-            className="relative flex flex-col items-center justify-center p-5 rounded-2xl cursor-default group"
-            style={{
-                background: 'var(--color-darker)',
-                border: '1.5px solid var(--color-border)',
-                transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
-            }}
-            onMouseMove={onMouseMove}
-            onMouseLeave={onMouseLeave}
+            transition={{ duration: 0.35, delay: index * 0.04 }}
+            whileHover={{ y: -4, scale: 1.03 }}
+            className="relative flex flex-col items-center justify-center p-5 rounded-2xl cursor-default group border border-primary/25 bg-darker hover:border-accent/50 transition-all duration-200 shadow-md hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] transform-gpu"
         >
             {/* Category accent dot */}
             <span
                 className="absolute top-3 right-3 w-2 h-2 rounded-full"
-                style={{ backgroundColor: config.color, boxShadow: `0 0 6px ${config.color}` }}
+                style={{ backgroundColor: config.color }}
             />
 
             {/* Icon */}
             <i
-                className={`${skill.icon_class} text-4xl mb-3 transition-colors duration-300 text-gray-400 group-hover:text-white`}
+                className={`${skill.icon_class} text-3xl sm:text-4xl mb-3 transition-colors duration-200 text-gray-400 group-hover:text-white`}
             />
 
             {/* Name */}
@@ -67,7 +39,6 @@ function SkillCard({ skill, config, index }) {
     );
 }
 
-
 export default function SkillsSection({ skills }) {
     const { t } = useLanguage();
     return (
@@ -76,10 +47,10 @@ export default function SkillsSection({ skills }) {
 
                 {/* Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: 50 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-100px' }}
-                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.7 }}
                     className="text-center mb-14"
                 >
                     <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
@@ -100,9 +71,12 @@ export default function SkillsSection({ skills }) {
                 </div>
             </div>
 
-            {/* Marquee */}
-            <div className="mt-20 overflow-hidden w-full bg-dark/50 py-4 border-y border-primary/20">
-                <div className="flex animate-[marquee_30s_linear_infinite] whitespace-nowrap">
+            {/* Marquee acelerado por GPU */}
+            <div className="mt-20 overflow-hidden w-full bg-dark/50 py-4 border-y border-primary/20 contain-paint">
+                <div
+                    className="flex whitespace-nowrap will-change-transform"
+                    style={{ animation: 'marquee 30s linear infinite' }}
+                >
                     {[1, 2, 3].map((set) => (
                         <div key={set} className="flex gap-10 shrink-0 px-5">
                             {skills.map((skill) => {
@@ -121,8 +95,8 @@ export default function SkillsSection({ skills }) {
 
             <style>{`
                 @keyframes marquee {
-                    0%   { transform: translateX(0); }
-                    100% { transform: translateX(-33.33%); }
+                    0%   { transform: translate3d(0, 0, 0); }
+                    100% { transform: translate3d(-33.333%, 0, 0); }
                 }
             `}</style>
         </section>
