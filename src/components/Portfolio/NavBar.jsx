@@ -2,24 +2,20 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
-import { useFont } from '../../context/FontContext';
 
 export default function NavBar() {
     const { lang, setLang, t } = useLanguage();
     const { palette, paletteData, palettes, setPalette } = useTheme();
-    const { font, fontData, fonts, setFont } = useFont();
     const [active, setActive]                 = useState('home');
     const [visible, setVisible]               = useState(true);
     const [scrolled, setScrolled]             = useState(false);
     const [mobileOpen, setMobileOpen]         = useState(false);
     const [dropdownOpen, setDropdownOpen]     = useState(false);
     const [paletteDropdown, setPaletteDropdown] = useState(false);
-    const [fontDropdown, setFontDropdown]     = useState(false);
     const lastY           = useRef(0);
     const hideTimer       = useRef(null);
     const dropdownRef     = useRef(null);
     const paletteRef      = useRef(null);
-    const fontRef         = useRef(null);
     const progressRef     = useRef(null);
     const activeRef       = useRef('home');
 
@@ -39,8 +35,6 @@ export default function NavBar() {
                 setDropdownOpen(false);
             if (paletteRef.current && !paletteRef.current.contains(e.target))
                 setPaletteDropdown(false);
-            if (fontRef.current && !fontRef.current.contains(e.target))
-                setFontDropdown(false);
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
@@ -258,67 +252,6 @@ export default function NavBar() {
                             </AnimatePresence>
                         </div>
 
-                        {/* Font Selector Dropdown (Temporário para testes de tipografia) */}
-                        <div className="relative hidden sm:block" ref={fontRef}>
-                            <button
-                                onClick={() => { setFontDropdown(!fontDropdown); setPaletteDropdown(false); setDropdownOpen(false); }}
-                                className="flex items-center gap-2 border border-white/10 hover:border-accent/40 text-primary hover:text-accent text-[10px] tracking-widest uppercase px-3 py-2 transition-all duration-200"
-                                style={{ borderRadius: '2px' }}
-                                aria-label="Selecionar tipografia"
-                                title="Tipografia (Temporário para desenvolvimento)"
-                            >
-                                <span className="text-accent font-bold font-serif text-xs">Aa</span>
-                                <span className="truncate max-w-[90px] text-[10px] font-sans">{fontData?.name}</span>
-                                <i className={`fas fa-chevron-down text-[8px] transition-transform duration-200 ${fontDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            <AnimatePresence>
-                                {fontDropdown && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-1.5 w-64 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-2 z-50 backdrop-blur-xl"
-                                        style={{ borderRadius: '4px' }}
-                                    >
-                                        <div className="text-[9px] uppercase tracking-widest text-primary/60 px-2 py-1.5 font-semibold border-b border-white/5 mb-1.5 flex items-center justify-between">
-                                            <span>Tipografia (Teste)</span>
-                                            <span className="text-[8px] text-accent/80 font-mono">5 Estilos</span>
-                                        </div>
-                                        <div className="space-y-1">
-                                            {Object.entries(fonts).map(([id, f]) => {
-                                                const isCurrent = font === id;
-                                                return (
-                                                    <button
-                                                        key={id}
-                                                        onClick={() => { setFont(id); setFontDropdown(false); }}
-                                                        className={`w-full text-left p-2 rounded-xs border transition-all duration-150 flex flex-col gap-0.5 ${
-                                                            isCurrent
-                                                                ? 'bg-accent/10 border-accent/30 text-white'
-                                                                : 'bg-black/20 border-transparent text-primary hover:text-white hover:bg-white/5 hover:border-white/10'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <span className="text-[11px] font-bold text-secondary" style={{ fontFamily: f.serif }}>
-                                                                {f.name}
-                                                            </span>
-                                                            <span className="text-[8px] uppercase tracking-widest text-accent/90 border border-accent/20 px-1 rounded">
-                                                                {f.tag}
-                                                            </span>
-                                                        </div>
-                                                        <div className="text-[9px] text-gray-400 font-sans truncate">
-                                                            {f.previewSerif} + {f.previewSans}
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
                         {/* Language Dropdown */}
                         <div className="relative hidden sm:block" ref={dropdownRef}>
                             <button
@@ -451,38 +384,6 @@ export default function NavBar() {
                                                         />
                                                     ))}
                                                 </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Mobile Font Selector (Temporário para testes) */}
-                            <div className="mb-6 p-3 bg-white/[0.02] border border-white/5 rounded-xs">
-                                <div className="text-[9px] uppercase tracking-widest text-primary/60 font-semibold mb-2.5 flex items-center justify-between">
-                                    <span>Tipografia (Teste)</span>
-                                    <i className="fas fa-font text-accent" />
-                                </div>
-                                <div className="space-y-1.5">
-                                    {Object.entries(fonts).map(([id, f]) => {
-                                        const isCurrent = font === id;
-                                        return (
-                                            <button
-                                                key={id}
-                                                onClick={() => { setFont(id); setMobileOpen(false); }}
-                                                className={`w-full p-2 text-left rounded-xs border transition-all duration-150 flex items-center justify-between ${
-                                                    isCurrent
-                                                        ? 'text-accent bg-accent/10 border-accent/30'
-                                                        : 'text-primary bg-black/30 border-white/5 hover:border-white/20'
-                                                }`}
-                                            >
-                                                <div>
-                                                    <span className="text-[10px] font-bold block text-secondary" style={{ fontFamily: f.serif }}>{f.name}</span>
-                                                    <span className="text-[8px] text-gray-400 font-sans">{f.previewSerif} + {f.previewSans}</span>
-                                                </div>
-                                                <span className="text-[8px] uppercase tracking-widest text-accent/80 border border-accent/20 px-1 rounded">
-                                                    {f.tag}
-                                                </span>
                                             </button>
                                         );
                                     })}

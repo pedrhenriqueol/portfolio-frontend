@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
-import { useFont } from '../../context/FontContext';
 
 const scrollTo = (id) => {
     const el = document.getElementById(id);
@@ -16,7 +15,6 @@ export default function CommandPalette() {
     const inputRef = useRef(null);
     const { t, lang, setLang } = useLanguage();
     const { palettes, setPalette, palette: currentPalette } = useTheme();
-    const { fonts, setFont, font: currentFont } = useFont();
 
     /* ── Commands ── */
     const commands = useMemo(() => [
@@ -71,16 +69,6 @@ export default function CommandPalette() {
             ],
         },
         {
-            group: 'Tipografia (Teste)',
-            items: Object.entries(fonts).map(([id, f]) => ({
-                id: `font-${id}`,
-                icon: 'fas fa-font',
-                label: `Fonte: ${f.name} (${f.tag})`,
-                hint: `${f.previewSerif} + ${f.previewSans}`,
-                action: () => setFont(id),
-            })),
-        },
-        {
             group: 'Idioma',
             items: [
                 { id: 'lang-pt', icon: '🇧🇷', label: 'Português (BR)', action: () => setLang('pt') },
@@ -98,7 +86,7 @@ export default function CommandPalette() {
                 action: () => setPalette(id),
             })),
         },
-    ], [t, setLang, palettes, setPalette, fonts, setFont]);
+    ], [t, setLang, palettes, setPalette]);
 
     /* ── Flat filtered list ── */
     const flat = useMemo(() => {
