@@ -66,6 +66,16 @@ export default function CommandPalette() {
                     label: 'Abrir LinkedIn',
                     action: () => window.open('https://www.linkedin.com/in/pedro-henrique-b0a015391/', '_blank'),
                 },
+                {
+                    id: 'play-games',
+                    icon: 'fas fa-gamepad',
+                    label: 'Jogar Minijogos no Terminal (Snake, QA Quiz, Matrix)',
+                    hint: 'Terminal Arcade 🎮',
+                    action: () => {
+                        scrollTo('sobre');
+                        toast('Role até o terminal e digite: pedro --games 🕹️');
+                    },
+                },
             ],
         },
         {
