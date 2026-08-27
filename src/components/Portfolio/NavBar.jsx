@@ -455,6 +455,8 @@ export default function NavBar() {
                                         );
                                     })}
                                 </div>
+                            </div>
+
                             {/* Mobile Font Selector (Temporário para testes) */}
                             <div className="mb-6 p-3 bg-white/[0.02] border border-white/5 rounded-xs">
                                 <div className="text-[9px] uppercase tracking-widest text-primary/60 font-semibold mb-2.5 flex items-center justify-between">
