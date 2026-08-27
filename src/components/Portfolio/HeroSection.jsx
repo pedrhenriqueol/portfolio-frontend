@@ -173,8 +173,10 @@ export default function HeroSection() {
                             <MagneticButton strength={0.3}>
                                 <a
                                     href="/curriculo_pedro_henrique.pdf"
-                                    download
-                                    className="inline-flex items-center gap-2 border border-primary/30 text-primary hover:text-accent hover:border-accent/50 font-semibold px-6 py-3 rounded-lg transition-all duration-300 text-sm"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download="curriculo_pedro_henrique.pdf"
+                                    className="inline-flex items-center gap-2 border border-primary/30 text-primary hover:text-accent hover:border-accent/50 font-semibold px-6 py-3 rounded-lg transition-all duration-300 text-sm cursor-pointer"
                                 >
                                     <i className="fas fa-file-pdf text-accent" />
                                     {t('hero.downloadCV') || 'Download CV'}
