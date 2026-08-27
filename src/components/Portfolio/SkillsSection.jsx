@@ -19,15 +19,15 @@ function SkillCard({ skill, config, index }) {
         if (!el) return;
         const x = e.nativeEvent.offsetX;
         const y = e.nativeEvent.offsetY;
-        el.style.background    = `radial-gradient(140px circle at ${x}px ${y}px, ${config.color}18, transparent 70%), rgba(11,12,16,0.7)`;
+        el.style.background    = `radial-gradient(140px circle at ${x}px ${y}px, ${config.color}18, transparent 70%), var(--color-darker)`;
         el.style.borderColor   = config.color;
         el.style.boxShadow     = `0 0 28px ${config.color}30`;
     };
 
     const onMouseLeave = (e) => {
         const el = e.currentTarget;
-        el.style.background  = 'rgba(11,12,16,0.7)';
-        el.style.borderColor = 'rgba(197,198,199,0.10)';
+        el.style.background  = 'var(--color-darker)';
+        el.style.borderColor = 'var(--color-border)';
         el.style.boxShadow   = 'none';
     };
 
@@ -41,8 +41,8 @@ function SkillCard({ skill, config, index }) {
             whileHover={{ y: -6, scale: 1.05 }}
             className="relative flex flex-col items-center justify-center p-5 rounded-2xl cursor-default group"
             style={{
-                background: 'rgba(11,12,16,0.7)',
-                border: '1.5px solid rgba(197,198,199,0.10)',
+                background: 'var(--color-darker)',
+                border: '1.5px solid var(--color-border)',
                 transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
             }}
             onMouseMove={onMouseMove}
@@ -83,7 +83,7 @@ export default function SkillsSection({ skills }) {
                     className="text-center mb-14"
                 >
                     <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                        HABILIDADES & TECNOLOGIAS
+                        {t('skills.tag')}
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">{t('skills.title')}</h2>
                     <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">

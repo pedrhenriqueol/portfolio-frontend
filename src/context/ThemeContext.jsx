@@ -15,6 +15,7 @@ export const PALETTES = {
             '--color-light': '#FFFFFF',
             '--color-border': 'rgba(140, 106, 74, 0.25)',
         },
+        accentRgb: '140, 106, 74',
         preview: ['#231B16', '#8C6A4A', '#F5EBE1'],
         sparks: ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'],
     },
@@ -32,6 +33,7 @@ export const PALETTES = {
             '--color-light': '#FAF9F7',
             '--color-border': 'rgba(234, 232, 227, 0.08)',
         },
+        accentRgb: '217, 119, 87',
         preview: ['#24221F', '#D97757', '#EAE8E3'],
         sparks: ['#D97757', '#C66545', '#EAE8E3', '#A6A298', '#24221F'],
     },
@@ -49,6 +51,7 @@ export const PALETTES = {
             '--color-light': '#FFFFFF',
             '--color-border': 'rgba(214, 210, 196, 0.15)',
         },
+        accentRgb: '214, 210, 196',
         preview: ['#1B1B1B', '#8A8A8A', '#D6D2C4'],
         sparks: ['#D6D2C4', '#E5E2D8', '#8A8A8A', '#4A4A4A', '#1B1B1B'],
     },
@@ -66,6 +69,7 @@ export const PALETTES = {
             '--color-light': '#FFFFFF',
             '--color-border': 'rgba(124, 138, 91, 0.2)',
         },
+        accentRgb: '124, 138, 91',
         preview: ['#161C12', '#7C8A5B', '#F0F2EB'],
         sparks: ['#7C8A5B', '#8F9E6C', '#3B4A2A', '#A3AD94', '#161C12'],
     },
@@ -83,6 +87,7 @@ export const PALETTES = {
             '--color-light': '#FFFFFF',
             '--color-border': 'rgba(79, 134, 198, 0.2)',
         },
+        accentRgb: '79, 134, 198',
         preview: ['#0F141C', '#4F86C6', '#E8F1F5'],
         sparks: ['#4F86C6', '#6BA0DC', '#1C293D', '#8FA9C4', '#0F141C'],
     },
@@ -100,6 +105,7 @@ export const PALETTES = {
             '--color-light': '#FFFFFF',
             '--color-border': 'rgba(56, 178, 133, 0.2)',
         },
+        accentRgb: '56, 178, 133',
         preview: ['#101413', '#38B285', '#E6F4F0'],
         sparks: ['#38B285', '#4CCBA0', '#1C2B26', '#8FAEA4', '#101413'],
     },
@@ -120,6 +126,11 @@ export function ThemeProvider({ children }) {
         Object.entries(palette.colors).forEach(([prop, val]) => {
             root.style.setProperty(prop, val);
         });
+
+        // Inject RGB triplet for box-shadow / rgba() usage
+        if (palette.accentRgb) {
+            root.style.setProperty('--color-accent-rgb', palette.accentRgb);
+        }
 
         localStorage.setItem('portfolio_theme', paletteId);
     }, []);

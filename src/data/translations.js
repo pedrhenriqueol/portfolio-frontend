@@ -14,12 +14,14 @@ export const translations = {
             role: 'Fullstack',
             description: 'Especialista na modernização de sistemas legados e desenvolvimento de soluções escaláveis utilizando',
             verProjetos: 'Ver Projetos',
+            downloadCV: 'Download CV',
             terminal: {
                 role: 'Fullstack Dev',
                 available: 'available: true, ✓'
             }
         },
         about: {
+            tag: 'BIOGRAFIA',
             title: 'Sobre Mim',
             resumoTitle: 'Resumo Profissional',
             resumo1: 'Desenvolvedor Fullstack em estágio com',
@@ -77,6 +79,7 @@ export const translations = {
             ]
         },
         experience: {
+            tag: 'TRAJETÓRIA',
             title: 'Experiência Profissional',
             subtitle: 'Minha trajetória no desenvolvimento de software e atuação no mercado.',
             empty: 'Nenhuma experiência cadastrada ainda.',
@@ -138,6 +141,7 @@ export const translations = {
             ]
         },
         skills: {
+            tag: 'HABILIDADES & TECNOLOGIAS',
             title: 'Habilidades & Tecnologias',
             subtitle: 'Ferramentas e linguagens que domino e utilizo no dia a dia.',
             levels: {
@@ -165,6 +169,7 @@ export const translations = {
             ]
         },
         projects: {
+            tag: 'PORTFÓLIO',
             title: 'Projetos em Destaque',
             subtitle: 'Soluções desenvolvidas para resolver problemas reais e aplicar novos conhecimentos.',
             btnRepo: 'Ver Repositório',
@@ -177,6 +182,11 @@ export const translations = {
             modalSobre: 'Sobre o Projeto',
             modalDestaques: 'Destaques Técnicos',
             modalPrincipais: 'Principais Funcionalidades',
+            filterAll: 'Todos',
+            filterFullstack: 'Web / Fullstack',
+            filterDesktop: 'Desktop / Delphi',
+            filterBackend: 'Backend & APIs',
+            filterOthers: 'Outros',
             list: [
                 {
                     id: 1,
@@ -320,6 +330,7 @@ export const translations = {
             }
         },
         about: {
+            tag: 'BIOGRAPHY',
             title: 'About Me',
             resumoTitle: 'Professional Summary',
             resumo1: 'Fullstack Developer intern with',
@@ -377,6 +388,7 @@ export const translations = {
             ]
         },
         experience: {
+            tag: 'TRAJECTORY',
             title: 'Professional Experience',
             subtitle: 'My journey in software development and the market.',
             empty: 'No experience registered yet.',
@@ -438,6 +450,7 @@ export const translations = {
             ]
         },
         skills: {
+            tag: 'SKILLS & TECHNOLOGIES',
             title: 'Skills & Technologies',
             subtitle: 'Tools and languages I master and use daily.',
             levels: {
@@ -465,6 +478,7 @@ export const translations = {
             ]
         },
         projects: {
+            tag: 'PORTFOLIO',
             title: 'Featured Projects',
             subtitle: 'Solutions developed to solve real problems and apply new knowledge.',
             btnRepo: 'Repository',
@@ -477,6 +491,11 @@ export const translations = {
             modalSobre: 'About the Project',
             modalDestaques: 'Technical Highlights',
             modalPrincipais: 'Main Features',
+            filterAll: 'All',
+            filterFullstack: 'Web / Fullstack',
+            filterDesktop: 'Desktop / Delphi',
+            filterBackend: 'Backend & APIs',
+            filterOthers: 'Others',
             list: [
                 {
                     id: 1,
@@ -620,6 +639,7 @@ export const translations = {
             }
         },
         about: {
+            tag: 'BIOGRAFÍA',
             title: 'Sobre Mí',
             resumoTitle: 'Resumen Profesional',
             resumo1: 'Desarrollador Fullstack en pasantía con',
@@ -677,6 +697,7 @@ export const translations = {
             ]
         },
         experience: {
+            tag: 'TRAYECTORIA',
             title: 'Experiencia Profesional',
             subtitle: 'Mi trayectoria en el desarrollo de software y el mercado.',
             empty: 'Aún no hay experiencia registrada.',
@@ -738,6 +759,7 @@ export const translations = {
             ]
         },
         skills: {
+            tag: 'HABILIDADES Y TECNOLOGÍAS',
             title: 'Habilidades y Tecnologías',
             subtitle: 'Herramientas y lenguajes que domino y uso diariamente.',
             levels: {
@@ -765,6 +787,7 @@ export const translations = {
             ]
         },
         projects: {
+            tag: 'PORTAFOLIO',
             title: 'Proyectos Destacados',
             subtitle: 'Soluciones desarrolladas para resolver problemas reales y aplicar nuevos conocimientos.',
             btnRepo: 'Ver Repositorio',
@@ -777,6 +800,11 @@ export const translations = {
             modalSobre: 'Sobre el Proyecto',
             modalDestaques: 'Aspectos Técnicos',
             modalPrincipais: 'Características Principales',
+            filterAll: 'Todos',
+            filterFullstack: 'Web / Fullstack',
+            filterDesktop: 'Desktop / Delphi',
+            filterBackend: 'Backend & APIs',
+            filterOthers: 'Otros',
             list: [
                 {
                     id: 1,

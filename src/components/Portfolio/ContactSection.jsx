@@ -11,28 +11,24 @@ const CONTACT_LINKS = [
         label: 'LinkedIn',
         value: '/in/pedro-henrique-b0a015391',
         href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
-        color: '#8C6A4A',
     },
     {
         icon: 'fab fa-github',
         label: 'GitHub',
         value: 'github.com/pedrhenriqueol',
         href: 'https://github.com/pedrhenriqueol',
-        color: '#8C6A4A',
     },
     {
         icon: 'fas fa-envelope',
         label: 'E-mail',
         value: 'pedrohc.forza@gmail.com',
         href: 'https://mail.google.com/mail/?view=cm&fs=1&to=pedrohc.forza@gmail.com',
-        color: '#8C6A4A',
     },
     {
         icon: 'fab fa-instagram',
         label: 'Instagram',
         value: '@pedrherg',
         href: 'https://www.instagram.com/pedrherg',
-        color: '#8C6A4A',
     },
 ];
 
@@ -111,7 +107,7 @@ export default function ContactSection() {
                             {t('contact.directMessage')}
                         </p>
 
-                        {CONTACT_LINKS.map(({ icon, label, value, href, color }, idx) => (
+                        {CONTACT_LINKS.map(({ icon, label, value, href }, idx) => (
                             <motion.a
                                 key={label}
                                 href={href}
@@ -122,24 +118,12 @@ export default function ContactSection() {
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                                 whileHover={{ x: 6 }}
-                                className="group flex items-center gap-4 p-4 rounded-xl border border-primary/20 bg-darker/60 hover:border-opacity-60 transition-all duration-300"
-                                style={{ '--card-color': color }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = `${color}50`;
-                                    e.currentTarget.style.boxShadow   = `0 0 20px ${color}18`;
-                                    e.currentTarget.style.background   = `${color}08`;
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = 'rgba(197,198,199,0.2)';
-                                    e.currentTarget.style.boxShadow   = 'none';
-                                    e.currentTarget.style.background   = 'rgba(31,40,51,0.6)';
-                                }}
+                                className="group flex items-center gap-4 p-4 rounded-xl border border-primary/20 bg-darker/60 hover:border-accent/50 hover:bg-accent/5 hover:shadow-[0_0_20px_rgba(var(--color-accent-rgb),0.1)] transition-all duration-300"
                             >
                                 <span
-                                    className="flex items-center justify-center w-11 h-11 rounded-lg shrink-0 transition-all duration-300"
-                                    style={{ background: `${color}15`, border: `1px solid ${color}30` }}
+                                    className="flex items-center justify-center w-11 h-11 rounded-lg shrink-0 bg-accent/10 border border-accent/20 transition-all duration-300"
                                 >
-                                    <i className={`${icon} text-xl`} style={{ color }} />
+                                    <i className={`${icon} text-xl text-accent`} />
                                 </span>
                                 <div className="min-w-0">
                                     <p className="text-xs text-gray-500 mb-0.5">{label}</p>
@@ -147,7 +131,7 @@ export default function ContactSection() {
                                         {value}
                                     </p>
                                 </div>
-                                <i className="fas fa-arrow-right ml-auto text-gray-600 group-hover:text-gray-300 text-sm transition-all duration-300 group-hover:translate-x-1" />
+                                <i className="fas fa-arrow-right ml-auto text-gray-600 group-hover:text-accent text-sm transition-all duration-300 group-hover:translate-x-1" />
                             </motion.a>
                         ))}
                     </motion.div>

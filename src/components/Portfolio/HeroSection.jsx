@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { MagneticButton } from './InteractiveEffects';
+import InteractiveTerminal from './InteractiveTerminal';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function HeroSection() {
@@ -175,6 +176,18 @@ export default function HeroSection() {
                                 </a>
                             </MagneticButton>
 
+                            {/* Download CV */}
+                            <MagneticButton strength={0.3}>
+                                <a
+                                    href="/curriculo_pedro_henrique.pdf"
+                                    download
+                                    className="inline-flex items-center gap-2 border border-primary/30 text-primary hover:text-accent hover:border-accent/50 font-semibold px-6 py-3 rounded-lg transition-all duration-300 text-sm"
+                                >
+                                    <i className="fas fa-file-pdf text-accent" />
+                                    {t('hero.downloadCV') || 'Download CV'}
+                                </a>
+                            </MagneticButton>
+
                             <div className="flex justify-center gap-3">
                                 {[
                                     {
@@ -220,7 +233,7 @@ export default function HeroSection() {
                         </div>
                     </motion.div>
 
-                    {/* Terminal — parallax via DOM direto */}
+                    {/* Terminal interativo */}
                     <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -228,100 +241,9 @@ export default function HeroSection() {
                         className="flex-1 flex justify-center md:justify-end"
                         ref={termRef}
                     >
-                        <div className="relative w-full max-w-[360px]">
-                            {/* Ambient glow */}
+                        <div className="relative w-full max-w-[400px]">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
-
-                            {/* Terminal window */}
-                            <div data-no-morph="true" className="relative bg-[#0d0f14]/95 border border-white/8 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
-                                {/* Title bar */}
-                                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60">
-                                    <span className="w-3 h-3 rounded-full bg-white/20" />
-                                    <span className="w-3 h-3 rounded-full bg-white/20" />
-                                    <span className="w-3 h-3 rounded-full bg-white/20" />
-                                    <span className="ml-2 text-xs text-gray-500 font-mono">portfolio.js</span>
-                                    <span className="ml-auto flex items-center gap-1.5 text-xs font-mono">
-                                        <motion.span
-                                            animate={{ opacity: [1, 0.3, 1] }}
-                                            transition={{ duration: 2.5, repeat: Infinity }}
-                                            className="w-1.5 h-1.5 rounded-full bg-accent inline-block"
-                                        />
-                                        <span className="text-accent/50">live</span>
-                                    </span>
-                                </div>
-
-                                {/* Code lines */}
-                                <div className="p-6 font-mono text-[13px] leading-relaxed space-y-0.5">
-                                    {[
-                                        { text: 'const developer = {',           color: 'text-primary', delay: 0.4 },
-                                        { text: '  name: "Pedro Henrique",',     color: 'text-accent', delay: 0.65 },
-                                        { text: `  role: "${t('hero.terminal.role')}",`, color: 'text-secondary', delay: 0.9 },
-                                        { text: '  stack: [',                    color: 'text-primary', delay: 1.1 },
-                                        { text: '    "Delphi + UniGui",',        color: 'text-secondary', delay: 1.3 },
-                                        { text: '    "PHP / Laravel",',          color: 'text-secondary', delay: 1.5 },
-                                        { text: '    "React + TypeScript",',     color: 'text-secondary', delay: 1.7 },
-                                        { text: '  ],',                          color: 'text-primary', delay: 1.9 },
-                                        { text: `  ${t('hero.terminal.available')}`,     color: 'text-accent', delay: 2.1 },
-                                        { text: '}',                             color: 'text-primary', delay: 2.3 },
-                                    ].map(({ text, color, delay }) => (
-                                        <motion.div
-                                            key={text}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1,  x: 0   }}
-                                            transition={{ delay, duration: 0.3 }}
-                                            className={`${color} block`}
-                                        >
-                                            {text}
-                                        </motion.div>
-                                    ))}
-
-                                    {/* Blinking cursor line */}
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 2.5 }}
-                                        className="flex items-center gap-1.5 pt-2 text-accent/50 text-xs"
-                                    >
-                                        <span className="text-accent/40">{'>'}</span>
-                                        <motion.span
-                                            animate={{ opacity: [1, 0, 1] }}
-                                            transition={{ duration: 1, repeat: Infinity }}
-                                            className="inline-block w-[7px] h-[15px] bg-accent/70 rounded-[2px] align-middle"
-                                        />
-                                    </motion.div>
-                                </div>
-
-                                {/* Bottom status bar */}
-                                <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 bg-dark/40 text-[10px] font-mono text-gray-600">
-                                    <span className="text-accent/50">⬡ JavaScript</span>
-                                    <span className="ml-auto">UTF-8</span>
-                                    <span>Ln 10</span>
-                                </div>
-                            </div>
-
-                            {/* Floating tech badges */}
-                            {[
-                                { label: 'Delphi',      pos: '-top-4 left-4',     delay: 2.4, color: '#A6A298' },
-                                { label: 'Laravel',     pos: '-top-4 right-6',    delay: 2.6, color: '#A6A298' },
-                                { label: 'React',       pos: '-bottom-4 left-6',  delay: 2.8, color: '#A6A298' },
-                                { label: 'TypeScript',  pos: '-bottom-4 right-4', delay: 3.0, color: '#A6A298' },
-                            ].map(({ label, pos, delay, color }) => (
-                                <motion.span
-                                    key={label}
-                                    initial={{ opacity: 0, scale: 0.5, y: 8 }}
-                                    animate={{ opacity: 1, scale: 1,   y: 0 }}
-                                    transition={{ delay, type: 'spring', stiffness: 260, damping: 24 }}
-                                    className={`absolute ${pos} text-[11px] font-bold px-3 py-1 rounded-full border backdrop-blur-md`}
-                                    style={{
-                                        color,
-                                        borderColor: `${color}40`,
-                                        background:  `${color}12`,
-                                        boxShadow:   'none',
-                                    }}
-                                >
-                                    {label}
-                                </motion.span>
-                            ))}
+                            <InteractiveTerminal />
                         </div>
                     </motion.div>
 

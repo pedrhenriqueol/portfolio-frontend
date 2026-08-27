@@ -127,14 +127,10 @@ export default function NavBar() {
                 />
             </div>
 
-            {/* Main header */}
             <div
-                className="border-b transition-all duration-500"
-                style={{
-                    background:     scrolled ? 'rgba(10,10,11,0.97)' : 'rgba(10,10,11,0.72)',
-                    backdropFilter: 'blur(16px)',
-                    borderColor:    'rgba(255,255,255,0.06)',
-                }}
+                className={`border-b transition-all duration-500 backdrop-blur-md ${
+                    scrolled ? 'bg-darker/95 border-primary/20' : 'bg-darker/70 border-white/5'
+                }`}
             >
                 <div className={`max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-[4.5rem]'}`}>
 
@@ -206,7 +202,7 @@ export default function NavBar() {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -6, scale: 0.97 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-1.5 w-48 bg-[#0f0f0f] border border-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50"
+                                        className="absolute right-0 mt-1.5 w-48 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50 backdrop-blur-xl"
                                         style={{ borderRadius: '4px' }}
                                     >
                                         <div className="text-[9px] uppercase tracking-widest text-primary/60 px-2.5 py-1.5 font-semibold border-b border-white/5 mb-1 flex items-center justify-between">
@@ -263,7 +259,7 @@ export default function NavBar() {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-1.5 w-28 bg-[#0f0f0f] border border-white/8 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50"
+                                        className="absolute right-0 mt-1.5 w-28 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50 backdrop-blur-xl"
                                         style={{ borderRadius: '2px' }}
                                     >
                                         {['pt', 'en', 'es'].map((l) => (
@@ -324,8 +320,7 @@ export default function NavBar() {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.28, ease: 'easeInOut' }}
-                        className="md:hidden overflow-hidden border-b border-white/5"
-                        style={{ background: 'rgba(10,10,11,0.99)', backdropFilter: 'blur(20px)' }}
+                        className="md:hidden overflow-hidden border-b border-primary/20 bg-darker/98 backdrop-blur-2xl"
                     >
                         <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col">
 

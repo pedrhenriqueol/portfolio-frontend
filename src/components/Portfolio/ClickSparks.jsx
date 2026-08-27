@@ -33,7 +33,7 @@ export default function ClickSparks() {
 
         window.addEventListener('click', handleClick);
         return () => window.removeEventListener('click', handleClick);
-    }, []);
+    }, [paletteData]);
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[9996] overflow-hidden">
