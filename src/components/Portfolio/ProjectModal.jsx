@@ -49,7 +49,7 @@ export default function ProjectModal({ project, onClose }) {
                     {/* Close button */}
                     <button
                         onClick={onClose}
-                        aria-label="Fechar"
+                        aria-label={t('projects.modalFechar') || 'Fechar'}
                         className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all duration-300 group cursor-pointer"
                     >
                         <i className="fas fa-times group-hover:rotate-90 transition-transform duration-300" />
@@ -215,7 +215,7 @@ export default function ProjectModal({ project, onClose }) {
                                     <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/20 space-y-2">
                                         <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider">
                                             <i className="fas fa-exclamation-triangle" />
-                                            <span>Desafio Técnico</span>
+                                            <span>{t('projects.modalChallengeTitle') || 'Desafio Técnico'}</span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-primary/90 leading-relaxed">
                                             {challenge}
@@ -226,7 +226,7 @@ export default function ProjectModal({ project, onClose }) {
                                     <div className="p-4 rounded-xl bg-green-950/20 border border-green-500/20 space-y-2">
                                         <div className="flex items-center gap-2 text-green-400 font-bold text-xs uppercase tracking-wider">
                                             <i className="fas fa-check-circle" />
-                                            <span>Solução de Engenharia</span>
+                                            <span>{t('projects.modalSolutionTitle') || 'Solução de Engenharia'}</span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-primary/90 leading-relaxed">
                                             {solution}

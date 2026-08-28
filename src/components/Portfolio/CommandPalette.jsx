@@ -19,7 +19,7 @@ export default function CommandPalette() {
     /* ── Commands ── */
     const commands = useMemo(() => [
         {
-            group: 'Navegação',
+            group: lang === 'en' ? 'Navigation' : lang === 'es' ? 'Navegación' : 'Navegação',
             items: [
                 { id: 'nav-home',    icon: 'fas fa-home',        label: 'Home',            action: () => scrollTo('home') },
                 { id: 'nav-sobre',   icon: 'fas fa-user',        label: t('nav.sobre'),    action: () => scrollTo('sobre') },
@@ -30,13 +30,13 @@ export default function CommandPalette() {
             ],
         },
         {
-            group: 'Ações',
+            group: lang === 'en' ? 'Actions' : lang === 'es' ? 'Acciones' : 'Ações',
             items: [
                 {
                     id: 'dl-cv-pt',
                     icon: 'fas fa-file-pdf',
-                    label: 'Baixar Currículo (PDF)',
-                    hint: 'PT-BR',
+                    label: lang === 'en' ? 'Download Resume (PDF)' : lang === 'es' ? 'Descargar Currículum (PDF)' : 'Baixar Currículo (PDF)',
+                    hint: 'PDF',
                     action: () => {
                         const link = document.createElement('a');
                         link.href = '/curriculo_pedro_henrique.pdf';
@@ -47,39 +47,42 @@ export default function CommandPalette() {
                 {
                     id: 'copy-email',
                     icon: 'fas fa-copy',
-                    label: 'Copiar E-mail',
+                    label: lang === 'en' ? 'Copy Email' : lang === 'es' ? 'Copiar Correo' : 'Copiar E-mail',
                     hint: 'pedrohc.forza@gmail.com',
                     action: () => {
                         navigator.clipboard.writeText('pedrohc.forza@gmail.com');
-                        toast('E-mail copiado! 📋');
+                        toast(lang === 'en' ? 'Email copied! 📋' : lang === 'es' ? '¡Correo copiado! 📋' : 'E-mail copiado! 📋');
                     },
                 },
                 {
                     id: 'open-github',
                     icon: 'fab fa-github',
-                    label: 'Abrir GitHub',
+                    label: lang === 'en' ? 'Open GitHub' : lang === 'es' ? 'Abrir GitHub' : 'Abrir GitHub',
                     action: () => window.open('https://github.com/pedrhenriqueol', '_blank'),
                 },
                 {
                     id: 'open-linkedin',
                     icon: 'fab fa-linkedin',
-                    label: 'Abrir LinkedIn',
+                    label: lang === 'en' ? 'Open LinkedIn' : lang === 'es' ? 'Abrir LinkedIn' : 'Abrir LinkedIn',
                     action: () => window.open('https://www.linkedin.com/in/pedro-henrique-b0a015391/', '_blank'),
                 },
                 {
                     id: 'play-games',
                     icon: 'fas fa-gamepad',
-                    label: 'Jogar Minijogos no Terminal (Snake, QA Quiz, Matrix)',
+                    label: lang === 'en' ? 'Play Terminal Games (Snake, Quiz, Matrix)' : lang === 'es' ? 'Jugar Minijuegos en la Terminal (Snake, Quiz, Matrix)' : 'Jogar Minijogos no Terminal (Snake, QA Quiz, Matrix)',
                     hint: 'Terminal Arcade 🎮',
                     action: () => {
-                        scrollTo('sobre');
-                        toast('Role até o terminal e digite: pedro --games 🕹️');
+                        scrollTo('home');
+                        setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('focus-terminal', { detail: { command: 'pedro --games' } }));
+                        }, 120);
+                        toast(lang === 'en' ? 'Terminal Arcade launched! 🕹️' : lang === 'es' ? '¡Terminal Arcade activado! 🕹️' : 'Terminal Arcade ativado! 🕹️');
                     },
                 },
             ],
         },
         {
-            group: 'Idioma',
+            group: lang === 'en' ? 'Language' : lang === 'es' ? 'Idioma' : 'Idioma',
             items: [
                 { id: 'lang-pt', icon: '🇧🇷', label: 'Português (BR)', action: () => setLang('pt') },
                 { id: 'lang-en', icon: '🇺🇸', label: 'English',         action: () => setLang('en') },
@@ -87,7 +90,7 @@ export default function CommandPalette() {
             ],
         },
         {
-            group: 'Tema',
+            group: lang === 'en' ? 'Theme' : lang === 'es' ? 'Tema' : 'Tema',
             items: Object.entries(palettes).map(([id, p]) => ({
                 id: `theme-${id}`,
                 icon: 'fas fa-palette',
@@ -96,7 +99,7 @@ export default function CommandPalette() {
                 action: () => setPalette(id),
             })),
         },
-    ], [t, setLang, palettes, setPalette]);
+    ], [t, lang, setLang, palettes, setPalette]);
 
     /* ── Flat filtered list ── */
     const flat = useMemo(() => {
@@ -215,7 +218,7 @@ export default function CommandPalette() {
                                     value={query}
                                     onChange={e => { setQuery(e.target.value); setSelected(0); }}
                                     onKeyDown={onInputKey}
-                                    placeholder="Buscar comandos, navegar, trocar tema..."
+                                    placeholder={lang === 'en' ? 'Search commands, navigate, change theme...' : lang === 'es' ? 'Buscar comandos, navegar, cambiar tema...' : 'Buscar comandos, navegar, trocar tema...'}
                                     className="flex-1 bg-transparent text-white text-sm placeholder-primary/40 outline-none font-sans"
                                     aria-label="Pesquisar comandos"
                                 />
@@ -227,7 +230,9 @@ export default function CommandPalette() {
                             {/* Results */}
                             <div className="max-h-[360px] overflow-y-auto py-2">
                                 {flat.length === 0 ? (
-                                    <p className="text-center text-primary/40 text-sm py-8">Nenhum resultado encontrado.</p>
+                                    <p className="text-center text-primary/40 text-sm py-8">
+                                        {lang === 'en' ? 'No results found.' : lang === 'es' ? 'No se encontraron resultados.' : 'Nenhum resultado encontrado.'}
+                                    </p>
                                 ) : (
                                     (() => {
                                         let globalIdx = 0;

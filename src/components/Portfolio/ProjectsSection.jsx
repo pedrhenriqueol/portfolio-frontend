@@ -30,7 +30,7 @@ export default function ProjectsSection({ projects }) {
     const [selected,   setSelected]   = useState(null);
     const [activeFilter, setFilter]   = useState('all');
     const [viewMode,   setViewMode]   = useState('grid'); // 'grid' | 'list'
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
 
     const FILTERS = [
         { id: 'all',       label: t('projects.filterAll')       || 'Todos' },
@@ -113,14 +113,18 @@ export default function ProjectsSection({ projects }) {
                             }`}
                         >
                             <i className="fas fa-list text-[10px]" />
-                            <span className="hidden sm:inline">Lista</span>
+                            <span className="hidden sm:inline">{lang === 'en' ? 'List' : 'Lista'}</span>
                         </button>
                     </div>
                 </motion.div>
 
                 {/* Count indicator */}
                 <p className="text-primary/75 text-xs font-mono mb-6">
-                    {filtered.length} projeto{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+                    {lang === 'en'
+                        ? `${filtered.length} project${filtered.length !== 1 ? 's' : ''} found`
+                        : lang === 'es'
+                        ? `${filtered.length} proyecto${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}`
+                        : `${filtered.length} projeto${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}`}
                 </p>
 
                 {/* Grid View */}
@@ -274,7 +278,7 @@ export default function ProjectsSection({ projects }) {
                                                     {hasDetails && (
                                                         <button onClick={(e) => { e.stopPropagation(); setSelected(project); }}
                                                             className="px-3 py-1.5 border border-primary/30 text-primary text-[11px] rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer">
-                                                            <i className="fas fa-info-circle mr-1 text-accent" />Ver
+                                                            <i className="fas fa-info-circle mr-1 text-accent" />{lang === 'en' ? 'View' : 'Ver'}
                                                         </button>
                                                     )}
                                                     {project.repo_link && (
