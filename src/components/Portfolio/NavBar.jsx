@@ -146,17 +146,41 @@ export default function NavBar() {
             >
                 <div className={`max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-[4.5rem]'}`}>
 
-                    {/* Logo */}
+                    {/* Logo - Mini Terminal Badge Black & White */}
                     <button
                         onClick={() => scrollTo('home')}
-                        className="group flex items-center gap-0.5 shrink-0"
+                        className="group flex items-center gap-2.5 shrink-0 select-none cursor-pointer"
                         aria-label="Ir para o inicio"
                     >
-                        <span className="font-bold text-base tracking-[0.08em] text-secondary group-hover:text-white transition-colors duration-300 uppercase">
-                            Pedro Henrique
-                        </span>
-                        <span className="text-accent font-bold text-lg leading-none">.</span>
-                        <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-accent opacity-75 animate-pulse shrink-0" />
+                        {/* Mini Terminal Window Square */}
+                        <div className="relative flex flex-col justify-between w-[34px] h-[32px] rounded-[5px] bg-[#0c0d10] border border-white/25 group-hover:border-white/70 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] p-[3px] overflow-hidden">
+                            {/* Window Header with 3 dots */}
+                            <div className="flex items-center gap-[3px] px-0.5 pt-0.5">
+                                <span className="w-[3px] h-[3px] rounded-full bg-white/40 group-hover:bg-red-400/90 transition-colors" />
+                                <span className="w-[3px] h-[3px] rounded-full bg-white/40 group-hover:bg-yellow-400/90 transition-colors" />
+                                <span className="w-[3px] h-[3px] rounded-full bg-white/40 group-hover:bg-green-400/90 transition-colors" />
+                            </div>
+
+                            {/* Prompt: >_ PH with blinking cursor */}
+                            <div className="flex items-center gap-[1px] font-mono text-[9.5px] font-extrabold leading-none pl-0.5 pb-0.5 text-white">
+                                <span className="text-white/60 font-medium">{'>_'}</span>
+                                <span className="text-white tracking-tighter">PH</span>
+                                <span className="w-[2px] h-[7px] bg-white ml-[1px] animate-pulse group-hover:bg-green-400 transition-colors" />
+                            </div>
+                        </div>
+
+                        {/* Name Branding */}
+                        <div className="flex flex-col text-left">
+                            <div className="flex items-center gap-0.5">
+                                <span className="font-bold text-[13px] sm:text-sm tracking-[0.08em] text-secondary group-hover:text-white transition-colors duration-300 uppercase">
+                                    Pedro Henrique
+                                </span>
+                                <span className="text-white font-bold text-sm leading-none">.</span>
+                            </div>
+                            <span className="text-[8.5px] font-mono tracking-widest text-primary/70 group-hover:text-white/80 uppercase -mt-0.5 transition-colors">
+                                dev // qa
+                            </span>
+                        </div>
                     </button>
 
                     {/* Desktop nav */}
