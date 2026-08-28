@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { MagneticButton } from './InteractiveEffects';
-import InteractiveTerminal from './InteractiveTerminal';
 import { useLanguage } from '../../context/LanguageContext';
+
+const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
 export default function HeroSection() {
     const { t } = useLanguage();
@@ -228,7 +229,7 @@ export default function HeroSection() {
                         </div>
                     </motion.div>
 
-                    {/* Terminal interativo */}
+                    {/* Terminal interativo com Lazy Loading & Suspense */}
                     <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -238,7 +239,24 @@ export default function HeroSection() {
                     >
                         <div className="relative w-full max-w-[400px]">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
-                            <InteractiveTerminal />
+                            <Suspense fallback={
+                                <div className="w-full h-[420px] rounded-xl bg-darker/90 border border-white/10 p-4 flex flex-col justify-between animate-pulse">
+                                    <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                                        <div className="w-3 h-3 rounded-full bg-white/20" />
+                                        <div className="w-3 h-3 rounded-full bg-white/20" />
+                                        <div className="w-3 h-3 rounded-full bg-white/20" />
+                                        <div className="w-24 h-3 rounded bg-white/10 ml-auto" />
+                                    </div>
+                                    <div className="space-y-3 py-4 flex-grow">
+                                        <div className="w-3/4 h-3 rounded bg-white/10" />
+                                        <div className="w-1/2 h-3 rounded bg-white/10" />
+                                        <div className="w-5/6 h-3 rounded bg-white/10" />
+                                    </div>
+                                    <div className="w-full h-8 rounded bg-white/10" />
+                                </div>
+                            }>
+                                <InteractiveTerminal />
+                            </Suspense>
                         </div>
                     </motion.div>
 
