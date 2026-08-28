@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
-/* ── Relógio ao vivo de Fortaleza (UTC-3) ── */
-function LiveClock() {
+/* ── Relógio ao vivo de Fortaleza (UTC-3) otimizado ── */
+function LiveClock({ lang }) {
     const [time, setTime] = useState('');
     useEffect(() => {
+        const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
         const update = () => {
+            if (document.hidden) return;
             setTime(
-                new Date().toLocaleTimeString('pt-BR', {
+                new Date().toLocaleTimeString(locale, {
                     timeZone: 'America/Fortaleza',
                     hour: '2-digit',
                     minute: '2-digit',
@@ -18,14 +20,20 @@ function LiveClock() {
         };
         update();
         const timer = setInterval(update, 1000);
-        return () => clearInterval(timer);
-    }, []);
+        const onVisChange = () => { if (!document.hidden) update(); };
+        document.addEventListener('visibilitychange', onVisChange, { passive: true });
+
+        return () => {
+            clearInterval(timer);
+            document.removeEventListener('visibilitychange', onVisChange);
+        };
+    }, [lang]);
 
     return <span className="tabular-nums font-mono font-bold text-white text-xl sm:text-2xl">{time || '10:00:00'}</span>;
 }
 
 export default function AboutSection() {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
 
     const metrics = [
         { value: '10+', label: t('about.highlights')[0] || '10+ meses de experiência', icon: 'fas fa-briefcase' },
@@ -97,7 +105,7 @@ export default function AboutSection() {
                                 </span>
                                 <span className="inline-flex items-center gap-2 bg-secondary/5 border border-secondary/20 px-3 py-1 rounded-full text-xs font-medium text-secondary">
                                     <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                                    Disponível
+                                    {lang === 'en' ? 'Available' : lang === 'es' ? 'Disponible' : 'Disponível'}
                                 </span>
                             </div>
 
@@ -154,11 +162,11 @@ export default function AboutSection() {
                                     <i className="fas fa-map-marker-alt text-accent text-xs" />
                                     Fortaleza, CE — Brasil
                                 </div>
-                                <div className="text-xs text-gray-400">Fuso Horário Local (UTC-3)</div>
+                                <div className="text-xs text-gray-400">{lang === 'en' ? 'Local Timezone (UTC-3)' : lang === 'es' ? 'Zona Horaria Local (UTC-3)' : 'Fuso Horário Local (UTC-3)'}</div>
                             </div>
                             <div className="text-right bg-darker/80 border border-primary/20 px-4 py-2 rounded-xl">
-                                <LiveClock />
-                                <span className="text-[10px] text-accent block font-mono">Horário Oficial</span>
+                                <LiveClock lang={lang} />
+                                <span className="text-[10px] text-accent block font-mono">{lang === 'en' ? 'Official Time' : lang === 'es' ? 'Hora Oficial' : 'Horário Oficial'}</span>
                             </div>
                         </motion.div>
 
