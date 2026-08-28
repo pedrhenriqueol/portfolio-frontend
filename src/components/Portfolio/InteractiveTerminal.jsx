@@ -3,6 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { GAMES_INFO, TRIVIA_QUESTIONS } from './TerminalGames';
 
+// ── Lista completa de comandos para autocomplete ──
+const ALL_CMD_STRINGS = [
+    'pedro --help', 'pedro --skills', 'pedro --experience', 'pedro --contact',
+    'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
+    'pedro --play trivia', 'pedro --play aim-test', 'pedro --sudo matrix',
+    'pedro --version', 'clear', 'exit',
+];
+
 const COMMANDS = [
     {
         cmd: 'help',
@@ -100,19 +108,18 @@ const COMMANDS = [
     },
 ];
 
-const INIT_LINES = [
-    { text: 'Pedro Henrique — Terminal Interativo v2.0 [Arcade Edition 🕹️]', color: 'text-secondary font-bold' },
-    { text: 'Digite "pedro --help" para ver comandos ou "pedro --games" para jogar!', color: 'text-primary/70' },
-];
-
 export default function InteractiveTerminal() {
     const { t } = useLanguage();
-    const [lines, setLines] = useState(INIT_LINES);
+    const [lines, setLines] = useState([
+        { text: 'Pedro Henrique — Terminal Interativo v2.0 [Arcade Edition 🕹️]', color: 'text-secondary font-bold' },
+        { text: 'Digite "pedro --help" para ver comandos ou "pedro --games" para jogar!', color: 'text-primary/70' },
+    ]);
     const [input, setInput] = useState('');
     const [focused, setFocused] = useState(false);
     const [history, setHistory] = useState([]);
     const [histIdx, setHistIdx] = useState(-1);
-    const [activeGame, setActiveGame] = useState(null); // 'snake' | 'bug-hunter' | 'trivia' | 'aim-test' | 'matrix' | null
+    const [activeGame, setActiveGame] = useState(null);
+    const [visitorCity, setVisitorCity] = useState('');
     const bottomRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -123,13 +130,16 @@ export default function InteractiveTerminal() {
     const [snakeDir, setSnakeDir] = useState('RIGHT');
     const [snakeScore, setSnakeScore] = useState(0);
     const [snakeGameOver, setSnakeGameOver] = useState(false);
+    const [snakeHighscore, setSnakeHighscore] = useState(() => {
+        return parseInt(localStorage.getItem('terminal_snake_highscore') || '0', 10);
+    });
     const snakeDirRef = useRef('RIGHT');
     snakeDirRef.current = snakeDir;
 
     // ── Bug Hunter State (Minesweeper QA) ──
     const [bugGrid, setBugGrid] = useState([]);
     const [bugFlags, setBugFlags] = useState(0);
-    const [bugState, setBugState] = useState('PLAYING'); // 'PLAYING' | 'WON' | 'LOST'
+    const [bugState, setBugState] = useState('PLAYING');
 
     // ── Trivia Quiz State ──
     const [triviaIdx, setTriviaIdx] = useState(0);
@@ -140,9 +150,43 @@ export default function InteractiveTerminal() {
     const [aimStartTime, setAimStartTime] = useState(0);
     const [aimScores, setAimScores] = useState([]);
     const [aimHits, setAimHits] = useState(0);
+    const [aimBestAvg, setAimBestAvg] = useState(() => {
+        return parseInt(localStorage.getItem('terminal_aim_best_avg') || '0', 10);
+    });
 
     // ── Matrix Effect State ──
     const matrixCanvasRef = useRef(null);
+
+    // ── Detectar localização do visitante via IP-API ──
+    useEffect(() => {
+        fetch('http://ip-api.com/json/?fields=city,country,countryCode')
+            .then(r => r.json())
+            .then(data => {
+                if (data.city) {
+                    const cityStr = `${data.city}, ${data.countryCode || data.country}`;
+                    setVisitorCity(cityStr);
+                    const hour = new Date().getHours();
+                    const greeting = hour >= 0 && hour < 5
+                        ? '🌙 Acessando de madrugada? Isso sim é dedicação!'
+                        : hour < 12 ? '☀️ Bom dia!' : hour < 18 ? '🌤️ Boa tarde!' : '🌙 Boa noite!';
+                    setLines(prev => [
+                        ...prev,
+                        { text: `${greeting} Conectado via ${cityStr}`, color: 'text-accent/80' },
+                    ]);
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    // ── Bloquear scroll da página quando terminal focado ──
+    useEffect(() => {
+        if (focused) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [focused]);
 
     useEffect(() => {
         if (!activeGame) {
@@ -315,6 +359,34 @@ export default function InteractiveTerminal() {
             return;
         }
 
+        // ── Easter Eggs ──
+        if (trimmed.toLowerCase() === 'pedro --sudo rm -rf /' || trimmed.toLowerCase() === 'sudo rm -rf /') {
+            setLines(prev => [
+                ...prev,
+                { text: `> ${trimmed}`, color: 'text-accent/80' },
+                { text: '💥 rm: Permissão negada. Esse portfólio é indestrutível.', color: 'text-red-400 font-bold' },
+                { text: '🛡️ Proteção deploy automático ativada. Nice try!', color: 'text-secondary' },
+                { text: '', color: '' },
+            ]);
+            setInput('');
+            return;
+        }
+
+        if (trimmed.toLowerCase() === 'pedro --version' || trimmed.toLowerCase() === 'version') {
+            setLines(prev => [
+                ...prev,
+                { text: `> ${trimmed}`, color: 'text-accent/80' },
+                { text: '// Terminal Interativo v2.1 — Arcade Edition 🕹️', color: 'text-accent' },
+                { text: `engine:   React 19 + Vite 8 + Tailwind CSS v4`, color: 'text-secondary' },
+                { text: `build:    ${new Date().toLocaleDateString('pt-BR')}`, color: 'text-secondary' },
+                { text: `author:   Pedro Henrique (@pedrhenriqueol)`, color: 'text-secondary' },
+                { text: `games:    5 minijogos interativos`, color: 'text-secondary' },
+                { text: '', color: '' },
+            ]);
+            setInput('');
+            return;
+        }
+
         // Comandos de Jogos
         if (trimmed.toLowerCase() === 'pedro --games' || trimmed.toLowerCase() === 'pedro-games' || trimmed.toLowerCase() === 'games') {
             const out = COMMANDS.find(c => c.cmd === 'games').output();
@@ -359,7 +431,8 @@ export default function InteractiveTerminal() {
         }
 
         if (trimmed === 'clear') {
-            setLines(INIT_LINES);
+            setLines([{ text: 'Pedro Henrique — Terminal Interativo v2.0 [Arcade Edition 🕹️]', color: 'text-secondary font-bold' },
+                { text: 'Digite "pedro --help" para ver comandos ou "pedro --games" para jogar!', color: 'text-primary/70' }]);
             setInput('');
             return;
         }
@@ -452,10 +525,17 @@ export default function InteractiveTerminal() {
 
         if (nextHits >= 5) {
             const avg = Math.round(newScores.reduce((a, b) => a + b, 0) / newScores.length);
+            // Persistir melhor média
+            if (aimBestAvg === 0 || avg < aimBestAvg) {
+                setAimBestAvg(avg);
+                localStorage.setItem('terminal_aim_best_avg', avg.toString());
+            }
+            const bestDisplay = (aimBestAvg === 0 || avg < aimBestAvg) ? avg : aimBestAvg;
             setLines(prev => [
                 ...prev,
                 { text: `🎯 TESTE DE REFLEXOS CONCLUÍDO! (5 Alvos)`, color: 'text-accent font-bold' },
                 { text: `⚡ Tempo médio de resposta: ${avg}ms`, color: 'text-green-400 font-bold' },
+                { text: `🏆 Melhor média registrada: ${bestDisplay}ms`, color: 'text-secondary' },
                 { text: avg < 300 ? '🚀 Reflexos de Cyberpunk / QA em tempo real!' : '👍 Ótimo tempo de reação!', color: 'text-secondary' },
                 { text: 'Digite "pedro --games" para outros jogos.', color: 'text-primary/60' },
                 { text: '', color: '' }
@@ -470,6 +550,14 @@ export default function InteractiveTerminal() {
         }
     };
 
+    // ── Persistir recorde Snake quando Game Over ──
+    useEffect(() => {
+        if (snakeGameOver && snakeScore > snakeHighscore) {
+            localStorage.setItem('terminal_snake_highscore', snakeScore.toString());
+            setSnakeHighscore(snakeScore);
+        }
+    }, [snakeGameOver, snakeScore, snakeHighscore]);
+
     // ── Teclas no Terminal / Snake ──
     const onKey = (e) => {
         if (activeGame === 'snake' && !snakeGameOver) {
@@ -481,7 +569,33 @@ export default function InteractiveTerminal() {
             return;
         }
 
-        if (e.key === 'Enter') { runCommand(input); }
+        // ── Tab Autocomplete ──
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const current = input.toLowerCase().trim();
+            if (!current) return;
+            const matches = ALL_CMD_STRINGS.filter(c => c.startsWith(current) && c !== current);
+            if (matches.length === 1) {
+                setInput(matches[0]);
+            } else if (matches.length > 1) {
+                setLines(prev => [
+                    ...prev,
+                    { text: `> ${input}`, color: 'text-accent/80' },
+                    { text: `Sugestões: ${matches.join('  |  ')}`, color: 'text-primary/60' },
+                ]);
+                // Preenche com o prefixo comum mais longo
+                let common = matches[0];
+                for (const m of matches) {
+                    while (!m.startsWith(common)) {
+                        common = common.slice(0, -1);
+                    }
+                }
+                if (common.length > current.length) setInput(common);
+            }
+            return;
+        }
+
+        if (e.key === 'Enter') { e.preventDefault(); runCommand(input); }
         if (e.key === 'ArrowUp') {
             e.preventDefault();
             const idx = Math.min(histIdx + 1, history.length - 1);
@@ -527,6 +641,7 @@ export default function InteractiveTerminal() {
                         <div className="w-full flex items-center justify-between text-xs border-b border-white/10 pb-1.5 text-gray-300">
                             <span className="text-accent font-bold">🐍 SNAKE ASCII</span>
                             <span>Score: <strong className="text-white">{snakeScore}</strong></span>
+                            <span>🏆 Record: <strong className="text-yellow-400">{snakeHighscore}</strong></span>
                             <span>Item: <strong className="text-accent">{foodLabel}</strong></span>
                             <button onClick={() => setActiveGame(null)} className="text-red-400 hover:underline text-[10px]">ESC / Sair</button>
                         </div>
@@ -556,7 +671,10 @@ export default function InteractiveTerminal() {
 
                         {snakeGameOver ? (
                             <div className="text-center space-y-1">
-                                <div className="text-red-400 font-bold text-xs">💥 GAME OVER! Colisão detectada.</div>
+                                <div className="text-red-400 font-bold text-xs">💥 GAME OVER! Colisão detectada. Score: {snakeScore}</div>
+                                {snakeScore > snakeHighscore && snakeScore > 0 && (
+                                    <div className="text-yellow-400 font-bold text-xs animate-pulse">🏆 NOVO RECORDE! {snakeScore} pontos!</div>
+                                )}
                                 <div className="flex gap-2 justify-center">
                                     <button onClick={initSnake} className="px-3 py-1 bg-accent text-darker font-bold text-[10px] rounded hover:bg-accent-hover">Jogar de Novo</button>
                                     <button onClick={() => setActiveGame(null)} className="px-3 py-1 border border-white/20 text-gray-300 text-[10px] rounded hover:bg-white/10">Voltar ao Terminal</button>
@@ -649,6 +767,7 @@ export default function InteractiveTerminal() {
                         <div className="w-full flex items-center justify-between text-xs border-b border-white/10 pb-1.5 text-gray-300">
                             <span className="text-accent font-bold">🎯 AIM & REFLEX TEST</span>
                             <span>Acertos: <strong className="text-white">{aimHits}/5</strong></span>
+                            {aimBestAvg > 0 && <span>🏆 Best: <strong className="text-yellow-400">{aimBestAvg}ms</strong></span>}
                             <button onClick={() => setActiveGame(null)} className="text-red-400 hover:underline text-[10px]">Sair</button>
                         </div>
                         <div className="relative w-full h-[150px] bg-black/50 border border-white/10 rounded overflow-hidden">
@@ -722,8 +841,8 @@ export default function InteractiveTerminal() {
             <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 bg-dark/40 text-[10px] font-mono text-gray-500 select-none">
                 <span className="text-accent/60">⬡ Interactive Shell Arcade</span>
                 <span className="hidden sm:inline text-gray-600">|</span>
-                <span className="hidden sm:inline text-gray-400">Atalhos: pedro --games</span>
-                <span className="ml-auto">Fortaleza, BR</span>
+                <span className="hidden sm:inline text-gray-400">Tab: autocomplete</span>
+                <span className="ml-auto">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>
                 <span>UTC-3</span>
             </div>
         </div>
