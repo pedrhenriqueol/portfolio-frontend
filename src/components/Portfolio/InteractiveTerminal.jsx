@@ -120,7 +120,7 @@ export default function InteractiveTerminal() {
     const [histIdx, setHistIdx] = useState(-1);
     const [activeGame, setActiveGame] = useState(null);
     const [visitorCity, setVisitorCity] = useState('');
-    const bottomRef = useRef(null);
+    const contentRef = useRef(null);
     const inputRef = useRef(null);
 
     // ── Snake Game State ──
@@ -178,19 +178,10 @@ export default function InteractiveTerminal() {
             .catch(() => {});
     }, []);
 
-    // ── Bloquear scroll da página quando terminal focado ──
+    // ── Auto-scroll interno do terminal (sem afetar o scroll da página) ──
     useEffect(() => {
-        if (focused) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [focused]);
-
-    useEffect(() => {
-        if (!activeGame) {
-            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (!activeGame && contentRef.current) {
+            contentRef.current.scrollTop = contentRef.current.scrollHeight;
         }
     }, [lines, activeGame]);
 
@@ -619,7 +610,10 @@ export default function InteractiveTerminal() {
             </div>
 
             {/* Content Area */}
-            <div className="p-4 font-mono text-[12px] leading-relaxed min-h-[240px] max-h-[300px] overflow-y-auto relative">
+            <div
+                ref={contentRef}
+                className="p-4 font-mono text-[12px] leading-relaxed min-h-[240px] max-h-[300px] overflow-y-auto relative"
+            >
                 
                 {/* ── JOGO 1: SNAKE GAME ── */}
                 {activeGame === 'snake' && (
@@ -794,7 +788,6 @@ export default function InteractiveTerminal() {
                                 {line.text || '\u00A0'}
                             </div>
                         ))}
-                        <div ref={bottomRef} />
                     </div>
                 )}
             </div>
