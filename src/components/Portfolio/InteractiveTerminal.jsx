@@ -8,7 +8,7 @@ const ALL_CMD_STRINGS = [
     'pedro --help', 'pedro --skills', 'pedro --experience', 'pedro --contact',
     'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
     'pedro --play trivia', 'pedro --play aim-test', 'pedro --sudo matrix',
-    'pedro --version', 'clear', 'exit',
+    'pedro --sudo rm -rf /', 'pedro --version', 'clear', 'exit',
 ];
 
 const COMMANDS = [
@@ -569,28 +569,14 @@ export default function InteractiveTerminal() {
             return;
         }
 
-        // ── Tab Autocomplete ──
+        // ── Tab Autocomplete com Sombra de Sugestão ──
         if (e.key === 'Tab') {
             e.preventDefault();
-            const current = input.toLowerCase().trim();
-            if (!current) return;
-            const matches = ALL_CMD_STRINGS.filter(c => c.startsWith(current) && c !== current);
-            if (matches.length === 1) {
-                setInput(matches[0]);
-            } else if (matches.length > 1) {
-                setLines(prev => [
-                    ...prev,
-                    { text: `> ${input}`, color: 'text-accent/80' },
-                    { text: `Sugestões: ${matches.join('  |  ')}`, color: 'text-primary/60' },
-                ]);
-                // Preenche com o prefixo comum mais longo
-                let common = matches[0];
-                for (const m of matches) {
-                    while (!m.startsWith(common)) {
-                        common = common.slice(0, -1);
-                    }
-                }
-                if (common.length > current.length) setInput(common);
+            const current = input.toLowerCase();
+            if (!current.trim()) return;
+            const match = ALL_CMD_STRINGS.find(c => c.startsWith(current) && c !== current);
+            if (match) {
+                setInput(match);
             }
             return;
         }
@@ -813,23 +799,42 @@ export default function InteractiveTerminal() {
                 )}
             </div>
 
-            {/* Input line */}
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5 bg-dark/30">
+            {/* Input line com Shadow / Ghost Text Autocomplete */}
+            <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5 bg-dark/30 relative">
                 <span className="text-accent/70 font-mono text-[12px] shrink-0">{'>'}</span>
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={onKey}
-                    onFocus={() => setFocused(true)}
-                    onBlur={() => setFocused(false)}
-                    placeholder={activeGame ? 'Digite "exit" para voltar ao shell...' : 'pedro --games'}
-                    className="flex-1 bg-transparent text-white font-mono text-[12px] outline-none placeholder-primary/25"
-                    spellCheck={false}
-                    autoComplete="off"
-                    aria-label="Terminal interativo"
-                />
+                
+                <div className="relative flex-1 flex items-center">
+                    {/* Shadow / Ghost Text */}
+                    {!activeGame && input && (() => {
+                        const match = ALL_CMD_STRINGS.find(c => c.startsWith(input.toLowerCase()) && c !== input.toLowerCase());
+                        if (match) {
+                            return (
+                                <div className="absolute inset-0 pointer-events-none font-mono text-[12px] flex items-center select-none overflow-hidden">
+                                    <span className="opacity-0 whitespace-pre">{input}</span>
+                                    <span className="text-accent/40 whitespace-pre">{match.slice(input.length)}</span>
+                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-accent/10 text-accent/60 border border-accent/20 tracking-wider">Tab ⇥</span>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
+
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={onKey}
+                        onFocus={() => setFocused(true)}
+                        onBlur={() => setFocused(false)}
+                        placeholder={activeGame ? 'Digite "exit" para voltar ao shell...' : 'pedro --games'}
+                        className="w-full bg-transparent text-white font-mono text-[12px] outline-none placeholder-primary/25 relative z-10"
+                        spellCheck={false}
+                        autoComplete="off"
+                        aria-label="Terminal interativo"
+                    />
+                </div>
+
                 <motion.span
                     animate={{ opacity: focused ? [1, 0, 1] : 1 }}
                     transition={{ duration: 1, repeat: Infinity }}
@@ -841,7 +846,7 @@ export default function InteractiveTerminal() {
             <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 bg-dark/40 text-[10px] font-mono text-gray-500 select-none">
                 <span className="text-accent/60">⬡ Interactive Shell Arcade</span>
                 <span className="hidden sm:inline text-gray-600">|</span>
-                <span className="hidden sm:inline text-gray-400">Tab: autocomplete</span>
+                <span className="hidden sm:inline text-gray-400">Pressione Tab para autocompletar</span>
                 <span className="ml-auto">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>
                 <span>UTC-3</span>
             </div>
