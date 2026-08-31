@@ -4,8 +4,8 @@ const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const SIZE = 36;
-const HOVER_SIZE = 54;
+const SIZE = 24;
+const HOVER_SIZE = 40;
 const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
 const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
@@ -183,7 +183,7 @@ export default function CursorMorph() {
 
     return (
         <>
-            {/* 1. Bola com contraste invertido, tamanho 36px, delay suave e expansão calibrada apenas para links/botões */}
+            {/* 1. Bola de contraste discreta (24px), sem poluir a tela */}
             <div
                 ref={contrastRef}
                 className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full will-change-transform"

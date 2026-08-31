@@ -4,10 +4,10 @@ import { useLanguage } from '../../context/LanguageContext';
 
 // ── Cores Padronizadas e Harmoniosas por Categoria (Design Editorial Consistente) ──
 const CATEGORY_THEME = {
-    'Frontend':     { color: '#60A5FA', badgeBg: 'rgba(96, 165, 250, 0.12)', border: 'rgba(96, 165, 250, 0.3)' }, // Azul Sereno
-    'Backend & ERP':{ color: '#F87171', badgeBg: 'rgba(248, 113, 113, 0.12)', border: 'rgba(248, 113, 113, 0.3)' }, // Vermelho Suave Coral
-    'Database':     { color: '#34D399', badgeBg: 'rgba(52, 211, 153, 0.12)', border: 'rgba(52, 211, 153, 0.3)' }, // Verde Esmeralda
-    'DevOps & QA':  { color: '#FBBF24', badgeBg: 'rgba(251, 191, 36, 0.12)',  border: 'rgba(251, 191, 36, 0.3)' }, // Dourado Âmbar
+    'Frontend':     { color: '#60A5FA' }, // Azul Sereno
+    'Backend & ERP':{ color: '#F87171' }, // Vermelho Suave Coral
+    'Database':     { color: '#34D399' }, // Verde Esmeralda
+    'DevOps & QA':  { color: '#FBBF24' }, // Dourado Âmbar
 };
 
 // ── Tecnologias com categorização clara e paleta unificada ──
@@ -67,11 +67,11 @@ export default function TechSphere3D() {
     const [hoveredTech, setHoveredTech] = useState(null);
     const [activeTech, setActiveTech] = useState(null);
 
-    // Estado físico: velocidade base ultra-lenta / quase estática
+    // Estado físico: velocidade base ultra-lenta constante e natural
     const angleRef = useRef({ x: 0.15, y: 0 });
-    const speedRef = useRef({ rx: 0.0003, ry: 0.0006 });
+    const BASE_SPEED = { rx: 0.0003, ry: 0.0006 };
+    const speedRef = useRef({ rx: BASE_SPEED.rx, ry: BASE_SPEED.ry });
     const isDraggingRef = useRef(false);
-    const isHoveringRef = useRef(false);
     const dragDistanceRef = useRef(0);
     const lastMouseRef = useRef({ x: 0, y: 0 });
     const isVisibleRef = useRef(true);
@@ -79,11 +79,12 @@ export default function TechSphere3D() {
     const baseItems = useMemo(() => fibonacciSphere(TECH_ITEMS), []);
     const [projected, setProjected] = useState([]);
 
-    // ── Projeção Matemática 3D → 2D com interpolação contínua ──
+    // ── Projeção Matemática 3D → 2D com distribuição espaçosa (sem colisão) ──
     const project = useCallback(() => {
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-        const RADIUS = isMobile ? 155 : 220;
-        const FOV = isMobile ? 380 : 480;
+        // Aumentado o raio orbital para espalhar os nós e evitar sobreposição/poluição
+        const RADIUS = isMobile ? 165 : 240;
+        const FOV = isMobile ? 380 : 500;
 
         const ax = angleRef.current.x;
         const ay = angleRef.current.y;
@@ -108,7 +109,7 @@ export default function TechSphere3D() {
                 ...item,
                 left: x1 * RADIUS * scale,
                 top: y2 * RADIUS * scale,
-                scale: scale * (0.75 + depth * 0.35) * (isMatch ? 1 : 0.75),
+                scale: scale * (0.65 + depth * 0.35) * (isMatch ? 1 : 0.75),
                 depth,
                 z2,
                 zIndex: Math.floor((z2 + 1) * 100),
@@ -129,15 +130,9 @@ export default function TechSphere3D() {
             if (!isVisibleRef.current) return;
 
             if (!isDraggingRef.current) {
-                // Quando o mouse está sobre o globo ou sobre uma stack, para completamente para facilitar o clique
-                if (isHoveringRef.current) {
-                    speedRef.current.rx = lerp(speedRef.current.rx, 0, 0.08);
-                    speedRef.current.ry = lerp(speedRef.current.ry, 0, 0.08);
-                } else {
-                    // Quando ocioso, rotação extremamente lenta e suave (quase imperceptível)
-                    speedRef.current.rx = lerp(speedRef.current.rx, 0.0003, 0.02);
-                    speedRef.current.ry = lerp(speedRef.current.ry, 0.0006, 0.02);
-                }
+                // Mantém a rotação lenta e suave constante mesmo com o mouse dentro ou fora do container
+                speedRef.current.rx = lerp(speedRef.current.rx, BASE_SPEED.rx, 0.03);
+                speedRef.current.ry = lerp(speedRef.current.ry, BASE_SPEED.ry, 0.03);
 
                 angleRef.current.x += speedRef.current.rx;
                 angleRef.current.y += speedRef.current.ry;
@@ -175,20 +170,30 @@ export default function TechSphere3D() {
 
     const onMouseMove = (e) => {
         if (!isDraggingRef.current) {
-            isHoveringRef.current = true;
+            // Mouse se mexendo dentro sem clicar: inclinação suave e sutil
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const mx = e.clientX - (rect.left + rect.width / 2);
+                const my = e.clientY - (rect.top + rect.height / 2);
+                speedRef.current = {
+                    rx: -my * 0.000008 + BASE_SPEED.rx,
+                    ry: mx * 0.000008 + BASE_SPEED.ry,
+                };
+            }
             return;
         }
 
+        // Mouse clicado e arrastando: velocidade ágil e responsiva
         const dx = e.clientX - lastMouseRef.current.x;
         const dy = e.clientY - lastMouseRef.current.y;
         dragDistanceRef.current += Math.abs(dx) + Math.abs(dy);
 
-        angleRef.current.y += dx * 0.006;
-        angleRef.current.x -= dy * 0.006;
+        angleRef.current.y += dx * 0.007;
+        angleRef.current.x -= dy * 0.007;
 
         speedRef.current = {
-            rx: -dy * 0.001,
-            ry: dx * 0.001,
+            rx: -dy * 0.0015,
+            ry: dx * 0.0015,
         };
 
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
@@ -211,12 +216,12 @@ export default function TechSphere3D() {
         const dy = e.touches[0].clientY - lastMouseRef.current.y;
         dragDistanceRef.current += Math.abs(dx) + Math.abs(dy);
 
-        angleRef.current.y += dx * 0.007;
-        angleRef.current.x -= dy * 0.007;
+        angleRef.current.y += dx * 0.008;
+        angleRef.current.x -= dy * 0.008;
 
         speedRef.current = {
-            rx: -dy * 0.0015,
-            ry: dx * 0.0015,
+            rx: -dy * 0.002,
+            ry: dx * 0.002,
         };
 
         lastMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -268,12 +273,9 @@ export default function TechSphere3D() {
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
-                onMouseEnter={() => {
-                    isHoveringRef.current = true;
-                }}
                 onMouseLeave={() => {
                     isDraggingRef.current = false;
-                    isHoveringRef.current = false;
+                    speedRef.current = { rx: BASE_SPEED.rx, ry: BASE_SPEED.ry };
                     setHoveredTech(null);
                 }}
                 className="relative w-full h-[480px] sm:h-[540px] md:h-[580px] flex items-center justify-center overflow-hidden rounded-3xl bg-dark/40 border border-primary/20 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.6)] cursor-grab active:cursor-grabbing"
@@ -286,8 +288,8 @@ export default function TechSphere3D() {
                 <div
                     className="absolute pointer-events-none animate-[spin_120s_linear_infinite]"
                     style={{
-                        width: 470,
-                        height: 470,
+                        width: 490,
+                        height: 490,
                         borderRadius: '50%',
                         border: '1px dashed rgba(var(--color-accent-rgb, 140, 106, 74), 0.25)',
                         opacity: 0.35,
@@ -296,8 +298,8 @@ export default function TechSphere3D() {
                 <div
                     className="absolute pointer-events-none animate-[spin_180s_linear_infinite_reverse]"
                     style={{
-                        width: 410,
-                        height: 410,
+                        width: 430,
+                        height: 430,
                         borderRadius: '50%',
                         border: '1px solid rgba(255, 255, 255, 0.04)',
                         transform: 'rotateX(68deg) rotateZ(30deg)',
@@ -336,7 +338,7 @@ export default function TechSphere3D() {
                     </g>
                 </svg>
 
-                {/* ── Nós Esféricos com Ícones Aumentados Levemente e Legíveis ── */}
+                {/* ── Nós Esféricos Limpos, Discretos e com Espaçamento Adequado ── */}
                 <div className="relative w-0 h-0 flex items-center justify-center pointer-events-none">
                     {projected.map((node) => {
                         const isHovered = hoveredTech?.id === node.id;
@@ -348,7 +350,7 @@ export default function TechSphere3D() {
                                 onClick={() => handleNodeClick(node)}
                                 onMouseEnter={() => setHoveredTech(node)}
                                 onMouseLeave={() => setHoveredTech(null)}
-                                className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2.5 px-3.5 py-2 rounded-full group pointer-events-auto transition-[box-shadow,border-color,background-color] duration-200 cursor-pointer"
+                                className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full group pointer-events-auto transition-[box-shadow,border-color,background-color] duration-200 cursor-pointer"
                                 style={{
                                     transform: `translate3d(${node.left}px, ${node.top}px, 0) scale(${node.scale * (isHovered || isSelected ? 1.15 : 1)})`,
                                     zIndex: (isHovered || isSelected) ? 9999 : node.zIndex,
@@ -361,24 +363,24 @@ export default function TechSphere3D() {
                                         : `${node.color}35`,
                                     borderWidth: '1px',
                                     boxShadow: (isHovered || isSelected)
-                                        ? `0 0 22px ${node.color}50, inset 0 0 10px ${node.color}20`
-                                        : '0 4px 14px rgba(0, 0, 0, 0.4)',
+                                        ? `0 0 20px ${node.color}50, inset 0 0 10px ${node.color}20`
+                                        : '0 4px 12px rgba(0, 0, 0, 0.4)',
                                     pointerEvents: node.depth > 0.35 && node.isMatch ? 'auto' : 'none',
                                 }}
                             >
-                                {/* Ícone levemente aumentado (w-7 h-7 com ícone text-sm/base) */}
+                                {/* Ícone compacto e elegante (w-6 h-6) */}
                                 <div
-                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110"
+                                    className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110"
                                     style={{ backgroundColor: `${node.color}20` }}
                                 >
                                     <i
-                                        className={`${node.icon} text-sm sm:text-base`}
+                                        className={`${node.icon} text-xs sm:text-sm`}
                                         style={{ color: node.color }}
                                     />
                                 </div>
 
                                 {/* Nome da tecnologia */}
-                                <span className="text-xs sm:text-sm font-semibold tracking-wide font-sans text-gray-100 whitespace-nowrap group-hover:text-white transition-colors">
+                                <span className="text-[11px] sm:text-xs font-semibold tracking-wide font-sans text-gray-200 whitespace-nowrap group-hover:text-white transition-colors">
                                     {node.name}
                                 </span>
                             </div>

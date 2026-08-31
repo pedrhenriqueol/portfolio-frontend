@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import TechSphere3D from './TechSphere3D';
@@ -10,24 +10,28 @@ const CATEGORY_STYLES = {
         border: 'rgba(96, 165, 250, 0.25)',
         badgeBg: 'rgba(96, 165, 250, 0.12)',
         iconBg: 'rgba(96, 165, 250, 0.15)',
+        order: 1,
     },
     'Back-end': {
         color: '#F87171', // Coral / Vermelho Suave
         border: 'rgba(248, 113, 113, 0.25)',
         badgeBg: 'rgba(248, 113, 113, 0.12)',
         iconBg: 'rgba(248, 113, 113, 0.15)',
+        order: 2,
     },
     'Database': {
         color: '#34D399', // Verde Esmeralda
         border: 'rgba(52, 211, 153, 0.25)',
         badgeBg: 'rgba(52, 211, 153, 0.12)',
         iconBg: 'rgba(52, 211, 153, 0.15)',
+        order: 3,
     },
     'DevOps & QA': {
         color: '#FBBF24', // Dourado Âmbar
         border: 'rgba(251, 191, 36, 0.25)',
         badgeBg: 'rgba(251, 191, 36, 0.12)',
         iconBg: 'rgba(251, 191, 36, 0.15)',
+        order: 4,
     },
 };
 
@@ -111,10 +115,19 @@ export default function SkillsSection({ skills }) {
         { id: 'DevOps & QA',  labelPt: 'DevOps & QA',    labelEn: 'DevOps & QA',   labelEs: 'DevOps & QA' },
     ];
 
-    const filteredSkills = skills.filter((skill) => {
-        if (selectedCategory === 'all') return true;
-        return skill.category === selectedCategory;
-    });
+    // Ordenação por cor/categoria agrupada na visualização 'Todos'
+    const processedSkills = useMemo(() => {
+        const list = [...skills];
+        if (selectedCategory === 'all') {
+            return list.sort((a, b) => {
+                const orderA = CATEGORY_STYLES[a.category]?.order || 99;
+                const orderB = CATEGORY_STYLES[b.category]?.order || 99;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.id - b.id;
+            });
+        }
+        return list.filter((skill) => skill.category === selectedCategory);
+    }, [skills, selectedCategory]);
 
     return (
         <section id="conhecimentos" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
@@ -206,9 +219,9 @@ export default function SkillsSection({ skills }) {
                                 })}
                             </div>
 
-                            {/* Cards Grid */}
+                            {/* Cards Grid ordenado por cor / categoria */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 w-full">
-                                {filteredSkills.map((skill, index) => (
+                                {processedSkills.map((skill, index) => (
                                     <SkillCard key={skill.id} skill={skill} index={index} />
                                 ))}
                             </div>
