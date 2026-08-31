@@ -6,20 +6,30 @@ const isTouchDevice = () =>
 
 const DEFAULT_SIZE = 36;
 const HOVER_SIZE = 64;
+const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
+const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
+const T_FREE  = `width 0.28s ${BEZIER}, height 0.28s ${BEZIER}, border-radius 0.28s ${BEZIER}, opacity 0.2s ease`;
 
 export default function CursorMorph() {
-    const cursorRef = useRef(null);
+    const contrastRef = useRef(null);
+    const morphRef = useRef(null);
 
     useEffect(() => {
         if (isTouchDevice()) return;
 
-        const cursorEl = cursorRef.current;
-        if (!cursorEl) return;
+        const contrastEl = contrastRef.current;
+        const morphEl = morphRef.current;
+        if (!contrastEl || !morphEl) return;
 
         let mouseX = -200;
         let mouseY = -200;
         let ringX = -200;
         let ringY = -200;
+        let activeCard = null;
+        let returnTimeout = null;
+        let moveRaf = null;
+        let scrollRaf = null;
         let loopRaf = null;
         let cachedZoom = 0.8;
         let isHovered = false;
@@ -30,16 +40,61 @@ export default function CursorMorph() {
         updateZoom();
         window.addEventListener('resize', updateZoom, { passive: true });
 
-        // Loop contínuo com física suave e delay elegante atrás da seta nativa do mouse
+        // Identifica com precisão se o cursor está sobre um card morphável
+        const findCard = (target) => {
+            if (!target || target === document.body || target === document.documentElement) return null;
+            if (target.closest('[data-no-morph="true"], .no-morph, nav, input, textarea, canvas, svg')) return null;
+
+            const candidate = target.closest(
+                '[data-cursor-morph="true"], .cursor-morph, .rounded-2xl.border, .rounded-xl.border, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
+            );
+            if (!candidate || candidate.closest('[data-no-morph="true"], .no-morph')) return null;
+
+            const rect = candidate.getBoundingClientRect();
+            const w = rect.width / cachedZoom;
+            const h = rect.height / cachedZoom;
+
+            // Filtro de dimensões adequadas para morph
+            if (w >= 70 && h >= 45 && w <= (window.innerWidth / cachedZoom) * 0.98 && h <= 1600) {
+                return candidate;
+            }
+            return null;
+        };
+
+        const updateMorphPosition = (isScroll = false) => {
+            if (activeCard) {
+                const rect = activeCard.getBoundingClientRect();
+                const radius = getComputedStyle(activeCard).borderRadius || '16px';
+                const left = rect.left / cachedZoom;
+                const top  = rect.top / cachedZoom;
+                const w    = rect.width / cachedZoom;
+                const h    = rect.height / cachedZoom;
+
+                morphEl.style.transition   = isScroll ? T_SCROLL : T_MORPH;
+                morphEl.style.width        = `${w}px`;
+                morphEl.style.height       = `${h}px`;
+                morphEl.style.borderRadius = radius;
+                morphEl.style.transform    = `translate3d(${left}px, ${top}px, 0)`;
+                morphEl.style.opacity      = '0.4';
+            } else {
+                const size = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
+                const curX = mouseX / cachedZoom - size / 2;
+                const curY = mouseY / cachedZoom - size / 2;
+                morphEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+                morphEl.style.opacity   = '0';
+            }
+        };
+
+        // Loop contínuo com física suave para a bola translúcida de contraste
         const renderLoop = () => {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
-            // Fator de interpolação mais suave (0.11) para a bola seguir levemente atrás do cursor
+            // Delay suave e fluida seguindo o mouse
             ringX += (targetX - ringX) * 0.11;
             ringY += (targetY - ringY) * 0.11;
 
-            cursorEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+            contrastEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
 
             loopRaf = requestAnimationFrame(renderLoop);
         };
@@ -49,7 +104,7 @@ export default function CursorMorph() {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            // Detecta elementos interativos
+            // Detecta se está sobre elemento interativo (links, botões, títulos clicáveis)
             const target = e.target;
             const interactive = Boolean(
                 target.closest('button, a, input, textarea, select, [role="button"], .cursor-pointer, [data-cursor-hover="true"], h1, h2, h3, [data-sphere-node]')
@@ -58,17 +113,69 @@ export default function CursorMorph() {
             if (interactive !== isHovered) {
                 isHovered = interactive;
                 const targetSize = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
-                cursorEl.style.width = `${targetSize}px`;
-                cursorEl.style.height = `${targetSize}px`;
-                cursorEl.style.opacity = isHovered ? '0.85' : '0.65';
+                contrastEl.style.width   = `${targetSize}px`;
+                contrastEl.style.height  = `${targetSize}px`;
+                contrastEl.style.opacity = isHovered ? '0.85' : '0.65';
+            }
+
+            if (moveRaf) return;
+
+            moveRaf = requestAnimationFrame(() => {
+                moveRaf = null;
+                const card = findCard(e.target);
+
+                if (card !== activeCard) {
+                    activeCard = card;
+                    if (returnTimeout) clearTimeout(returnTimeout);
+
+                    if (activeCard) {
+                        updateMorphPosition(false);
+                    } else {
+                        const size = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
+                        const curX = mouseX / cachedZoom - size / 2;
+                        const curY = mouseY / cachedZoom - size / 2;
+
+                        morphEl.style.transition   = T_MORPH;
+                        morphEl.style.width        = `${size}px`;
+                        morphEl.style.height       = `${size}px`;
+                        morphEl.style.borderRadius = '50%';
+                        morphEl.style.transform    = `translate3d(${curX}px, ${curY}px, 0)`;
+
+                        returnTimeout = setTimeout(() => {
+                            if (!activeCard) {
+                                morphEl.style.transition = T_FREE;
+                                morphEl.style.opacity    = '0';
+                            }
+                        }, 380);
+                    }
+                } else if (!activeCard) {
+                    const size = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
+                    const curX = mouseX / cachedZoom - size / 2;
+                    const curY = mouseY / cachedZoom - size / 2;
+                    morphEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+                }
+            });
+        };
+
+        const onScroll = () => {
+            if (activeCard && !scrollRaf) {
+                scrollRaf = requestAnimationFrame(() => {
+                    scrollRaf = null;
+                    updateMorphPosition(true);
+                });
             }
         };
 
         window.addEventListener('mousemove', onMouseMove, { passive: true });
+        window.addEventListener('scroll', onScroll, { passive: true });
 
         return () => {
             window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', updateZoom);
+            if (returnTimeout) clearTimeout(returnTimeout);
+            if (moveRaf) cancelAnimationFrame(moveRaf);
+            if (scrollRaf) cancelAnimationFrame(scrollRaf);
             if (loopRaf) cancelAnimationFrame(loopRaf);
         };
     }, []);
@@ -76,18 +183,40 @@ export default function CursorMorph() {
     if (isTouchDevice()) return null;
 
     return (
-        <div
-            ref={cursorRef}
-            className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full will-change-transform"
-            style={{
-                width:           `${DEFAULT_SIZE}px`,
-                height:          `${DEFAULT_SIZE}px`,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                opacity:         0.65,
-                mixBlendMode:    'difference',
-                transition:      'width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease',
-                transform:       'translate3d(-200px, -200px, 0) translate(-50%, -50%)',
-            }}
-        />
+        <>
+            {/* 1. Bola de contraste invertido translúcida seguindo suavemente o mouse */}
+            <div
+                ref={contrastRef}
+                className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full will-change-transform"
+                style={{
+                    width:           `${DEFAULT_SIZE}px`,
+                    height:          `${DEFAULT_SIZE}px`,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    opacity:         0.65,
+                    mixBlendMode:    'difference',
+                    transition:      'width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease',
+                    transform:       'translate3d(-200px, -200px, 0) translate(-50%, -50%)',
+                }}
+            />
+
+            {/* 2. Efeito Morph que se expande e abraça os cards suavemente */}
+            <div
+                ref={morphRef}
+                className="pointer-events-none fixed top-0 left-0 z-[99998] transform-gpu"
+                style={{
+                    width:         `${DEFAULT_SIZE}px`,
+                    height:        `${DEFAULT_SIZE}px`,
+                    borderRadius:  '50%',
+                    border:        '1.5px solid var(--color-accent, #8C6A4A)',
+                    background:    'rgba(var(--color-accent-rgb, 140, 106, 74), 0.08)',
+                    boxShadow:     '0 0 20px rgba(var(--color-accent-rgb, 140, 106, 74), 0.15)',
+                    opacity:       0,
+                    transition:    T_FREE,
+                    willChange:    'transform, width, height, border-radius, opacity',
+                    transform:     'translate3d(-200px, -200px, 0)',
+                    contain:       'layout style',
+                }}
+            />
+        </>
     );
 }
