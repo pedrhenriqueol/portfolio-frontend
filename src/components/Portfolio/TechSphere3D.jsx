@@ -2,222 +2,238 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
-// ── Tech items com cores vibrantes para glow individual ──
-const TECH_SPHERE_ITEMS = [
-    { name: 'Delphi 11',     icon: 'fas fa-desktop',             color: '#E63946', category: 'Desktop & ERP',       level: 4 },
-    { name: 'UniGui Web',    icon: 'fas fa-globe',               color: '#457B9D', category: 'Desktop & Web',       level: 4 },
-    { name: 'React 19',      icon: 'fab fa-react',               color: '#61DAFB', category: 'Frontend',            level: 4 },
-    { name: 'TypeScript',    icon: 'fab fa-js-square',           color: '#3178C6', category: 'Fullstack',           level: 4 },
-    { name: 'PHP / Laravel', icon: 'fab fa-laravel',             color: '#FF2D20', category: 'Backend',             level: 4 },
-    { name: 'SQL Server',    icon: 'fas fa-database',            color: '#CC292B', category: 'Database',            level: 4 },
-    { name: 'MySQL',         icon: 'fas fa-server',              color: '#00758F', category: 'Database',            level: 4 },
-    { name: 'Postman (QA)',  icon: 'fas fa-paper-plane',         color: '#FF6C37', category: 'QA & Testes',         level: 4 },
-    { name: 'Docker',        icon: 'fab fa-docker',              color: '#2496ED', category: 'DevOps',              level: 3 },
-    { name: 'Java / Swing',  icon: 'fab fa-java',                color: '#ED8B00', category: 'Backend & Desktop',   level: 3 },
-    { name: 'Python / Flask',icon: 'fab fa-python',              color: '#3776AB', category: 'Backend',             level: 3 },
-    { name: 'Tailwind CSS',  icon: 'fab fa-css3-alt',            color: '#38BDF8', category: 'Frontend',            level: 4 },
-    { name: 'ACBr Fiscal',   icon: 'fas fa-file-invoice-dollar', color: '#10B981', category: 'Sistemas Fiscais',    level: 4 },
-    { name: 'Git & GitHub',  icon: 'fab fa-github',              color: '#F05032', category: 'DevOps',              level: 4 },
-    { name: 'Linux Server',  icon: 'fab fa-linux',               color: '#FCC624', category: 'DevOps',              level: 3 },
-    { name: 'APIs RESTful',  icon: 'fas fa-network-wired',       color: '#A855F7', category: 'Backend',             level: 4 },
-    { name: 'Scrum / Kanban',icon: 'fas fa-tasks',               color: '#F59E0B', category: 'Metodologia',         level: 3 },
-    { name: 'Regressão QA',  icon: 'fas fa-bug',                 color: '#EC4899', category: 'QA & Testes',         level: 4 },
+// ── Tecnologias com cores vibrantes para glow individual ──
+const TECH_ITEMS = [
+    { name: 'Delphi 11',     icon: 'fas fa-desktop',             color: '#E63946', category: 'Desktop & ERP' },
+    { name: 'UniGui Web',    icon: 'fas fa-globe',               color: '#457B9D', category: 'Desktop & Web' },
+    { name: 'React 19',      icon: 'fab fa-react',               color: '#61DAFB', category: 'Frontend' },
+    { name: 'TypeScript',    icon: 'fab fa-js-square',           color: '#3178C6', category: 'Fullstack' },
+    { name: 'PHP / Laravel', icon: 'fab fa-laravel',             color: '#FF2D20', category: 'Backend' },
+    { name: 'SQL Server',    icon: 'fas fa-database',            color: '#CC292B', category: 'Database' },
+    { name: 'MySQL',         icon: 'fas fa-server',              color: '#00758F', category: 'Database' },
+    { name: 'Postman (QA)',  icon: 'fas fa-paper-plane',         color: '#FF6C37', category: 'QA & Testes' },
+    { name: 'Docker',        icon: 'fab fa-docker',              color: '#2496ED', category: 'DevOps' },
+    { name: 'Java / Swing',  icon: 'fab fa-java',                color: '#ED8B00', category: 'Backend' },
+    { name: 'Python / Flask',icon: 'fab fa-python',              color: '#3776AB', category: 'Backend' },
+    { name: 'Tailwind CSS',  icon: 'fab fa-css3-alt',            color: '#38BDF8', category: 'Frontend' },
+    { name: 'ACBr Fiscal',   icon: 'fas fa-file-invoice-dollar', color: '#10B981', category: 'Fiscal' },
+    { name: 'Git & GitHub',  icon: 'fab fa-github',              color: '#F05032', category: 'DevOps' },
+    { name: 'Linux Server',  icon: 'fab fa-linux',               color: '#FCC624', category: 'DevOps' },
+    { name: 'APIs RESTful',  icon: 'fas fa-network-wired',       color: '#A855F7', category: 'Backend' },
+    { name: 'Scrum / Kanban',icon: 'fas fa-tasks',               color: '#F59E0B', category: 'Metodologia' },
+    { name: 'Regressão QA',  icon: 'fas fa-bug',                 color: '#EC4899', category: 'QA & Testes' },
 ];
 
-// ── Helpers ──
-const LEVEL_LABELS = { 5: 'Especialista', 4: 'Avançado', 3: 'Intermediário', 2: 'Básico' };
-const LEVEL_LABELS_EN = { 5: 'Expert', 4: 'Advanced', 3: 'Intermediate', 2: 'Basic' };
-const LEVEL_LABELS_ES = { 5: 'Experto', 4: 'Avanzado', 3: 'Intermedio', 2: 'Básico' };
-
-function getLevelLabel(level, lang) {
-    if (lang === 'en') return LEVEL_LABELS_EN[level] || '';
-    if (lang === 'es') return LEVEL_LABELS_ES[level] || '';
-    return LEVEL_LABELS[level] || '';
-}
-
-// Distribuição de Fibonacci na esfera
-function fibonacciSphere(items) {
-    const N = items.length;
+// Distribuição de Fibonacci na esfera (pontos uniformemente espaçados)
+function fibonacciSphere(count) {
     const phi = Math.PI * (3 - Math.sqrt(5));
-    return items.map((item, i) => {
-        const y = 1 - (i / (N - 1)) * 2;
-        const radius = Math.sqrt(1 - y * y);
+    const points = [];
+    for (let i = 0; i < count; i++) {
+        const y = 1 - (i / (count - 1)) * 2;
+        const r = Math.sqrt(1 - y * y);
         const theta = phi * i;
-        return {
-            ...item,
-            ox: Math.cos(theta) * radius,
-            oy: y,
-            oz: Math.sin(theta) * radius,
-        };
-    });
-}
-
-// Distância 2D projetada entre dois nós
-function projDist(a, b) {
-    const dx = a.left - b.left;
-    const dy = a.top - b.top;
-    return Math.sqrt(dx * dx + dy * dy);
+        points.push({ x: Math.cos(theta) * r, y, z: Math.sin(theta) * r });
+    }
+    return points;
 }
 
 export default function TechSphere3D() {
     const { lang } = useLanguage();
     const containerRef = useRef(null);
-    const [hoveredTech, setHoveredTech] = useState(null);
-    const angleRef = useRef({ x: 0, y: 0 });
-    const speedRef = useRef({ rx: 0.003, ry: 0.005 });
-    const isVisibleRef = useRef(true);
-    const isDraggingRef = useRef(false);
-    const lastMouseRef = useRef({ x: 0, y: 0 });
+    const canvasRef = useRef(null);
     const nodesRef = useRef([]);
+    const angleRef = useRef({ x: 0, y: 0 });
+    const targetSpeedRef = useRef({ rx: 0.004, ry: 0.006 });
+    const currentSpeedRef = useRef({ rx: 0.004, ry: 0.006 });
+    const isVisibleRef = useRef(true);
+    const mouseInRef = useRef(false);
+    const [hoveredTech, setHoveredTech] = useState(null);
+    const sizeRef = useRef({ w: 0, h: 0 });
 
-    // Nós base imutáveis
-    const baseItems = useMemo(() => fibonacciSphere(TECH_SPHERE_ITEMS), []);
+    // Pontos base na esfera
+    const basePoints = useMemo(() => fibonacciSphere(TECH_ITEMS.length), []);
 
-    const [projected, setProjected] = useState([]);
+    // ── Canvas constellation lines ──
+    const drawConstellations = useCallback((nodes) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
 
-    // ── Projeção 3D → 2D com depth info ──
-    const project = useCallback(() => {
-        const ax = angleRef.current.x;
-        const ay = angleRef.current.y;
-        const sinX = Math.sin(ax), cosX = Math.cos(ax);
-        const sinY = Math.sin(ay), cosY = Math.cos(ay);
-        const RADIUS = 180;
-        const FOV = 380;
+        const cx = w / 2;
+        const cy = h / 2;
+        const THRESHOLD = 110;
 
-        const result = baseItems.map(item => {
-            // Rotação Y
-            const x1 = item.ox * cosY - item.oz * sinY;
-            const z1 = item.oz * cosY + item.ox * sinY;
-            // Rotação X
-            const y2 = item.oy * cosX - z1 * sinX;
-            const z2 = z1 * cosX + item.oy * sinX;
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[i].px - nodes[j].px;
+                const dy = nodes[i].py - nodes[j].py;
+                const dist = Math.sqrt(dx * dx + dy * dy);
 
-            const scale = FOV / (FOV + z2 * RADIUS);
-            // Depth normalized 0→1 (0=farthest, 1=nearest)
-            const depth = (z2 + 1) / 2;
-
-            return {
-                ...item,
-                left: x1 * RADIUS * scale,
-                top: y2 * RADIUS * scale,
-                scale,
-                depth,
-                z2,
-                zIndex: Math.floor((z2 + 1) * 100),
-                // Visual depth effects
-                alpha: 0.15 + depth * 0.85,
-                blurPx: depth < 0.3 ? (0.3 - depth) * 5 : 0,
-                glowIntensity: 0.1 + depth * 0.5,
-            };
-        });
-
-        nodesRef.current = result;
-        setProjected(result);
-    }, [baseItems]);
-
-    // ── Animation loop ──
-    useEffect(() => {
-        let raf;
-
-        const tick = () => {
-            if (!isVisibleRef.current) return;
-
-            if (!isDraggingRef.current) {
-                angleRef.current.x += speedRef.current.rx;
-                angleRef.current.y += speedRef.current.ry;
-            }
-
-            project();
-            raf = requestAnimationFrame(tick);
-        };
-
-        // IntersectionObserver para pausar quando fora da tela
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                isVisibleRef.current = entry.isIntersecting;
-                if (entry.isIntersecting) {
-                    raf = requestAnimationFrame(tick);
-                } else {
-                    cancelAnimationFrame(raf);
-                }
-            },
-            { threshold: 0.1 }
-        );
-
-        if (containerRef.current) observer.observe(containerRef.current);
-        raf = requestAnimationFrame(tick);
-
-        return () => {
-            cancelAnimationFrame(raf);
-            observer.disconnect();
-        };
-    }, [project]);
-
-    // ── Mouse interaction ──
-    const onMouseMove = useCallback((e) => {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        const mx = e.clientX - (rect.left + rect.width / 2);
-        const my = e.clientY - (rect.top + rect.height / 2);
-
-        speedRef.current = {
-            rx: -my * 0.000035,
-            ry: mx * 0.000035,
-        };
-    }, []);
-
-    const onMouseLeave = useCallback(() => {
-        isDraggingRef.current = false;
-        speedRef.current = { rx: 0.003, ry: 0.005 };
-        setHoveredTech(null);
-    }, []);
-
-    // ── Constellation lines (SVG) ──
-    const constellationLines = useMemo(() => {
-        if (projected.length === 0) return [];
-        const THRESHOLD = 120;
-        const lines = [];
-
-        for (let i = 0; i < projected.length; i++) {
-            for (let j = i + 1; j < projected.length; j++) {
-                const d = projDist(projected[i], projected[j]);
-                if (d < THRESHOLD) {
-                    const avgDepth = (projected[i].depth + projected[j].depth) / 2;
-                    const opacity = (1 - d / THRESHOLD) * avgDepth * 0.35;
-                    if (opacity > 0.02) {
-                        lines.push({
-                            x1: projected[i].left,
-                            y1: projected[i].top,
-                            x2: projected[j].left,
-                            y2: projected[j].top,
-                            opacity,
-                            color: projected[i].color,
-                        });
+                if (dist < THRESHOLD) {
+                    const avgDepth = (nodes[i].depth + nodes[j].depth) / 2;
+                    const opacity = (1 - dist / THRESHOLD) * avgDepth * 0.3;
+                    if (opacity > 0.015) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx + nodes[i].px, cy + nodes[i].py);
+                        ctx.lineTo(cx + nodes[j].px, cy + nodes[j].py);
+                        ctx.strokeStyle = `rgba(140, 106, 74, ${opacity})`;
+                        ctx.lineWidth = 0.7;
+                        ctx.stroke();
                     }
                 }
             }
         }
-        return lines;
-    }, [projected]);
+    }, []);
+
+    // ── Main animation loop (requestAnimationFrame, no React state in loop) ──
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        let raf;
+        const RADIUS = 170;
+        const FOV = 400;
+        const lerp = (a, b, t) => a + (b - a) * t;
+
+        // Inicializa refs dos DOM nodes
+        const nodeEls = container.querySelectorAll('[data-sphere-node]');
+
+        const tick = () => {
+            if (!isVisibleRef.current) return;
+
+            // Suaviza velocidade de rotação (inércia)
+            currentSpeedRef.current.rx = lerp(currentSpeedRef.current.rx, targetSpeedRef.current.rx, 0.05);
+            currentSpeedRef.current.ry = lerp(currentSpeedRef.current.ry, targetSpeedRef.current.ry, 0.05);
+
+            angleRef.current.x += currentSpeedRef.current.rx;
+            angleRef.current.y += currentSpeedRef.current.ry;
+
+            const ax = angleRef.current.x;
+            const ay = angleRef.current.y;
+            const sinX = Math.sin(ax), cosX = Math.cos(ax);
+            const sinY = Math.sin(ay), cosY = Math.cos(ay);
+
+            const projected = [];
+
+            basePoints.forEach((pt, i) => {
+                // Rotação Y → X
+                const x1 = pt.x * cosY - pt.z * sinY;
+                const z1 = pt.z * cosY + pt.x * sinY;
+                const y2 = pt.y * cosX - z1 * sinX;
+                const z2 = z1 * cosX + pt.y * sinX;
+
+                const scale = FOV / (FOV + z2 * RADIUS);
+                const depth = (z2 + 1) / 2; // 0=atrás, 1=frente
+
+                const px = x1 * RADIUS * scale;
+                const py = y2 * RADIUS * scale;
+
+                projected.push({ px, py, depth, scale, z2 });
+
+                // Atualiza DOM diretamente (bypass React re-render para 60fps)
+                const el = nodeEls[i];
+                if (el) {
+                    const nodeScale = scale * (depth > 0.85 ? 1.05 : 1);
+                    const alpha = 0.12 + depth * 0.88;
+                    const blur = depth < 0.28 ? (0.28 - depth) * 6 : 0;
+                    const glow = depth * 0.5;
+
+                    el.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${nodeScale})`;
+                    el.style.zIndex = Math.floor((z2 + 1) * 100);
+                    el.style.opacity = alpha;
+                    el.style.filter = blur > 0.3 ? `blur(${blur}px)` : 'none';
+
+                    // Glow aura
+                    const aura = el.firstChild;
+                    if (aura) {
+                        aura.style.boxShadow = `0 0 ${8 + glow * 16}px ${TECH_ITEMS[i].color}${Math.round(glow * 35).toString(16).padStart(2, '0')}`;
+                    }
+                }
+            });
+
+            nodesRef.current = projected;
+            drawConstellations(projected);
+
+            raf = requestAnimationFrame(tick);
+        };
+
+        // IntersectionObserver — pausa fora da viewport
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                isVisibleRef.current = entry.isIntersecting;
+                if (entry.isIntersecting) raf = requestAnimationFrame(tick);
+                else cancelAnimationFrame(raf);
+            },
+            { threshold: 0.1 }
+        );
+        observer.observe(container);
+        raf = requestAnimationFrame(tick);
+
+        return () => { cancelAnimationFrame(raf); observer.disconnect(); };
+    }, [basePoints, drawConstellations]);
+
+    // ── Resize canvas ──
+    useEffect(() => {
+        const container = containerRef.current;
+        const canvas = canvasRef.current;
+        if (!container || !canvas) return;
+
+        const resizeCanvas = () => {
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            sizeRef.current = { w: rect.width, h: rect.height };
+        };
+        resizeCanvas();
+        const ro = new ResizeObserver(resizeCanvas);
+        ro.observe(container);
+        return () => ro.disconnect();
+    }, []);
+
+    // ── Mouse interaction — reatividade ao movimento ──
+    const onMouseMove = useCallback((e) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const mx = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+        const my = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+
+        // Velocidade proporcional à distância do centro
+        targetSpeedRef.current = {
+            rx: -my * 0.012,
+            ry: mx * 0.012,
+        };
+    }, []);
+
+    const onMouseLeave = useCallback(() => {
+        mouseInRef.current = false;
+        targetSpeedRef.current = { rx: 0.004, ry: 0.006 };
+        setHoveredTech(null);
+    }, []);
+
+    const onMouseEnter = useCallback(() => {
+        mouseInRef.current = true;
+    }, []);
 
     return (
         <div
             ref={containerRef}
             onMouseMove={onMouseMove}
+            onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             className="relative w-full h-[420px] sm:h-[500px] flex items-center justify-center select-none cursor-grab active:cursor-grabbing overflow-hidden rounded-2xl bg-dark/40 border border-primary/20 backdrop-blur-sm shadow-2xl"
         >
-            {/* ── Background ambient glows ── */}
+            {/* Background ambient glows */}
             <div className="absolute w-72 h-72 rounded-full bg-accent/8 blur-[100px] pointer-events-none" />
             <div className="absolute w-48 h-48 rounded-full bg-secondary/10 blur-[60px] pointer-events-none" />
 
-            {/* ── Anel equatorial com gradiente ── */}
+            {/* Anel equatorial com gradiente */}
             <div
                 className="absolute pointer-events-none animate-[spin_80s_linear_infinite]"
                 style={{
-                    width: 360,
-                    height: 360,
-                    borderRadius: '50%',
+                    width: 360, height: 360, borderRadius: '50%',
                     border: '1px solid transparent',
                     backgroundImage: 'linear-gradient(var(--color-dark), var(--color-dark)), linear-gradient(135deg, var(--color-accent) 0%, transparent 40%, transparent 60%, var(--color-accent) 100%)',
                     backgroundOrigin: 'border-box',
@@ -226,119 +242,63 @@ export default function TechSphere3D() {
                 }}
             />
 
-            {/* ── Segundo anel inclinado ── */}
+            {/* Segundo anel inclinado */}
             <div
                 className="absolute pointer-events-none animate-[spin_120s_linear_infinite_reverse]"
                 style={{
-                    width: 300,
-                    height: 300,
-                    borderRadius: '50%',
-                    border: '1px dashed',
-                    borderColor: 'var(--color-border)',
-                    transform: 'rotateX(65deg) rotateZ(25deg)',
-                    opacity: 0.15,
+                    width: 300, height: 300, borderRadius: '50%',
+                    border: '1px dashed', borderColor: 'var(--color-border)',
+                    transform: 'rotateX(65deg) rotateZ(25deg)', opacity: 0.15,
                 }}
             />
 
-            {/* ── Constellation lines SVG ── */}
-            <svg
+            {/* Canvas para linhas de constelação (performance) */}
+            <canvas
+                ref={canvasRef}
                 className="absolute inset-0 w-full h-full pointer-events-none"
-                style={{ overflow: 'visible' }}
-            >
-                <g transform={`translate(${containerRef.current?.clientWidth / 2 || 200}, ${containerRef.current?.clientHeight / 2 || 210})`}>
-                    {constellationLines.map((line, i) => (
-                        <line
-                            key={i}
-                            x1={line.x1}
-                            y1={line.y1}
-                            x2={line.x2}
-                            y2={line.y2}
-                            stroke={line.color}
-                            strokeWidth={0.8}
-                            strokeOpacity={line.opacity}
-                            strokeLinecap="round"
-                        />
-                    ))}
-                </g>
-            </svg>
+            />
 
-            {/* ── 3D Orbiting Nodes ── */}
+            {/* Nós 3D orbitando — manipulados via DOM direto para 60fps */}
             <div className="relative w-0 h-0 flex items-center justify-center">
-                {projected.map((node) => {
-                    const isHovered = hoveredTech?.name === node.name;
-                    const nodeScale = node.scale * (isHovered ? 1.35 : 1);
-
-                    return (
+                {TECH_ITEMS.map((item, i) => (
+                    <div
+                        key={item.name}
+                        data-sphere-node={i}
+                        onMouseEnter={() => setHoveredTech(item)}
+                        onMouseLeave={() => setHoveredTech(null)}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer group"
+                        style={{ willChange: 'transform, opacity, filter' }}
+                    >
+                        {/* Glow aura */}
                         <div
-                            key={node.name}
-                            onMouseEnter={() => setHoveredTech(node)}
-                            onMouseLeave={() => setHoveredTech(null)}
+                            className="absolute rounded-full"
                             style={{
-                                transform: `translate3d(${node.left}px, ${node.top}px, 0) scale(${nodeScale})`,
-                                zIndex: isHovered ? 999 : node.zIndex,
-                                opacity: isHovered ? 1 : node.alpha,
-                                filter: node.blurPx > 0.2 && !isHovered
-                                    ? `blur(${node.blurPx}px)`
-                                    : 'none',
+                                width: 44, height: 44,
+                                background: `radial-gradient(circle, ${item.color}15 0%, transparent 70%)`,
                             }}
-                            className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center justify-center transition-[filter] duration-200 ease-out cursor-pointer group"
+                        />
+
+                        {/* Icon container */}
+                        <div
+                            className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full border border-white/8 bg-[rgba(26,19,16,0.85)] group-hover:border-accent/60 transition-colors duration-150"
                         >
-                            {/* Glow aura behind icon */}
-                            <div
-                                className="absolute rounded-full transition-all duration-300 ease-out"
-                                style={{
-                                    width: isHovered ? 56 : 44,
-                                    height: isHovered ? 56 : 44,
-                                    background: `radial-gradient(circle, ${node.color}${isHovered ? '30' : '15'} 0%, transparent 70%)`,
-                                    boxShadow: isHovered
-                                        ? `0 0 24px ${node.color}40, 0 0 48px ${node.color}20`
-                                        : `0 0 12px ${node.color}${Math.round(node.glowIntensity * 25).toString(16).padStart(2, '0')}`,
-                                }}
+                            <i
+                                className={`${item.icon} text-base sm:text-lg`}
+                                style={{ color: item.color }}
                             />
-
-                            {/* Icon container */}
-                            <div
-                                className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-200 ease-out"
-                                style={{
-                                    backgroundColor: isHovered
-                                        ? `${node.color}20`
-                                        : 'rgba(26, 19, 16, 0.85)',
-                                    borderColor: isHovered
-                                        ? `${node.color}80`
-                                        : 'rgba(255,255,255,0.08)',
-                                    boxShadow: isHovered
-                                        ? `inset 0 0 12px ${node.color}15`
-                                        : 'none',
-                                }}
-                            >
-                                <i
-                                    className={`${node.icon} text-base sm:text-lg transition-colors duration-200`}
-                                    style={{
-                                        color: isHovered ? node.color : `${node.color}${Math.round(node.alpha * 200 + 55).toString(16).padStart(2, '0')}`,
-                                        textShadow: isHovered ? `0 0 8px ${node.color}60` : 'none',
-                                    }}
-                                />
-                            </div>
-
-                            {/* Inline name label — only for front nodes */}
-                            {node.depth > 0.5 && (
-                                <span
-                                    className="absolute -bottom-5 text-[9px] sm:text-[10px] font-mono font-semibold whitespace-nowrap text-center transition-opacity duration-200"
-                                    style={{
-                                        color: isHovered ? node.color : 'rgba(255,255,255,0.45)',
-                                        opacity: isHovered ? 1 : node.depth * 0.8,
-                                        textShadow: isHovered ? `0 0 6px ${node.color}40` : 'none',
-                                    }}
-                                >
-                                    {node.name}
-                                </span>
-                            )}
                         </div>
-                    );
-                })}
+
+                        {/* Name label — aparece no hover */}
+                        <span className="absolute -bottom-5 text-[9px] sm:text-[10px] font-mono font-semibold whitespace-nowrap text-white/0 group-hover:text-white/90 transition-all duration-200"
+                            style={{ textShadow: `0 0 6px ${item.color}40` }}
+                        >
+                            {item.name}
+                        </span>
+                    </div>
+                ))}
             </div>
 
-            {/* ── Expanded Tooltip Panel ── */}
+            {/* Tooltip com nome e categoria */}
             <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 flex items-center justify-between sm:justify-end gap-3 pointer-events-none">
                 <AnimatePresence mode="wait">
                     {hoveredTech ? (
@@ -348,49 +308,20 @@ export default function TechSphere3D() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 8, scale: 0.95 }}
                             transition={{ duration: 0.2, ease: 'easeOut' }}
-                            className="px-5 py-3.5 rounded-xl bg-darker/95 border shadow-2xl backdrop-blur-md min-w-[220px]"
+                            className="px-5 py-3 rounded-xl bg-darker/95 border shadow-2xl backdrop-blur-md"
                             style={{ borderColor: `${hoveredTech.color}50` }}
                         >
-                            <div className="flex items-center gap-3 mb-2.5">
+                            <div className="flex items-center gap-3">
                                 <div
                                     className="w-9 h-9 rounded-lg flex items-center justify-center"
                                     style={{ backgroundColor: `${hoveredTech.color}18` }}
                                 >
-                                    <i
-                                        className={`${hoveredTech.icon} text-lg`}
-                                        style={{ color: hoveredTech.color }}
-                                    />
+                                    <i className={`${hoveredTech.icon} text-lg`} style={{ color: hoveredTech.color }} />
                                 </div>
                                 <div>
-                                    <div className="text-xs font-bold text-white font-mono leading-tight">
-                                        {hoveredTech.name}
-                                    </div>
-                                    <div className="text-[10px] font-sans" style={{ color: `${hoveredTech.color}cc` }}>
-                                        {hoveredTech.category}
-                                    </div>
+                                    <div className="text-xs font-bold text-white font-mono leading-tight">{hoveredTech.name}</div>
+                                    <div className="text-[10px] font-sans" style={{ color: `${hoveredTech.color}cc` }}>{hoveredTech.category}</div>
                                 </div>
-                            </div>
-
-                            {/* Level bar */}
-                            <div className="flex items-center gap-2">
-                                <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${(hoveredTech.level / 5) * 100}%` }}
-                                        transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                                        className="h-full rounded-full"
-                                        style={{
-                                            background: `linear-gradient(90deg, ${hoveredTech.color}80, ${hoveredTech.color})`,
-                                            boxShadow: `0 0 8px ${hoveredTech.color}60`,
-                                        }}
-                                    />
-                                </div>
-                                <span
-                                    className="text-[9px] font-mono font-semibold whitespace-nowrap"
-                                    style={{ color: hoveredTech.color }}
-                                >
-                                    {getLevelLabel(hoveredTech.level, lang)}
-                                </span>
                             </div>
                         </motion.div>
                     ) : (
