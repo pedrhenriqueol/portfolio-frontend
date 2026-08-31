@@ -212,9 +212,9 @@ export const translations = {
                         subtitle: 'Módulo Administrativo Full-Stack — Gestão ERP/PDV',
                         fullDescription: 'Desenvolvimento full-stack de módulo administrativo corporativo para gestão de ERP/PDV. A arquitetura foi concebida de forma totalmente desacoplada, utilizando uma API RESTful em Laravel e uma aplicação client-side construída com React e TypeScript. O foco central esteve na performance sob alta concorrência de operadores e integridade fiscal absoluta.',
                         metrics: [
-                            '⚡ 2s ➔ <500ms (Otimização de Queries)',
-                            '👥 100+ Usuários Simultâneos',
-                            '🛡️ 100% Conformidade Fiscal ACBr'
+                            { label: 'Latência', value: '2s → <500ms', icon: 'fas fa-bolt' },
+                            { label: 'Concorrência', value: '100+ Usuários Simultâneos', icon: 'fas fa-users' },
+                            { label: 'Conformidade', value: '100% Fiscal ACBr', icon: 'fas fa-shield-alt' }
                         ],
                         architecture: [
                             { layer: 'Client / Presentation', tech: 'React 18 + TypeScript + Tailwind', role: 'SPA desacoplada com componentes reativos, cache local e feedback otimista' },
@@ -246,9 +246,9 @@ export const translations = {
                         subtitle: 'Plataforma Multi-tenant de Gestão Empresarial',
                         fullDescription: 'Projeção e implementação de uma plataforma de governança corporativa com arquitetura Multi-tenant, permitindo a operação centralizada de múltiplas unidades de negócio e filiais em um único ecossistema. O painel executivo consolida dados financeiros e operacionais dispersos com supervisão em tempo real.',
                         metrics: [
-                            '🏢 Multi-Tenant com Isolamento Lógico',
-                            '🔐 RBAC Granular por Cargo e Filial',
-                            '📊 Dashboards Consolidados em Tempo Real'
+                            { label: 'Arquitetura', value: 'Multi-Tenant com Isolamento Lógico', icon: 'fas fa-sitemap' },
+                            { label: 'Segurança', value: 'RBAC Granular por Cargo e Filial', icon: 'fas fa-user-shield' },
+                            { label: 'Analytics', value: 'Dashboards Consolidados em Tempo Real', icon: 'fas fa-chart-line' }
                         ],
                         architecture: [
                             { layer: 'Client Portal', tech: 'React + TypeScript + Chart.js', role: 'Painéis executivos dinâmicos com gráficos interativos e agregação visual' },
@@ -280,9 +280,9 @@ export const translations = {
                         subtitle: 'Modernização de Sistema Monolítico Legado para Web',
                         fullDescription: 'Engenharia de modernização e refatoração de um sistema comercial monolítico legado (Desktop/VCL em Delphi 6) para uma arquitetura Web nativa utilizando RAD Studio Delphi 11 e o framework UniGui. O projeto envolveu a reestruturação profunda do gerenciamento de estado e concorrência para execução server-side via navegador.',
                         metrics: [
-                            '🌐 Desktop ➔ 100% Web Nativo',
-                            '🛡️ Zero Perda de Regras Fiscais ACBr',
-                            '🚀 Execução Server-Side Otimizada'
+                            { label: 'Modernização', value: 'Desktop ➔ 100% Web Nativo', icon: 'fas fa-cloud' },
+                            { label: 'Integridade', value: 'Zero Perda de Regras Fiscais ACBr', icon: 'fas fa-check-circle' },
+                            { label: 'Performance', value: 'Execução Server-Side Otimizada', icon: 'fas fa-tachometer-alt' }
                         ],
                         architecture: [
                             { layer: 'Web Client', tech: 'UniGui Web / ExtJS Engine', role: 'Interface rica e responsiva no navegador sem necessidade de instalação local' },
@@ -572,21 +572,21 @@ export const translations = {
                         subtitle: 'Full-Stack Administrative Module — Enterprise ERP/POS',
                         fullDescription: 'Full-stack development of a corporate administrative module for ERP/POS management. The architecture was engineered completely decoupled, leveraging a robust Laravel RESTful API and a modern client-side application built with React and TypeScript. Primary focus was placed on zero latency under concurrent operator workloads and strict tax invoice compliance.',
                         metrics: [
-                            '⚡ 2s ➔ <500ms (Query Optimization)',
-                            '👥 100+ Concurrent Production Users',
-                            '🛡️ 100% Tax & Fiscal Compliance'
+                            { label: 'Latency', value: '2s → <500ms (Query Optimization)', icon: 'fas fa-bolt' },
+                            { label: 'Concurrency', value: '100+ Concurrent Users', icon: 'fas fa-users' },
+                            { label: 'Compliance', value: '100% ACBr Fiscal Compliance', icon: 'fas fa-shield-alt' }
                         ],
                         architecture: [
-                            { layer: 'Client / Presentation', tech: 'React 18 + TypeScript + Tailwind', role: 'Decoupled SPA with reactive hooks, local cache, and optimistic UI updates' },
-                            { layer: 'API Gateway & Auth', tech: 'Laravel Sanctum + Middleware', role: 'Stateless token authentication, session control, and strict payload validation' },
-                            { layer: 'Business & Fiscal', tech: 'PHP 8 Services + ACBr Core', role: 'Billing rules processing, electronic invoice issuance, and real-time inventory' },
+                            { layer: 'Client / Presentation', tech: 'React 18 + TypeScript + Tailwind', role: 'Decoupled SPA with reactive components, local caching, and optimistic UI updates' },
+                            { layer: 'API Gateway & Auth', tech: 'Laravel Sanctum + Middleware', role: 'Stateless auth, session security, and payload validation gates' },
+                            { layer: 'Business & Fiscal', tech: 'PHP 8 Services + ACBr Core', role: 'Billing business logic, fiscal generation, and real-time inventory management' },
                             { layer: 'Data Tier', tech: 'SQL Server / MySQL Pool', role: 'Optimized relational schema with covering indexes and zero N+1 queries' }
                         ],
-                        challenge: 'Concurrency bottlenecks during peak fiscal closing hours and slow report generation across thousands of inventory SKUs in relational databases.',
-                        solution: 'Complete architectural refactoring to decoupled Laravel API + React SPA, applying Eager Loading with composite indexes and asynchronous fiscal processing via ACBr.',
+                        challenge: 'Concurrency bottlenecks during peak fiscal emission hours and slow reporting across thousands of inventory SKUs in a legacy relational database.',
+                        solution: 'Refactored to a decoupled architecture (Laravel REST API + React SPA), introduced compound indexing with eager loading, and async queue workers for fiscal compliance.',
                         highlights: [
                             'Decoupled architecture: RESTful API (Laravel) + SPA (React + TypeScript)',
-                            '100% responsive and accessible interface calibrated with Tailwind CSS dark theme',
+                            'Responsive and accessible dark-themed interface built with Tailwind CSS',
                             'Real-time inventory management with instant feedback via reactive components',
                             'Accounts receivable control with advanced multi-parameter filtering and report exports',
                             'Deep integration with tax engines (ACBr) for electronic invoice issuance with offline contingency',
@@ -606,9 +606,9 @@ export const translations = {
                         subtitle: 'Multi-tenant Enterprise Governance Platform',
                         fullDescription: 'Design and implementation of an enterprise governance platform with Multi-tenant architecture, allowing centralized operation of multiple business units and subsidiaries in a unified ecosystem. The executive dashboard consolidates dispersed financial and operational metrics with real-time supervision.',
                         metrics: [
-                            '🏢 Logical Multi-Tenant Isolation',
-                            '🔐 Granular Hierarchical RBAC',
-                            '📊 Real-Time Consolidated Analytics'
+                            { label: 'Architecture', value: 'Logical Multi-Tenant Isolation', icon: 'fas fa-sitemap' },
+                            { label: 'Security', value: 'Granular Hierarchical RBAC', icon: 'fas fa-user-shield' },
+                            { label: 'Analytics', value: 'Real-Time Consolidated Analytics', icon: 'fas fa-chart-line' }
                         ],
                         architecture: [
                             { layer: 'Client Portal', tech: 'React + TypeScript + Chart.js', role: 'Dynamic executive panels with interactive charts and real-time aggregation' },
@@ -631,18 +631,18 @@ export const translations = {
                 {
                     id: 3,
                     title: 'Delphi → UniGui Web Migration',
-                    description: 'Modernization engineering of a legacy monolithic system (Delphi Desktop/VCL) to native Web architecture with Delphi 11 + UniGui, maintaining 100% tax compliance.',
+                    description: 'Legacy monolithic system modernization (Delphi Desktop/VCL) to native Web architecture using Delphi 11 + UniGui, maintaining 100% fiscal compliance.',
                     image_url: '/unigui_migration_mockup.jpg',
                     repo_link: null,
                     demo_link: null,
                     tags: ['Delphi 11', 'UniGui', 'ACBr', 'FireDAC', 'FortesReport', 'SQL Server'],
                     details: {
-                        subtitle: 'Legacy Monolithic System Modernization to Web',
-                        fullDescription: 'Modernization engineering and refactoring of a legacy monolithic commercial system (Desktop/VCL in Delphi 6) to a native Web architecture using RAD Studio Delphi 11 and the UniGui framework. The project involved deep restructuring of state management and concurrency for server-side browser execution.',
+                        subtitle: 'Legacy Monolithic Desktop-to-Web Modernization',
+                        fullDescription: 'Deep architectural refactoring and migration of a legacy commercial system (Delphi 6 Desktop/VCL) to a modern Web architecture powered by RAD Studio Delphi 11 and the UniGui framework. Re-engineered state management and concurrency models for seamless browser execution.',
                         metrics: [
-                            '🌐 Desktop ➔ 100% Native Web',
-                            '🛡️ Zero Loss of ACBr Business Rules',
-                            '🚀 Optimized Server-Side Execution'
+                            { label: 'Modernization', value: 'Desktop ➔ 100% Native Web', icon: 'fas fa-cloud' },
+                            { label: 'Integrity', value: 'Zero Fiscal Logic Regression (ACBr)', icon: 'fas fa-check-circle' },
+                            { label: 'Performance', value: 'Optimized Server-Side Concurrency', icon: 'fas fa-tachometer-alt' }
                         ],
                         architecture: [
                             { layer: 'Web Client', tech: 'UniGui Web / ExtJS Engine', role: 'Rich responsive browser interface without requiring local client installations' },
@@ -933,25 +933,25 @@ export const translations = {
                         subtitle: 'Módulo Administrativo Full-Stack — Gestión ERP/POS',
                         fullDescription: 'Desarrollo full-stack de módulo administrativo corporativo para gestión de ERP/POS. La arquitectura fue concebida totalmente desacoplada, utilizando una API RESTful en Laravel y una aplicación cliente construida con React y TypeScript. El enfoque central estuvo en el rendimiento bajo alta concurrencia de operadores y estricto cumplimiento fiscal.',
                         metrics: [
-                            '⚡ 2s ➔ <500ms (Optimización de Consultas)',
-                            '👥 100+ Usuarios Concurrentes',
-                            '🛡️ 100% Cumplimiento Fiscal ACBr'
+                            { label: 'Latencia', value: '2s → <500ms (Optimización de Consultas)', icon: 'fas fa-bolt' },
+                            { label: 'Concurrencia', value: '100+ Usuarios Simultáneos', icon: 'fas fa-users' },
+                            { label: 'Cumplimiento', value: '100% Fiscal ACBr', icon: 'fas fa-shield-alt' }
                         ],
                         architecture: [
                             { layer: 'Client / Presentation', tech: 'React 18 + TypeScript + Tailwind', role: 'SPA desacoplada con componentes reactivos, caché local y feedback optimista' },
                             { layer: 'API Gateway & Auth', tech: 'Laravel Sanctum + Middleware', role: 'Autenticación stateless, control de sesión seguro y validación estricta de payloads' },
-                            { layer: 'Business & Fiscal', tech: 'PHP 8 Services + ACBr Core', role: 'Procesamiento de facturación, emisión fiscal e inventario en tiempo real' },
-                            { layer: 'Data Tier', tech: 'SQL Server / MySQL Pool', role: 'Modelado relacional optimizado con índices y cero consultas N+1' }
+                            { layer: 'Business & Fiscal', tech: 'PHP 8 Services + ACBr Core', role: 'Procesamiento de reglas de facturación, emisión fiscal e inventario en tiempo real' },
+                            { layer: 'Data Tier', tech: 'SQL Server / MySQL Pool', role: 'Modelado relacional optimizado con índices de cobertura y cero consultas N+1' }
                         ],
-                        challenge: 'Cuellos de botella de concurrencia en horarios pico durante la emisión fiscal y lentitud en reportes de inventario con miles de SKUs.',
-                        solution: 'Refactorización completa hacia arquitectura desacoplada (Laravel REST API + React SPA), aplicación de Eager Loading con índices compuestos y procesamiento asíncrono vía ACBr.',
+                        challenge: 'Cuellos de botella por concurrencia en horarios pico durante emisión fiscal y lentitud en reportes con miles de SKUs en base de datos relacional.',
+                        solution: 'Refactorización a arquitectura desacoplada (Laravel REST API + React SPA), aplicación de Eager Loading con índices compuestos y procesamiento asíncrono via ACBr.',
                         highlights: [
                             'Arquitectura desacoplada: API RESTful (Laravel) + SPA (React + TypeScript)',
                             'Interfaz 100% responsiva y accesible con tema oscuro calibrado en Tailwind CSS',
                             'Gestión de inventario en tiempo real con retroalimentación inmediata vía hooks reactivos',
                             'Control de cuentas por cobrar con filtros avanzados y exportación de reportes analíticos',
                             'Integración profunda con componentes fiscales (ACBr) para emisión de facturas electrónicas',
-                            'Autenticación y autorización robusta vía Laravel Sanctum con RBAC por rol de operador',
+                            'Autenticação y autorización robusta vía Laravel Sanctum con RBAC por rol de operador',
                         ],
                     },
                 },
@@ -967,9 +967,9 @@ export const translations = {
                         subtitle: 'Plataforma Multi-tenant de Gestión Empresarial',
                         fullDescription: 'Diseño e implementación de una plataforma de gobernanza empresarial con arquitectura Multi-tenant, permitiendo operar múltiples unidades de negocio y filiales en un solo ecosistema. El panel ejecutivo consolida datos financieros y operativos dispersos con supervisión en tiempo real.',
                         metrics: [
-                            '🏢 Multi-Tenant con Aislamiento Lógico',
-                            '🔐 RBAC Granular por Rol y Sucursal',
-                            '📊 Dashboards Consolidados en Tiempo Real'
+                            { label: 'Arquitectura', value: 'Multi-Tenant con Aislamiento Lógico', icon: 'fas fa-sitemap' },
+                            { label: 'Seguridad', value: 'RBAC Granular por Rol y Sucursal', icon: 'fas fa-user-shield' },
+                            { label: 'Analytics', value: 'Dashboards Consolidados en Tiempo Real', icon: 'fas fa-chart-line' }
                         ],
                         architecture: [
                             { layer: 'Client Portal', tech: 'React + TypeScript + Chart.js', role: 'Paneles ejecutivos dinámicos con gráficos interactivos y agregación visual' },
@@ -999,11 +999,11 @@ export const translations = {
                     tags: ['Delphi 11', 'UniGui', 'ACBr', 'FireDAC', 'FortesReport', 'SQL Server'],
                     details: {
                         subtitle: 'Modernización de Sistema Monolítico Heredado a Web',
-                        fullDescription: 'Ingeniería de modernización y refactorización de un sistema comercial monolítico heredado (Desktop/VCL en Delphi 6) a arquitectura Web nativa usando RAD Studio Delphi 11 y el framework UniGui. El proyecto involucró la reestructuración profunda del manejo de estado y concurrencia para ejecución en servidor vía navegador.',
+                        fullDescription: 'Ingeniería de modernización y refactorización de un sistema comercial monolítico heredado (Desktop/VCL en Delphi 6) a una arquitectura Web nativa utilizando RAD Studio Delphi 11 y el framework UniGui. El proyecto involucró la reestructuración profunda de la gestión de estado y concurrencia para ejecución server-side via navegador.',
                         metrics: [
-                            '🌐 Desktop ➔ 100% Web Nativo',
-                            '🛡️ Cero Pérdida de Reglas Fiscales ACBr',
-                            '🚀 Ejecución en Servidor Optimizada'
+                            { label: 'Modernización', value: 'Desktop ➔ 100% Web Nativo', icon: 'fas fa-cloud' },
+                            { label: 'Integridad', value: 'Cero Regresión en Reglas Fiscales ACBr', icon: 'fas fa-check-circle' },
+                            { label: 'Rendimiento', value: 'Ejecución Server-Side Optimizada', icon: 'fas fa-tachometer-alt' }
                         ],
                         architecture: [
                             { layer: 'Web Client', tech: 'UniGui Web / ExtJS Engine', role: 'Interfaz rica y responsiva en el navegador sin requerir instalación local' },

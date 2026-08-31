@@ -119,13 +119,19 @@ export default function ProjectModal({ project, onClose }) {
 
                             {/* Metrics Highlights if available */}
                             {metrics && metrics.length > 0 && (
-                                <div className="flex flex-wrap gap-2 pt-2">
-                                    {metrics.map((metric, idx) => (
-                                        <span key={idx} className="text-[11px] font-mono font-bold bg-darker/80 border border-accent/30 text-secondary px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                                            {metric}
-                                        </span>
-                                    ))}
+                                <div className="flex flex-wrap gap-2.5 pt-2">
+                                    {metrics.map((metric, idx) => {
+                                        const isObj = typeof metric === 'object' && metric !== null;
+                                        const iconClass = isObj ? metric.icon : 'fas fa-chart-line';
+                                        const labelText = isObj ? `${metric.label ? `${metric.label}: ` : ''}${metric.value}` : metric;
+
+                                        return (
+                                            <span key={idx} className="text-xs font-mono font-medium bg-darker/90 border border-primary/30 text-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-sm hover:border-accent/40 transition-colors">
+                                                <i className={`${iconClass} text-accent text-xs`} />
+                                                <span>{labelText}</span>
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
