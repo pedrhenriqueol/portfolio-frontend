@@ -3,40 +3,64 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import TechSphere3D from './TechSphere3D';
 
-const CATEGORY_CONFIG = {
-    'Back-end':  { color: 'var(--color-accent)' },
-    'Fullstack': { color: 'var(--color-accent)' },
-    'Front-end': { color: 'var(--color-primary)' },
-    'Database':  { color: 'var(--color-primary)' },
-    'DevOps':    { color: 'var(--color-primary)' },
-    'Outros':    { color: 'var(--color-primary)' },
-};
+function SkillCard({ skill, index }) {
+    const cardColor = skill.color || 'var(--color-accent)';
 
-function SkillCard({ skill, config, index }) {
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.88 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: index * 0.04 }}
-            whileHover={{ y: -4, scale: 1.03 }}
-            className="relative flex flex-col items-center justify-center p-5 rounded-2xl cursor-default group border border-primary/25 bg-darker hover:border-accent/50 transition-all duration-200 shadow-md hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] transform-gpu"
+            transition={{ duration: 0.35, delay: index * 0.03 }}
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group border border-primary/20 bg-darker/90 hover:border-accent/60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden"
+            style={{
+                borderColor: `${cardColor}25`,
+            }}
         >
-            {/* Category accent dot */}
-            <span
-                className="absolute top-3 right-3 w-2 h-2 rounded-full"
-                style={{ backgroundColor: config.color }}
-            />
+            {/* Top row: Icon + Category Badge */}
+            <div className="flex items-center justify-between gap-2 mb-3">
+                <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 shrink-0"
+                    style={{ backgroundColor: `${cardColor}20` }}
+                >
+                    <i
+                        className={`${skill.icon_class} text-lg sm:text-xl transition-colors duration-200`}
+                        style={{ color: cardColor }}
+                    />
+                </div>
 
-            {/* Icon */}
-            <i
-                className={`${skill.icon_class} text-3xl sm:text-4xl mb-3 transition-colors duration-200 text-gray-400 group-hover:text-white`}
-            />
+                <span
+                    className="text-[10px] font-mono px-2 py-0.5 rounded-full font-medium"
+                    style={{
+                        backgroundColor: `${cardColor}15`,
+                        color: cardColor,
+                        border: `1px solid ${cardColor}30`,
+                    }}
+                >
+                    {skill.category}
+                </span>
+            </div>
 
             {/* Name */}
-            <span className="text-xs font-semibold text-center leading-tight text-gray-400 group-hover:text-white transition-colors duration-200">
+            <h4 className="text-sm sm:text-base font-bold text-white font-sans group-hover:text-white transition-colors duration-200 mb-1">
                 {skill.name}
-            </span>
+            </h4>
+
+            {/* Description context */}
+            {skill.desc && (
+                <p className="text-[11px] text-gray-400 font-sans leading-relaxed line-clamp-2">
+                    {skill.desc}
+                </p>
+            )}
+
+            {/* Bottom highlight bar */}
+            <div
+                className="absolute bottom-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                    background: `linear-gradient(90deg, transparent, ${cardColor}, transparent)`,
+                }}
+            />
         </motion.div>
     );
 }
@@ -44,6 +68,20 @@ function SkillCard({ skill, config, index }) {
 export default function SkillsSection({ skills }) {
     const { t, lang } = useLanguage();
     const [viewMode, setViewMode] = useState('sphere'); // 'sphere' | 'grid'
+    const [selectedCategory, setSelectedCategory] = useState('all');
+
+    const CATEGORIES = [
+        { id: 'all',          labelPt: 'Todos',          labelEn: 'All',           labelEs: 'Todos' },
+        { id: 'Front-end',    labelPt: 'Frontend',       labelEn: 'Frontend',      labelEs: 'Frontend' },
+        { id: 'Back-end',     labelPt: 'Backend & ERP',  labelEn: 'Backend & ERP', labelEs: 'Backend & ERP' },
+        { id: 'Database',     labelPt: 'Banco de Dados', labelEn: 'Database',      labelEs: 'Base de Datos' },
+        { id: 'DevOps & QA',  labelPt: 'DevOps & QA',    labelEn: 'DevOps & QA',   labelEs: 'DevOps & QA' },
+    ];
+
+    const filteredSkills = skills.filter((skill) => {
+        if (selectedCategory === 'all') return true;
+        return skill.category === selectedCategory;
+    });
 
     return (
         <section id="conhecimentos" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
@@ -112,12 +150,35 @@ export default function SkillsSection({ skills }) {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -15 }}
                             transition={{ duration: 0.4 }}
-                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                            className="w-full flex flex-col items-center"
                         >
-                            {skills.map((skill, index) => {
-                                const cfg = CATEGORY_CONFIG[skill.category] || CATEGORY_CONFIG['Outros'];
-                                return <SkillCard key={skill.id} skill={skill} config={cfg} index={index} />;
-                            })}
+                            {/* Filter Bar for Grid Mode */}
+                            <div className="w-full flex items-center justify-center gap-1.5 sm:gap-2 mb-8 flex-wrap px-2">
+                                {CATEGORIES.map((cat) => {
+                                    const isSelected = selectedCategory === cat.id;
+                                    const label = lang === 'en' ? cat.labelEn : lang === 'es' ? cat.labelEs : cat.labelPt;
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setSelectedCategory(cat.id)}
+                                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
+                                                isSelected
+                                                    ? 'bg-accent text-darker shadow-[0_0_15px_rgba(var(--color-accent-rgb,140,106,74),0.4)] scale-105'
+                                                    : 'bg-darker/80 border border-primary/20 text-gray-400 hover:text-white hover:border-primary/40'
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Cards Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 w-full">
+                                {filteredSkills.map((skill, index) => (
+                                    <SkillCard key={skill.id} skill={skill} index={index} />
+                                ))}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -131,15 +192,12 @@ export default function SkillsSection({ skills }) {
                 >
                     {[1, 2, 3].map((set) => (
                         <div key={set} className="flex gap-10 shrink-0 px-5">
-                            {skills.map((skill) => {
-                                const cfg = CATEGORY_CONFIG[skill.category] || CATEGORY_CONFIG['Outros'];
-                                return (
-                                    <span key={`${set}-${skill.id}`} className="text-gray-500 text-sm flex items-center gap-2">
-                                        <i className={skill.icon_class} style={{ color: cfg.color, opacity: 0.7 }} />
-                                        {skill.name}
-                                    </span>
-                                );
-                            })}
+                            {skills.map((skill) => (
+                                <span key={`${set}-${skill.id}`} className="text-gray-500 text-sm flex items-center gap-2">
+                                    <i className={skill.icon_class} style={{ color: skill.color || 'var(--color-accent)', opacity: 0.8 }} />
+                                    {skill.name}
+                                </span>
+                            ))}
                         </div>
                     ))}
                 </div>
