@@ -4,8 +4,8 @@ const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const SIZE = 24;
-const HOVER_SIZE = 40;
+const SIZE = 32;
+const HOVER_SIZE = 48;
 const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
 const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
@@ -85,14 +85,14 @@ export default function CursorMorph() {
             }
         };
 
-        // Loop contínuo com física suave para a bola de contraste
+        // Loop contínuo com física de inércia suave: velocidade de perseguição reduzida em mais de 70% (0.02)
         const renderLoop = () => {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
-            // Delay fluido e mais relaxado (0.065) para seguir o mouse com inércia evidente
-            ringX += (targetX - ringX) * 0.065;
-            ringY += (targetY - ringY) * 0.065;
+            // Perseguição ultra suave e flutuante
+            ringX += (targetX - ringX) * 0.02;
+            ringY += (targetY - ringY) * 0.02;
 
             contrastEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
 
