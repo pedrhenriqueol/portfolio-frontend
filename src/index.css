@@ -23,12 +23,6 @@ html {
   --font-serif: 'Newsreader', 'Times New Roman', serif;
 }
 
-@media (pointer: fine) {
-  body, a, button, [role="button"], input, select, textarea {
-    cursor: none !important;
-  }
-}
-
 body {
   font-family: var(--font-sans);
 }

@@ -4,7 +4,7 @@ const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const DEFAULT_SIZE = 32;
+const DEFAULT_SIZE = 36;
 const HOVER_SIZE = 64;
 
 export default function CursorMorph() {
@@ -30,14 +30,14 @@ export default function CursorMorph() {
         updateZoom();
         window.addEventListener('resize', updateZoom, { passive: true });
 
-        // Loop contínuo com física e interpolação super suave (60-120 FPS)
+        // Loop contínuo com física suave e delay elegante atrás da seta nativa do mouse
         const renderLoop = () => {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
-            // Interpolação suave e fluida
-            ringX += (targetX - ringX) * 0.18;
-            ringY += (targetY - ringY) * 0.18;
+            // Fator de interpolação mais suave (0.11) para a bola seguir levemente atrás do cursor
+            ringX += (targetX - ringX) * 0.11;
+            ringY += (targetY - ringY) * 0.11;
 
             cursorEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
 
@@ -49,7 +49,7 @@ export default function CursorMorph() {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            // Detecta elementos clicáveis / links / botões / textos principais
+            // Detecta elementos interativos
             const target = e.target;
             const interactive = Boolean(
                 target.closest('button, a, input, textarea, select, [role="button"], .cursor-pointer, [data-cursor-hover="true"], h1, h2, h3, [data-sphere-node]')
@@ -60,6 +60,7 @@ export default function CursorMorph() {
                 const targetSize = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
                 cursorEl.style.width = `${targetSize}px`;
                 cursorEl.style.height = `${targetSize}px`;
+                cursorEl.style.opacity = isHovered ? '0.85' : '0.65';
             }
         };
 
@@ -77,13 +78,14 @@ export default function CursorMorph() {
     return (
         <div
             ref={cursorRef}
-            className="pointer-events-none fixed top-0 left-0 z-[999999] rounded-full will-change-transform"
+            className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full will-change-transform"
             style={{
                 width:           `${DEFAULT_SIZE}px`,
                 height:          `${DEFAULT_SIZE}px`,
-                backgroundColor: '#ffffff',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                opacity:         0.65,
                 mixBlendMode:    'difference',
-                transition:      'width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition:      'width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease',
                 transform:       'translate3d(-200px, -200px, 0) translate(-50%, -50%)',
             }}
         />
