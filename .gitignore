@@ -24,4 +24,8 @@ dist-ssr
 *.sw?
 
 _laravel_backend/
+*.mp4
+*.mov
+*.webm
+
 
