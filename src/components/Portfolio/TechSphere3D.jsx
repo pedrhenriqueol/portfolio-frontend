@@ -2,27 +2,38 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
-// ── Tecnologias com categorização clara, cores e descrições de contexto ──
+// ── Cores Padronizadas e Harmoniosas por Categoria (Design Editorial Consistente) ──
+const CATEGORY_THEME = {
+    'Frontend':     { color: '#60A5FA', badgeBg: 'rgba(96, 165, 250, 0.12)', border: 'rgba(96, 165, 250, 0.3)' }, // Azul Sereno
+    'Backend & ERP':{ color: '#F87171', badgeBg: 'rgba(248, 113, 113, 0.12)', border: 'rgba(248, 113, 113, 0.3)' }, // Vermelho Suave Coral
+    'Database':     { color: '#34D399', badgeBg: 'rgba(52, 211, 153, 0.12)', border: 'rgba(52, 211, 153, 0.3)' }, // Verde Esmeralda
+    'DevOps & QA':  { color: '#FBBF24', badgeBg: 'rgba(251, 191, 36, 0.12)',  border: 'rgba(251, 191, 36, 0.3)' }, // Dourado Âmbar
+};
+
+// ── Tecnologias com categorização clara e paleta unificada ──
 const TECH_ITEMS = [
-    { id: 'delphi',    name: 'Delphi 11',      icon: 'fas fa-desktop',             color: '#E63946', category: 'Backend & ERP', desc: 'VCL / UniGui, Sistemas ERP & PDV' },
-    { id: 'unigui',    name: 'UniGui Web',     icon: 'fas fa-globe',               color: '#457B9D', category: 'Backend & ERP', desc: 'Aplicações Web em tempo real com Delphi' },
-    { id: 'react',     name: 'React 19',       icon: 'fab fa-react',               color: '#61DAFB', category: 'Frontend',      desc: 'SPAs, Componentes reativos & Hooks' },
-    { id: 'ts',        name: 'TypeScript',     icon: 'fab fa-js-square',           color: '#3178C6', category: 'Frontend',      desc: 'Tipagem estrita & Código escalável' },
-    { id: 'laravel',   name: 'PHP / Laravel',  icon: 'fab fa-laravel',             color: '#FF2D20', category: 'Backend & ERP', desc: 'APIs RESTful, Eloquent & Arquitetura MVC' },
-    { id: 'sqlserver', name: 'SQL Server',     icon: 'fas fa-database',            color: '#CC292B', category: 'Database',       desc: 'Tuning de queries, Índices & Stored Procedures' },
-    { id: 'mysql',     name: 'MySQL',          icon: 'fas fa-server',              color: '#00758F', category: 'Database',       desc: 'Modelagem relacional & Otimização' },
-    { id: 'postman',   name: 'QA & Postman',   icon: 'fas fa-paper-plane',         color: '#FF6C37', category: 'DevOps & QA',   desc: 'Testes de integração & Validação de endpoints' },
-    { id: 'docker',    name: 'Docker',         icon: 'fab fa-docker',              color: '#2496ED', category: 'DevOps & QA',   desc: 'Containers & Ambientes padronizados' },
-    { id: 'java',      name: 'Java / Swing',   icon: 'fab fa-java',                color: '#ED8B00', category: 'Backend & ERP', desc: 'Estruturas de dados & POO' },
-    { id: 'python',    name: 'Python / Flask', icon: 'fab fa-python',              color: '#3776AB', category: 'Backend & ERP', desc: 'Automações, Scripts & Micro-APIs' },
-    { id: 'tailwind',  name: 'Tailwind CSS',   icon: 'fab fa-css3-alt',            color: '#38BDF8', category: 'Frontend',      desc: 'Design systems, Layouts fluidos & Responsividade' },
-    { id: 'acbr',      name: 'ACBr Fiscal',    icon: 'fas fa-file-invoice-dollar', color: '#10B981', category: 'Backend & ERP', desc: 'Emissão NF-e, NFC-e & Legislação Fiscal' },
-    { id: 'git',       name: 'Git & GitHub',   icon: 'fab fa-github',              color: '#F05032', category: 'DevOps & QA',   desc: 'CI/CD, Versionamento & Workflows' },
-    { id: 'linux',     name: 'Linux Server',   icon: 'fab fa-linux',               color: '#FCC624', category: 'DevOps & QA',   desc: 'Deploy, Configuração Nginx & Shell Script' },
-    { id: 'rest',      name: 'APIs RESTful',   icon: 'fas fa-network-wired',       color: '#A855F7', category: 'Backend & ERP', desc: 'Contratos de dados, JSON & Autenticação Sanctum' },
-    { id: 'scrum',     name: 'Scrum / Kanban', icon: 'fas fa-tasks',               color: '#F59E0B', category: 'DevOps & QA',   desc: 'Metodologias ágeis & Entregas contínuas' },
-    { id: 'qa',        name: 'Regressão QA',   icon: 'fas fa-bug',                 color: '#EC4899', category: 'DevOps & QA',   desc: 'Prevenção de bugs & Testes de carga' },
-];
+    { id: 'delphi',    name: 'Delphi 11',      icon: 'fas fa-desktop',             category: 'Backend & ERP', desc: 'VCL / UniGui, Sistemas ERP & PDV' },
+    { id: 'unigui',    name: 'UniGui Web',     icon: 'fas fa-globe',               category: 'Backend & ERP', desc: 'Aplicações Web em tempo real com Delphi' },
+    { id: 'react',     name: 'React 19',       icon: 'fab fa-react',               category: 'Frontend',      desc: 'SPAs, Componentes reativos & Hooks' },
+    { id: 'ts',        name: 'TypeScript',     icon: 'fab fa-js-square',           category: 'Frontend',      desc: 'Tipagem estrita & Código escalável' },
+    { id: 'laravel',   name: 'PHP / Laravel',  icon: 'fab fa-laravel',             category: 'Backend & ERP', desc: 'APIs RESTful, Eloquent & Arquitetura MVC' },
+    { id: 'sqlserver', name: 'SQL Server',     icon: 'fas fa-database',            category: 'Database',      desc: 'Tuning de queries, Índices & Stored Procedures' },
+    { id: 'mysql',     name: 'MySQL',          icon: 'fas fa-server',              category: 'Database',      desc: 'Modelagem relacional & Otimização' },
+    { id: 'postman',   name: 'QA & Postman',   icon: 'fas fa-paper-plane',         category: 'DevOps & QA',   desc: 'Testes de integração & Validação de endpoints' },
+    { id: 'docker',    name: 'Docker',         icon: 'fab fa-docker',              category: 'DevOps & QA',   desc: 'Containers & Ambientes padronizados' },
+    { id: 'java',      name: 'Java / Swing',   icon: 'fab fa-java',                category: 'Backend & ERP', desc: 'Estruturas de dados & POO' },
+    { id: 'python',    name: 'Python / Flask', icon: 'fab fa-python',              category: 'Backend & ERP', desc: 'Automações, Scripts & Micro-APIs' },
+    { id: 'tailwind',  name: 'Tailwind CSS',   icon: 'fab fa-css3-alt',            category: 'Frontend',      desc: 'Design systems, Layouts fluidos & Responsividade' },
+    { id: 'acbr',      name: 'ACBr Fiscal',    icon: 'fas fa-file-invoice-dollar', category: 'Backend & ERP', desc: 'Emissão NF-e, NFC-e & Legislação Fiscal' },
+    { id: 'git',       name: 'Git & GitHub',   icon: 'fab fa-github',              category: 'DevOps & QA',   desc: 'CI/CD, Versionamento & Workflows' },
+    { id: 'linux',     name: 'Linux Server',   icon: 'fab fa-linux',               category: 'DevOps & QA',   desc: 'Deploy, Configuração Nginx & Shell Script' },
+    { id: 'rest',      name: 'APIs RESTful',   icon: 'fas fa-network-wired',       category: 'Backend & ERP', desc: 'Contratos de dados, JSON & Autenticação Sanctum' },
+    { id: 'scrum',     name: 'Scrum / Kanban', icon: 'fas fa-tasks',               category: 'DevOps & QA',   desc: 'Metodologias ágeis & Entregas contínuas' },
+    { id: 'qa',        name: 'Regressão QA',   icon: 'fas fa-bug',                 category: 'DevOps & QA',   desc: 'Prevenção de bugs & Testes de carga' },
+].map(item => ({
+    ...item,
+    color: CATEGORY_THEME[item.category]?.color || '#8C6A4A',
+}));
 
 const CATEGORIES = [
     { id: 'all',          labelPt: 'Todos',          labelEn: 'All',           labelEs: 'Todos' },
@@ -56,10 +67,11 @@ export default function TechSphere3D() {
     const [hoveredTech, setHoveredTech] = useState(null);
     const [activeTech, setActiveTech] = useState(null);
 
-    // Estado físico e de rotação ultra suave
+    // Estado físico: velocidade base ultra-lenta / quase estática
     const angleRef = useRef({ x: 0.15, y: 0 });
-    const speedRef = useRef({ rx: 0.002, ry: 0.0035 });
+    const speedRef = useRef({ rx: 0.0003, ry: 0.0006 });
     const isDraggingRef = useRef(false);
+    const isHoveringRef = useRef(false);
     const dragDistanceRef = useRef(0);
     const lastMouseRef = useRef({ x: 0, y: 0 });
     const isVisibleRef = useRef(true);
@@ -70,7 +82,7 @@ export default function TechSphere3D() {
     // ── Projeção Matemática 3D → 2D com interpolação contínua ──
     const project = useCallback(() => {
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-        const RADIUS = isMobile ? 150 : 210;
+        const RADIUS = isMobile ? 155 : 220;
         const FOV = isMobile ? 380 : 480;
 
         const ax = angleRef.current.x;
@@ -96,11 +108,11 @@ export default function TechSphere3D() {
                 ...item,
                 left: x1 * RADIUS * scale,
                 top: y2 * RADIUS * scale,
-                scale: scale * (0.65 + depth * 0.35) * (isMatch ? 1 : 0.75),
+                scale: scale * (0.75 + depth * 0.35) * (isMatch ? 1 : 0.75),
                 depth,
                 z2,
                 zIndex: Math.floor((z2 + 1) * 100),
-                alpha: (0.12 + depth * 0.88) * (isMatch ? 1 : 0.2),
+                alpha: (0.15 + depth * 0.85) * (isMatch ? 1 : 0.2),
                 isMatch,
             };
         });
@@ -108,7 +120,7 @@ export default function TechSphere3D() {
         setProjected(result);
     }, [baseItems, selectedCategory]);
 
-    // ── Loop de Animação a 60 FPS com Inércia Suave ──
+    // ── Loop de Animação a 60 FPS ──
     useEffect(() => {
         let raf;
         const lerp = (a, b, t) => a + (b - a) * t;
@@ -117,9 +129,15 @@ export default function TechSphere3D() {
             if (!isVisibleRef.current) return;
 
             if (!isDraggingRef.current) {
-                // Desacelera a rotação suavemente caso o mouse tenha soltado
-                speedRef.current.rx = lerp(speedRef.current.rx, 0.0015, 0.03);
-                speedRef.current.ry = lerp(speedRef.current.ry, 0.003, 0.03);
+                // Quando o mouse está sobre o globo ou sobre uma stack, para completamente para facilitar o clique
+                if (isHoveringRef.current) {
+                    speedRef.current.rx = lerp(speedRef.current.rx, 0, 0.08);
+                    speedRef.current.ry = lerp(speedRef.current.ry, 0, 0.08);
+                } else {
+                    // Quando ocioso, rotação extremamente lenta e suave (quase imperceptível)
+                    speedRef.current.rx = lerp(speedRef.current.rx, 0.0003, 0.02);
+                    speedRef.current.ry = lerp(speedRef.current.ry, 0.0006, 0.02);
+                }
 
                 angleRef.current.x += speedRef.current.rx;
                 angleRef.current.y += speedRef.current.ry;
@@ -147,7 +165,7 @@ export default function TechSphere3D() {
         };
     }, [project]);
 
-    // ── Interações de Mouse e Touch Perfeitas ──
+    // ── Interações de Mouse e Touch ──
     const onMouseDown = (e) => {
         if (e.button !== 0) return;
         isDraggingRef.current = true;
@@ -157,15 +175,7 @@ export default function TechSphere3D() {
 
     const onMouseMove = (e) => {
         if (!isDraggingRef.current) {
-            if (containerRef.current) {
-                const rect = containerRef.current.getBoundingClientRect();
-                const mx = e.clientX - (rect.left + rect.width / 2);
-                const my = e.clientY - (rect.top + rect.height / 2);
-                speedRef.current = {
-                    rx: -my * 0.00003,
-                    ry: mx * 0.00003,
-                };
-            }
+            isHoveringRef.current = true;
             return;
         }
 
@@ -173,12 +183,12 @@ export default function TechSphere3D() {
         const dy = e.clientY - lastMouseRef.current.y;
         dragDistanceRef.current += Math.abs(dx) + Math.abs(dy);
 
-        angleRef.current.y += dx * 0.007;
-        angleRef.current.x -= dy * 0.007;
+        angleRef.current.y += dx * 0.006;
+        angleRef.current.x -= dy * 0.006;
 
         speedRef.current = {
-            rx: -dy * 0.0015,
-            ry: dx * 0.0015,
+            rx: -dy * 0.001,
+            ry: dx * 0.001,
         };
 
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
@@ -201,12 +211,12 @@ export default function TechSphere3D() {
         const dy = e.touches[0].clientY - lastMouseRef.current.y;
         dragDistanceRef.current += Math.abs(dx) + Math.abs(dy);
 
-        angleRef.current.y += dx * 0.008;
-        angleRef.current.x -= dy * 0.008;
+        angleRef.current.y += dx * 0.007;
+        angleRef.current.x -= dy * 0.007;
 
         speedRef.current = {
-            rx: -dy * 0.002,
-            ry: dx * 0.002,
+            rx: -dy * 0.0015,
+            ry: dx * 0.0015,
         };
 
         lastMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -237,7 +247,7 @@ export default function TechSphere3D() {
                                     setActiveTech(null);
                                 }
                             }}
-                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 ${
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
                                 isSelected
                                     ? 'bg-accent text-darker shadow-[0_0_15px_rgba(var(--color-accent-rgb,140,106,74),0.4)] scale-105'
                                     : 'bg-darker/80 border border-primary/20 text-gray-400 hover:text-white hover:border-primary/40'
@@ -258,9 +268,12 @@ export default function TechSphere3D() {
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
+                onMouseEnter={() => {
+                    isHoveringRef.current = true;
+                }}
                 onMouseLeave={() => {
                     isDraggingRef.current = false;
-                    speedRef.current = { rx: 0.0015, ry: 0.003 };
+                    isHoveringRef.current = false;
                     setHoveredTech(null);
                 }}
                 className="relative w-full h-[480px] sm:h-[540px] md:h-[580px] flex items-center justify-center overflow-hidden rounded-3xl bg-dark/40 border border-primary/20 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.6)] cursor-grab active:cursor-grabbing"
@@ -271,20 +284,20 @@ export default function TechSphere3D() {
 
                 {/* Anéis orbitais decorativos sutis */}
                 <div
-                    className="absolute pointer-events-none animate-[spin_90s_linear_infinite]"
+                    className="absolute pointer-events-none animate-[spin_120s_linear_infinite]"
                     style={{
-                        width: 460,
-                        height: 460,
+                        width: 470,
+                        height: 470,
                         borderRadius: '50%',
                         border: '1px dashed rgba(var(--color-accent-rgb, 140, 106, 74), 0.25)',
                         opacity: 0.35,
                     }}
                 />
                 <div
-                    className="absolute pointer-events-none animate-[spin_140s_linear_infinite_reverse]"
+                    className="absolute pointer-events-none animate-[spin_180s_linear_infinite_reverse]"
                     style={{
-                        width: 400,
-                        height: 400,
+                        width: 410,
+                        height: 410,
                         borderRadius: '50%',
                         border: '1px solid rgba(255, 255, 255, 0.04)',
                         transform: 'rotateX(68deg) rotateZ(30deg)',
@@ -294,14 +307,6 @@ export default function TechSphere3D() {
 
                 {/* Linhas de Constelação SVG Ultra-Leves */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    <defs>
-                        {projected.map((node) => (
-                            <radialGradient key={`grad-${node.id}`} id={`glow-${node.id}`}>
-                                <stop offset="0%" stopColor={node.color} stopOpacity="0.6" />
-                                <stop offset="100%" stopColor={node.color} stopOpacity="0" />
-                            </radialGradient>
-                        ))}
-                    </defs>
                     <g transform={`translate(${containerRef.current ? containerRef.current.clientWidth / 2 : 300}, ${containerRef.current ? containerRef.current.clientHeight / 2 : 250})`}>
                         {projected.map((nodeA, i) =>
                             projected.slice(i + 1).map((nodeB) => {
@@ -309,9 +314,9 @@ export default function TechSphere3D() {
                                 const dx = nodeA.left - nodeB.left;
                                 const dy = nodeA.top - nodeB.top;
                                 const dist = Math.sqrt(dx * dx + dy * dy);
-                                if (dist > 130) return null;
+                                if (dist > 140) return null;
 
-                                const opacity = (1 - dist / 130) * ((nodeA.depth + nodeB.depth) / 2) * 0.3;
+                                const opacity = (1 - dist / 140) * ((nodeA.depth + nodeB.depth) / 2) * 0.25;
                                 if (opacity < 0.02) return null;
 
                                 return (
@@ -331,7 +336,7 @@ export default function TechSphere3D() {
                     </g>
                 </svg>
 
-                {/* ── Nós Esféricos Limpos e Atraentes (Ícone Circular + Label Nítido) ── */}
+                {/* ── Nós Esféricos com Ícones Aumentados Levemente e Legíveis ── */}
                 <div className="relative w-0 h-0 flex items-center justify-center pointer-events-none">
                     {projected.map((node) => {
                         const isHovered = hoveredTech?.id === node.id;
@@ -343,37 +348,37 @@ export default function TechSphere3D() {
                                 onClick={() => handleNodeClick(node)}
                                 onMouseEnter={() => setHoveredTech(node)}
                                 onMouseLeave={() => setHoveredTech(null)}
-                                className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full group pointer-events-auto transition-[box-shadow,border-color,background-color] duration-200"
+                                className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2.5 px-3.5 py-2 rounded-full group pointer-events-auto transition-[box-shadow,border-color,background-color] duration-200 cursor-pointer"
                                 style={{
                                     transform: `translate3d(${node.left}px, ${node.top}px, 0) scale(${node.scale * (isHovered || isSelected ? 1.15 : 1)})`,
                                     zIndex: (isHovered || isSelected) ? 9999 : node.zIndex,
                                     opacity: (isHovered || isSelected) ? 1 : node.alpha,
                                     backgroundColor: (isHovered || isSelected)
                                         ? 'rgba(15, 12, 10, 0.95)'
-                                        : 'rgba(26, 19, 16, 0.85)',
+                                        : 'rgba(24, 18, 15, 0.85)',
                                     borderColor: (isHovered || isSelected)
                                         ? node.color
-                                        : 'rgba(255, 255, 255, 0.1)',
+                                        : `${node.color}35`,
                                     borderWidth: '1px',
                                     boxShadow: (isHovered || isSelected)
-                                        ? `0 0 20px ${node.color}50, inset 0 0 10px ${node.color}20`
-                                        : '0 4px 12px rgba(0, 0, 0, 0.4)',
+                                        ? `0 0 22px ${node.color}50, inset 0 0 10px ${node.color}20`
+                                        : '0 4px 14px rgba(0, 0, 0, 0.4)',
                                     pointerEvents: node.depth > 0.35 && node.isMatch ? 'auto' : 'none',
                                 }}
                             >
-                                {/* Ícone */}
+                                {/* Ícone levemente aumentado (w-7 h-7 com ícone text-sm/base) */}
                                 <div
-                                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110"
                                     style={{ backgroundColor: `${node.color}20` }}
                                 >
                                     <i
-                                        className={`${node.icon} text-xs sm:text-sm`}
+                                        className={`${node.icon} text-sm sm:text-base`}
                                         style={{ color: node.color }}
                                     />
                                 </div>
 
                                 {/* Nome da tecnologia */}
-                                <span className="text-[11px] sm:text-xs font-semibold tracking-wide font-sans text-gray-200 whitespace-nowrap group-hover:text-white transition-colors">
+                                <span className="text-xs sm:text-sm font-semibold tracking-wide font-sans text-gray-100 whitespace-nowrap group-hover:text-white transition-colors">
                                     {node.name}
                                 </span>
                             </div>

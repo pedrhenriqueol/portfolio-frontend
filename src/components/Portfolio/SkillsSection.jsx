@@ -3,8 +3,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import TechSphere3D from './TechSphere3D';
 
+// ── Sistema de Cores Harmonioso e Padronizado por Categoria ──
+const CATEGORY_STYLES = {
+    'Front-end': {
+        color: '#60A5FA', // Azul Sereno
+        border: 'rgba(96, 165, 250, 0.25)',
+        badgeBg: 'rgba(96, 165, 250, 0.12)',
+        iconBg: 'rgba(96, 165, 250, 0.15)',
+    },
+    'Back-end': {
+        color: '#F87171', // Coral / Vermelho Suave
+        border: 'rgba(248, 113, 113, 0.25)',
+        badgeBg: 'rgba(248, 113, 113, 0.12)',
+        iconBg: 'rgba(248, 113, 113, 0.15)',
+    },
+    'Database': {
+        color: '#34D399', // Verde Esmeralda
+        border: 'rgba(52, 211, 153, 0.25)',
+        badgeBg: 'rgba(52, 211, 153, 0.12)',
+        iconBg: 'rgba(52, 211, 153, 0.15)',
+    },
+    'DevOps & QA': {
+        color: '#FBBF24', // Dourado Âmbar
+        border: 'rgba(251, 191, 36, 0.25)',
+        badgeBg: 'rgba(251, 191, 36, 0.12)',
+        iconBg: 'rgba(251, 191, 36, 0.15)',
+    },
+};
+
 function SkillCard({ skill, index }) {
-    const cardColor = skill.color || 'var(--color-accent)';
+    const style = CATEGORY_STYLES[skill.category] || {
+        color: 'var(--color-accent, #8C6A4A)',
+        border: 'rgba(140, 106, 74, 0.25)',
+        badgeBg: 'rgba(140, 106, 74, 0.12)',
+        iconBg: 'rgba(140, 106, 74, 0.15)',
+    };
 
     return (
         <motion.div
@@ -13,29 +46,29 @@ function SkillCard({ skill, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -5, scale: 1.02 }}
-            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group border border-primary/20 bg-darker/90 hover:border-accent/60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden"
+            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:border-opacity-60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden"
             style={{
-                borderColor: `${cardColor}25`,
+                border: `1px solid ${style.border}`,
             }}
         >
             {/* Top row: Icon + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
                 <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 shrink-0"
-                    style={{ backgroundColor: `${cardColor}20` }}
+                    style={{ backgroundColor: style.iconBg }}
                 >
                     <i
                         className={`${skill.icon_class} text-lg sm:text-xl transition-colors duration-200`}
-                        style={{ color: cardColor }}
+                        style={{ color: style.color }}
                     />
                 </div>
 
                 <span
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full font-medium"
+                    className="text-[10px] font-mono px-2.5 py-0.5 rounded-full font-medium"
                     style={{
-                        backgroundColor: `${cardColor}15`,
-                        color: cardColor,
-                        border: `1px solid ${cardColor}30`,
+                        backgroundColor: style.badgeBg,
+                        color: style.color,
+                        border: `1px solid ${style.border}`,
                     }}
                 >
                     {skill.category}
@@ -58,7 +91,7 @@ function SkillCard({ skill, index }) {
             <div
                 className="absolute bottom-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{
-                    background: `linear-gradient(90deg, transparent, ${cardColor}, transparent)`,
+                    background: `linear-gradient(90deg, transparent, ${style.color}, transparent)`,
                 }}
             />
         </motion.div>
@@ -192,12 +225,15 @@ export default function SkillsSection({ skills }) {
                 >
                     {[1, 2, 3].map((set) => (
                         <div key={set} className="flex gap-10 shrink-0 px-5">
-                            {skills.map((skill) => (
-                                <span key={`${set}-${skill.id}`} className="text-gray-500 text-sm flex items-center gap-2">
-                                    <i className={skill.icon_class} style={{ color: skill.color || 'var(--color-accent)', opacity: 0.8 }} />
-                                    {skill.name}
-                                </span>
-                            ))}
+                            {skills.map((skill) => {
+                                const style = CATEGORY_STYLES[skill.category] || { color: 'var(--color-accent)' };
+                                return (
+                                    <span key={`${set}-${skill.id}`} className="text-gray-500 text-sm flex items-center gap-2">
+                                        <i className={skill.icon_class} style={{ color: style.color, opacity: 0.8 }} />
+                                        {skill.name}
+                                    </span>
+                                );
+                            })}
                         </div>
                     ))}
                 </div>
