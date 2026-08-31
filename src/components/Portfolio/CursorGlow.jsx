@@ -1,31 +1,27 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const SIZE = 20;
-const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
-const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
-const T_FREE  = `width 0.28s ${BEZIER}, height 0.28s ${BEZIER}, border-radius 0.28s ${BEZIER}, opacity 0.2s ease`;
-
 export default function CursorMorph() {
-    const elRef = useRef(null);
+    const dotRef = useRef(null);
+    const ringRef = useRef(null);
+    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
         if (isTouchDevice()) return;
 
-        const el = elRef.current;
-        if (!el) return;
+        const dot = dotRef.current;
+        const ring = ringRef.current;
+        if (!dot) return;
 
         let mouseX = -200;
         let mouseY = -200;
-        let activeCard = null;
-        let returnTimeout = null;
-        let moveRaf = null;
-        let scrollRaf = null;
-        let cachedZoom = 0.8;
+        let ringX = -200;
+        let ringY = -200;
+        let rafId = null;
+        let cachedZoom = 1;
 
         const updateZoom = () => {
             cachedZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
@@ -33,130 +29,70 @@ export default function CursorMorph() {
         updateZoom();
         window.addEventListener('resize', updateZoom, { passive: true });
 
-        // Identifica com precisão qualquer card morphável na página
-        const findCard = (target) => {
-            if (!target || target === document.body || target === document.documentElement) return null;
-            if (target.closest('[data-no-morph="true"], .no-morph, nav, input, textarea')) return null;
-
-            const candidate = target.closest(
-                '[data-cursor-morph="true"], .cursor-morph, .rounded-2xl.border, .rounded-xl.border, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
-            );
-            if (!candidate || candidate.closest('[data-no-morph="true"], .no-morph')) return null;
-
-            const rect = candidate.getBoundingClientRect();
-            const w = rect.width / cachedZoom;
-            const h = rect.height / cachedZoom;
-
-            // Filtro de dimensões adequadas para morph
-            if (w >= 60 && h >= 40 && w <= (window.innerWidth / cachedZoom) * 0.98 && h <= 1600) {
-                return candidate;
-            }
-            return null;
-        };
-
-        const updatePosition = (isScroll = false) => {
-            if (activeCard) {
-                const rect = activeCard.getBoundingClientRect();
-                const radius = getComputedStyle(activeCard).borderRadius || '16px';
-                const left = rect.left / cachedZoom;
-                const top  = rect.top / cachedZoom;
-                const w    = rect.width / cachedZoom;
-                const h    = rect.height / cachedZoom;
-
-                el.style.transition   = isScroll ? T_SCROLL : T_MORPH;
-                el.style.width        = `${w}px`;
-                el.style.height       = `${h}px`;
-                el.style.borderRadius = radius;
-                el.style.transform    = `translate3d(${left}px, ${top}px, 0)`;
-            } else {
-                const curX = mouseX / cachedZoom - SIZE / 2;
-                const curY = mouseY / cachedZoom - SIZE / 2;
-                el.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
-            }
-        };
-
         const onMouseMove = (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            mouseX = e.clientX / cachedZoom;
+            mouseY = e.clientY / cachedZoom;
 
-            if (moveRaf) return;
+            // O ponto central segue o cursor instantaneamente para máxima precisão
+            dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
 
-            moveRaf = requestAnimationFrame(() => {
-                moveRaf = null;
-                const card = findCard(e.target);
-
-                if (card !== activeCard) {
-                    activeCard = card;
-                    if (returnTimeout) clearTimeout(returnTimeout);
-
-                    if (activeCard) {
-                        updatePosition(false);
-                    } else {
-                        const curX = mouseX / cachedZoom - SIZE / 2;
-                        const curY = mouseY / cachedZoom - SIZE / 2;
-
-                        el.style.transition   = T_MORPH;
-                        el.style.width        = `${SIZE}px`;
-                        el.style.height       = `${SIZE}px`;
-                        el.style.borderRadius = '50%';
-                        el.style.transform    = `translate3d(${curX}px, ${curY}px, 0)`;
-
-                        returnTimeout = setTimeout(() => {
-                            if (!activeCard) {
-                                el.style.transition = T_FREE;
-                            }
-                        }, 380);
-                    }
-                } else if (!activeCard) {
-                    const curX = mouseX / cachedZoom - SIZE / 2;
-                    const curY = mouseY / cachedZoom - SIZE / 2;
-                    el.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
-                }
-            });
+            // Detecta se está sobre elemento interativo para expandir a lente de contraste
+            const target = e.target;
+            const isInteractive = Boolean(
+                target.closest('button, a, input, textarea, select, [role="button"], .cursor-pointer, [data-cursor-hover="true"]')
+            );
+            setIsHovered(isInteractive);
         };
 
-        const onScroll = () => {
-            if (activeCard) {
-                if (!scrollRaf) {
-                    scrollRaf = requestAnimationFrame(() => {
-                        scrollRaf = null;
-                        updatePosition(true);
-                    });
-                }
+        // Loop de inércia suave para o anel / halo externo
+        const render = () => {
+            ringX += (mouseX - ringX) * 0.18;
+            ringY += (mouseY - ringY) * 0.18;
+
+            if (ring) {
+                ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
             }
+
+            rafId = requestAnimationFrame(render);
         };
 
+        rafId = requestAnimationFrame(render);
         window.addEventListener('mousemove', onMouseMove, { passive: true });
-        window.addEventListener('scroll', onScroll, { passive: true });
 
         return () => {
             window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', updateZoom);
-            if (returnTimeout) clearTimeout(returnTimeout);
-            if (moveRaf) cancelAnimationFrame(moveRaf);
-            if (scrollRaf) cancelAnimationFrame(scrollRaf);
+            if (rafId) cancelAnimationFrame(rafId);
         };
     }, []);
 
     if (isTouchDevice()) return null;
 
     return (
-        <div
-            ref={elRef}
-            className="pointer-events-none fixed top-0 left-0 z-[99998] transform-gpu"
-            style={{
-                width:         `${SIZE}px`,
-                height:        `${SIZE}px`,
-                borderRadius:  '50%',
-                border:        '1.5px solid var(--color-border)',
-                background:    'var(--color-border)',
-                boxShadow:     'none',
-                transition:    T_FREE,
-                willChange:    'transform, width, height, border-radius',
-                transform:     'translate3d(-200px, -200px, 0)',
-                contain:       'layout style',
-            }}
-        />
+        <>
+            {/* Lente de Contraste Invertido (Mix Blend Difference) */}
+            <div
+                ref={dotRef}
+                className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full bg-white transition-[width,height,opacity] duration-200 ease-out transform -translate-x-1/2 -translate-y-1/2 will-change-transform"
+                style={{
+                    width: isHovered ? '42px' : '12px',
+                    height: isHovered ? '42px' : '12px',
+                    mixBlendMode: 'difference',
+                    opacity: isHovered ? 0.95 : 0.85,
+                }}
+            />
+
+            {/* Halo / Anel Externo Fluido Sutil */}
+            <div
+                ref={ringRef}
+                className="pointer-events-none fixed top-0 left-0 z-[99998] rounded-full border border-accent/40 transition-[width,height,opacity,border-color] duration-300 ease-out transform -translate-x-1/2 -translate-y-1/2 will-change-transform"
+                style={{
+                    width: isHovered ? '56px' : '28px',
+                    height: isHovered ? '56px' : '28px',
+                    opacity: isHovered ? 0.4 : 0.25,
+                    boxShadow: isHovered ? '0 0 15px rgba(var(--color-accent-rgb, 200, 150, 100), 0.25)' : 'none',
+                }}
+            />
+        </>
     );
 }

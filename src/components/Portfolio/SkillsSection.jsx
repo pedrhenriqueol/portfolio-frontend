@@ -1,5 +1,7 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import TechSphere3D from './TechSphere3D';
 
 const CATEGORY_CONFIG = {
     'Back-end':  { color: 'var(--color-accent)' },
@@ -40,7 +42,9 @@ function SkillCard({ skill, config, index }) {
 }
 
 export default function SkillsSection({ skills }) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
+    const [viewMode, setViewMode] = useState('sphere'); // 'sphere' | 'grid'
+
     return (
         <section id="conhecimentos" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,24 +55,72 @@ export default function SkillsSection({ skills }) {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-80px' }}
                     transition={{ duration: 0.7 }}
-                    className="text-center mb-14"
+                    className="text-center mb-10"
                 >
                     <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
                         {t('skills.tag')}
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">{t('skills.title')}</h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                    <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base mb-8">
                         {t('skills.subtitle')}
                     </p>
+
+                    {/* Visualizer Mode Toggle */}
+                    <div className="inline-flex items-center p-1 rounded-full bg-darker border border-primary/25 shadow-lg">
+                        <button
+                            onClick={() => setViewMode('sphere')}
+                            className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 cursor-pointer ${
+                                viewMode === 'sphere'
+                                    ? 'bg-accent text-darker shadow-md'
+                                    : 'text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            <i className="fas fa-globe text-xs" />
+                            {lang === 'en' ? '3D Interactive Globe' : lang === 'es' ? 'Globo 3D Interactivo' : 'Globo 3D Interativo'}
+                        </button>
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 cursor-pointer ${
+                                viewMode === 'grid'
+                                    ? 'bg-accent text-darker shadow-md'
+                                    : 'text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            <i className="fas fa-th-large text-xs" />
+                            {lang === 'en' ? 'Detailed Grid' : lang === 'es' ? 'Grade Detallada' : 'Grade Detalhada'}
+                        </button>
+                    </div>
                 </motion.div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {skills.map((skill, index) => {
-                        const cfg = CATEGORY_CONFIG[skill.category] || CATEGORY_CONFIG['Outros'];
-                        return <SkillCard key={skill.id} skill={skill} config={cfg} index={index} />;
-                    })}
-                </div>
+                {/* Content View: 3D Sphere or Grid */}
+                <AnimatePresence mode="wait">
+                    {viewMode === 'sphere' ? (
+                        <motion.div
+                            key="sphere-view"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.4 }}
+                            className="w-full flex flex-col items-center"
+                        >
+                            <TechSphere3D />
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="grid-view"
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -15 }}
+                            transition={{ duration: 0.4 }}
+                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                        >
+                            {skills.map((skill, index) => {
+                                const cfg = CATEGORY_CONFIG[skill.category] || CATEGORY_CONFIG['Outros'];
+                                return <SkillCard key={skill.id} skill={skill} config={cfg} index={index} />;
+                            })}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Marquee acelerado por GPU */}
