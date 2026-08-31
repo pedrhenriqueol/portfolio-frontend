@@ -90,9 +90,9 @@ export default function CursorMorph() {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
-            // Delay elegante e orgânico (0.12) para a bola seguir o cursor com peso natural
-            ringX += (targetX - ringX) * 0.12;
-            ringY += (targetY - ringY) * 0.12;
+            // Delay fluido e mais relaxado (0.065) para seguir o mouse com inércia evidente
+            ringX += (targetX - ringX) * 0.065;
+            ringY += (targetY - ringY) * 0.065;
 
             contrastEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
 
