@@ -4,41 +4,18 @@ import { useLanguage } from '../../context/LanguageContext';
 
 // ── Cores Padronizadas e Harmoniosas por Categoria (Design Editorial Consistente) ──
 const CATEGORY_THEME = {
-    'Frontend':     { color: '#60A5FA' }, // Azul Sereno
-    'Backend & ERP':{ color: '#F87171' }, // Vermelho Suave Coral
+    'Front-end':    { color: '#60A5FA' }, // Azul Sereno
+    'Frontend':     { color: '#60A5FA' },
+    'Back-end':     { color: '#F87171' }, // Vermelho Suave Coral
+    'Backend & ERP':{ color: '#F87171' },
     'Database':     { color: '#34D399' }, // Verde Esmeralda
     'DevOps & QA':  { color: '#FBBF24' }, // Dourado Âmbar
 };
 
-// ── Tecnologias com categorização clara e paleta unificada ──
-const TECH_ITEMS = [
-    { id: 'delphi',    name: 'Delphi 11',      icon: 'fas fa-desktop',             category: 'Backend & ERP', desc: 'VCL / UniGui, Sistemas ERP & PDV' },
-    { id: 'unigui',    name: 'UniGui Web',     icon: 'fas fa-globe',               category: 'Backend & ERP', desc: 'Aplicações Web em tempo real com Delphi' },
-    { id: 'react',     name: 'React 19',       icon: 'fab fa-react',               category: 'Frontend',      desc: 'SPAs, Componentes reativos & Hooks' },
-    { id: 'ts',        name: 'TypeScript',     icon: 'fab fa-js-square',           category: 'Frontend',      desc: 'Tipagem estrita & Código escalável' },
-    { id: 'laravel',   name: 'PHP / Laravel',  icon: 'fab fa-laravel',             category: 'Backend & ERP', desc: 'APIs RESTful, Eloquent & Arquitetura MVC' },
-    { id: 'sqlserver', name: 'SQL Server',     icon: 'fas fa-database',            category: 'Database',      desc: 'Tuning de queries, Índices & Stored Procedures' },
-    { id: 'mysql',     name: 'MySQL',          icon: 'fas fa-server',              category: 'Database',      desc: 'Modelagem relacional & Otimização' },
-    { id: 'postman',   name: 'QA & Postman',   icon: 'fas fa-paper-plane',         category: 'DevOps & QA',   desc: 'Testes de integração & Validação de endpoints' },
-    { id: 'docker',    name: 'Docker',         icon: 'fab fa-docker',              category: 'DevOps & QA',   desc: 'Containers & Ambientes padronizados' },
-    { id: 'java',      name: 'Java / Swing',   icon: 'fab fa-java',                category: 'Backend & ERP', desc: 'Estruturas de dados & POO' },
-    { id: 'python',    name: 'Python / Flask', icon: 'fab fa-python',              category: 'Backend & ERP', desc: 'Automações, Scripts & Micro-APIs' },
-    { id: 'tailwind',  name: 'Tailwind CSS',   icon: 'fab fa-css3-alt',            category: 'Frontend',      desc: 'Design systems, Layouts fluidos & Responsividade' },
-    { id: 'acbr',      name: 'ACBr Fiscal',    icon: 'fas fa-file-invoice-dollar', category: 'Backend & ERP', desc: 'Emissão NF-e, NFC-e & Legislação Fiscal' },
-    { id: 'git',       name: 'Git & GitHub',   icon: 'fab fa-github',              category: 'DevOps & QA',   desc: 'CI/CD, Versionamento & Workflows' },
-    { id: 'linux',     name: 'Linux Server',   icon: 'fab fa-linux',               category: 'DevOps & QA',   desc: 'Deploy, Configuração Nginx & Shell Script' },
-    { id: 'rest',      name: 'APIs RESTful',   icon: 'fas fa-network-wired',       category: 'Backend & ERP', desc: 'Contratos de dados, JSON & Autenticação Sanctum' },
-    { id: 'scrum',     name: 'Scrum / Kanban', icon: 'fas fa-tasks',               category: 'DevOps & QA',   desc: 'Metodologias ágeis & Entregas contínuas' },
-    { id: 'qa',        name: 'Regressão QA',   icon: 'fas fa-bug',                 category: 'DevOps & QA',   desc: 'Prevenção de bugs & Testes de carga' },
-].map(item => ({
-    ...item,
-    color: CATEGORY_THEME[item.category]?.color || '#8C6A4A',
-}));
-
 const CATEGORIES = [
     { id: 'all',          labelPt: 'Todos',          labelEn: 'All',           labelEs: 'Todos' },
-    { id: 'Frontend',     labelPt: 'Frontend',       labelEn: 'Frontend',      labelEs: 'Frontend' },
-    { id: 'Backend & ERP',labelPt: 'Backend & ERP',  labelEn: 'Backend & ERP', labelEs: 'Backend & ERP' },
+    { id: 'Front-end',    labelPt: 'Frontend',       labelEn: 'Frontend',      labelEs: 'Frontend' },
+    { id: 'Back-end',     labelPt: 'Backend & ERP',  labelEn: 'Backend & ERP', labelEs: 'Backend & ERP' },
     { id: 'Database',     labelPt: 'Banco de Dados', labelEn: 'Database',      labelEs: 'Base de Datos' },
     { id: 'DevOps & QA',  labelPt: 'DevOps & QA',    labelEn: 'DevOps & QA',   labelEs: 'DevOps & QA' },
 ];
@@ -60,8 +37,8 @@ function fibonacciSphere(items) {
     });
 }
 
-export default function TechSphere3D() {
-    const { lang } = useLanguage();
+export default function TechSphere3D({ skills = [] }) {
+    const { t, lang } = useLanguage();
     const containerRef = useRef(null);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [hoveredTech, setHoveredTech] = useState(null);
@@ -76,13 +53,22 @@ export default function TechSphere3D() {
     const lastMouseRef = useRef({ x: 0, y: 0 });
     const isVisibleRef = useRef(true);
 
-    const baseItems = useMemo(() => fibonacciSphere(TECH_ITEMS), []);
+    // Obtém as tecnologias traduzidas dinamicamente do LanguageContext
+    const localizedSkills = useMemo(() => {
+        const list = (skills && skills.length > 0) ? skills : (t('skills.list') || []);
+        return list.map((item) => ({
+            ...item,
+            icon: item.icon_class || item.icon || 'fas fa-code',
+            color: CATEGORY_THEME[item.category]?.color || item.color || '#8C6A4A',
+        }));
+    }, [skills, t]);
+
+    const baseItems = useMemo(() => fibonacciSphere(localizedSkills), [localizedSkills]);
     const [projected, setProjected] = useState([]);
 
     // ── Projeção Matemática 3D → 2D com distribuição espaçosa (sem colisão) ──
     const project = useCallback(() => {
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-        // Aumentado o raio orbital para espalhar os nós e evitar sobreposição/poluição
         const RADIUS = isMobile ? 165 : 240;
         const FOV = isMobile ? 380 : 500;
 
@@ -130,7 +116,7 @@ export default function TechSphere3D() {
             if (!isVisibleRef.current) return;
 
             if (!isDraggingRef.current) {
-                // Mantém a rotação lenta e suave constante mesmo com o mouse dentro ou fora do container
+                // Mantém a rotação lenta e suave constante
                 speedRef.current.rx = lerp(speedRef.current.rx, BASE_SPEED.rx, 0.03);
                 speedRef.current.ry = lerp(speedRef.current.ry, BASE_SPEED.ry, 0.03);
 
@@ -235,6 +221,13 @@ export default function TechSphere3D() {
         if (dragDistanceRef.current > 6) return;
         setActiveTech(activeTech?.id === tech.id ? null : tech);
     };
+
+    // Resgata o item ativo/hover atualizado com o idioma corrente
+    const currentDetailTech = useMemo(() => {
+        const activeOrHover = hoveredTech || activeTech;
+        if (!activeOrHover) return null;
+        return localizedSkills.find(s => s.id === activeOrHover.id) || activeOrHover;
+    }, [hoveredTech, activeTech, localizedSkills]);
 
     return (
         <div className="relative w-full flex flex-col items-center select-none">
@@ -388,46 +381,46 @@ export default function TechSphere3D() {
                     })}
                 </div>
 
-                {/* ── Card Flutuante de Destaque / Detalhes ── */}
+                {/* ── Card Flutuante de Destaque / Detalhes Dinâmico com Idioma ── */}
                 <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 flex items-center justify-between sm:justify-end gap-3 pointer-events-none z-50">
                     <AnimatePresence mode="wait">
-                        {(hoveredTech || activeTech) ? (
+                        {currentDetailTech ? (
                             <motion.div
-                                key={(hoveredTech || activeTech).id}
+                                key={`${currentDetailTech.id}-${lang}`}
                                 initial={{ opacity: 0, y: 15, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                 transition={{ duration: 0.2 }}
                                 className="px-5 py-3.5 rounded-2xl bg-darker/95 border shadow-2xl backdrop-blur-xl max-w-sm"
-                                style={{ borderColor: `${(hoveredTech || activeTech).color}60` }}
+                                style={{ borderColor: `${currentDetailTech.color}60` }}
                             >
                                 <div className="flex items-center gap-3">
                                     <div
                                         className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                                        style={{ backgroundColor: `${(hoveredTech || activeTech).color}25` }}
+                                        style={{ backgroundColor: `${currentDetailTech.color}25` }}
                                     >
                                         <i
-                                            className={`${(hoveredTech || activeTech).icon} text-xl`}
-                                            style={{ color: (hoveredTech || activeTech).color }}
+                                            className={`${currentDetailTech.icon} text-xl`}
+                                            style={{ color: currentDetailTech.color }}
                                         />
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-bold text-white font-sans">
-                                                {(hoveredTech || activeTech).name}
+                                                {currentDetailTech.name}
                                             </span>
                                             <span
                                                 className="text-[10px] font-mono px-2 py-0.5 rounded-full"
                                                 style={{
-                                                    backgroundColor: `${(hoveredTech || activeTech).color}20`,
-                                                    color: (hoveredTech || activeTech).color,
+                                                    backgroundColor: `${currentDetailTech.color}20`,
+                                                    color: currentDetailTech.color,
                                                 }}
                                             >
-                                                {(hoveredTech || activeTech).category}
+                                                {currentDetailTech.category}
                                             </span>
                                         </div>
                                         <p className="text-[11px] text-gray-300 font-sans mt-0.5 leading-snug">
-                                            {(hoveredTech || activeTech).desc}
+                                            {currentDetailTech.desc}
                                         </p>
                                     </div>
                                 </div>

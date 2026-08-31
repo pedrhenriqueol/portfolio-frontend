@@ -187,7 +187,7 @@ export default function SkillsSection({ skills }) {
                             transition={{ duration: 0.4 }}
                             className="w-full flex flex-col items-center"
                         >
-                            <TechSphere3D />
+                            <TechSphere3D skills={skills} />
                         </motion.div>
                     ) : (
                         <motion.div
