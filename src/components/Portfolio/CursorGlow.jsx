@@ -4,23 +4,23 @@ const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const DEFAULT_SIZE = 36;
-const HOVER_SIZE = 64;
+const SIZE = 24;
+const HOVER_SIZE = 38;
 const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
 const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, opacity 0.2s ease`;
 const T_FREE  = `width 0.28s ${BEZIER}, height 0.28s ${BEZIER}, border-radius 0.28s ${BEZIER}, opacity 0.2s ease`;
 
 export default function CursorMorph() {
-    const contrastRef = useRef(null);
+    const ringRef = useRef(null);
     const morphRef = useRef(null);
 
     useEffect(() => {
         if (isTouchDevice()) return;
 
-        const contrastEl = contrastRef.current;
+        const ringEl = ringRef.current;
         const morphEl = morphRef.current;
-        if (!contrastEl || !morphEl) return;
+        if (!ringEl || !morphEl) return;
 
         let mouseX = -200;
         let mouseY = -200;
@@ -77,7 +77,7 @@ export default function CursorMorph() {
                 morphEl.style.transform    = `translate3d(${left}px, ${top}px, 0)`;
                 morphEl.style.opacity      = '0.4';
             } else {
-                const size = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
+                const size = isHovered ? HOVER_SIZE : SIZE;
                 const curX = mouseX / cachedZoom - size / 2;
                 const curY = mouseY / cachedZoom - size / 2;
                 morphEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
@@ -85,16 +85,15 @@ export default function CursorMorph() {
             }
         };
 
-        // Loop contínuo com física suave para a bola translúcida de contraste
+        // Loop contínuo com física suave para o anel fluido
         const renderLoop = () => {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
-            // Delay suave e fluida seguindo o mouse
-            ringX += (targetX - ringX) * 0.11;
-            ringY += (targetY - ringY) * 0.11;
+            ringX += (targetX - ringX) * 0.16;
+            ringY += (targetY - ringY) * 0.16;
 
-            contrastEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+            ringEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
 
             loopRaf = requestAnimationFrame(renderLoop);
         };
@@ -104,18 +103,19 @@ export default function CursorMorph() {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            // Detecta se está sobre elemento interativo (links, botões, títulos clicáveis)
+            // Apenas botões, links e elementos clicáveis expandem o anel (sem afetar texto comum)
             const target = e.target;
             const interactive = Boolean(
-                target.closest('button, a, input, textarea, select, [role="button"], .cursor-pointer, [data-cursor-hover="true"], h1, h2, h3, [data-sphere-node]')
+                target.closest('button, a, [role="button"], .cursor-pointer, [data-cursor-hover="true"]')
             );
 
             if (interactive !== isHovered) {
                 isHovered = interactive;
-                const targetSize = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
-                contrastEl.style.width   = `${targetSize}px`;
-                contrastEl.style.height  = `${targetSize}px`;
-                contrastEl.style.opacity = isHovered ? '0.85' : '0.65';
+                const targetSize = isHovered ? HOVER_SIZE : SIZE;
+                ringEl.style.width = `${targetSize}px`;
+                ringEl.style.height = `${targetSize}px`;
+                ringEl.style.borderColor = isHovered ? 'var(--color-accent, #8C6A4A)' : 'rgba(var(--color-accent-rgb, 140, 106, 74), 0.35)';
+                ringEl.style.backgroundColor = isHovered ? 'rgba(var(--color-accent-rgb, 140, 106, 74), 0.12)' : 'transparent';
             }
 
             if (moveRaf) return;
@@ -131,7 +131,7 @@ export default function CursorMorph() {
                     if (activeCard) {
                         updateMorphPosition(false);
                     } else {
-                        const size = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
+                        const size = isHovered ? HOVER_SIZE : SIZE;
                         const curX = mouseX / cachedZoom - size / 2;
                         const curY = mouseY / cachedZoom - size / 2;
 
@@ -149,7 +149,7 @@ export default function CursorMorph() {
                         }, 380);
                     }
                 } else if (!activeCard) {
-                    const size = isHovered ? HOVER_SIZE : DEFAULT_SIZE;
+                    const size = isHovered ? HOVER_SIZE : SIZE;
                     const curX = mouseX / cachedZoom - size / 2;
                     const curY = mouseY / cachedZoom - size / 2;
                     morphEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
@@ -184,28 +184,28 @@ export default function CursorMorph() {
 
     return (
         <>
-            {/* 1. Bola de contraste invertido translúcida seguindo suavemente o mouse */}
+            {/* 1. Halo suave na cor da paleta (sem manchas pretas/brancas sobre o texto) */}
             <div
-                ref={contrastRef}
+                ref={ringRef}
                 className="pointer-events-none fixed top-0 left-0 z-[99999] rounded-full will-change-transform"
                 style={{
-                    width:           `${DEFAULT_SIZE}px`,
-                    height:          `${DEFAULT_SIZE}px`,
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    opacity:         0.65,
-                    mixBlendMode:    'difference',
-                    transition:      'width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease',
+                    width:           `${SIZE}px`,
+                    height:          `${SIZE}px`,
+                    border:          '1px solid rgba(var(--color-accent-rgb, 140, 106, 74), 0.35)',
+                    backgroundColor: 'transparent',
+                    boxShadow:       '0 0 12px rgba(var(--color-accent-rgb, 140, 106, 74), 0.1)',
+                    transition:      'width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, background-color 0.2s ease',
                     transform:       'translate3d(-200px, -200px, 0) translate(-50%, -50%)',
                 }}
             />
 
-            {/* 2. Efeito Morph que se expande e abraça os cards suavemente */}
+            {/* 2. Efeito Morph ao pairar sobre cards (abraça o contorno do card) */}
             <div
                 ref={morphRef}
                 className="pointer-events-none fixed top-0 left-0 z-[99998] transform-gpu"
                 style={{
-                    width:         `${DEFAULT_SIZE}px`,
-                    height:        `${DEFAULT_SIZE}px`,
+                    width:         `${SIZE}px`,
+                    height:        `${SIZE}px`,
                     borderRadius:  '50%',
                     border:        '1.5px solid var(--color-accent, #8C6A4A)',
                     background:    'rgba(var(--color-accent-rgb, 140, 106, 74), 0.08)',
