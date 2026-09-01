@@ -265,8 +265,9 @@ export default function TechSphere3D({ skills = [] }) {
             {/* Container da Esfera / Constelação Orbital */}
             <div
                 ref={containerRef}
+                data-no-morph="true"
                 onPointerDown={onPointerDown}
-                className="relative w-full max-w-[580px] h-[480px] flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden"
+                className="no-morph relative w-full max-w-[580px] h-[480px] mt-8 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden"
                 style={{ touchAction: 'none' }}
             >
                 {/* Canvas com conexões sutis de constelação */}

@@ -184,6 +184,17 @@ export default function CursorGlow() {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
+            // Se o cursor estiver sobre uma área explicitamente no-morph (como o Globo 3D ou Canvas interativo), oculta o cursor customizado
+            const isNoMorphArea = e.target && e.target.closest('[data-no-morph="true"], .no-morph, canvas');
+            if (isNoMorphArea) {
+                cursorEl.style.opacity = '0';
+                targetMorph.active = false;
+                currentCard = null;
+                return;
+            } else {
+                cursorEl.style.opacity = '1';
+            }
+
             // Detecta texto e define o tamanho alvo para interpolação suave
             const isText = checkIsText(e.target);
             targetSize = isText ? TEXT_HOVER_SIZE : DEFAULT_SIZE;

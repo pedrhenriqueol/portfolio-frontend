@@ -240,7 +240,7 @@ export default function ProjectModal({ project, onClose }) {
                                 <div className="space-y-3 bg-darker/40 p-5 rounded-xl border border-white/5">
                                     <h3 className="text-xs font-bold text-accent uppercase tracking-[0.2em] flex items-center gap-2">
                                         <i className="fas fa-exclamation-triangle text-amber-400/80" />
-                                        {t('projects.modalDesafio')}
+                                        {t('projects.modalDesafio') || t('projects.modalChallengeTitle') || 'Desafio Técnico'}
                                     </h3>
                                     <p className="text-primary/90 text-xs sm:text-sm leading-relaxed">
                                         {challenge}
@@ -251,7 +251,7 @@ export default function ProjectModal({ project, onClose }) {
                                 <div className="space-y-3 bg-darker/40 p-5 rounded-xl border border-white/5">
                                     <h3 className="text-xs font-bold text-accent uppercase tracking-[0.2em] flex items-center gap-2">
                                         <i className="fas fa-check-circle text-green-400/80" />
-                                        {t('projects.modalSolucao')}
+                                        {t('projects.modalSolucao') || t('projects.modalSolutionTitle') || 'Solução de Engenharia'}
                                     </h3>
                                     <p className="text-primary/90 text-xs sm:text-sm leading-relaxed">
                                         {solution}

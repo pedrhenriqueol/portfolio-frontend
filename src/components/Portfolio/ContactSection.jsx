@@ -206,7 +206,7 @@ export default function ContactSection() {
                                     {/* Nome */}
                                     <div>
                                         <label className="block text-xs font-semibold text-primary/80 uppercase tracking-wider mb-1.5 font-mono">
-                                            {t('contact.labelName')}
+                                            {t('contact.labelName') || t('contact.formName') || 'Nome'}
                                         </label>
                                         <div className="relative">
                                             <input
@@ -239,7 +239,7 @@ export default function ContactSection() {
                                     {/* Email */}
                                     <div>
                                         <label className="block text-xs font-semibold text-primary/80 uppercase tracking-wider mb-1.5 font-mono">
-                                            {t('contact.labelEmail')}
+                                            {t('contact.labelEmail') || t('contact.formEmail') || 'E-mail'}
                                         </label>
                                         <div className="relative">
                                             <input
@@ -273,7 +273,7 @@ export default function ContactSection() {
                                 {/* Assunto */}
                                 <div>
                                     <label className="block text-xs font-semibold text-primary/80 uppercase tracking-wider mb-1.5 font-mono">
-                                        {t('contact.labelSubject')}
+                                        {t('contact.labelSubject') || t('contact.formSubject') || 'Assunto'}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -306,7 +306,7 @@ export default function ContactSection() {
                                 {/* Mensagem */}
                                 <div>
                                     <label className="block text-xs font-semibold text-primary/80 uppercase tracking-wider mb-1.5 font-mono">
-                                        {t('contact.labelMessage')}
+                                        {t('contact.labelMessage') || t('contact.formMessage') || 'Mensagem'}
                                     </label>
                                     <div className="relative">
                                         <textarea
@@ -344,12 +344,12 @@ export default function ContactSection() {
                                             {processing ? (
                                                 <>
                                                     <i className="fas fa-circle-notch fa-spin text-sm" />
-                                                    <span>{t('contact.sending')}</span>
+                                                    <span>{t('contact.sending') || t('contact.btnSending') || 'Enviando...'}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <i className="fas fa-paper-plane text-xs" />
-                                                    <span>{t('contact.submitBtn')}</span>
+                                                    <span>{t('contact.submitBtn') || t('contact.btnSend') || 'Enviar Mensagem'}</span>
                                                 </>
                                             )}
                                         </button>
