@@ -132,7 +132,8 @@ export default function AboutSection() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
-                        className="lg:col-span-7 bg-dark border border-primary/30 rounded-2xl p-7 sm:p-9 relative flex flex-col justify-between hover:border-accent/40 transition-all duration-300 shadow-xl"
+                        data-cursor-card="true"
+                        className="lg:col-span-7 bg-dark border border-primary/30 rounded-2xl p-7 sm:p-9 relative flex flex-col justify-between hover:border-accent/40 transition-all duration-300 shadow-xl cursor-default"
                     >
                         <div className="space-y-5">
                             <div className="flex items-center justify-between">
@@ -196,7 +197,8 @@ export default function AboutSection() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-dark border border-primary/30 rounded-2xl p-7 hover:border-accent/40 transition-all duration-300 shadow-xl flex flex-col justify-between"
+                            data-cursor-card="true"
+                            className="bg-dark border border-primary/30 rounded-2xl p-7 hover:border-accent/40 transition-all duration-300 shadow-xl flex flex-col justify-between cursor-default"
                         >
                             <span className="flex items-center gap-2 text-xs font-semibold text-accent uppercase tracking-wider font-sans mb-4">
                                 <i className="fas fa-graduation-cap text-[11px]" />
@@ -221,7 +223,8 @@ export default function AboutSection() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-dark border border-primary/30 rounded-2xl p-7 hover:border-accent/40 transition-all duration-300 shadow-xl flex items-center justify-between"
+                            data-cursor-card="true"
+                            className="bg-dark border border-primary/30 rounded-2xl p-7 hover:border-accent/40 transition-all duration-300 shadow-xl flex items-center justify-between cursor-default"
                         >
                             <div>
                                 <span className="text-[10px] font-mono uppercase tracking-widest text-primary/60 block mb-1">
@@ -248,7 +251,8 @@ export default function AboutSection() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: idx * 0.1 }}
-                            className="bg-dark/80 border border-primary/20 rounded-2xl p-6 hover:border-accent/50 transition-all duration-300 shadow-lg flex flex-col justify-between group"
+                            data-cursor-card="true"
+                            className="bg-dark/80 border border-primary/20 rounded-2xl p-6 hover:border-accent/50 transition-all duration-300 shadow-lg flex flex-col justify-between group cursor-default"
                         >
                             <div>
                                 <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200">

@@ -80,7 +80,8 @@ export default function ExperienceSection({ experiences }) {
                     {summaryStats.map((stat, idx) => (
                         <div
                             key={idx}
-                            className="bg-darker/90 border border-primary/25 rounded-xl p-4 flex items-center gap-3.5 hover:border-accent/40 transition-all duration-200 shadow-lg"
+                            data-cursor-card="true"
+                            className="bg-darker/90 border border-primary/25 rounded-xl p-4 flex items-center gap-3.5 hover:border-accent/40 transition-all duration-200 shadow-lg cursor-default"
                         >
                             <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                                 <i className={`${stat.icon} text-accent text-sm`} />
@@ -117,7 +118,10 @@ export default function ExperienceSection({ experiences }) {
                                     </div>
 
                                     {/* Card de Experiência */}
-                                    <div className="bg-darker rounded-2xl border border-primary/30 hover:border-accent/50 transition-all duration-300 shadow-2xl overflow-hidden group">
+                                    <div
+                                        data-cursor-card="true"
+                                        className="bg-darker rounded-2xl border border-primary/30 hover:border-accent/50 transition-all duration-300 shadow-2xl overflow-hidden group cursor-default"
+                                    >
                                         {/* Card Header */}
                                         <div className="p-6 sm:p-8 border-b border-primary/20 bg-white/[0.01]">
                                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
