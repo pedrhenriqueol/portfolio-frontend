@@ -59,6 +59,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                 e.stopPropagation();
                                 onSelect(project);
                             }}
+                            data-cursor-morph="true"
                             className="px-3 py-1.5 border border-primary/30 text-primary text-[11px] rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer"
                         >
                             <i className="fas fa-info-circle mr-1 text-accent" />
@@ -71,6 +72,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                             target="_blank"
                             rel="noreferrer"
                             onClick={(e) => e.stopPropagation()}
+                            data-cursor-morph="true"
                             className="px-3 py-1.5 border border-primary/30 text-primary text-[11px] rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer"
                         >
                             <i className="fab fa-github" />
@@ -151,6 +153,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                     e.stopPropagation();
                                     onSelect(project);
                                 }}
+                                data-cursor-morph="true"
                                 className="flex-1 text-center py-2 px-4 bg-darker border border-white/15 text-primary text-sm font-medium rounded-lg hover:border-accent/40 hover:text-accent transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                             >
                                 <i className="fas fa-info-circle text-accent" />
@@ -163,6 +166,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
+                                data-cursor-morph="true"
                                 className="flex-1 text-center py-2 px-4 bg-darker border border-white/15 text-primary text-sm font-medium rounded-lg hover:border-accent/40 hover:text-accent transition-all duration-200 flex items-center justify-center cursor-pointer"
                             >
                                 <i className="fas fa-code mr-2" />
@@ -181,6 +185,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
+                                data-cursor-morph="true"
                                 className="flex-1 text-center py-2 px-4 bg-accent text-darker text-sm font-semibold rounded-lg hover:bg-accent-hover transition-all duration-200 flex items-center justify-center cursor-pointer"
                             >
                                 <i className="fas fa-external-link-alt mr-2" />

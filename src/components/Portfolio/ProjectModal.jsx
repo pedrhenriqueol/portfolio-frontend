@@ -65,6 +65,7 @@ export default function ProjectModal({ project, onClose }) {
                                 href={project.demo_link}
                                 target="_blank"
                                 rel="noreferrer"
+                                data-cursor-morph="true"
                                 className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 bg-accent/15 text-accent border border-accent/30 rounded-lg text-xs font-semibold hover:bg-accent hover:text-darker transition-all"
                             >
                                 <i className="fas fa-external-link-alt text-[10px]" />
@@ -75,6 +76,7 @@ export default function ProjectModal({ project, onClose }) {
                         <button
                             onClick={onClose}
                             aria-label={t('projects.modalFechar') || 'Fechar'}
+                            data-cursor-morph="true"
                             className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/80 hover:text-white hover:bg-white/15 hover:border-accent/40 transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
                             title="Fechar (ESC)"
                         >

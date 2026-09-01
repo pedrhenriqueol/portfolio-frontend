@@ -168,6 +168,7 @@ export default function HeroSection() {
                             <MagneticButton strength={0.4}>
                                 <a
                                     href="#projetos"
+                                    data-cursor-morph="true"
                                     className="inline-flex items-center justify-center bg-accent text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent-hover transition-all duration-300 shadow-md hover:shadow-[0_0_20px_rgba(var(--color-accent-rgb),0.35)] active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-darker focus-visible:outline-hidden"
                                 >
                                     {t('hero.verProjetos')}
@@ -181,6 +182,7 @@ export default function HeroSection() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     download="curriculo_pedro_henrique.pdf"
+                                    data-cursor-morph="true"
                                     className="inline-flex items-center justify-center gap-2 border border-primary/30 text-primary hover:text-white hover:border-accent font-semibold px-6 py-3 rounded-lg transition-all duration-300 text-sm cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-darker focus-visible:outline-hidden"
                                 >
                                     <i className="fas fa-file-pdf text-accent" />
@@ -195,7 +197,7 @@ export default function HeroSection() {
                                         href: 'https://github.com/pedrhenriqueol',
                                         label: 'GitHub',
                                         icon: (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
                                                 <path d="M9 18c-4.51 2-5-2-7-2" />
                                             </svg>
@@ -218,6 +220,7 @@ export default function HeroSection() {
                                             href={s.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
+                                            data-cursor-morph="true"
                                             className="w-11 h-11 rounded-lg border border-primary/20 flex items-center justify-center text-primary/70 hover:text-accent hover:border-accent/40 transition-colors duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
                                             aria-label={s.label}
                                         >

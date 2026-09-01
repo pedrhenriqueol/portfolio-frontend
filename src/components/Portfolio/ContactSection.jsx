@@ -146,7 +146,8 @@ export default function ContactSection() {
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.4, delay: idx * 0.08 }}
                                 whileHover={{ x: 4 }}
-                                className="group flex items-center gap-3.5 p-3.5 rounded-xl border border-primary/20 bg-darker/60 hover:border-accent/40 hover:bg-accent/5 transition-all duration-200"
+                                data-cursor-morph="true"
+                                className="group flex items-center gap-3.5 p-3.5 rounded-xl border border-primary/20 bg-darker/60 hover:border-accent/40 hover:bg-accent/5 transition-all duration-200 cursor-pointer"
                             >
                                 <span
                                     className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 bg-accent/10 border border-accent/20 transition-all duration-200"
@@ -339,6 +340,7 @@ export default function ContactSection() {
                                         <button
                                             type="submit"
                                             disabled={processing}
+                                            data-cursor-morph="true"
                                             className="w-full inline-flex items-center justify-center gap-2 bg-accent text-darker font-semibold py-3 px-6 rounded-xl hover:bg-accent-hover transition-all duration-200 shadow-md hover:shadow-accent/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
                                         >
                                             {processing ? (

@@ -50,7 +50,7 @@ function SkillCard({ skill, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -4, scale: 1.01 }}
-            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/25"
+            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/25"
         >
             {/* Top row: Icon (Neutro no repouso -> Revela Brand Color no Hover) + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
@@ -146,6 +146,7 @@ export default function SkillsSection({ skills = [] }) {
                     <div className="inline-flex items-center p-1 rounded-full bg-darker border border-primary/25 shadow-lg">
                         <button
                             onClick={() => setViewMode('sphere')}
+                            data-cursor-morph="true"
                             className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 cursor-pointer ${
                                 viewMode === 'sphere'
                                     ? 'bg-accent text-darker shadow-md'
@@ -157,6 +158,7 @@ export default function SkillsSection({ skills = [] }) {
                         </button>
                         <button
                             onClick={() => setViewMode('grid')}
+                            data-cursor-morph="true"
                             className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 cursor-pointer ${
                                 viewMode === 'grid'
                                     ? 'bg-accent text-darker shadow-md'
@@ -198,6 +200,7 @@ export default function SkillsSection({ skills = [] }) {
                                         <button
                                             key={cat.id}
                                             onClick={() => setSelectedCategory(cat.id)}
+                                            data-cursor-morph="true"
                                             className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                                                 selectedCategory === cat.id
                                                     ? 'bg-accent text-darker shadow-sm'

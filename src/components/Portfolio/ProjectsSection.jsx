@@ -66,6 +66,7 @@ export default function ProjectsSection({ projects }) {
                             <button
                                 key={f.id}
                                 onClick={() => setFilter(f.id)}
+                                data-cursor-morph="true"
                                 className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded-full transition-all duration-200 cursor-pointer ${
                                     activeFilter === f.id
                                         ? 'bg-accent text-darker border-accent shadow-xs'
@@ -82,6 +83,7 @@ export default function ProjectsSection({ projects }) {
                     <div className="flex items-center gap-1 bg-darker border border-primary/20 rounded-lg p-1">
                         <button
                             onClick={() => setViewMode('grid')}
+                            data-cursor-morph="true"
                             className={`px-3 py-1.5 rounded-md text-[11px] flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
                                 viewMode === 'grid' ? 'bg-accent text-darker font-semibold shadow-xs' : 'text-primary hover:text-accent'
                             }`}
@@ -91,6 +93,7 @@ export default function ProjectsSection({ projects }) {
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
+                            data-cursor-morph="true"
                             className={`px-3 py-1.5 rounded-md text-[11px] flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
                                 viewMode === 'list' ? 'bg-accent text-darker font-semibold shadow-xs' : 'text-primary hover:text-accent'
                             }`}

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import CursorTrail from './components/Portfolio/CursorGlow';
+import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import NavBar from './components/Portfolio/NavBar';
 import HeroSection from './components/Portfolio/HeroSection';
@@ -42,7 +42,7 @@ export default function App() {
     return (
         <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker">
             {/* Global micro-effects */}
-            <CursorTrail />
+            <CustomCursor />
             <ClickSparks />
             <SoundEngine />
             

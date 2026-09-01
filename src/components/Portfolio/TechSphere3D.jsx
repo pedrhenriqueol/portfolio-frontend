@@ -355,6 +355,7 @@ export default function TechSphere3D({ skills = [] }) {
                     <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
+                        data-cursor-morph="true"
                         className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                             selectedCategory === cat.id
                                 ? 'bg-accent text-darker shadow-sm'
