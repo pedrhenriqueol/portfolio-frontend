@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProjectModal({ project, onClose }) {
@@ -25,10 +25,9 @@ export default function ProjectModal({ project, onClose }) {
     const coverImage = project.image_url || '/dashboard_placeholder.png';
 
     return (
-        <AnimatePresence>
-            {/* Backdrop */}
-            <motion.div
-                key="backdrop"
+        /* Backdrop */
+        <motion.div
+            key="backdrop"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -245,6 +244,5 @@ export default function ProjectModal({ project, onClose }) {
                     </div>
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
     );
 }

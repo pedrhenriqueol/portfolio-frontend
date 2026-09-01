@@ -251,13 +251,6 @@ export default function SkillsSection({ skills }) {
                     ))}
                 </div>
             </div>
-
-            <style>{`
-                @keyframes marquee {
-                    0%   { transform: translate3d(0, 0, 0); }
-                    100% { transform: translate3d(-33.333%, 0, 0); }
-                }
-            `}</style>
         </section>
     );
 }

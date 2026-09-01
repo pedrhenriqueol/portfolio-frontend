@@ -1,23 +1,21 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
-import { useTheme } from '../../context/ThemeContext';
+import NavLogo from './NavBar/NavLogo';
+import LanguageDropdown from './NavBar/LanguageDropdown';
+import ThemeDropdown from './NavBar/ThemeDropdown';
+import MobileMenu from './NavBar/MobileMenu';
 
 export default function NavBar() {
-    const { lang, setLang, t } = useLanguage();
-    const { palette, paletteData, palettes, setPalette } = useTheme();
-    const [active, setActive]                 = useState('home');
-    const [visible, setVisible]               = useState(true);
-    const [scrolled, setScrolled]             = useState(false);
-    const [mobileOpen, setMobileOpen]         = useState(false);
-    const [dropdownOpen, setDropdownOpen]     = useState(false);
-    const [paletteDropdown, setPaletteDropdown] = useState(false);
-    const lastY           = useRef(0);
-    const hideTimer       = useRef(null);
-    const dropdownRef     = useRef(null);
-    const paletteRef      = useRef(null);
-    const progressRef     = useRef(null);
-    const activeRef       = useRef('home');
+    const { t } = useLanguage();
+    const [active, setActive]         = useState('home');
+    const [visible, setVisible]       = useState(true);
+    const [scrolled, setScrolled]     = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    const lastY       = useRef(0);
+    const hideTimer   = useRef(null);
+    const progressRef = useRef(null);
 
     const navLinks = useMemo(() => [
         { id: 'home',          label: t('nav.home') },
@@ -27,20 +25,7 @@ export default function NavBar() {
         { id: 'projetos',      label: t('nav.projetos') },
     ], [t]);
 
-    const flags = { pt: '🇧🇷 PT', en: '🇺🇸 EN', es: '🇪🇸 ES' };
-
-    useEffect(() => {
-        const handler = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-                setDropdownOpen(false);
-            if (paletteRef.current && !paletteRef.current.contains(e.target))
-                setPaletteDropdown(false);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    // Detecção de seção ativa via IntersectionObserver (processado off-main-thread pelo browser)
+    // Detecção de seção ativa via IntersectionObserver
     useEffect(() => {
         const observers = [];
         const ids = ['home', 'sobre', 'experiencia', 'conhecimentos', 'projetos'];
@@ -52,7 +37,6 @@ export default function NavBar() {
             const obs = new IntersectionObserver(
                 ([entry]) => {
                     if (entry.isIntersecting) {
-                        activeRef.current = id;
                         setActive(id);
                     }
                 },
@@ -64,8 +48,9 @@ export default function NavBar() {
         });
 
         return () => observers.forEach((obs) => obs.disconnect());
-    }, [navLinks]);
+    }, []);
 
+    // Controle de barra de progresso e ocultamento automático no scroll
     useEffect(() => {
         const SHOW_THRESHOLD = 80;
         const JITTER_DELTA   = 8;
@@ -85,7 +70,7 @@ export default function NavBar() {
                 }
 
                 const isScrolledNow = y > 40;
-                setScrolled(prev => prev !== isScrolledNow ? isScrolledNow : prev);
+                setScrolled(prev => (prev !== isScrolledNow ? isScrolledNow : prev));
 
                 const delta = y - lastY.current;
                 if (y < SHOW_THRESHOLD) {
@@ -94,8 +79,6 @@ export default function NavBar() {
                     if (delta > 0) {
                         clearTimeout(hideTimer.current);
                         hideTimer.current = setTimeout(() => setVisible(false), 80);
-                        setDropdownOpen(false);
-                        setPaletteDropdown(false);
                     } else {
                         clearTimeout(hideTimer.current);
                         setVisible(true);
@@ -115,13 +98,13 @@ export default function NavBar() {
         };
     }, []);
 
-    const scrollTo = (id) => {
+    const scrollTo = useCallback((id) => {
         setMobileOpen(false);
         setTimeout(() => {
             const el = document.getElementById(id);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 320);
-    };
+        }, 150);
+    }, []);
 
     return (
         <motion.nav
@@ -145,95 +128,10 @@ export default function NavBar() {
                 }`}
             >
                 <div className={`max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-[4.5rem]'}`}>
+                    {/* Logo */}
+                    <NavLogo onClick={() => scrollTo('home')} />
 
-                    {/* Logo - Razor-sharp Vector Terminal Badge */}
-                    <button
-                        onClick={() => scrollTo('home')}
-                        className="group flex items-center gap-3 shrink-0 select-none cursor-pointer"
-                        aria-label="Ir para o inicio"
-                    >
-                        {/* Terminal Vector Icon Badge */}
-                        <div className="relative flex items-center justify-center shrink-0">
-                            <svg 
-                                className="w-[38px] h-[36px] transition-all duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.2)]"
-                                viewBox="0 0 42 38" 
-                                fill="none" 
-                                xmlns="http://www.w3.org/2000/svg"
-                                shapeRendering="geometricPrecision"
-                                textRendering="geometricPrecision"
-                            >
-                                {/* Terminal Window Background */}
-                                <rect 
-                                    x="1" 
-                                    y="1" 
-                                    width="40" 
-                                    height="36" 
-                                    rx="6" 
-                                    fill="#0C0D12" 
-                                    stroke="rgba(255,255,255,0.22)" 
-                                    strokeWidth="1.2" 
-                                    className="group-hover:stroke-white/70 transition-colors" 
-                                />
-                                
-                                {/* Header Line */}
-                                <line x1="1" y1="11" x2="41" y2="11" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
-                                
-                                {/* 3 Window Control Dots */}
-                                <circle cx="6.5" cy="6" r="1.6" fill="#FF5F56" className="opacity-75 group-hover:opacity-100 transition-opacity" />
-                                <circle cx="11.5" cy="6" r="1.6" fill="#FFBD2E" className="opacity-75 group-hover:opacity-100 transition-opacity" />
-                                <circle cx="16.5" cy="6" r="1.6" fill="#27C93F" className="opacity-75 group-hover:opacity-100 transition-opacity" />
-
-                                {/* Command Prompt > */}
-                                <path 
-                                    d="M 6.5 19.5 L 11.5 24.5 L 6.5 29.5" 
-                                    stroke="#FFFFFF" 
-                                    strokeOpacity="0.75" 
-                                    strokeWidth="1.8" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                />
-
-                                {/* PH Monogram */}
-                                <text 
-                                    x="15" 
-                                    y="28" 
-                                    fill="#FFFFFF" 
-                                    fontFamily="'JetBrains Mono', monospace, ui-monospace, monospace" 
-                                    fontSize="12.5" 
-                                    fontWeight="800" 
-                                    letterSpacing="-0.5"
-                                >
-                                    PH
-                                </text>
-
-                                {/* Live Blinking Cursor */}
-                                <rect 
-                                    x="33.5" 
-                                    y="19" 
-                                    width="2.5" 
-                                    height="10" 
-                                    rx="0.5" 
-                                    fill="#27C93F" 
-                                    className="animate-pulse group-hover:fill-white transition-colors" 
-                                />
-                            </svg>
-                        </div>
-
-                        {/* Name Branding */}
-                        <div className="flex flex-col text-left">
-                            <div className="flex items-center gap-0.5">
-                                <span className="font-bold text-[13.5px] sm:text-[14.5px] tracking-[0.1em] text-secondary group-hover:text-white transition-colors duration-300 uppercase leading-snug">
-                                    Pedro Henrique
-                                </span>
-                                <span className="text-white font-bold text-base leading-none">.</span>
-                            </div>
-                            <span className="text-[9px] font-mono tracking-[0.16em] text-primary/70 group-hover:text-white/80 uppercase -mt-0.5 transition-colors">
-                                dev // qa
-                            </span>
-                        </div>
-                    </button>
-
-                    {/* Desktop nav */}
+                    {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-9" aria-label="Navegacao principal">
                         {navLinks.map(({ id, label }) => {
                             const isActive = active === id;
@@ -241,7 +139,7 @@ export default function NavBar() {
                                 <button
                                     key={id}
                                     onClick={() => scrollTo(id)}
-                                    className="relative group text-[11px] tracking-[0.22em] uppercase font-medium transition-colors duration-300 py-1"
+                                    className="relative group text-[11px] tracking-[0.22em] uppercase font-medium transition-colors duration-300 py-1 cursor-pointer"
                                     style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-primary)' }}
                                     aria-current={isActive ? 'page' : undefined}
                                 >
@@ -250,135 +148,29 @@ export default function NavBar() {
                                         className="absolute left-0 -bottom-0.5 h-px bg-accent transition-all duration-500 ease-in-out"
                                         style={{ width: isActive ? '100%' : '0%' }}
                                     />
-                                    <span className="absolute left-0 -bottom-0.5 h-px bg-accent/35 w-0 group-hover:w-full transition-all ease-in-out" style={{ transitionDuration: '400ms' }} />
+                                    <span className="absolute left-0 -bottom-0.5 h-px bg-accent/35 w-0 group-hover:w-full transition-all duration-400 ease-in-out" />
                                 </button>
                             );
                         })}
                     </nav>
 
-                    {/* Right side */}
+                    {/* Right Side: Theme, Language, Contact CTA & Mobile Toggle */}
                     <div className="flex items-center gap-2.5 shrink-0">
+                        <ThemeDropdown />
+                        <LanguageDropdown />
 
-                        {/* Palette Selector Dropdown */}
-                        <div className="relative hidden sm:block" ref={paletteRef}>
-                            <button
-                                onClick={() => { setPaletteDropdown(!paletteDropdown); setFontDropdown(false); setDropdownOpen(false); }}
-                                className="flex items-center gap-2 border border-white/10 hover:border-accent/40 text-primary hover:text-accent text-[10px] tracking-widest uppercase px-3 py-2 transition-all duration-200"
-                                style={{ borderRadius: '2px' }}
-                                aria-label="Selecionar paleta de cores"
-                                title={t('palette.title')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    {paletteData?.preview?.map((c, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="w-2 h-2 rounded-full border border-black/30 shadow-xs"
-                                            style={{ backgroundColor: c }}
-                                        />
-                                    ))}
-                                </div>
-                                <i className={`fas fa-palette text-[10px] ml-0.5 text-accent`} />
-                                <i className={`fas fa-chevron-down text-[8px] transition-transform duration-200 ${paletteDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            <AnimatePresence>
-                                {paletteDropdown && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-1.5 w-48 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50 backdrop-blur-xl"
-                                        style={{ borderRadius: '4px' }}
-                                    >
-                                        <div className="text-[9px] uppercase tracking-widest text-primary/60 px-2.5 py-1.5 font-semibold border-b border-white/5 mb-1 flex items-center justify-between">
-                                            <span>{t('palette.title')}</span>
-                                            <i className="fas fa-swatchbook text-accent/70" />
-                                        </div>
-                                        {Object.entries(palettes).map(([id, p]) => {
-                                            const isCurrent = palette === id;
-                                            const name = t(p.nameKey) !== p.nameKey ? t(p.nameKey) : p.defaultName;
-                                            return (
-                                                <button
-                                                    key={id}
-                                                    onClick={() => { setPalette(id); setPaletteDropdown(false); }}
-                                                    className={`w-full text-left px-2.5 py-2 text-[10px] tracking-wider uppercase font-medium transition-all duration-150 flex items-center justify-between rounded-xs ${
-                                                        isCurrent
-                                                            ? 'text-accent bg-accent/10 border border-accent/25'
-                                                            : 'text-primary hover:text-secondary hover:bg-white/5 border border-transparent'
-                                                    }`}
-                                                >
-                                                    <span className="truncate max-w-[105px]">{name}</span>
-                                                    <div className="flex items-center gap-1 shrink-0">
-                                                        {p.preview.map((c, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                className="w-2.5 h-2.5 rounded-full border border-black/40 shadow-xs"
-                                                                style={{ backgroundColor: c }}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Language Dropdown */}
-                        <div className="relative hidden sm:block" ref={dropdownRef}>
-                            <button
-                                onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center gap-1.5 border border-white/10 hover:border-accent/35 text-primary hover:text-accent text-[10px] tracking-widest uppercase px-3 py-2 transition-all duration-200"
-                                style={{ borderRadius: '2px' }}
-                                aria-label="Selecionar idioma"
-                            >
-                                <span>{flags[lang]}</span>
-                                <i className={`fas fa-chevron-down text-[9px] transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            <AnimatePresence>
-                                {dropdownOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -6 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-1.5 w-28 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50 backdrop-blur-xl"
-                                        style={{ borderRadius: '2px' }}
-                                    >
-                                        {['pt', 'en', 'es'].map((l) => (
-                                            <button
-                                                key={l}
-                                                onClick={() => { setLang(l); setDropdownOpen(false); }}
-                                                className={`w-full text-left px-4 py-2.5 text-[10px] tracking-widest uppercase font-medium transition-colors duration-150 ${
-                                                    lang === l
-                                                        ? 'text-accent bg-accent/8'
-                                                        : 'text-primary hover:text-secondary hover:bg-white/4'
-                                                }`}
-                                            >
-                                                {flags[l]}
-                                            </button>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* CTA — editorial flat */}
+                        {/* CTA button */}
                         <button
                             onClick={() => scrollTo('contato')}
-                            className="hidden sm:inline-flex items-center uppercase text-[10px] tracking-[0.22em] font-semibold px-5 py-2.5 text-darker bg-accent hover:bg-accent-hover transition-colors duration-300 shadow-sm"
-                            style={{ borderRadius: '2px' }}
+                            className="hidden sm:inline-flex items-center uppercase text-[10px] tracking-[0.22em] font-semibold px-5 py-2.5 text-darker bg-accent hover:bg-accent-hover transition-colors duration-300 shadow-sm cursor-pointer rounded-xs"
                         >
                             {t('nav.contato')}
                         </button>
 
-                        {/* Hamburger */}
+                        {/* Hamburger Button */}
                         <button
-                            className="md:hidden flex flex-col gap-[5px] p-2 group"
-                            onClick={() => setMobileOpen((v) => !v)}
+                            className="md:hidden flex flex-col gap-[5px] p-2 group cursor-pointer"
+                            onClick={() => setMobileOpen(v => !v)}
                             aria-label="Menu"
                         >
                             <motion.span
@@ -398,95 +190,15 @@ export default function NavBar() {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
-            <AnimatePresence>
-                {mobileOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.28, ease: 'easeInOut' }}
-                        className="md:hidden overflow-hidden border-b border-primary/20 bg-darker/98 backdrop-blur-2xl"
-                    >
-                        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col">
-
-                            {/* Mobile Language Selector */}
-                            <div className="flex gap-2 mb-4">
-                                {['pt', 'en', 'es'].map((l) => (
-                                    <button
-                                        key={l}
-                                        onClick={() => { setLang(l); setMobileOpen(false); }}
-                                        className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest border transition-all duration-200 ${
-                                            lang === l
-                                                ? 'border-accent text-accent bg-accent/8'
-                                                : 'border-white/10 text-primary hover:border-white/20 hover:text-secondary'
-                                        }`}
-                                        style={{ borderRadius: '2px' }}
-                                    >
-                                        {flags[l]}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Mobile Palette Selector */}
-                            <div className="mb-6 p-3 bg-white/[0.02] border border-white/5 rounded-xs">
-                                <div className="text-[9px] uppercase tracking-widest text-primary/60 font-semibold mb-2.5 flex items-center justify-between">
-                                    <span>{t('palette.title')}</span>
-                                    <i className="fas fa-palette text-accent" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {Object.entries(palettes).map(([id, p]) => {
-                                        const isCurrent = palette === id;
-                                        const name = t(p.nameKey) !== p.nameKey ? t(p.nameKey) : p.defaultName;
-                                        return (
-                                            <button
-                                                key={id}
-                                                onClick={() => { setPalette(id); setMobileOpen(false); }}
-                                                className={`p-2 text-[9px] tracking-wider uppercase font-medium transition-all duration-150 flex items-center justify-between rounded-xs border ${
-                                                    isCurrent
-                                                        ? 'text-accent bg-accent/10 border-accent/30'
-                                                        : 'text-primary bg-black/30 border-white/5 hover:border-white/20'
-                                                }`}
-                                            >
-                                                <span className="truncate mr-1">{name}</span>
-                                                <div className="flex items-center gap-0.5 shrink-0">
-                                                    {p.preview.map((c, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            className="w-2 h-2 rounded-full"
-                                                            style={{ backgroundColor: c }}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {[...navLinks, { id: 'contato', label: t('nav.contato') }].map(({ id, label }, i) => (
-                                <motion.button
-                                    key={id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.045 }}
-                                    onClick={() => scrollTo(id)}
-                                    className={`w-full text-left py-4 text-[11px] tracking-[0.22em] uppercase font-medium border-b transition-colors duration-200 flex items-center justify-between ${
-                                        active === id
-                                            ? 'text-accent border-white/8'
-                                            : 'text-primary border-white/5 hover:text-secondary'
-                                    }`}
-                                >
-                                    {label}
-                                    {active === id && (
-                                        <span className="w-1 h-1 rounded-full bg-accent shrink-0" />
-                                    )}
-                                </motion.button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Mobile Navigation Drawer */}
+            <MobileMenu
+                isOpen={mobileOpen}
+                navLinks={navLinks}
+                active={active}
+                scrollTo={scrollTo}
+                onClose={() => setMobileOpen(false)}
+                t={t}
+            />
         </motion.nav>
     );
 }

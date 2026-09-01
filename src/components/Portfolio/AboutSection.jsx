@@ -36,29 +36,41 @@ export default function AboutSection() {
     const { t, lang } = useLanguage();
 
     const metrics = [
-        { value: '10+', label: t('about.highlights')[0] || '10+ meses de experiência', icon: 'fas fa-briefcase' },
-        { value: '100+', label: t('about.highlights')[1] || '100+ usuários diários', icon: 'fas fa-users' },
-        { value: '4×', label: t('about.highlights')[3] || 'Queries mais rápidas', icon: 'fas fa-tachometer-alt' },
-        { value: '100%', label: 'Conformidade fiscal (ACBr)', icon: 'fas fa-check-double' },
+        { value: '10+', label: t('about.highlights')?.[0] || (lang === 'en' ? '10+ months experience' : '10+ meses de experiência'), icon: 'fas fa-briefcase' },
+        { value: '100+', label: t('about.highlights')?.[1] || (lang === 'en' ? '100+ daily active users' : '100+ usuários diários'), icon: 'fas fa-users' },
+        { value: '4×', label: t('about.highlights')?.[3] || (lang === 'en' ? 'Faster query execution' : 'Queries mais rápidas'), icon: 'fas fa-tachometer-alt' },
+        { value: '100%', label: lang === 'en' ? 'Fiscal compliance (ACBr)' : lang === 'es' ? 'Cumplimiento fiscal (ACBr)' : 'Conformidade fiscal (ACBr)', icon: 'fas fa-check-double' },
     ];
 
     const pillars = [
         {
             icon: 'fas fa-laptop-code',
-            title: 'Fullstack & Modernização',
-            desc: 'Especialista em transição de monolitos legados para SPAs modernas e APIs REST desacopladas.',
+            title: lang === 'en' ? 'Fullstack & Modernization' : lang === 'es' ? 'Fullstack y Modernización' : 'Fullstack & Modernização',
+            desc: lang === 'en'
+                ? 'Expert in transitioning legacy monoliths into modern SPAs and decoupled RESTful APIs.'
+                : lang === 'es'
+                ? 'Especialista en migración de monolitos heredados a SPAs modernas y APIs REST desacopladas.'
+                : 'Especialista em transição de monolitos legados para SPAs modernas e APIs REST desacopladas.',
             tags: ['Delphi 11', 'UniGui', 'Laravel', 'React', 'TypeScript', 'Tailwind'],
         },
         {
             icon: 'fas fa-database',
-            title: 'Bancos de Dados & Performance',
-            desc: 'Refatoração de queries críticas N+1, indexação inteligente e garantia de integridade transacional.',
+            title: lang === 'en' ? 'Databases & Performance' : lang === 'es' ? 'Bases de Datos y Rendimiento' : 'Bancos de Dados & Performance',
+            desc: lang === 'en'
+                ? 'Critical query refactoring (N+1 resolution), smart indexing and transactional integrity.'
+                : lang === 'es'
+                ? 'Refactorización crítica de consultas N+1, indexación inteligente e integridad transaccional.'
+                : 'Refatoração de queries críticas N+1, indexação inteligente e garantia de integridade transacional.',
             tags: ['SQL Server', 'MySQL', 'PostgreSQL', 'Indexação', 'Tuning'],
         },
         {
             icon: 'fas fa-shield-alt',
-            title: 'QA & Sistemas Críticos',
-            desc: 'Engenharia de requisitos, testes automatizados/manuais via Postman e blindagem contra regressões.',
+            title: lang === 'en' ? 'QA & Mission-Critical Systems' : lang === 'es' ? 'QA y Sistemas Críticos' : 'QA & Sistemas Críticos',
+            desc: lang === 'en'
+                ? 'Requirements engineering, automated/manual tests via Postman and regression protection.'
+                : lang === 'es'
+                ? 'Ingeniería de requisitos, pruebas automatizadas/manuales con Postman y blindaje contra regresiones.'
+                : 'Engenharia de requisitos, testes automatizados/manuais via Postman e blindagem contra regressões.',
             tags: ['Postman', 'Testes Funcionais', 'Scrum / Kanban', 'ZPEs / Portos'],
         },
     ];

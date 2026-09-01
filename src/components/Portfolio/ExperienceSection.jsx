@@ -21,13 +21,29 @@ function HighlightedText({ text }) {
 }
 
 export default function ExperienceSection({ experiences }) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
 
     const summaryStats = [
-        { value: '10+ Meses', label: 'Experiência em produção', icon: 'fas fa-calendar-check' },
-        { value: '100+ Usuários', label: 'Diários em sistemas ERP', icon: 'fas fa-users' },
-        { value: '25% Menos Bugs', label: 'Via QA preventivo', icon: 'fas fa-shield-alt' },
-        { value: '4× Mais Rápido', label: 'Queries otimizadas (<500ms)', icon: 'fas fa-bolt' },
+        {
+            value: '10+ ' + (lang === 'en' ? 'Months' : 'Meses'),
+            label: lang === 'en' ? 'Production experience' : lang === 'es' ? 'Experiencia en producción' : 'Experiência em produção',
+            icon: 'fas fa-calendar-check'
+        },
+        {
+            value: '100+ ' + (lang === 'en' ? 'Users' : lang === 'es' ? 'Usuarios' : 'Usuários'),
+            label: lang === 'en' ? 'Daily on ERP systems' : lang === 'es' ? 'Diarios en sistemas ERP' : 'Diários em sistemas ERP',
+            icon: 'fas fa-users'
+        },
+        {
+            value: lang === 'en' ? '25% Fewer Bugs' : '25% Menos Bugs',
+            label: lang === 'en' ? 'Via proactive QA' : lang === 'es' ? 'Vía QA preventivo' : 'Via QA preventivo',
+            icon: 'fas fa-shield-alt'
+        },
+        {
+            value: lang === 'en' ? '4× Faster' : lang === 'es' ? '4× Más Rápido' : '4× Mais Rápido',
+            label: lang === 'en' ? 'Optimized queries (<500ms)' : lang === 'es' ? 'Consultas optimizadas (<500ms)' : 'Queries otimizadas (<500ms)',
+            icon: 'fas fa-bolt'
+        },
     ];
 
     return (

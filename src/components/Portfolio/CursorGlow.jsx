@@ -1,17 +1,18 @@
 import { useEffect, useRef } from 'react';
 
-const isTouchDevice = () =>
-    typeof window !== 'undefined' &&
-    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+const isTouchDevice = () => {
+    if (typeof window === 'undefined') return false;
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+};
 
-const DEFAULT_SIZE = 32;
-const TEXT_HOVER_SIZE = 58;
-
-export default function CursorMorph() {
+export default function CursorGlow() {
     const cursorRef = useRef(null);
 
     useEffect(() => {
         if (isTouchDevice()) return;
+
+        const DEFAULT_SIZE = 26;
+        const TEXT_HOVER_SIZE = 44;
 
         const cursorEl = cursorRef.current;
         if (!cursorEl) return;
@@ -43,6 +44,7 @@ export default function CursorMorph() {
             radius: '50%',
         };
 
+        let currentCard = null;
         let moveRaf = null;
         let loopRaf = null;
         let cachedZoom = 0.8;
@@ -62,6 +64,9 @@ export default function CursorMorph() {
                 '[data-cursor-morph="true"], .cursor-morph, .rounded-2xl.border, .rounded-xl.border, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
             );
             if (!candidate || candidate.closest('[data-no-morph="true"], .no-morph')) return null;
+
+            // Retorno rápido se ainda estiver sobre o mesmo card
+            if (candidate === currentCard) return candidate;
 
             const rect = candidate.getBoundingClientRect();
             const w = rect.width / cachedZoom;
@@ -162,8 +167,10 @@ export default function CursorMorph() {
         const updateCardDimensions = (card) => {
             if (!card) {
                 targetMorph.active = false;
+                currentCard = null;
                 return;
             }
+            currentCard = card;
             const rect = card.getBoundingClientRect();
             targetMorph.active = true;
             targetMorph.left = rect.left / cachedZoom;
@@ -196,6 +203,7 @@ export default function CursorMorph() {
                     updateCardDimensions(card);
                 } else {
                     targetMorph.active = false;
+                    currentCard = null;
                 }
             });
         };
@@ -205,7 +213,10 @@ export default function CursorMorph() {
                 const hoveredEl = document.elementFromPoint(mouseX, mouseY);
                 const card = findCard(hoveredEl);
                 if (card) updateCardDimensions(card);
-                else targetMorph.active = false;
+                else {
+                    targetMorph.active = false;
+                    currentCard = null;
+                }
             }
         };
 

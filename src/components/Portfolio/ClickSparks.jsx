@@ -12,9 +12,11 @@ export default function ClickSparks() {
         if (!canvas) return;
         const ctx = canvas.getContext('2d', { alpha: true });
 
+        let cachedZoom = 0.8;
         const resize = () => {
             canvas.width  = window.innerWidth;
             canvas.height = window.innerHeight;
+            cachedZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
         };
         resize();
         window.addEventListener('resize', resize, { passive: true });
@@ -59,9 +61,8 @@ export default function ClickSparks() {
         };
 
         const onClick = (e) => {
-            const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-            const x = e.clientX / zoom;
-            const y = e.clientY / zoom;
+            const x = e.clientX / cachedZoom;
+            const y = e.clientY / cachedZoom;
             const colors = paletteData?.sparks || ['#8C6A4A', '#A37E5A', '#4B342A', '#D1C7BD', '#231B16'];
             const now = performance.now();
 
