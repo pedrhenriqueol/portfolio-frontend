@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-// Diâmetro generoso e expressivo em repouso (~36px)
-const DEFAULT_SIZE = 36;
+// Diâmetro padrão reduzido em 40% (~22px, base anterior de 36px)
+const DEFAULT_SIZE = 22;
 
-// Física de mola fluida (Framer Motion Spring Physics)
+// Física de mola fluida e amortecida (Framer Motion Spring Physics)
 const SPRING_TRANSITION = {
     type: 'spring',
     damping: 25,
@@ -16,7 +16,7 @@ export default function CustomCursor() {
     const [isTouch, setIsTouch] = useState(false);
     const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
     const [cursorState, setCursorState] = useState({
-        mode: 'default', // 'default' | 'mold' | 'expand'
+        mode: 'default', // 'default' | 'text' | 'mold' | 'expand'
         x: -100,
         y: -100,
         width: DEFAULT_SIZE,
@@ -33,7 +33,7 @@ export default function CustomCursor() {
     const rafRef = useRef(null);
     const cachedZoomRef = useRef(1);
 
-    // Desativa cursor virtual em dispositivos touch
+    // Desativa cursor customizado em dispositivos touch
     useEffect(() => {
         const checkTouch = () => {
             return (
@@ -55,7 +55,7 @@ export default function CustomCursor() {
         return () => window.removeEventListener('resize', updateZoom);
     }, []);
 
-    // Atualiza estado do cursor dentro do frame da GPU
+    // Atualiza o estado do cursor no frame de renderização da GPU
     const updateCursor = useCallback(() => {
         const zoom = cachedZoomRef.current;
         const currentPos = posRef.current;
@@ -90,7 +90,7 @@ export default function CustomCursor() {
             const targetWidth = rect.width / zoom + pad * 2;
             const targetHeight = rect.height / zoom + pad * 2;
 
-            // Leve atração magnética em direção ao ponteiro dentro do elemento
+            // Atração magnética sutil em direção ao cursor dentro do botão
             const centerX = targetLeft + targetWidth / 2;
             const centerY = targetTop + targetHeight / 2;
             const pullX = (currentPos.x - centerX) * 0.12;
@@ -106,7 +106,20 @@ export default function CustomCursor() {
                 isNoMorph: false,
                 isOffscreen: false,
             });
+        } else if (targetData?.type === 'text') {
+            // Superfície de texto: expansão suave de 60%
+            setCursorState({
+                mode: 'text',
+                x: currentPos.x - DEFAULT_SIZE / 2,
+                y: currentPos.y - DEFAULT_SIZE / 2,
+                width: DEFAULT_SIZE,
+                height: DEFAULT_SIZE,
+                borderRadius: '50%',
+                isNoMorph: false,
+                isOffscreen: false,
+            });
         } else if (targetData?.type === 'expand') {
+            // Outros elementos clicáveis
             setCursorState({
                 mode: 'expand',
                 x: currentPos.x - DEFAULT_SIZE / 2,
@@ -118,6 +131,7 @@ export default function CustomCursor() {
                 isOffscreen: false,
             });
         } else {
+            // Estado livre: tamanho padrão (22px)
             setCursorState({
                 mode: 'default',
                 x: currentPos.x - DEFAULT_SIZE / 2,
@@ -131,12 +145,12 @@ export default function CustomCursor() {
         }
     }, []);
 
-    // Identifica com precisão o tipo de elemento sob o ponteiro
+    // Identifica o tipo de elemento sob o ponteiro do mouse
     const resolveTarget = (el) => {
         if (!el || el === document.body || el === document.documentElement) return null;
         if (el.closest('[data-no-morph="true"], .no-morph, canvas')) return null;
 
-        // 1. Elementos que recebem contorno moldado (botões, links, pílulas, switches de aba)
+        // 1. Elementos moldáveis (botões, links, pílulas, switches de aba)
         const moldCandidate = el.closest(
             'button, a, [data-cursor-morph="true"], .cursor-morph, [role="button"], input[type="submit"], input[type="button"]'
         );
@@ -144,15 +158,25 @@ export default function CustomCursor() {
             const rect = moldCandidate.getBoundingClientRect();
             const w = rect.width / cachedZoomRef.current;
             const h = rect.height / cachedZoomRef.current;
-            // Botões, links ou pílulas de tamanho compacto
             if (w >= 20 && h >= 18 && w <= 380 && h <= 96) {
                 return { type: 'mold', el: moldCandidate };
             }
         }
 
-        // 2. Elementos interativos amplos ou de foco (cards, inputs, tags, elementos clicáveis)
+        // 2. Superfícies de texto (títulos, subtítulos, parágrafos, biografia, tags)
+        const textCandidate = el.closest(
+            'h1, h2, h3, h4, h5, h6, p, span, strong, em, b, i, blockquote, li, code, label'
+        );
+        if (textCandidate && !textCandidate.closest('[data-no-morph="true"], .no-morph')) {
+            const text = textCandidate.textContent?.trim?.();
+            if (text && text.length > 0) {
+                return { type: 'text', el: textCandidate };
+            }
+        }
+
+        // 3. Demais elementos interativos (inputs, textareas, selects, cards clicáveis)
         const expandCandidate = el.closest(
-            'input, textarea, select, label, [data-cursor="expand"], .cursor-pointer, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
+            'input, textarea, select, [data-cursor="expand"], .cursor-pointer'
         );
         if (expandCandidate && !expandCandidate.closest('[data-no-morph="true"], .no-morph')) {
             return { type: 'expand', el: expandCandidate };
@@ -208,7 +232,7 @@ export default function CustomCursor() {
             updateCursor();
         };
 
-        // Handlers dedicados de saída/entrada suave do Globo 3D
+        // Handlers de saída e entrada suave na Esfera 3D
         const onNoMorphEnter = () => {
             isNoMorphRef.current = true;
             targetRef.current = null;
@@ -278,6 +302,23 @@ export default function CustomCursor() {
                           WebkitBackdropFilter: 'blur(2px)',
                           mixBlendMode: 'normal',
                       }
+                    : cursorState.mode === 'text'
+                    ? {
+                          // Aumento suave de 60% do tamanho em superfícies de texto com mix-blend-mode difference
+                          x: mousePos.x - DEFAULT_SIZE / 2,
+                          y: mousePos.y - DEFAULT_SIZE / 2,
+                          width: DEFAULT_SIZE,
+                          height: DEFAULT_SIZE,
+                          borderRadius: '50%',
+                          opacity: 1,
+                          scale: 1.6,
+                          backgroundColor: '#ffffff',
+                          border: '0px solid transparent',
+                          boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          mixBlendMode: 'difference',
+                      }
                     : cursorState.mode === 'expand'
                     ? {
                           x: mousePos.x - DEFAULT_SIZE / 2,
@@ -286,7 +327,7 @@ export default function CustomCursor() {
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',
                           opacity: 1,
-                          scale: 1.45,
+                          scale: 1.35,
                           backgroundColor: '#ffffff',
                           border: '0px solid transparent',
                           boxShadow: 'none',
@@ -295,6 +336,7 @@ export default function CustomCursor() {
                           mixBlendMode: 'difference',
                       }
                     : {
+                          // Tamanho normal (22px) em repouso
                           x: mousePos.x - DEFAULT_SIZE / 2,
                           y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
