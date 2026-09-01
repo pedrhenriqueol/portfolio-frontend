@@ -1,25 +1,27 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-const DEFAULT_SIZE = 18;
+// Diâmetro generoso e expressivo em repouso (~36px)
+const DEFAULT_SIZE = 36;
 
-// Física de mola calibrada (Framer Motion Spring Physics)
+// Física de mola fluida (Framer Motion Spring Physics)
 const SPRING_TRANSITION = {
     type: 'spring',
-    stiffness: 380,
-    damping: 30,
-    mass: 0.5,
+    damping: 25,
+    stiffness: 250,
+    mass: 0.6,
 };
 
 export default function CustomCursor() {
     const [isTouch, setIsTouch] = useState(false);
+    const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
     const [cursorState, setCursorState] = useState({
+        mode: 'default', // 'default' | 'mold' | 'expand'
         x: -100,
         y: -100,
         width: DEFAULT_SIZE,
         height: DEFAULT_SIZE,
         borderRadius: '50%',
-        isMorphing: false,
         isNoMorph: false,
         isOffscreen: true,
     });
@@ -31,7 +33,7 @@ export default function CustomCursor() {
     const rafRef = useRef(null);
     const cachedZoomRef = useRef(1);
 
-    // Detecta dispositivos de toque (mobile/tablets) para desativar cursor virtual
+    // Desativa cursor virtual em dispositivos touch
     useEffect(() => {
         const checkTouch = () => {
             return (
@@ -43,7 +45,7 @@ export default function CustomCursor() {
         setIsTouch(checkTouch());
     }, []);
 
-    // Sincroniza zoom do index.css (0.8)
+    // Sincroniza o fator de zoom global do index.css (0.8)
     useEffect(() => {
         const updateZoom = () => {
             cachedZoomRef.current = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
@@ -53,20 +55,33 @@ export default function CustomCursor() {
         return () => window.removeEventListener('resize', updateZoom);
     }, []);
 
-    // Atualização de estado no frame da GPU (RAF)
+    // Atualiza estado do cursor dentro do frame da GPU
     const updateCursor = useCallback(() => {
         const zoom = cachedZoomRef.current;
-        const trigger = targetRef.current;
+        const currentPos = posRef.current;
+        const targetData = targetRef.current;
 
-        if (trigger && !isNoMorphRef.current && !isOffscreenRef.current) {
-            const rect = trigger.getBoundingClientRect();
-            const comp = window.getComputedStyle(trigger);
+        setMousePos({ x: currentPos.x, y: currentPos.y });
+
+        if (isNoMorphRef.current || isOffscreenRef.current) {
+            setCursorState(prev => ({
+                ...prev,
+                mode: 'default',
+                isNoMorph: isNoMorphRef.current,
+                isOffscreen: isOffscreenRef.current,
+            }));
+            return;
+        }
+
+        if (targetData?.type === 'mold') {
+            const rect = targetData.el.getBoundingClientRect();
+            const comp = window.getComputedStyle(targetData.el);
             let radius = comp.borderRadius || '12px';
 
-            if (radius.includes('%') || parseFloat(radius) >= 24) {
+            if (radius.includes('%') || parseFloat(radius) >= 20) {
                 radius = '9999px';
             } else {
-                radius = `${(parseFloat(radius) || 8) + 3}px`;
+                radius = `${(parseFloat(radius) || 8) + 4}px`;
             }
 
             const pad = 3;
@@ -75,37 +90,77 @@ export default function CustomCursor() {
             const targetWidth = rect.width / zoom + pad * 2;
             const targetHeight = rect.height / zoom + pad * 2;
 
-            // Atração magnética sutil em direção ao cursor dentro do botão
+            // Leve atração magnética em direção ao ponteiro dentro do elemento
             const centerX = targetLeft + targetWidth / 2;
             const centerY = targetTop + targetHeight / 2;
-            const pullX = (posRef.current.x - centerX) * 0.12;
-            const pullY = (posRef.current.y - centerY) * 0.12;
+            const pullX = (currentPos.x - centerX) * 0.12;
+            const pullY = (currentPos.y - centerY) * 0.12;
 
             setCursorState({
+                mode: 'mold',
                 x: targetLeft + pullX,
                 y: targetTop + pullY,
                 width: targetWidth,
                 height: targetHeight,
                 borderRadius: radius,
-                isMorphing: true,
+                isNoMorph: false,
+                isOffscreen: false,
+            });
+        } else if (targetData?.type === 'expand') {
+            setCursorState({
+                mode: 'expand',
+                x: currentPos.x - DEFAULT_SIZE / 2,
+                y: currentPos.y - DEFAULT_SIZE / 2,
+                width: DEFAULT_SIZE,
+                height: DEFAULT_SIZE,
+                borderRadius: '50%',
                 isNoMorph: false,
                 isOffscreen: false,
             });
         } else {
             setCursorState({
-                x: posRef.current.x - DEFAULT_SIZE / 2,
-                y: posRef.current.y - DEFAULT_SIZE / 2,
+                mode: 'default',
+                x: currentPos.x - DEFAULT_SIZE / 2,
+                y: currentPos.y - DEFAULT_SIZE / 2,
                 width: DEFAULT_SIZE,
                 height: DEFAULT_SIZE,
                 borderRadius: '50%',
-                isMorphing: false,
-                isNoMorph: isNoMorphRef.current,
-                isOffscreen: isOffscreenRef.current,
+                isNoMorph: false,
+                isOffscreen: false,
             });
         }
     }, []);
 
-    // Eventos de movimento e tracking cirúrgico
+    // Identifica com precisão o tipo de elemento sob o ponteiro
+    const resolveTarget = (el) => {
+        if (!el || el === document.body || el === document.documentElement) return null;
+        if (el.closest('[data-no-morph="true"], .no-morph, canvas')) return null;
+
+        // 1. Elementos que recebem contorno moldado (botões, links, pílulas, switches de aba)
+        const moldCandidate = el.closest(
+            'button, a, [data-cursor-morph="true"], .cursor-morph, [role="button"], input[type="submit"], input[type="button"]'
+        );
+        if (moldCandidate && !moldCandidate.closest('[data-no-morph="true"], .no-morph')) {
+            const rect = moldCandidate.getBoundingClientRect();
+            const w = rect.width / cachedZoomRef.current;
+            const h = rect.height / cachedZoomRef.current;
+            // Botões, links ou pílulas de tamanho compacto
+            if (w >= 20 && h >= 18 && w <= 380 && h <= 96) {
+                return { type: 'mold', el: moldCandidate };
+            }
+        }
+
+        // 2. Elementos interativos amplos ou de foco (cards, inputs, tags, elementos clicáveis)
+        const expandCandidate = el.closest(
+            'input, textarea, select, label, [data-cursor="expand"], .cursor-pointer, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
+        );
+        if (expandCandidate && !expandCandidate.closest('[data-no-morph="true"], .no-morph')) {
+            return { type: 'expand', el: expandCandidate };
+        }
+
+        return null;
+    };
+
     useEffect(() => {
         if (isTouch) return;
 
@@ -117,15 +172,11 @@ export default function CustomCursor() {
             };
             isOffscreenRef.current = false;
 
-            // Verificação em tempo real de áreas restritas (Globo 3D / Canvas / Terminais)
-            const noMorphTarget = e.target?.closest?.('[data-no-morph="true"], .no-morph, canvas');
-            isNoMorphRef.current = Boolean(noMorphTarget);
+            // Verificação em tempo real da área da Esfera 3D
+            const hitNoMorph = Boolean(e.target?.closest?.('[data-no-morph="true"], .no-morph, canvas'));
+            isNoMorphRef.current = hitNoMorph;
 
-            // Delimitação estrita dos triggers interativos permitidos
-            const triggerEl = e.target?.closest?.(
-                '[data-cursor-morph="true"], .cursor-morph, [data-cursor="magnetic"]'
-            );
-            targetRef.current = triggerEl && !isNoMorphRef.current ? triggerEl : null;
+            targetRef.current = hitNoMorph ? null : resolveTarget(e.target);
 
             if (!rafRef.current) {
                 rafRef.current = requestAnimationFrame(() => {
@@ -136,7 +187,7 @@ export default function CustomCursor() {
         };
 
         const onScroll = () => {
-            if (targetRef.current) {
+            if (targetRef.current?.type === 'mold') {
                 if (!rafRef.current) {
                     rafRef.current = requestAnimationFrame(() => {
                         rafRef.current = null;
@@ -157,7 +208,7 @@ export default function CustomCursor() {
             updateCursor();
         };
 
-        // Eventos customizados para desativação no Globo 3D
+        // Handlers dedicados de saída/entrada suave do Globo 3D
         const onNoMorphEnter = () => {
             isNoMorphRef.current = true;
             targetRef.current = null;
@@ -193,28 +244,72 @@ export default function CustomCursor() {
 
     return (
         <motion.div
-            className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform transform-gpu"
-            animate={{
-                x: cursorState.x,
-                y: cursorState.y,
-                width: cursorState.width,
-                height: cursorState.height,
-                borderRadius: cursorState.borderRadius,
-                opacity: isHidden ? 0 : 1,
-                scale: isHidden ? 0.5 : 1,
-                backgroundColor: cursorState.isMorphing
-                    ? 'rgba(255, 255, 255, 0.05)'
-                    : '#ffffff',
-                border: cursorState.isMorphing
-                    ? '1px solid rgba(255, 255, 255, 0.4)'
-                    : '0px solid transparent',
-                boxShadow: cursorState.isMorphing
-                    ? '0 0 20px rgba(255, 255, 255, 0.08)'
-                    : 'none',
-                backdropFilter: cursorState.isMorphing ? 'blur(2px)' : 'none',
-                WebkitBackdropFilter: cursorState.isMorphing ? 'blur(2px)' : 'none',
-                mixBlendMode: cursorState.isMorphing ? 'normal' : 'difference',
-            }}
+            className="pointer-events-none fixed top-0 left-0 z-[9999] will-change-transform transform-gpu"
+            animate={
+                isHidden
+                    ? {
+                          x: mousePos.x - DEFAULT_SIZE / 2,
+                          y: mousePos.y - DEFAULT_SIZE / 2,
+                          width: DEFAULT_SIZE,
+                          height: DEFAULT_SIZE,
+                          borderRadius: '50%',
+                          opacity: 0,
+                          scale: 0.5,
+                          backgroundColor: '#ffffff',
+                          border: '0px solid transparent',
+                          boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          mixBlendMode: 'difference',
+                      }
+                    : cursorState.mode === 'mold'
+                    ? {
+                          x: cursorState.x,
+                          y: cursorState.y,
+                          width: cursorState.width,
+                          height: cursorState.height,
+                          borderRadius: cursorState.borderRadius,
+                          opacity: 1,
+                          scale: 1,
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          border: '1px solid rgba(255, 255, 255, 0.4)',
+                          boxShadow: '0 0 24px rgba(255, 255, 255, 0.08)',
+                          backdropFilter: 'blur(2px)',
+                          WebkitBackdropFilter: 'blur(2px)',
+                          mixBlendMode: 'normal',
+                      }
+                    : cursorState.mode === 'expand'
+                    ? {
+                          x: mousePos.x - DEFAULT_SIZE / 2,
+                          y: mousePos.y - DEFAULT_SIZE / 2,
+                          width: DEFAULT_SIZE,
+                          height: DEFAULT_SIZE,
+                          borderRadius: '50%',
+                          opacity: 1,
+                          scale: 1.45,
+                          backgroundColor: '#ffffff',
+                          border: '0px solid transparent',
+                          boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          mixBlendMode: 'difference',
+                      }
+                    : {
+                          x: mousePos.x - DEFAULT_SIZE / 2,
+                          y: mousePos.y - DEFAULT_SIZE / 2,
+                          width: DEFAULT_SIZE,
+                          height: DEFAULT_SIZE,
+                          borderRadius: '50%',
+                          opacity: 1,
+                          scale: 1,
+                          backgroundColor: '#ffffff',
+                          border: '0px solid transparent',
+                          boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          mixBlendMode: 'difference',
+                      }
+            }
             transition={SPRING_TRANSITION}
         />
     );
