@@ -23,32 +23,66 @@ const CATEGORIES = [
 // Distribuição uniforme de Fibonacci na esfera 3D
 function createSphereNodes(items) {
     const N = items.length;
-    if (N === 0) return [];
+    if (N === 0) return { nodes: [], edges: [] };
     const phi = Math.PI * (3 - Math.sqrt(5)); // Ângulo áureo ~2.399 rad
 
-    return items.map((item, i) => {
+    const nodes = items.map((item, i) => {
         const y = 1 - (i / Math.max(N - 1, 1)) * 2;
         const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
         const theta = phi * i;
 
         return {
             ...item,
+            index: i,
             ox: Math.cos(theta) * radiusAtY,
             oy: y,
             oz: Math.sin(theta) * radiusAtY,
         };
     });
+
+    // Pré-computação das arestas estáticas da constelação (distância 3D < 0.72)
+    const edges = [];
+    for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[i].ox - nodes[j].ox;
+            const dy = nodes[i].oy - nodes[j].oy;
+            const dz = nodes[i].oz - nodes[j].oz;
+            const dist3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (dist3D < 0.72) {
+                edges.push([i, j]);
+            }
+        }
+    }
+
+    return { nodes, edges };
 }
 
 export default function TechSphere3D({ skills = [] }) {
     const { t, lang } = useLanguage();
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
+    const nodeElementsRef = useRef([]);
 
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [hoveredTech, setHoveredTech] = useState(null);
     const [activeTech, setActiveTech] = useState(null);
-    const [projectedNodes, setProjectedNodes] = useState([]);
+
+    // Refs mutáveis para evitar re-renders a 60fps
+    const selectedCategoryRef = useRef('all');
+    const hoveredTechIdRef = useRef(null);
+    const activeTechIdRef = useRef(null);
+
+    useEffect(() => {
+        selectedCategoryRef.current = selectedCategory;
+    }, [selectedCategory]);
+
+    useEffect(() => {
+        hoveredTechIdRef.current = hoveredTech?.id ?? null;
+    }, [hoveredTech]);
+
+    useEffect(() => {
+        activeTechIdRef.current = activeTech?.id ?? null;
+    }, [activeTech]);
 
     // Parâmetros de física e rotação contínua
     const angleRef = useRef({ x: 0.2, y: 0.1 });
@@ -58,6 +92,7 @@ export default function TechSphere3D({ skills = [] }) {
     const dragDistanceRef = useRef(0);
     const lastPointerRef = useRef({ x: 0, y: 0 });
     const isVisibleRef = useRef(true);
+    const rafIdRef = useRef(null);
 
     // Tecnologias formatadas e categorizadas
     const localizedSkills = useMemo(() => {
@@ -70,126 +105,152 @@ export default function TechSphere3D({ skills = [] }) {
         }));
     }, [skills, t]);
 
-    const baseNodes = useMemo(() => createSphereNodes(localizedSkills), [localizedSkills]);
+    const { nodes: baseNodes, edges: staticEdges } = useMemo(
+        () => createSphereNodes(localizedSkills),
+        [localizedSkills]
+    );
 
-    // Visibilidade em tela via IntersectionObserver para 100% de economia de CPU/GPU fora do viewport
+    // Buffers reutilizáveis para coordenadas projetadas (Zero GC / Zero alocações no loop)
+    const projectedCoords = useRef([]);
+    useEffect(() => {
+        projectedCoords.current = baseNodes.map(() => ({ px: 0, py: 0, z2: 0, scale: 1 }));
+    }, [baseNodes]);
+
+    // Loop de renderização 3D a 60 FPS diretos no DOM e Canvas (SEM re-render React)
+    const runFrame = useCallback(() => {
+        if (!isVisibleRef.current) return;
+
+        // Inércia e amortecimento
+        if (!isDraggingRef.current) {
+            speedRef.current.rx += (targetSpeed.current.rx - speedRef.current.rx) * 0.04;
+            speedRef.current.ry += (targetSpeed.current.ry - speedRef.current.ry) * 0.04;
+        }
+
+        angleRef.current.x += speedRef.current.rx;
+        angleRef.current.y += speedRef.current.ry;
+
+        const ax = angleRef.current.x;
+        const ay = angleRef.current.y;
+        const cosX = Math.cos(ax), sinX = Math.sin(ax);
+        const cosY = Math.cos(ay), sinY = Math.sin(ay);
+
+        const SPHERE_RADIUS = 200;
+        const FOV = 440;
+
+        const currentCat = selectedCategoryRef.current;
+        const hovId = hoveredTechIdRef.current;
+        const actId = activeTechIdRef.current;
+
+        const domNodes = nodeElementsRef.current;
+        const coords = projectedCoords.current;
+
+        // 1. Projeção e Atualização Direta nos Elementos DOM dos Nós
+        for (let i = 0; i < baseNodes.length; i++) {
+            const node = baseNodes[i];
+            const el = domNodes[i];
+
+            // Rotação Y
+            const x1 = node.ox * cosY + node.oz * sinY;
+            const z1 = -node.ox * sinY + node.oz * cosY;
+
+            // Rotação X
+            const y1 = node.oy * cosX - z1 * sinX;
+            const z2 = node.oy * sinX + z1 * cosX;
+
+            const zDist = z2 * SPHERE_RADIUS;
+            const scale = FOV / (FOV - zDist);
+            const px = x1 * SPHERE_RADIUS * scale;
+            const py = y1 * SPHERE_RADIUS * scale;
+            const clampedScale = Math.min(1.35, Math.max(0.7, scale));
+            const depthAlpha = Math.max(0.2, (z2 + 1.2) / 2.2);
+
+            coords[i].px = px;
+            coords[i].py = py;
+            coords[i].z2 = z2;
+            coords[i].scale = clampedScale;
+
+            if (el) {
+                const isFiltered = currentCat !== 'all' && node.category !== currentCat;
+                const isFocused = (hovId === node.id) || (actId === node.id);
+                const finalScale = isFocused ? clampedScale * 1.25 : clampedScale;
+                const finalAlpha = isFiltered ? 0.12 : isFocused ? 1 : depthAlpha;
+                const finalZIndex = isFocused ? 999 : Math.round((z2 + 2) * 100);
+
+                el.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${finalScale})`;
+                el.style.opacity = finalAlpha;
+                el.style.zIndex = finalZIndex;
+            }
+        }
+
+        // 2. Renderização das Linhas de Constelação no Canvas 2D
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                ctx.lineWidth = 1;
+
+                for (let e = 0; e < staticEdges.length; e++) {
+                    const [i, j] = staticEdges[e];
+                    const p1 = coords[i];
+                    const p2 = coords[j];
+
+                    const avgZ = (p1.z2 + p2.z2) / 2;
+                    const lineAlpha = Math.max(0, (avgZ + 0.8) * 0.18);
+
+                    if (lineAlpha > 0.01) {
+                        ctx.strokeStyle = `rgba(214, 210, 196, ${lineAlpha})`;
+                        ctx.beginPath();
+                        ctx.moveTo(cx + p1.px, cy + p1.py);
+                        ctx.lineTo(cx + p2.px, cy + p2.py);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        rafIdRef.current = requestAnimationFrame(runFrame);
+    }, [baseNodes, staticEdges]);
+
+    // Visibilidade em tela via IntersectionObserver: Pausa 100% o loop quando fora do viewport
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {
-                isVisibleRef.current = entry.isIntersecting;
+                const isNowVisible = entry.isIntersecting;
+                isVisibleRef.current = isNowVisible;
+
+                if (isNowVisible) {
+                    if (!rafIdRef.current) {
+                        rafIdRef.current = requestAnimationFrame(runFrame);
+                    }
+                } else {
+                    if (rafIdRef.current) {
+                        cancelAnimationFrame(rafIdRef.current);
+                        rafIdRef.current = null;
+                    }
+                }
             },
             { threshold: 0.1 }
         );
 
         observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
+        if (isVisibleRef.current && !rafIdRef.current) {
+            rafIdRef.current = requestAnimationFrame(runFrame);
+        }
 
-    // Loop de renderização 3D (Posicionamento dos nós + Canvas de conexões)
-    useEffect(() => {
-        let animId;
-        const canvas = canvasRef.current;
-        const ctx = canvas ? canvas.getContext('2d') : null;
-
-        const updateSphere = () => {
-            if (!isVisibleRef.current) {
-                animId = requestAnimationFrame(updateSphere);
-                return;
+        return () => {
+            observer.disconnect();
+            if (rafIdRef.current) {
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = null;
             }
-
-            // Inércia e amortecimento
-            if (!isDraggingRef.current) {
-                speedRef.current.rx += (targetSpeed.current.rx - speedRef.current.rx) * 0.04;
-                speedRef.current.ry += (targetSpeed.current.ry - speedRef.current.ry) * 0.04;
-            }
-
-            angleRef.current.x += speedRef.current.rx;
-            angleRef.current.y += speedRef.current.ry;
-
-            const ax = angleRef.current.x;
-            const ay = angleRef.current.y;
-            const cosX = Math.cos(ax), sinX = Math.sin(ax);
-            const cosY = Math.cos(ay), sinY = Math.sin(ay);
-
-            const SPHERE_RADIUS = 200;
-            const FOV = 440;
-
-            // Projeção dos nós esféricos
-            const projected = baseNodes.map((node) => {
-                // Rotação Y
-                const x1 = node.ox * cosY + node.oz * sinY;
-                const z1 = -node.ox * sinY + node.oz * cosY;
-
-                // Rotação X
-                const y1 = node.oy * cosX - z1 * sinX;
-                const z2 = node.oy * sinX + z1 * cosX;
-
-                const zDist = z2 * SPHERE_RADIUS;
-                const scale = FOV / (FOV - zDist);
-                const px = x1 * SPHERE_RADIUS * scale;
-                const py = y1 * SPHERE_RADIUS * scale;
-
-                // Opacidade baseada em profundidade Z (nós da frente são nítidos, fundo é suave)
-                const depthAlpha = Math.max(0.2, (z2 + 1.2) / 2.2);
-
-                return {
-                    ...node,
-                    px,
-                    py,
-                    z2,
-                    scale: Math.min(1.35, Math.max(0.7, scale)),
-                    zIndex: Math.round((z2 + 2) * 100),
-                    depthAlpha,
-                };
-            });
-
-            setProjectedNodes(projected);
-
-            // Renderiza linhas de conexão da constelação no Canvas
-            if (ctx && canvas) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const cx = canvas.width / 2;
-                const cy = canvas.height / 2;
-
-                ctx.lineWidth = 1;
-
-                for (let i = 0; i < projected.length; i++) {
-                    const n1 = projected[i];
-                    for (let j = i + 1; j < projected.length; j++) {
-                        const n2 = projected[j];
-
-                        // Distância euclidiana 3D
-                        const dx = n1.ox - n2.ox;
-                        const dy = n1.oy - n2.oy;
-                        const dz = n1.oz - n2.oz;
-                        const dist3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-                        // Conecta apenas nós vizinhos na constelação (< 0.72)
-                        if (dist3D < 0.72) {
-                            const avgZ = (n1.z2 + n2.z2) / 2;
-                            const lineAlpha = Math.max(0, (avgZ + 0.8) * 0.18);
-
-                            if (lineAlpha > 0.01) {
-                                ctx.strokeStyle = `rgba(214, 210, 196, ${lineAlpha})`;
-                                ctx.beginPath();
-                                ctx.moveTo(cx + n1.px, cy + n1.py);
-                                ctx.lineTo(cx + n2.px, cy + n2.py);
-                                ctx.stroke();
-                            }
-                        }
-                    }
-                }
-            }
-
-            animId = requestAnimationFrame(updateSphere);
         };
-
-        animId = requestAnimationFrame(updateSphere);
-        return () => cancelAnimationFrame(animId);
-    }, [baseNodes]);
+    }, [runFrame]);
 
     // Redimensionamento do Canvas
     useEffect(() => {
@@ -272,7 +333,7 @@ export default function TechSphere3D({ skills = [] }) {
                 className="no-morph relative w-full max-w-[580px] h-[480px] mt-8 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl"
                 style={{ touchAction: 'none' }}
             >
-                {/* Canvas com conexões sutis de constelação */}
+                {/* Canvas com conexões pré-computadas de constelação */}
                 <canvas
                     ref={canvasRef}
                     className="absolute inset-0 pointer-events-none w-full h-full z-0"
@@ -281,24 +342,20 @@ export default function TechSphere3D({ skills = [] }) {
                 {/* Glow Radial Central */}
                 <div className="absolute inset-0 bg-radial from-secondary/5 via-transparent to-transparent pointer-events-none" />
 
-                {/* Nós da Esfera (sem texto invertido, sempre virados para frente) */}
-                {projectedNodes.map((node) => {
-                    const isFiltered = selectedCategory !== 'all' && node.category !== selectedCategory;
+                {/* Nós da Esfera (Atualizados diretamente no DOM a 60 FPS sem re-renders) */}
+                {baseNodes.map((node, idx) => {
                     const isFocused = (hoveredTech?.id === node.id) || (activeTech?.id === node.id);
-                    const finalScale = isFocused ? node.scale * 1.25 : node.scale;
-                    const finalAlpha = isFiltered ? 0.12 : isFocused ? 1 : node.depthAlpha;
 
                     return (
                         <div
                             key={node.id}
+                            ref={(el) => (nodeElementsRef.current[idx] = el)}
                             style={{
                                 position: 'absolute',
-                                transform: `translate3d(${node.px}px, ${node.py}px, 0) scale(${finalScale})`,
-                                zIndex: isFocused ? 999 : node.zIndex,
-                                opacity: finalAlpha,
+                                transform: 'translate3d(0px, 0px, 0) scale(1)',
                                 willChange: 'transform, opacity',
                             }}
-                            className="pointer-events-auto cursor-pointer flex flex-col items-center justify-center transition-opacity duration-200"
+                            className="pointer-events-auto cursor-pointer flex flex-col items-center justify-center"
                             onMouseEnter={() => setHoveredTech(node)}
                             onMouseLeave={() => setHoveredTech(null)}
                             onClick={() => {
