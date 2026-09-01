@@ -55,11 +55,12 @@ export default function TechSphere3D({ skills = [] }) {
 
     // Obtém as tecnologias traduzidas dinamicamente do LanguageContext
     const localizedSkills = useMemo(() => {
-        const list = (skills && skills.length > 0) ? skills : (t('skills.list') || []);
+        const raw = (skills && Array.isArray(skills) && skills.length > 0) ? skills : t('skills.list');
+        const list = Array.isArray(raw) ? raw : [];
         return list.map((item) => ({
             ...item,
-            icon: item.icon_class || item.icon || 'fas fa-code',
-            color: CATEGORY_THEME[item.category]?.color || item.color || '#8C6A4A',
+            icon: item?.icon_class || item?.icon || 'fas fa-code',
+            color: CATEGORY_THEME[item?.category]?.color || item?.color || '#8C6A4A',
         }));
     }, [skills, t]);
 

@@ -117,16 +117,16 @@ export default function SkillsSection({ skills }) {
 
     // Ordenação por cor/categoria agrupada na visualização 'Todos'
     const processedSkills = useMemo(() => {
-        const list = [...skills];
+        const list = Array.isArray(skills) ? [...skills] : [];
         if (selectedCategory === 'all') {
             return list.sort((a, b) => {
-                const orderA = CATEGORY_STYLES[a.category]?.order || 99;
-                const orderB = CATEGORY_STYLES[b.category]?.order || 99;
+                const orderA = CATEGORY_STYLES[a?.category]?.order || 99;
+                const orderB = CATEGORY_STYLES[b?.category]?.order || 99;
                 if (orderA !== orderB) return orderA - orderB;
-                return a.id - b.id;
+                return (a?.id || 0) - (b?.id || 0);
             });
         }
-        return list.filter((skill) => skill.category === selectedCategory);
+        return list.filter((skill) => skill?.category === selectedCategory);
     }, [skills, selectedCategory]);
 
     return (

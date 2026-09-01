@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 
+const DEFAULT_SIZE = 26;
+const TEXT_HOVER_SIZE = 44;
+
 const isTouchDevice = () => {
     if (typeof window === 'undefined') return false;
     return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -10,9 +13,6 @@ export default function CursorGlow() {
 
     useEffect(() => {
         if (isTouchDevice()) return;
-
-        const DEFAULT_SIZE = 26;
-        const TEXT_HOVER_SIZE = 44;
 
         const cursorEl = cursorRef.current;
         if (!cursorEl) return;

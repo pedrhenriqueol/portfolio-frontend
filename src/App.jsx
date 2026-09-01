@@ -31,9 +31,13 @@ function SectionSkeleton() {
 export default function App() {
     const { t } = useLanguage();
 
-    const EXPERIENCES = t('experience.list');
-    const SKILLS = t('skills.list');
-    const PROJECTS = t('projects.list');
+    const experiencesData = t('experience.list');
+    const skillsData = t('skills.list');
+    const projectsData = t('projects.list');
+
+    const EXPERIENCES = Array.isArray(experiencesData) ? experiencesData : [];
+    const SKILLS = Array.isArray(skillsData) ? skillsData : [];
+    const PROJECTS = Array.isArray(projectsData) ? projectsData : [];
 
     return (
         <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker">

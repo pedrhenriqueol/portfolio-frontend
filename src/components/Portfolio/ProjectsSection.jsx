@@ -20,7 +20,7 @@ export default function ProjectsSection({ projects }) {
     ], [t]);
 
     const filtered = useMemo(() => {
-        if (!projects) return [];
+        if (!Array.isArray(projects)) return [];
         if (activeFilter === 'all') return projects;
         return projects.filter(p => projectCategory(p) === activeFilter);
     }, [projects, activeFilter]);
