@@ -9,7 +9,7 @@ function HighlightedText({ text }) {
         <>
             {parts.map((part, i) =>
                 pattern.test(part) ? (
-                    <span key={i} className="text-secondary font-semibold">
+                    <span key={i} className="text-secondary font-semibold font-mono">
                         {part}
                     </span>
                 ) : (
@@ -47,7 +47,7 @@ export default function ExperienceSection({ experiences }) {
     ];
 
     return (
-        <section id="experiencia" className="grid-bg py-24 bg-dark relative border-t border-primary/30">
+        <section id="experiencia" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* ── Section Header ── */}
@@ -75,7 +75,7 @@ export default function ExperienceSection({ experiences }) {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16"
+                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14"
                 >
                     {summaryStats.map((stat, idx) => (
                         <div
@@ -87,7 +87,7 @@ export default function ExperienceSection({ experiences }) {
                             </div>
                             <div>
                                 <div className="text-sm sm:text-base font-bold text-white font-mono">{stat.value}</div>
-                                <div className="text-[11px] text-gray-400 leading-tight">{stat.label}</div>
+                                <div className="text-[11px] text-gray-400 leading-tight font-sans">{stat.label}</div>
                             </div>
                         </div>
                     ))}
@@ -100,7 +100,7 @@ export default function ExperienceSection({ experiences }) {
 
                     {experiences && experiences.length > 0 ? (
                         experiences.map((exp, expIdx) => {
-                            const isCurrent = exp.id === 2 || exp.period.toLowerCase().includes('presente') || exp.period.toLowerCase().includes('present');
+                            const isCurrent = exp.id === 2 || (exp.period && (exp.period.toLowerCase().includes('presente') || exp.period.toLowerCase().includes('present')));
 
                             return (
                                 <motion.div
@@ -118,45 +118,36 @@ export default function ExperienceSection({ experiences }) {
 
                                     {/* Card de Experiência */}
                                     <div className="bg-darker rounded-2xl border border-primary/30 hover:border-accent/50 transition-all duration-300 shadow-2xl overflow-hidden group">
-                                        
-                                        {/* Barra superior de destaque */}
-                                        <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-primary/20 bg-dark/40">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                                <div>
-                                                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                        <span className="text-xl sm:text-2xl font-bold text-white group-hover:text-secondary transition-colors">
-                                                            {exp.company}
-                                                        </span>
-                                                        {isCurrent ? (
-                                                            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-0.5 rounded-full">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                                                Atuação Atual
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary/70 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
-                                                                <i className="fas fa-check text-[9px]" />
-                                                                Concluído
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <h3 className="text-sm sm:text-base font-medium text-accent">
-                                                        {exp.role}
+                                        {/* Card Header */}
+                                        <div className="p-6 sm:p-8 border-b border-primary/20 bg-white/[0.01]">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                                                <div className="flex items-center gap-3">
+                                                    <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
+                                                        {exp.company}
                                                     </h3>
+                                                    {isCurrent && (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-green-500/10 text-green-400 border border-green-500/30">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                                            {lang === 'en' ? 'Current Role' : lang === 'es' ? 'Puesto Actual' : 'Cargo Atual'}
+                                                        </span>
+                                                    )}
                                                 </div>
-
-                                                <span className="self-start sm:self-auto text-xs font-semibold text-gray-300 bg-dark border border-primary/30 px-3.5 py-1.5 rounded-xl whitespace-nowrap font-mono shadow-sm">
-                                                    <i className="far fa-calendar-alt mr-2 text-accent" />
+                                                <span className="text-xs font-mono text-primary/70 bg-dark px-3 py-1 rounded-md border border-primary/20 self-start sm:self-auto">
                                                     {exp.period}
                                                 </span>
                                             </div>
 
-                                            {/* Badges de Tecnologias */}
+                                            <p className="text-secondary font-medium text-sm sm:text-base font-sans mb-4">
+                                                {exp.role}
+                                            </p>
+
+                                            {/* Tech Badges */}
                                             {exp.techBadges && (
-                                                <div className="flex flex-wrap gap-1.5 mt-4">
-                                                    {exp.techBadges.map((badge) => (
+                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                    {exp.techBadges.map((badge, bIdx) => (
                                                         <span
-                                                            key={badge}
-                                                            className="text-[10px] sm:text-[11px] font-medium text-gray-300 bg-dark/80 border border-primary/20 px-2.5 py-0.5 rounded-md"
+                                                            key={bIdx}
+                                                            className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/5 text-primary/80 border border-white/10 group-hover:border-accent/30 transition-colors"
                                                         >
                                                             {badge}
                                                         </span>
@@ -165,49 +156,33 @@ export default function ExperienceSection({ experiences }) {
                                             )}
                                         </div>
 
-                                        {/* Grupos de Atividades & Impacto */}
-                                        <div className="px-6 sm:px-8 py-6 space-y-6">
-                                            {exp.groups && exp.groups.map((group, gIdx) => (
-                                                <div key={gIdx} className="space-y-3">
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-gray-300 uppercase tracking-wider">
-                                                        <span className="w-5 h-5 rounded-md bg-accent/10 border border-accent/20 flex items-center justify-center">
-                                                            <i className={`${group.icon} text-accent text-[10px]`} />
-                                                        </span>
-                                                        {group.title}
+                                        {/* Card Groups (Responsabilidades / Conquistas) */}
+                                        {exp.groups && exp.groups.length > 0 && (
+                                            <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-dark/40">
+                                                {exp.groups.map((group, gIdx) => (
+                                                    <div key={gIdx} className="space-y-3">
+                                                        <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
+                                                            <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
+                                                            <span>{group.title}</span>
+                                                        </div>
+                                                        <ul className="space-y-2">
+                                                            {group.items && group.items.map((item, iIdx) => (
+                                                                <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
+                                                                    <span className="text-accent mt-1.5 text-[8px]">•</span>
+                                                                    <span><HighlightedText text={item} /></span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
                                                     </div>
-                                                    <ul className="space-y-2.5 pl-1">
-                                                        {group.items.map((item, iIdx) => (
-                                                            <li
-                                                                key={iIdx}
-                                                                className="flex items-start gap-3 text-gray-400 text-xs sm:text-sm leading-relaxed"
-                                                            >
-                                                                <span className="shrink-0 mt-[6px] w-[5px] h-[5px] rounded-full bg-accent/70" />
-                                                                <span>
-                                                                    <HighlightedText text={item} />
-                                                                </span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Rodapé de Destaque de Impacto */}
-                                        <div className="px-6 sm:px-8 py-3.5 bg-dark/60 border-t border-primary/15 flex items-center gap-2 text-xs text-secondary/80">
-                                            <i className="fas fa-trophy text-accent text-xs shrink-0" />
-                                            <span className="font-medium">
-                                                {exp.id === 2 
-                                                    ? 'Impacto: Blindagem de regressões e 25% menos bugs críticos pré-deploy em ambiente portuário.' 
-                                                    : 'Impacto: Queries de 2s para <500ms, estabilização de rotinas para 100+ usuários e 100% conformidade fiscal.'}
-                                            </span>
-                                        </div>
-
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             );
                         })
                     ) : (
-                        <p className="text-gray-500 text-center py-8">{t('experience.empty')}</p>
+                        <p className="text-gray-400 text-center py-12 font-sans">{t('experience.empty')}</p>
                     )}
                 </div>
 

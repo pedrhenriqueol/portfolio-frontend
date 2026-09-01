@@ -9,14 +9,15 @@ const scrollTo = (id) => {
 };
 
 export default function CommandPalette() {
-    const [open, setOpen]   = useState(false);
+    const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState(0);
     const inputRef = useRef(null);
+    const listRef = useRef(null);
     const { t, lang, setLang } = useLanguage();
-    const { palettes, setPalette, palette: currentPalette } = useTheme();
+    const { palettes, setPalette } = useTheme();
 
-    /* ── Commands ── */
+    /* ── Comandos Disponíveis ── */
     const commands = useMemo(() => [
         {
             group: lang === 'en' ? 'Navigation' : lang === 'es' ? 'Navegación' : 'Navegação',
@@ -101,18 +102,20 @@ export default function CommandPalette() {
         },
     ], [t, lang, setLang, palettes, setPalette]);
 
-    /* ── Flat filtered list ── */
+    /* ── Lista Filtrada ── */
     const flat = useMemo(() => {
-        const q = query.toLowerCase();
-        const all = commands.flatMap(g =>
+        const q = query.toLowerCase().trim();
+        if (!q) {
+            return commands.flatMap(g => g.items.map(item => ({ ...item, group: g.group })));
+        }
+        return commands.flatMap(g =>
             g.items
-                .filter(item => item.label.toLowerCase().includes(q))
+                .filter(item => item.label.toLowerCase().includes(q) || (item.hint && item.hint.toLowerCase().includes(q)))
                 .map(item => ({ ...item, group: g.group }))
         );
-        return all;
     }, [query, commands]);
 
-    /* ── Toast helper ── */
+    /* ── Toast Helper ── */
     const [toastMsg, setToastMsg] = useState('');
     const toastTimer = useRef(null);
     const toast = useCallback((msg) => {
@@ -121,38 +124,64 @@ export default function CommandPalette() {
         toastTimer.current = setTimeout(() => setToastMsg(''), 2400);
     }, []);
 
-    /* ── Keyboard shortcuts ── */
+    /* ── Atalho Global (Ctrl+K / Cmd+K e ESC) ── */
     useEffect(() => {
         const onKey = (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
                 setOpen(v => !v);
                 setQuery('');
                 setSelected(0);
             }
-            if (e.key === 'Escape') setOpen(false);
+            if (e.key === 'Escape' && open) {
+                e.preventDefault();
+                setOpen(false);
+            }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, []);
+    }, [open]);
 
+    /* ── Lock de Scroll e Foco Automático ao Abrir ── */
     useEffect(() => {
         if (open) {
             setSelected(0);
-            setTimeout(() => inputRef.current?.focus(), 60);
+            document.body.style.overflow = 'hidden';
+            const timer = setTimeout(() => {
+                inputRef.current?.focus();
+            }, 50);
+            return () => {
+                clearTimeout(timer);
+                document.body.style.overflow = '';
+            };
         }
     }, [open]);
 
-    /* ── Arrow navigation ── */
+    /* ── Navegação por Teclado e Foco ── */
     const onInputKey = (e) => {
-        if (e.key === 'ArrowDown') { e.preventDefault(); setSelected(s => Math.min(s + 1, flat.length - 1)); }
-        if (e.key === 'ArrowUp')   { e.preventDefault(); setSelected(s => Math.max(s - 1, 0)); }
-        if (e.key === 'Enter' && flat[selected]) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelected(s => Math.min(s + 1, flat.length - 1));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelected(s => Math.max(s - 1, 0));
+        } else if (e.key === 'Enter' && flat[selected]) {
+            e.preventDefault();
             flat[selected].action();
             setOpen(false);
             setQuery('');
         }
     };
+
+    // Auto-scroll do item selecionado na lista
+    useEffect(() => {
+        if (listRef.current) {
+            const activeEl = listRef.current.querySelector(`[data-index="${selected}"]`);
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }, [selected]);
 
     const run = useCallback((item) => {
         item.action();
@@ -162,19 +191,19 @@ export default function CommandPalette() {
 
     return (
         <>
-            {/* Hint button — desktop only */}
+            {/* Botão de Dica Flutuante Desktop */}
             <button
                 onClick={() => setOpen(true)}
-                className="hidden lg:flex fixed bottom-6 right-6 z-[9990] items-center gap-2 bg-darker/90 border border-primary/25 text-primary text-[11px] tracking-widest uppercase px-4 py-2.5 rounded-full backdrop-blur-xl shadow-xl hover:border-accent/50 hover:text-accent transition-all duration-200 group"
+                className="hidden lg:flex fixed bottom-6 right-6 z-[9990] items-center gap-2 bg-darker/90 border border-primary/25 text-primary text-[11px] tracking-widest uppercase px-4 py-2.5 rounded-full backdrop-blur-xl shadow-xl hover:border-accent/50 hover:text-accent transition-all duration-200 group cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
                 aria-label="Abrir command palette"
                 title="Command Palette (Ctrl+K)"
             >
                 <i className="fas fa-search text-[10px]" />
                 <span>Ctrl</span>
-                <span className="border border-primary/30 rounded px-1">K</span>
+                <span className="border border-primary/30 rounded px-1 text-[10px]">K</span>
             </button>
 
-            {/* Toast */}
+            {/* Toast Feedback */}
             <AnimatePresence>
                 {toastMsg && (
                     <motion.div
@@ -188,7 +217,7 @@ export default function CommandPalette() {
                 )}
             </AnimatePresence>
 
-            {/* Palette */}
+            {/* Modal Command Palette */}
             <AnimatePresence>
                 {open && (
                     <motion.div
@@ -197,96 +226,108 @@ export default function CommandPalette() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.18 }}
-                        className="fixed inset-0 z-[99990] flex items-start justify-center pt-[12vh] px-4 bg-black/60 backdrop-blur-sm"
                         onClick={() => setOpen(false)}
+                        className="fixed inset-0 z-[99990] flex items-start justify-center pt-[12vh] px-4 bg-black/70 backdrop-blur-sm"
+                        role="dialog"
+                        aria-modal="true"
                     >
                         <motion.div
-                            key="cp-panel"
-                            initial={{ opacity: 0, scale: 0.96, y: -12 }}
+                            initial={{ opacity: 0, scale: 0.96, y: -10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: -12 }}
-                            transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
-                            className="w-full max-w-xl bg-darker border border-primary/20 rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.9)] overflow-hidden"
-                            onClick={e => e.stopPropagation()}
+                            exit={{ opacity: 0, scale: 0.96, y: -10 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-xl bg-darker/98 border border-white/15 rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col"
                         >
-                            {/* Search input */}
-                            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-primary/15">
-                                <i className="fas fa-search text-primary/50 text-sm shrink-0" />
+                            {/* Input de Busca */}
+                            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 bg-white/[0.02]">
+                                <i className="fas fa-search text-accent/80 text-sm" />
                                 <input
                                     ref={inputRef}
                                     type="text"
                                     value={query}
-                                    onChange={e => { setQuery(e.target.value); setSelected(0); }}
+                                    onChange={(e) => {
+                                        setQuery(e.target.value);
+                                        setSelected(0);
+                                    }}
                                     onKeyDown={onInputKey}
-                                    placeholder={lang === 'en' ? 'Search commands, navigate, change theme...' : lang === 'es' ? 'Buscar comandos, navegar, cambiar tema...' : 'Buscar comandos, navegar, trocar tema...'}
-                                    className="flex-1 bg-transparent text-white text-sm placeholder-primary/40 outline-none font-sans"
-                                    aria-label="Pesquisar comandos"
+                                    placeholder={lang === 'en' ? 'Type a command or search...' : lang === 'es' ? 'Escribe un comando o busca...' : 'Digite um comando ou busque...'}
+                                    className="flex-1 bg-transparent text-white placeholder-primary/40 font-sans text-sm outline-hidden"
+                                    aria-label="Buscar comandos"
                                 />
-                                <kbd className="hidden sm:flex items-center gap-1 text-[10px] text-primary/40 border border-primary/20 rounded px-1.5 py-0.5">
+                                <kbd className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-primary/70 border border-white/10">
                                     ESC
                                 </kbd>
                             </div>
 
-                            {/* Results */}
-                            <div className="max-h-[360px] overflow-y-auto py-2">
-                                {flat.length === 0 ? (
-                                    <p className="text-center text-primary/40 text-sm py-8">
-                                        {lang === 'en' ? 'No results found.' : lang === 'es' ? 'No se encontraron resultados.' : 'Nenhum resultado encontrado.'}
-                                    </p>
+                            {/* Lista de Resultados */}
+                            <div
+                                ref={listRef}
+                                className="max-h-[360px] overflow-y-auto p-2 space-y-1 text-sm font-sans"
+                            >
+                                {flat.length > 0 ? (
+                                    flat.map((item, idx) => {
+                                        const isSelected = selected === idx;
+                                        return (
+                                            <button
+                                                key={`${item.id}-${idx}`}
+                                                data-index={idx}
+                                                onClick={() => run(item)}
+                                                onMouseEnter={() => setSelected(idx)}
+                                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-accent/15 border border-accent/30 text-white'
+                                                        : 'hover:bg-white/5 text-primary border border-transparent'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3 truncate">
+                                                    <span className="w-6 flex items-center justify-center text-sm shrink-0">
+                                                        {item.icon.startsWith('fa') ? (
+                                                            <i className={`${item.icon} ${isSelected ? 'text-accent' : 'text-primary/60'}`} />
+                                                        ) : (
+                                                            <span>{item.icon}</span>
+                                                        )}
+                                                    </span>
+                                                    <span className="truncate font-medium text-xs sm:text-sm">
+                                                        {item.label}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                    {item.preview && (
+                                                        <div className="flex items-center gap-1 mr-1">
+                                                            {item.preview.map((c, i) => (
+                                                                <span key={i} className="w-2.5 h-2.5 rounded-full border border-black/30" style={{ backgroundColor: c }} />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {item.hint && (
+                                                        <span className="text-[10px] text-primary/60 font-mono hidden sm:inline">
+                                                            {item.hint}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-white/5 text-primary/60">
+                                                        {item.group}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
                                 ) : (
-                                    (() => {
-                                        let globalIdx = 0;
-                                        const groups = {};
-                                        flat.forEach(item => {
-                                            if (!groups[item.group]) groups[item.group] = [];
-                                            groups[item.group].push({ ...item, _idx: globalIdx++ });
-                                        });
-                                        return Object.entries(groups).map(([group, items]) => (
-                                            <div key={group}>
-                                                <p className="text-[10px] uppercase tracking-widest text-primary/35 font-semibold px-4 pt-3 pb-1.5">{group}</p>
-                                                {items.map((item) => {
-                                                    const isActive = selected === item._idx;
-                                                    const isCurrent = item.id === `theme-${currentPalette}` || item.id === `lang-${lang}`;
-                                                    return (
-                                                        <button
-                                                            key={item.id}
-                                                            onClick={() => run(item)}
-                                                            onMouseEnter={() => setSelected(item._idx)}
-                                                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
-                                                                isActive ? 'bg-accent/10 text-white' : 'text-primary hover:bg-white/4'
-                                                            }`}
-                                                        >
-                                                            <span className="w-6 text-center text-sm shrink-0">
-                                                                {typeof item.icon === 'string' && item.icon.startsWith('fa')
-                                                                    ? <i className={`${item.icon} ${isActive ? 'text-accent' : 'text-primary/60'}`} />
-                                                                    : item.icon}
-                                                            </span>
-                                                            <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
-                                                            {item.preview && (
-                                                                <span className="flex gap-1 shrink-0">
-                                                                    {item.preview.map((c, i) => (
-                                                                        <span key={i} className="w-3 h-3 rounded-full border border-black/30" style={{ backgroundColor: c }} />
-                                                                    ))}
-                                                                </span>
-                                                            )}
-                                                            {item.hint && <span className="text-[10px] text-primary/40 shrink-0">{item.hint}</span>}
-                                                            {isCurrent && <span className="text-[9px] text-accent/70 border border-accent/25 px-1.5 py-0.5 rounded shrink-0">Ativo</span>}
-                                                            {isActive && <i className="fas fa-arrow-right text-[9px] text-accent/70 shrink-0" />}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        ));
-                                    })()
+                                    <div className="py-8 text-center text-primary/50 text-xs font-mono">
+                                        {lang === 'en' ? 'No commands found.' : lang === 'es' ? 'No se encontraron comandos.' : 'Nenhum comando encontrado.'}
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Footer */}
-                            <div className="flex items-center gap-4 px-4 py-2.5 border-t border-primary/10 text-[10px] text-primary/30 font-mono">
-                                <span><kbd className="border border-primary/20 rounded px-1">↑</kbd><kbd className="border border-primary/20 rounded px-1 ml-0.5">↓</kbd> navegar</span>
-                                <span><kbd className="border border-primary/20 rounded px-1">↵</kbd> executar</span>
-                                <span><kbd className="border border-primary/20 rounded px-1">ESC</kbd> fechar</span>
-                                <span className="ml-auto flex items-center gap-1"><i className="fas fa-search text-[9px]" /> Command Palette</span>
+                            {/* Footer do Palette */}
+                            <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 bg-white/[0.01] text-[10px] font-mono text-primary/60">
+                                <div className="flex items-center gap-2">
+                                    <span>↑↓ navegar</span>
+                                    <span>•</span>
+                                    <span>↵ selecionar</span>
+                                </div>
+                                <span>{flat.length} {lang === 'en' ? 'options' : 'opções'}</span>
                             </div>
                         </motion.div>
                     </motion.div>

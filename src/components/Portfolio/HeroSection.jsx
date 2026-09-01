@@ -60,8 +60,8 @@ export default function HeroSection() {
             const W = window.innerWidth;
             const H = window.innerHeight;
             targetRef.current = {
-                x: ((e.clientX / W) - 0.5) * 24,
-                y: ((e.clientY / H) - 0.5) * 16,
+                x: (e.clientX - W / 2) / (W / 2) * 20,
+                y: (e.clientY - H / 2) / (H / 2) * 20,
             };
             startLoop();
         };
@@ -98,7 +98,7 @@ export default function HeroSection() {
         <section
             id="home"
             ref={sectionRef}
-            className="grid-bg pt-28 pb-16 md:pt-40 md:pb-24 bg-dark flex items-center justify-center min-h-[105vh] relative overflow-hidden contain-paint"
+            className="grid-bg pt-28 pb-16 md:pt-36 md:pb-24 bg-dark flex items-center justify-center min-h-[100vh] relative overflow-hidden contain-paint"
         >
             {/* Background blobs — otimizados para GPU */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -126,45 +126,49 @@ export default function HeroSection() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
                 <div className="flex flex-col md:flex-row items-center gap-12">
 
-                    {/* Text — parallax via DOM direto */}
+                    {/* Text Container com min-height estável para ZERO CLS */}
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, ease: 'easeOut' }}
-                        className="flex-1 text-center md:text-left space-y-6"
+                        className="flex-1 text-center md:text-left space-y-6 min-h-[420px] sm:min-h-[460px] flex flex-col justify-center"
                         ref={textRef}
                     >
                         <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase block font-sans">
                             {t('hero.ola')}
                         </span>
 
-                        <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
-                            <TypeAnimation
-                                sequence={['PEDRO\nHENRIQUE', 7000, '', 500]}
-                                wrapper="span"
-                                cursor={true}
-                                repeat={Infinity}
-                                style={{ whiteSpace: 'pre-line' }}
-                                className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-accent inline-block font-serif"
-                            />
-                        </h1>
+                        {/* Altura mínima fixada para evitar Layout Shift (CLS) no TypeAnimation */}
+                        <div className="min-h-[96px] sm:min-h-[130px] md:min-h-[160px] flex items-center">
+                            <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-none">
+                                <TypeAnimation
+                                    sequence={['PEDRO\nHENRIQUE', 8000, 'PEDRO\nHENRIQUE', 1000]}
+                                    wrapper="span"
+                                    cursor={true}
+                                    repeat={Infinity}
+                                    style={{ whiteSpace: 'pre-line' }}
+                                    className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-accent inline-block font-serif"
+                                />
+                            </h1>
+                        </div>
 
                         <h3 className="text-xl md:text-2xl text-gray-300 font-serif font-light">
                             {t('hero.developer')} <span className="text-accent italic font-serif">{t('hero.role')}</span>
                         </h3>
 
-                        <p className="text-gray-400 max-w-lg mx-auto md:mx-0 text-lg leading-relaxed">
+                        <p className="text-gray-400 max-w-lg mx-auto md:mx-0 text-base sm:text-lg leading-relaxed min-h-[72px]">
                             {t('hero.description')}{' '}
                             <strong className="text-white font-semibold">Delphi (Desktop/UniGui)</strong>,{' '}
                             <strong className="text-white font-semibold">PHP/Laravel</strong> e{' '}
                             <strong className="text-white font-semibold">React</strong>.
                         </p>
 
+                        {/* Botões CTA com feedback tátil e acessibilidade aprimorada */}
                         <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start items-center">
                             <MagneticButton strength={0.4}>
                                 <a
                                     href="#projetos"
-                                    className="inline-block bg-accent text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent-hover transition-all duration-300"
+                                    className="inline-flex items-center justify-center bg-accent text-darker font-semibold px-8 py-3 rounded-lg hover:bg-accent-hover transition-all duration-300 shadow-md hover:shadow-[0_0_20px_rgba(var(--color-accent-rgb),0.35)] active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-darker focus-visible:outline-hidden"
                                 >
                                     {t('hero.verProjetos')}
                                 </a>
@@ -177,13 +181,14 @@ export default function HeroSection() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     download="curriculo_pedro_henrique.pdf"
-                                    className="inline-flex items-center gap-2 border border-primary/30 text-primary hover:text-accent hover:border-accent/50 font-semibold px-6 py-3 rounded-lg transition-all duration-300 text-sm cursor-pointer"
+                                    className="inline-flex items-center justify-center gap-2 border border-primary/30 text-primary hover:text-white hover:border-accent font-semibold px-6 py-3 rounded-lg transition-all duration-300 text-sm cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-darker focus-visible:outline-hidden"
                                 >
                                     <i className="fas fa-file-pdf text-accent" />
                                     {t('hero.downloadCV') || 'Download CV'}
                                 </a>
                             </MagneticButton>
 
+                            {/* Redes Sociais */}
                             <div className="flex justify-center gap-3">
                                 {[
                                     {
@@ -207,21 +212,16 @@ export default function HeroSection() {
                                             </svg>
                                         ),
                                     },
-                                    {
-                                        href: 'https://www.instagram.com/pedrherg',
-                                        label: 'Instagram',
-                                        icon: <i className="fab fa-instagram text-xl" />,
-                                    },
-                                ].map(({ href, label, icon }) => (
-                                    <MagneticButton key={label} strength={0.5}>
+                                ].map((s, idx) => (
+                                    <MagneticButton key={idx} strength={0.3}>
                                         <a
-                                            href={href}
+                                            href={s.href}
                                             target="_blank"
-                                            rel="noreferrer"
-                                            aria-label={label}
-                                            className="flex items-center justify-center w-12 h-12 bg-darker border border-white/10 text-gray-300 rounded-lg hover:border-accent/60 hover:text-accent transition-all duration-300 shadow-lg"
+                                            rel="noopener noreferrer"
+                                            className="w-11 h-11 rounded-lg border border-primary/20 flex items-center justify-center text-primary/70 hover:text-accent hover:border-accent/40 transition-colors duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
+                                            aria-label={s.label}
                                         >
-                                            {icon}
+                                            {s.icon}
                                         </a>
                                     </MagneticButton>
                                 ))}
@@ -237,10 +237,10 @@ export default function HeroSection() {
                         className="flex-1 flex justify-center md:justify-end"
                         ref={termRef}
                     >
-                        <div className="relative w-full max-w-[400px]">
+                        <div className="relative w-full max-w-[420px]">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-secondary/6 blur-[80px] rounded-full pointer-events-none" />
                             <Suspense fallback={
-                                <div className="w-full h-[420px] rounded-xl bg-darker/90 border border-white/10 p-4 flex flex-col justify-between animate-pulse">
+                                <div className="w-full h-[380px] rounded-xl bg-darker/90 border border-white/10 p-4 flex flex-col justify-between animate-pulse">
                                     <div className="flex items-center gap-2 pb-3 border-b border-white/5">
                                         <div className="w-3 h-3 rounded-full bg-white/20" />
                                         <div className="w-3 h-3 rounded-full bg-white/20" />

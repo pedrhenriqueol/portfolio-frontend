@@ -36,7 +36,7 @@ const CATEGORY_STYLES = {
 };
 
 function SkillCard({ skill, index }) {
-    const style = CATEGORY_STYLES[skill.category] || {
+    const style = CATEGORY_STYLES[skill?.category] || {
         color: 'var(--color-accent, #8C6A4A)',
         border: 'rgba(140, 106, 74, 0.25)',
         badgeBg: 'rgba(140, 106, 74, 0.12)',
@@ -49,7 +49,7 @@ function SkillCard({ skill, index }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
-            whileHover={{ y: -5, scale: 1.02 }}
+            whileHover={{ y: -4, scale: 1.01 }}
             className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:border-opacity-60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden"
             style={{
                 border: `1px solid ${style.border}`,
@@ -62,7 +62,7 @@ function SkillCard({ skill, index }) {
                     style={{ backgroundColor: style.iconBg }}
                 >
                     <i
-                        className={`${skill.icon_class} text-lg sm:text-xl transition-colors duration-200`}
+                        className={`${skill?.icon_class} text-lg sm:text-xl transition-colors duration-200`}
                         style={{ color: style.color }}
                     />
                 </div>
@@ -75,40 +75,32 @@ function SkillCard({ skill, index }) {
                         border: `1px solid ${style.border}`,
                     }}
                 >
-                    {skill.category}
+                    {skill?.category}
                 </span>
             </div>
 
             {/* Name */}
             <h4 className="text-sm sm:text-base font-bold text-white font-sans group-hover:text-white transition-colors duration-200 mb-1">
-                {skill.name}
+                {skill?.name}
             </h4>
 
             {/* Description context */}
-            {skill.desc && (
+            {skill?.desc && (
                 <p className="text-[11px] text-gray-400 font-sans leading-relaxed line-clamp-2">
                     {skill.desc}
                 </p>
             )}
-
-            {/* Bottom highlight bar */}
-            <div
-                className="absolute bottom-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                    background: `linear-gradient(90deg, transparent, ${style.color}, transparent)`,
-                }}
-            />
         </motion.div>
     );
 }
 
-export default function SkillsSection({ skills }) {
+export default function SkillsSection({ skills = [] }) {
     const { t, lang } = useLanguage();
     const [viewMode, setViewMode] = useState('sphere'); // 'sphere' | 'grid'
     const [selectedCategory, setSelectedCategory] = useState('all');
 
     const CATEGORIES = [
-        { id: 'all',          labelPt: 'Todos',          labelEn: 'All',           labelEs: 'Todos' },
+        { id: 'all',          labelPt: 'Todas',          labelEn: 'All',           labelEs: 'Todas' },
         { id: 'Front-end',    labelPt: 'Frontend',       labelEn: 'Frontend',      labelEs: 'Frontend' },
         { id: 'Back-end',     labelPt: 'Backend & ERP',  labelEn: 'Backend & ERP', labelEs: 'Backend & ERP' },
         { id: 'Database',     labelPt: 'Banco de Dados', labelEn: 'Database',      labelEs: 'Base de Datos' },
@@ -130,7 +122,7 @@ export default function SkillsSection({ skills }) {
     }, [skills, selectedCategory]);
 
     return (
-        <section id="conhecimentos" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
+        <section id="conhecimentos" className="grid-bg py-20 md:py-24 bg-darker relative border-t border-primary/30">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
@@ -160,7 +152,7 @@ export default function SkillsSection({ skills }) {
                             }`}
                         >
                             <i className="fas fa-globe text-xs" />
-                            {lang === 'en' ? '3D Interactive Globe' : lang === 'es' ? 'Globo 3D Interactivo' : 'Globo 3D Interativo'}
+                            <span>{lang === 'en' ? 'Orbital 3D Sphere' : lang === 'es' ? 'Esfera 3D Orbital' : 'Esfera 3D Orbital'}</span>
                         </button>
                         <button
                             onClick={() => setViewMode('grid')}
@@ -171,85 +163,62 @@ export default function SkillsSection({ skills }) {
                             }`}
                         >
                             <i className="fas fa-th-large text-xs" />
-                            {lang === 'en' ? 'Detailed Grid' : lang === 'es' ? 'Grade Detallada' : 'Grade Detalhada'}
+                            <span>{lang === 'en' ? 'Detailed Grid' : lang === 'es' ? 'Grade Detallada' : 'Grade Detalhada'}</span>
                         </button>
                     </div>
                 </motion.div>
 
-                {/* Content View: 3D Sphere or Grid */}
-                <AnimatePresence mode="wait">
-                    {viewMode === 'sphere' ? (
-                        <motion.div
-                            key="sphere-view"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.4 }}
-                            className="w-full flex flex-col items-center"
-                        >
-                            <TechSphere3D skills={skills} />
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="grid-view"
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -15 }}
-                            transition={{ duration: 0.4 }}
-                            className="w-full flex flex-col items-center"
-                        >
-                            {/* Filter Bar for Grid Mode */}
-                            <div className="w-full flex items-center justify-center gap-1.5 sm:gap-2 mb-8 flex-wrap px-2">
-                                {CATEGORIES.map((cat) => {
-                                    const isSelected = selectedCategory === cat.id;
-                                    const label = lang === 'en' ? cat.labelEn : lang === 'es' ? cat.labelEs : cat.labelPt;
-                                    return (
+                {/* Alternância Fluida de Visualização */}
+                <div className="min-h-[500px]">
+                    <AnimatePresence mode="wait">
+                        {viewMode === 'sphere' ? (
+                            <motion.div
+                                key="sphere-view"
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -15 }}
+                                transition={{ duration: 0.3 }}
+                                className="w-full flex flex-col items-center"
+                            >
+                                <TechSphere3D skills={skills} />
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="grid-view"
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -15 }}
+                                transition={{ duration: 0.3 }}
+                                className="w-full flex flex-col items-center"
+                            >
+                                {/* Categorias Filtro do Grid */}
+                                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                                    {CATEGORIES.map((cat) => (
                                         <button
                                             key={cat.id}
                                             onClick={() => setSelectedCategory(cat.id)}
-                                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
-                                                isSelected
-                                                    ? 'bg-accent text-darker shadow-[0_0_15px_rgba(var(--color-accent-rgb,140,106,74),0.4)] scale-105'
-                                                    : 'bg-darker/80 border border-primary/20 text-gray-400 hover:text-white hover:border-primary/40'
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
+                                                selectedCategory === cat.id
+                                                    ? 'bg-accent text-darker shadow-sm'
+                                                    : 'bg-darker/60 text-primary border border-primary/25 hover:border-accent/40 hover:text-accent'
                                             }`}
                                         >
-                                            {label}
+                                            {lang === 'en' ? cat.labelEn : lang === 'es' ? cat.labelEs : cat.labelPt}
                                         </button>
-                                    );
-                                })}
-                            </div>
+                                    ))}
+                                </div>
 
-                            {/* Cards Grid ordenado por cor / categoria */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 w-full">
-                                {processedSkills.map((skill, index) => (
-                                    <SkillCard key={skill.id} skill={skill} index={index} />
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-
-            {/* Marquee acelerado por GPU */}
-            <div className="mt-20 overflow-hidden w-full bg-dark/50 py-4 border-y border-primary/20 contain-paint">
-                <div
-                    className="flex whitespace-nowrap will-change-transform"
-                    style={{ animation: 'marquee 30s linear infinite' }}
-                >
-                    {[1, 2, 3].map((set) => (
-                        <div key={set} className="flex gap-10 shrink-0 px-5">
-                            {skills.map((skill) => {
-                                const style = CATEGORY_STYLES[skill.category] || { color: 'var(--color-accent)' };
-                                return (
-                                    <span key={`${set}-${skill.id}`} className="text-gray-500 text-sm flex items-center gap-2">
-                                        <i className={skill.icon_class} style={{ color: style.color, opacity: 0.8 }} />
-                                        {skill.name}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    ))}
+                                {/* Cards em Grid Harmonioso */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+                                    {processedSkills.map((skill, index) => (
+                                        <SkillCard key={skill.id || index} skill={skill} index={index} />
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
+
             </div>
         </section>
     );

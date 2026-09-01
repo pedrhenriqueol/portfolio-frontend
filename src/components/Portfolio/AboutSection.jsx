@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
-/* ── Relógio ao vivo de Fortaleza (UTC-3) otimizado ── */
+/* ── Relógio ao vivo de Fortaleza (UTC-3) com pausa inteligente em segundo plano ── */
 function LiveClock({ lang }) {
     const [time, setTime] = useState('');
+
     useEffect(() => {
         const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
+        let timer = null;
+
         const update = () => {
             if (document.hidden) return;
             setTime(
@@ -18,13 +21,35 @@ function LiveClock({ lang }) {
                 })
             );
         };
-        update();
-        const timer = setInterval(update, 1000);
-        const onVisChange = () => { if (!document.hidden) update(); };
+
+        const startTimer = () => {
+            if (!timer) {
+                update();
+                timer = setInterval(update, 1000);
+            }
+        };
+
+        const stopTimer = () => {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        };
+
+        startTimer();
+
+        const onVisChange = () => {
+            if (document.hidden) {
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        };
+
         document.addEventListener('visibilitychange', onVisChange, { passive: true });
 
         return () => {
-            clearInterval(timer);
+            stopTimer();
             document.removeEventListener('visibilitychange', onVisChange);
         };
     }, [lang]);
@@ -76,7 +101,7 @@ export default function AboutSection() {
     ];
 
     return (
-        <section id="sobre" className="grid-bg py-24 bg-darker relative border-t border-primary/30">
+        <section id="sobre" className="grid-bg py-20 md:py-24 bg-darker relative border-t border-primary/30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* ── Section Header ── */}
@@ -138,108 +163,108 @@ export default function AboutSection() {
                                 {t('about.resumo2_final')}
                             </p>
 
-                            <p className="text-gray-400 text-sm leading-relaxed">
-                                {t('about.resumo4')}{' '}
+                            <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                                {t('about.resumo3')}{' '}
+                                <span className="text-secondary font-semibold">{t('about.resumo3_highlight')}</span>{' '}
+                                {t('about.resumo3_final')} {t('about.resumo4')}{' '}
                                 <span className="text-secondary font-semibold">{t('about.resumo4_highlight1')}</span>{' '}
                                 {t('about.resumo4_rest')}{' '}
-                                <span className="text-white font-semibold">{t('about.resumo4_highlight2')}</span>
+                                <span className="text-secondary font-semibold">{t('about.resumo4_highlight2')}</span>
                             </p>
                         </div>
 
-                        {/* Strip de Métricas de Impacto */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 mt-6 border-t border-primary/20">
-                            {metrics.map(({ value, label, icon }) => (
-                                <div key={label} className="bg-darker/60 border border-primary/20 rounded-xl p-3 text-center">
-                                    <i className={`${icon} text-accent text-xs mb-1.5 block opacity-80`} />
-                                    <div className="text-lg font-bold text-white font-mono">{value}</div>
-                                    <div className="text-[10px] text-gray-400 leading-tight mt-0.5">{label}</div>
+                        {/* Strip de Mini-métricas */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 mt-6 border-t border-white/5">
+                            {metrics.map((m, i) => (
+                                <div key={i} className="flex flex-col">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <i className={`${m.icon} text-accent text-xs`} />
+                                        <span className="font-mono font-bold text-white text-base sm:text-lg">{m.value}</span>
+                                    </div>
+                                    <span className="text-[11px] text-gray-400 font-sans leading-tight">{m.label}</span>
                                 </div>
                             ))}
                         </div>
                     </motion.div>
 
-                    {/* 2. Coluna Lateral (Localização & Educação) (5 Colunas) */}
+                    {/* 2. Coluna Lateral Direita (5 Colunas) */}
                     <div className="lg:col-span-5 flex flex-col gap-6">
 
-                        {/* Card: Localização & Horário ao Vivo */}
+                        {/* Card Educação */}
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-dark border border-primary/30 rounded-2xl p-6 hover:border-accent/40 transition-all duration-300 shadow-xl flex items-center justify-between"
+                            className="bg-dark border border-primary/30 rounded-2xl p-7 hover:border-accent/40 transition-all duration-300 shadow-xl flex flex-col justify-between"
                         >
-                            <div>
-                                <div className="flex items-center gap-2 text-primary/70 text-xs font-semibold uppercase tracking-wider mb-1">
-                                    <i className="fas fa-map-marker-alt text-accent text-xs" />
-                                    Fortaleza, CE — Brasil
+                            <span className="flex items-center gap-2 text-xs font-semibold text-accent uppercase tracking-wider font-sans mb-4">
+                                <i className="fas fa-graduation-cap text-[11px]" />
+                                {t('about.educacaoTitle')}
+                            </span>
+
+                            <div className="space-y-4">
+                                <div className="border-l-2 border-accent/60 pl-4 space-y-0.5">
+                                    <h4 className="text-sm sm:text-base font-bold text-white font-serif">{t('about.edu1Title')}</h4>
+                                    <p className="text-xs text-primary/80 font-mono">{t('about.edu1Desc')}</p>
                                 </div>
-                                <div className="text-xs text-gray-400">{lang === 'en' ? 'Local Timezone (UTC-3)' : lang === 'es' ? 'Zona Horaria Local (UTC-3)' : 'Fuso Horário Local (UTC-3)'}</div>
-                            </div>
-                            <div className="text-right bg-darker/80 border border-primary/20 px-4 py-2 rounded-xl">
-                                <LiveClock lang={lang} />
-                                <span className="text-[10px] text-accent block font-mono">{lang === 'en' ? 'Official Time' : lang === 'es' ? 'Hora Oficial' : 'Horário Oficial'}</span>
+                                <div className="border-l-2 border-primary/30 pl-4 space-y-0.5">
+                                    <h4 className="text-sm sm:text-base font-bold text-white font-serif">{t('about.edu2Title')}</h4>
+                                    <p className="text-xs text-primary/80 font-mono">{t('about.edu2Desc')}</p>
+                                </div>
                             </div>
                         </motion.div>
 
-                        {/* Card: Educação & Formação Técnica */}
+                        {/* Card Localização & Fuso Horário ao Vivo */}
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-dark border border-primary/30 rounded-2xl p-6 hover:border-accent/40 transition-all duration-300 shadow-xl flex-1 flex flex-col justify-center space-y-4"
+                            className="bg-dark border border-primary/30 rounded-2xl p-7 hover:border-accent/40 transition-all duration-300 shadow-xl flex items-center justify-between"
                         >
-                            <div className="flex items-center gap-2 text-xs font-semibold text-accent uppercase tracking-wider font-sans">
-                                <i className="fas fa-graduation-cap text-xs" />
-                                {t('about.educacaoTitle') || 'Formação Acadêmica'}
+                            <div>
+                                <span className="text-[10px] font-mono uppercase tracking-widest text-primary/60 block mb-1">
+                                    {lang === 'en' ? 'LOCAL TIME (UTC-3)' : lang === 'es' ? 'HORA LOCAL (UTC-3)' : 'HORA LOCAL (UTC-3)'}
+                                </span>
+                                <LiveClock lang={lang} />
+                                <span className="text-xs text-primary/80 font-mono block mt-1">Fortaleza, CE — Brasil</span>
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="bg-darker/60 p-3.5 rounded-xl border border-primary/20 hover:border-secondary/30 transition-colors">
-                                    <h4 className="font-bold text-white text-xs sm:text-sm">{t('about.edu1Title')}</h4>
-                                    <p className="text-secondary text-[11px] mt-1 font-medium">{t('about.edu1Desc')}</p>
-                                </div>
-                                <div className="bg-darker/60 p-3.5 rounded-xl border border-primary/20 hover:border-secondary/30 transition-colors">
-                                    <h4 className="font-bold text-white text-xs sm:text-sm">{t('about.edu2Title')}</h4>
-                                    <p className="text-secondary text-[11px] mt-1 font-medium">{t('about.edu2Desc')}</p>
-                                </div>
+                            <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                                <i className="fas fa-clock text-accent text-lg" />
                             </div>
                         </motion.div>
+
                     </div>
                 </div>
 
-                {/* ── 3 Pilares de Especialidade (3 Colunas Perfeitamente Alinhadas) ── */}
+                {/* ── 3 Pilares de Atuação Técnica ── */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {pillars.map((pillar, idx) => (
+                    {pillars.map((p, idx) => (
                         <motion.div
-                            key={pillar.title}
-                            initial={{ opacity: 0, y: 30 }}
+                            key={idx}
+                            initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.15 * idx }}
-                            className="bg-dark border border-primary/30 rounded-2xl p-6 hover:border-accent/40 transition-all duration-300 shadow-xl flex flex-col justify-between group"
+                            transition={{ duration: 0.5, delay: idx * 0.1 }}
+                            className="bg-dark/80 border border-primary/20 rounded-2xl p-6 hover:border-accent/50 transition-all duration-300 shadow-lg flex flex-col justify-between group"
                         >
                             <div>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 group-hover:bg-accent/20 transition-colors">
-                                        <i className={`${pillar.icon} text-accent text-base`} />
-                                    </span>
-                                    <h3 className="text-base font-bold text-white group-hover:text-secondary transition-colors">
-                                        {pillar.title}
-                                    </h3>
+                                <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200">
+                                    <i className={`${p.icon} text-accent text-sm`} />
                                 </div>
-                                <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-5">
-                                    {pillar.desc}
+                                <h4 className="text-lg font-bold text-white font-serif mb-2 group-hover:text-secondary transition-colors">
+                                    {p.title}
+                                </h4>
+                                <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-4">
+                                    {p.desc}
                                 </p>
                             </div>
 
-                            <div className="flex flex-wrap gap-1.5 pt-4 border-t border-primary/15">
-                                {pillar.tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="text-[11px] font-medium text-gray-300 bg-darker border border-primary/25 px-2.5 py-1 rounded-md"
-                                    >
+                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+                                {p.tags.map((tag, tIdx) => (
+                                    <span key={tIdx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-primary/70 border border-white/5">
                                         {tag}
                                     </span>
                                 ))}

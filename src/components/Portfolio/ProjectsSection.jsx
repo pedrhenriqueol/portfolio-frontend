@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ProjectModal from './ProjectModal';
 import ProjectCard from './Projects/ProjectCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { FILTER_ICONS, projectCategory } from '../../utils/projects';
 
 export default function ProjectsSection({ projects }) {
-    const [selected, setSelected]         = useState(null);
-    const [activeFilter, setFilter]       = useState('all');
-    const [viewMode, setViewMode]         = useState('grid'); // 'grid' | 'list'
+    const [selected, setSelected]   = useState(null);
+    const [activeFilter, setFilter] = useState('all');
+    const [viewMode, setViewMode]   = useState('grid'); // 'grid' | 'list'
     const { t, lang } = useLanguage();
 
     const FILTERS = useMemo(() => [
@@ -26,8 +26,8 @@ export default function ProjectsSection({ projects }) {
     }, [projects, activeFilter]);
 
     return (
-        <section id="projetos" className="grid-bg py-24 bg-dark relative border-t border-primary/30">
-            {/* Modal de Detalhes com transição de saída suportada por AnimatePresence */}
+        <section id="projetos" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30">
+            {/* Modal de Detalhes com AnimatePresence */}
             <AnimatePresence>
                 {selected && <ProjectModal project={selected} onClose={() => setSelected(null)} />}
             </AnimatePresence>
@@ -35,10 +35,10 @@ export default function ProjectsSection({ projects }) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: 50 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-100px' }}
-                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.7 }}
                     className="text-center mb-10"
                 >
                     <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
@@ -54,11 +54,11 @@ export default function ProjectsSection({ projects }) {
 
                 {/* Filters + View Toggle bar */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-10"
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                    className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8"
                 >
                     {/* Filter tabs */}
                     <div className="flex flex-wrap items-center gap-2">
@@ -68,7 +68,7 @@ export default function ProjectsSection({ projects }) {
                                 onClick={() => setFilter(f.id)}
                                 className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded-full transition-all duration-200 cursor-pointer ${
                                     activeFilter === f.id
-                                        ? 'bg-accent text-darker border-accent'
+                                        ? 'bg-accent text-darker border-accent shadow-xs'
                                         : 'bg-darker/50 text-primary border-primary/25 hover:border-accent/40 hover:text-accent'
                                 }`}
                             >
@@ -78,12 +78,12 @@ export default function ProjectsSection({ projects }) {
                         ))}
                     </div>
 
-                    {/* View toggle */}
+                    {/* View toggle (Grid / Lista) */}
                     <div className="flex items-center gap-1 bg-darker border border-primary/20 rounded-lg p-1">
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`px-3 py-1.5 rounded-md text-[11px] flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                                viewMode === 'grid' ? 'bg-accent text-darker font-semibold' : 'text-primary hover:text-accent'
+                                viewMode === 'grid' ? 'bg-accent text-darker font-semibold shadow-xs' : 'text-primary hover:text-accent'
                             }`}
                         >
                             <i className="fas fa-th-large text-[10px]" />
@@ -92,7 +92,7 @@ export default function ProjectsSection({ projects }) {
                         <button
                             onClick={() => setViewMode('list')}
                             className={`px-3 py-1.5 rounded-md text-[11px] flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                                viewMode === 'list' ? 'bg-accent text-darker font-semibold' : 'text-primary hover:text-accent'
+                                viewMode === 'list' ? 'bg-accent text-darker font-semibold shadow-xs' : 'text-primary hover:text-accent'
                             }`}
                         >
                             <i className="fas fa-list text-[10px]" />
@@ -110,60 +110,62 @@ export default function ProjectsSection({ projects }) {
                         : `${filtered.length} projeto${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}`}
                 </p>
 
-                {/* Projects Display */}
-                <LayoutGroup>
-                    <AnimatePresence mode="popLayout">
-                        {viewMode === 'grid' ? (
-                            <motion.div
-                                key="grid"
-                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                            >
-                                {filtered.length > 0 ? (
-                                    filtered.map((project, index) => (
-                                        <ProjectCard
-                                            key={project.id}
-                                            project={project}
-                                            viewMode="grid"
-                                            index={index}
-                                            onSelect={setSelected}
-                                            t={t}
-                                            lang={lang}
-                                        />
-                                    ))
-                                ) : (
-                                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-400 col-span-3 text-center py-12">
-                                        <i className="fas fa-inbox text-2xl mb-3 block text-primary/40" />
-                                        {t('projects.empty')}
-                                    </motion.p>
-                                )}
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="list"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="space-y-3"
-                            >
-                                {filtered.length > 0 ? (
-                                    filtered.map((project, index) => (
-                                        <ProjectCard
-                                            key={project.id}
-                                            project={project}
-                                            viewMode="list"
-                                            index={index}
-                                            onSelect={setSelected}
-                                            t={t}
-                                            lang={lang}
-                                        />
-                                    ))
-                                ) : (
-                                    <p className="text-gray-400 text-center py-12">{t('projects.empty')}</p>
-                                )}
-                            </motion.div>
-                        )}
+                {/* Projects Display com transição suave nos filtros */}
+                <div className="min-h-[400px]">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={`${activeFilter}-${viewMode}`}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -12 }}
+                            transition={{ duration: 0.28, ease: 'easeOut' }}
+                        >
+                            {viewMode === 'grid' ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {filtered.length > 0 ? (
+                                        filtered.map((project, index) => (
+                                            <ProjectCard
+                                                key={project.id}
+                                                project={project}
+                                                viewMode="grid"
+                                                index={index}
+                                                onSelect={setSelected}
+                                                t={t}
+                                                lang={lang}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-gray-400 col-span-3 text-center py-16">
+                                            <i className="fas fa-inbox text-2xl mb-3 block text-primary/40" />
+                                            <p className="font-sans text-sm">{t('projects.empty')}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {filtered.length > 0 ? (
+                                        filtered.map((project, index) => (
+                                            <ProjectCard
+                                                key={project.id}
+                                                project={project}
+                                                viewMode="list"
+                                                index={index}
+                                                onSelect={setSelected}
+                                                t={t}
+                                                lang={lang}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-gray-400 text-center py-16">
+                                            <i className="fas fa-inbox text-2xl mb-3 block text-primary/40" />
+                                            <p className="font-sans text-sm">{t('projects.empty')}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </motion.div>
                     </AnimatePresence>
-                </LayoutGroup>
+                </div>
             </div>
         </section>
     );
