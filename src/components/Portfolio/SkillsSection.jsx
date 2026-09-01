@@ -38,7 +38,7 @@ const CATEGORY_STYLES = {
 function SkillCard({ skill, index }) {
     const brandColor = skill?.color || '#8C6A4A';
     const catStyle = CATEGORY_STYLES[skill?.category] || {
-        color: '#8C6A4A',
+        color: '#9CA3AF',
         border: 'rgba(255, 255, 255, 0.1)',
         badgeBg: 'rgba(255, 255, 255, 0.05)',
     };
@@ -50,22 +50,26 @@ function SkillCard({ skill, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -4, scale: 1.01 }}
-            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:border-opacity-60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/20"
+            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/25"
         >
-            {/* Top row: Icon with Official Brand Color + Category Badge */}
+            {/* Top row: Icon (Neutro no repouso -> Revela Brand Color no Hover) + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
                 <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110 shrink-0 border border-white/10"
-                    style={{ backgroundColor: `${brandColor}18` }}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shrink-0 border border-white/10 bg-white/5 group-hover:border-transparent"
+                    style={{
+                        backgroundColor: undefined,
+                    }}
                 >
                     <i
-                        className={`${skill?.icon_class} text-xl transition-transform duration-200`}
-                        style={{ color: brandColor }}
+                        className={`${skill?.icon_class} text-xl text-gray-300 group-hover:!text-[var(--brand-color)] transition-all duration-300`}
+                        style={{
+                            '--brand-color': brandColor,
+                        }}
                     />
                 </div>
 
                 <span
-                    className="text-[10px] font-mono px-2.5 py-0.5 rounded-full font-medium"
+                    className="text-[10px] font-mono px-2.5 py-0.5 rounded-full font-medium transition-colors duration-300"
                     style={{
                         backgroundColor: catStyle.badgeBg,
                         color: catStyle.color,

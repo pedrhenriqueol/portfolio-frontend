@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
-// ── Design System: Cores Harmoniosas por Categoria ──
+// ── Design System: Categorias ──
 const CATEGORY_THEME = {
     'Front-end':     { color: '#60A5FA', label: 'Frontend' },
     'Frontend':      { color: '#60A5FA', label: 'Frontend' },
@@ -62,27 +62,23 @@ export default function TechSphere3D({ skills = [] }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const nodeElementsRef = useRef([]);
+    const iconWrappersRef = useRef([]);
+    const iconElementsRef = useRef([]);
+    const labelElementsRef = useRef([]);
 
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [hoveredTech, setHoveredTech] = useState(null);
     const [activeTech, setActiveTech] = useState(null);
 
-    // Refs mutáveis para evitar re-renders a 60fps
+    // Refs mutáveis para evitar re-renders no RAF
     const selectedCategoryRef = useRef('all');
     const hoveredTechIdRef = useRef(null);
     const activeTechIdRef = useRef(null);
+    const isGlobeHoveredRef = useRef(false);
 
     useEffect(() => {
         selectedCategoryRef.current = selectedCategory;
     }, [selectedCategory]);
-
-    useEffect(() => {
-        hoveredTechIdRef.current = hoveredTech?.id ?? null;
-    }, [hoveredTech]);
-
-    useEffect(() => {
-        activeTechIdRef.current = activeTech?.id ?? null;
-    }, [activeTech]);
 
     // Parâmetros de física e rotação contínua
     const angleRef = useRef({ x: 0.2, y: 0.1 });
@@ -115,6 +111,60 @@ export default function TechSphere3D({ skills = [] }) {
     const projectedCoords = useRef([]);
     useEffect(() => {
         projectedCoords.current = baseNodes.map(() => ({ px: 0, py: 0, z2: 0, scale: 1 }));
+    }, [baseNodes]);
+
+    // Função de atualização visual dos nós (cor/hover/foco) sem re-render do React
+    const updateNodeVisuals = useCallback((targetHoverId, targetActiveId, isGlobeHovered) => {
+        const domNodes = nodeElementsRef.current;
+        const wrappers = iconWrappersRef.current;
+        const icons = iconElementsRef.current;
+        const labels = labelElementsRef.current;
+
+        for (let i = 0; i < baseNodes.length; i++) {
+            const node = baseNodes[i];
+            const wrapper = wrappers[i];
+            const icon = icons[i];
+            const label = labels[i];
+            if (!wrapper || !icon || !label) continue;
+
+            const isFocused = (targetHoverId === node.id) || (targetActiveId === node.id);
+            const brand = node.brandColor || node.color;
+
+            if (isFocused) {
+                // Nó focado/hovered: Acende com glow e cor oficial de marca vibrante
+                wrapper.style.backgroundColor = `${brand}25`;
+                wrapper.style.borderColor = brand;
+                wrapper.style.boxShadow = `0 0 24px ${brand}99`;
+                icon.style.color = brand;
+                icon.style.filter = `drop-shadow(0 0 8px ${brand}80)`;
+
+                label.style.color = '#FFFFFF';
+                label.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+                label.style.borderColor = brand;
+            } else if (isGlobeHovered) {
+                // Cursor dentro do Globo: Revela cores de marca com estética límpida
+                wrapper.style.backgroundColor = 'rgba(18, 20, 26, 0.85)';
+                wrapper.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                wrapper.style.boxShadow = 'none';
+                icon.style.color = brand;
+                icon.style.filter = 'none';
+
+                label.style.color = '#E5E7EB';
+                label.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                label.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            } else {
+                // Repouso/Idle (Cursor fora do Globo): Monocromático elegante e sóbrio
+                wrapper.style.backgroundColor = 'rgba(18, 20, 26, 0.85)';
+                wrapper.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                wrapper.style.boxShadow = 'none';
+                icon.style.color = '#D1D5DB';
+                icon.style.filter = 'none';
+
+                label.style.color = '#9CA3AF';
+                label.style.backgroundColor = 'rgba(0, 0, 0, 0.65)';
+                label.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+            }
+        }
     }, [baseNodes]);
 
     // Loop de renderização 3D a 60 FPS diretos no DOM e Canvas (SEM re-render React)
@@ -329,8 +379,18 @@ export default function TechSphere3D({ skills = [] }) {
                 ref={containerRef}
                 data-no-morph="true"
                 onPointerDown={onPointerDown}
-                onPointerEnter={() => window.dispatchEvent(new CustomEvent('cursor-no-morph-enter'))}
-                onPointerLeave={() => window.dispatchEvent(new CustomEvent('cursor-no-morph-leave'))}
+                onPointerEnter={() => {
+                    isGlobeHoveredRef.current = true;
+                    updateNodeVisuals(hoveredTechIdRef.current, activeTechIdRef.current, true);
+                    window.dispatchEvent(new CustomEvent('cursor-no-morph-enter'));
+                }}
+                onPointerLeave={() => {
+                    isGlobeHoveredRef.current = false;
+                    hoveredTechIdRef.current = null;
+                    setHoveredTech(null);
+                    updateNodeVisuals(null, activeTechIdRef.current, false);
+                    window.dispatchEvent(new CustomEvent('cursor-no-morph-leave'));
+                }}
                 className="no-morph relative w-full max-w-[580px] h-[480px] mt-8 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl"
                 style={{ touchAction: 'none' }}
             >
@@ -343,9 +403,8 @@ export default function TechSphere3D({ skills = [] }) {
                 {/* Glow Radial Central */}
                 <div className="absolute inset-0 bg-radial from-secondary/5 via-transparent to-transparent pointer-events-none" />
 
-                {/* Nós da Esfera (Atualizados diretamente no DOM a 60 FPS sem re-renders) */}
+                {/* Nós da Esfera (Renderização HD Ultra Nítida) */}
                 {baseNodes.map((node, idx) => {
-                    const isFocused = (hoveredTech?.id === node.id) || (activeTech?.id === node.id);
                     const brand = node.brandColor || node.color;
 
                     return (
@@ -357,41 +416,56 @@ export default function TechSphere3D({ skills = [] }) {
                                 transform: 'translate3d(0px, 0px, 0) scale(1)',
                                 willChange: 'transform, opacity',
                             }}
-                            className="pointer-events-auto cursor-pointer flex flex-col items-center justify-center group"
-                            onMouseEnter={() => setHoveredTech(node)}
-                            onMouseLeave={() => setHoveredTech(null)}
-                            onClick={() => {
-                                if (dragDistanceRef.current < 6) {
-                                    setActiveTech(activeTech?.id === node.id ? null : node);
-                                }
-                            }}
+                            className="cursor-pointer flex flex-col items-center justify-center pointer-events-none"
                         >
+                            {/* Card do Ícone */}
                             <div
-                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border transition-all duration-200"
+                                ref={(el) => (iconWrappersRef.current[idx] = el)}
+                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border transition-all duration-300 pointer-events-auto"
                                 style={{
-                                    backgroundColor: isFocused
-                                        ? `${brand}25`
-                                        : 'rgba(18, 20, 26, 0.85)',
-                                    boxShadow: isFocused ? `0 0 24px ${brand}99` : 'none',
-                                    borderColor: isFocused ? brand : 'rgba(255, 255, 255, 0.12)',
+                                    backgroundColor: 'rgba(18, 20, 26, 0.85)',
+                                    borderColor: 'rgba(255, 255, 255, 0.12)',
+                                }}
+                                onMouseEnter={() => {
+                                    hoveredTechIdRef.current = node.id;
+                                    setHoveredTech(node);
+                                    updateNodeVisuals(node.id, activeTechIdRef.current, true);
+                                }}
+                                onMouseLeave={() => {
+                                    hoveredTechIdRef.current = null;
+                                    setHoveredTech(null);
+                                    updateNodeVisuals(null, activeTechIdRef.current, isGlobeHoveredRef.current);
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (dragDistanceRef.current < 6) {
+                                        const newActive = activeTechIdRef.current === node.id ? null : node;
+                                        activeTechIdRef.current = newActive?.id ?? null;
+                                        setActiveTech(newActive);
+                                        updateNodeVisuals(hoveredTechIdRef.current, newActive?.id ?? null, isGlobeHoveredRef.current);
+                                    }
                                 }}
                             >
                                 <i
-                                    className={`${node.icon} text-lg sm:text-xl transition-all duration-200`}
+                                    ref={(el) => (iconElementsRef.current[idx] = el)}
+                                    className={`${node.icon} text-lg sm:text-xl transition-all duration-300`}
                                     style={{
-                                        color: isFocused ? brand : '#D1D5DB',
-                                        filter: isFocused ? `drop-shadow(0 0 8px ${brand}80)` : 'none',
+                                        color: '#D1D5DB',
                                     }}
                                 />
                             </div>
 
-                            {/* Label da Tecnologia (Sempre legível e nítido) */}
+                            {/* Label da Tecnologia (Tipografia HD Nítida Anti-Aliasing com subpixel rendering) */}
                             <span
-                                className="mt-1.5 text-[10.5px] font-mono tracking-tight whitespace-nowrap font-bold px-2 py-0.5 rounded-full shadow-md pointer-events-none transition-all duration-200"
+                                ref={(el) => (labelElementsRef.current[idx] = el)}
+                                className="mt-1.5 text-[11px] font-sans font-semibold tracking-wide whitespace-nowrap px-2.5 py-0.5 rounded-full shadow-md pointer-events-none transition-all duration-300 antialiased"
                                 style={{
-                                    color: isFocused ? '#FFFFFF' : '#9CA3AF',
-                                    backgroundColor: isFocused ? 'rgba(0,0,0,0.92)' : 'rgba(0,0,0,0.65)',
-                                    border: isFocused ? `1px solid ${brand}` : '1px solid rgba(255,255,255,0.08)',
+                                    color: '#9CA3AF',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                    textRendering: 'optimizeLegibility',
+                                    WebkitFontSmoothing: 'antialiased',
+                                    MozOsxFontSmoothing: 'grayscale',
                                 }}
                             >
                                 {node.name}
@@ -401,7 +475,7 @@ export default function TechSphere3D({ skills = [] }) {
                 })}
             </div>
 
-            {/* Painel Inferior de Detalhes da Tecnologia Selecionada */}
+            {/* Painel Inferior de Detalhes da Tecnologia Selecionada (HD Styling) */}
             <div className="min-h-[76px] w-full max-w-lg mt-2 flex items-center justify-center px-4">
                 <AnimatePresence mode="wait">
                     {activeItemData ? (
@@ -411,27 +485,33 @@ export default function TechSphere3D({ skills = [] }) {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -8, scale: 0.96 }}
                             transition={{ duration: 0.2 }}
-                            className="w-full bg-darker/95 border border-primary/30 p-3.5 rounded-2xl flex items-center gap-4 shadow-xl backdrop-blur-md"
+                            className="w-full bg-darker/95 border border-white/15 p-3.5 rounded-2xl flex items-center gap-4 shadow-2xl backdrop-blur-md"
                         >
                             <div
                                 className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border border-white/10"
-                                style={{ backgroundColor: `${activeItemData.color}25` }}
+                                style={{ backgroundColor: `${activeItemData.brandColor || activeItemData.color}25` }}
                             >
-                                <i className={`${activeItemData.icon} text-xl`} style={{ color: activeItemData.color }} />
+                                <i
+                                    className={`${activeItemData.icon} text-xl`}
+                                    style={{ color: activeItemData.brandColor || activeItemData.color }}
+                                />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <h4 className="text-white font-bold text-sm tracking-wide truncate">
+                                    <h4 className="text-white font-bold text-sm tracking-wide truncate antialiased">
                                         {activeItemData.name}
                                     </h4>
                                     <span
                                         className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border border-white/10 font-medium"
-                                        style={{ color: activeItemData.color, backgroundColor: `${activeItemData.color}15` }}
+                                        style={{
+                                            color: activeItemData.brandColor || activeItemData.color,
+                                            backgroundColor: `${activeItemData.brandColor || activeItemData.color}15`,
+                                        }}
                                     >
                                         {activeItemData.category}
                                     </span>
                                 </div>
-                                <p className="text-primary/75 text-xs font-sans mt-0.5 line-clamp-1">
+                                <p className="text-gray-300 text-xs font-sans mt-0.5 line-clamp-1 antialiased leading-relaxed">
                                     {activeItemData.desc || 'Tecnologia utilizada em produção e desenvolvimento de software.'}
                                 </p>
                             </div>
@@ -440,7 +520,7 @@ export default function TechSphere3D({ skills = [] }) {
                         <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="text-xs text-primary/70 font-mono tracking-wider flex items-center gap-2"
+                            className="text-xs text-gray-400 font-sans tracking-wide flex items-center gap-2 antialiased"
                         >
                             <i className="fas fa-arrows-alt text-[10px] text-accent animate-pulse" />
                             {lang === 'en' ? 'Drag constellation to rotate or click any node to inspect' : lang === 'es' ? 'Arrastra la constelación para rotar o haz clic para inspeccionar' : 'Arraste a constelação para girar ou clique em um nó para inspecionar'}
