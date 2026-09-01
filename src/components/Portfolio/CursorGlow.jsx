@@ -23,6 +23,7 @@ export default function CursorGlow() {
         let ringY = -200;
         let curSize = DEFAULT_SIZE;
         let targetSize = DEFAULT_SIZE;
+        let isInsideNoMorphArea = false;
 
         // Propriedades contínuas do Morph interpoladas a 60fps
         let morphState = {
@@ -55,17 +56,32 @@ export default function CursorGlow() {
         updateZoom();
         window.addEventListener('resize', updateZoom, { passive: true });
 
+        // Listeners para sincronização global de bounds da esfera/globo
+        const onNoMorphEnter = () => {
+            isInsideNoMorphArea = true;
+            targetMorph.active = false;
+            currentCard = null;
+            cursorEl.style.opacity = '0';
+        };
+
+        const onNoMorphLeave = () => {
+            isInsideNoMorphArea = false;
+            cursorEl.style.opacity = '1';
+        };
+
+        window.addEventListener('cursor-no-morph-enter', onNoMorphEnter);
+        window.addEventListener('cursor-no-morph-leave', onNoMorphLeave);
+
         // Identifica com precisão se o cursor está sobre um card ou botão morphável
         const findCard = (target) => {
             if (!target || target === document.body || target === document.documentElement) return null;
-            if (target.closest('[data-no-morph="true"], .no-morph, nav, input, textarea, canvas, svg')) return null;
+            if (isInsideNoMorphArea || target.closest('[data-no-morph="true"], .no-morph, nav, input, textarea, canvas, svg')) return null;
 
             const candidate = target.closest(
                 '[data-cursor-morph="true"], .cursor-morph, .rounded-2xl.border, .rounded-xl.border, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
             );
             if (!candidate || candidate.closest('[data-no-morph="true"], .no-morph')) return null;
 
-            // Retorno rápido se ainda estiver sobre o mesmo card
             if (candidate === currentCard) return candidate;
 
             const rect = candidate.getBoundingClientRect();
@@ -80,7 +96,7 @@ export default function CursorGlow() {
 
         // Identifica se está sobre texto legível que NÃO seja morph
         const checkIsText = (target) => {
-            if (!target) return false;
+            if (!target || isInsideNoMorphArea) return false;
             if (findCard(target)) return false;
 
             const textEl = target.closest(
@@ -94,27 +110,27 @@ export default function CursorGlow() {
 
         const lerp = (a, b, t) => a + (b - a) * t;
 
-        // Loop contínuo com interpolação física ultra-suave
+        // Loop contínuo com interpolação física ultra-suave a 60 FPS
         const renderLoop = () => {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
-            // Inércia de perseguição da bolinha
-            ringX += (targetX - ringX) * 0.02;
-            ringY += (targetY - ringY) * 0.02;
+            // Tracking contínuo com interpolação orgânica (sempre segue a posição real sem travar)
+            ringX += (targetX - ringX) * 0.14;
+            ringY += (targetY - ringY) * 0.14;
 
-            // Transição física orgânica de tamanho para textos (sem saltos secos)
-            curSize = lerp(curSize, targetSize, 0.08);
+            // Transição física orgânica de tamanho para textos
+            curSize = lerp(curSize, targetSize, 0.12);
 
             // Interpolação suave do estado Morph (0 = livre, 1 = card)
             const targetProgress = targetMorph.active ? 1 : 0;
-            morphState.progress = lerp(morphState.progress, targetProgress, 0.12);
+            morphState.progress = lerp(morphState.progress, targetProgress, 0.14);
 
             if (targetMorph.active) {
-                morphState.left = lerp(morphState.left, targetMorph.left, 0.14);
-                morphState.top = lerp(morphState.top, targetMorph.top, 0.14);
-                morphState.width = lerp(morphState.width, targetMorph.width, 0.14);
-                morphState.height = lerp(morphState.height, targetMorph.height, 0.14);
+                morphState.left = lerp(morphState.left, targetMorph.left, 0.16);
+                morphState.top = lerp(morphState.top, targetMorph.top, 0.16);
+                morphState.width = lerp(morphState.width, targetMorph.width, 0.16);
+                morphState.height = lerp(morphState.height, targetMorph.height, 0.16);
                 morphState.radius = targetMorph.radius;
             }
 
@@ -184,16 +200,18 @@ export default function CursorGlow() {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            // Se o cursor estiver sobre uma área explicitamente no-morph (como o Globo 3D ou Canvas interativo), oculta o cursor customizado
-            const isNoMorphArea = e.target && e.target.closest('[data-no-morph="true"], .no-morph, canvas');
-            if (isNoMorphArea) {
-                cursorEl.style.opacity = '0';
-                targetMorph.active = false;
-                currentCard = null;
-                return;
-            } else {
-                cursorEl.style.opacity = '1';
+            // Verificação em tempo real de bounds no-morph
+            const hitNoMorph = e.target && (e.target.closest('[data-no-morph="true"], .no-morph, canvas') !== null);
+            if (hitNoMorph !== isInsideNoMorphArea) {
+                isInsideNoMorphArea = hitNoMorph;
+                cursorEl.style.opacity = hitNoMorph ? '0' : '1';
+                if (hitNoMorph) {
+                    targetMorph.active = false;
+                    currentCard = null;
+                }
             }
+
+            if (isInsideNoMorphArea) return;
 
             // Detecta texto e define o tamanho alvo para interpolação suave
             const isText = checkIsText(e.target);
@@ -238,6 +256,8 @@ export default function CursorGlow() {
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', updateZoom);
+            window.removeEventListener('cursor-no-morph-enter', onNoMorphEnter);
+            window.removeEventListener('cursor-no-morph-leave', onNoMorphLeave);
             if (moveRaf) cancelAnimationFrame(moveRaf);
             if (loopRaf) cancelAnimationFrame(loopRaf);
         };
@@ -246,10 +266,10 @@ export default function CursorGlow() {
     if (isTouchDevice()) return null;
 
     return (
-        /* Cursor com interpolação física fluida a 60 FPS */
+        /* Cursor com transição fluida de opacidade, escala e aceleração por GPU */
         <div
             ref={cursorRef}
-            className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform transform-gpu"
+            className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform transform-gpu transition-opacity duration-200 ease-out"
             style={{
                 width: `${DEFAULT_SIZE}px`,
                 height: `${DEFAULT_SIZE}px`,
@@ -258,6 +278,7 @@ export default function CursorGlow() {
                 mixBlendMode: 'difference',
                 transform: 'translate3d(-200px, -200px, 0)',
                 contain: 'layout style',
+                opacity: 1,
             }}
         />
     );

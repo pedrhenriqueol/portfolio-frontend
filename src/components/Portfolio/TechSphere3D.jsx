@@ -267,7 +267,9 @@ export default function TechSphere3D({ skills = [] }) {
                 ref={containerRef}
                 data-no-morph="true"
                 onPointerDown={onPointerDown}
-                className="no-morph relative w-full max-w-[580px] h-[480px] mt-8 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden"
+                onPointerEnter={() => window.dispatchEvent(new CustomEvent('cursor-no-morph-enter'))}
+                onPointerLeave={() => window.dispatchEvent(new CustomEvent('cursor-no-morph-leave'))}
+                className="no-morph relative w-full max-w-[580px] h-[480px] mt-8 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl"
                 style={{ touchAction: 'none' }}
             >
                 {/* Canvas com conexões sutis de constelação */}
