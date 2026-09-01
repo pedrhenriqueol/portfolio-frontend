@@ -50,7 +50,7 @@ function SkillCard({ skill, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -4, scale: 1.01 }}
-            data-cursor-card="true"
+            data-no-card-morph="true"
             className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/25"
         >
             {/* Top row: Icon (Neutro no repouso -> Revela Brand Color no Hover) + Category Badge */}

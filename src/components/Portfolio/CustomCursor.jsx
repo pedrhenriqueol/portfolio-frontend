@@ -143,7 +143,8 @@ export default function CustomCursor() {
             }
         }
 
-        // 2. Cards de conteúdo (Sobre Mim, Educação, Experiência, Projetos, Skills, Bento Grid)
+        // 2. Cards de conteúdo (Sobre Mim, Educação, Experiência, Projetos, Bento Grid)
+        // Exclui cards de stack e habilidades da grade detalhada (#conhecimentos e data-no-card-morph)
         const cardCandidate = el.closest(
             '[data-cursor-card="true"], [data-cursor="morph"], [data-cursor-card], .rounded-2xl.border, .rounded-xl.border, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
         );
@@ -153,7 +154,7 @@ export default function CustomCursor() {
             cardCandidate !== document.documentElement &&
             cardCandidate.tagName !== 'SECTION' &&
             cardCandidate.tagName !== 'MAIN' &&
-            !cardCandidate.closest('[data-no-morph="true"], .no-morph')
+            !cardCandidate.closest('[data-no-morph="true"], .no-morph, [data-no-card-morph="true"], #conhecimentos')
         ) {
             const rect = cardCandidate.getBoundingClientRect();
             // Valida dimensões de card real (evita containers de tela inteira)
