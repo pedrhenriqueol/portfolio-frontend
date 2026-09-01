@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-// Diâmetro padrão em repouso (22px, tamanho ideal sem poluição visual)
+// Diâmetro padrão em repouso (22px, tamanho refinado e discreto)
 const DEFAULT_SIZE = 22;
 
-// Física de mola calibrada e orgânica (Framer Motion Spring Physics)
+// Física de mola calibrada (Framer Motion Spring Physics)
 const SPRING_TRANSITION = {
     type: 'spring',
     damping: 25,
@@ -31,7 +31,6 @@ export default function CustomCursor() {
     const isNoMorphRef = useRef(false);
     const isOffscreenRef = useRef(true);
     const rafRef = useRef(null);
-    const cachedZoomRef = useRef(1);
 
     // Desativa o cursor virtual em dispositivos touch
     useEffect(() => {
@@ -45,19 +44,8 @@ export default function CustomCursor() {
         setIsTouch(checkTouch());
     }, []);
 
-    // Sincroniza o zoom global do CSS (0.8)
-    useEffect(() => {
-        const updateZoom = () => {
-            cachedZoomRef.current = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-        };
-        updateZoom();
-        window.addEventListener('resize', updateZoom, { passive: true });
-        return () => window.removeEventListener('resize', updateZoom);
-    }, []);
-
-    // Atualiza estado e dimensões com renderização suave
+    // Atualiza estado e dimensões com precisão pixel-perfect
     const updateCursor = useCallback(() => {
-        const zoom = cachedZoomRef.current;
         const currentPos = posRef.current;
         const targetData = targetRef.current;
 
@@ -82,27 +70,24 @@ export default function CustomCursor() {
             if (radius.includes('%') || parseFloat(radius) >= 24) {
                 radius = isButton ? '9999px' : '24px';
             } else {
-                radius = `${(parseFloat(radius) || 12) + (isButton ? 3 : 2)}px`;
+                radius = comp.borderRadius || '16px';
             }
 
-            const pad = isButton ? 3 : 4;
-            const targetLeft = rect.left / zoom - pad;
-            const targetTop = rect.top / zoom - pad;
-            const targetWidth = rect.width / zoom + pad * 2;
-            const targetHeight = rect.height / zoom + pad * 2;
+            // Em botões pequenos: micro-padding e atração magnética
+            // Em cards: pad zero e fixação exata nas bordas do card (zero deslocamento)
+            const pad = isButton ? 2 : 0;
+            const targetLeft = rect.left - pad;
+            const targetTop = rect.top - pad;
+            const targetWidth = rect.width + pad * 2;
+            const targetHeight = rect.height + pad * 2;
 
-            // Atração magnética sutil (mais expressiva em botões, micro-parallax em cards grandes)
-            const centerX = targetLeft + targetWidth / 2;
-            const centerY = targetTop + targetHeight / 2;
             let pullX = 0;
             let pullY = 0;
-
             if (isButton) {
+                const centerX = targetLeft + targetWidth / 2;
+                const centerY = targetTop + targetHeight / 2;
                 pullX = (currentPos.x - centerX) * 0.14;
                 pullY = (currentPos.y - centerY) * 0.14;
-            } else {
-                pullX = Math.max(-6, Math.min(6, (currentPos.x - centerX) * 0.02));
-                pullY = Math.max(-6, Math.min(6, (currentPos.y - centerY) * 0.02));
             }
 
             setCursorState({
@@ -142,20 +127,18 @@ export default function CustomCursor() {
         }
     }, []);
 
-    // Identifica o elemento e categoria sob o ponteiro
+    // Identifica com precisão o elemento sob o ponteiro
     const resolveTarget = (el) => {
         if (!el || el === document.body || el === document.documentElement) return null;
         if (el.closest('[data-no-morph="true"], .no-morph, canvas')) return null;
 
-        // 1. Botões, links, switches e pílulas de filtro (maior prioridade interativa)
+        // 1. Botões, links, switches e pílulas de filtro (maior prioridade de morph)
         const buttonCandidate = el.closest(
             'button, a, [data-cursor-morph="true"], .cursor-morph, [role="button"], input[type="submit"], input[type="button"]'
         );
         if (buttonCandidate && !buttonCandidate.closest('[data-no-morph="true"], .no-morph')) {
             const rect = buttonCandidate.getBoundingClientRect();
-            const w = rect.width / cachedZoomRef.current;
-            const h = rect.height / cachedZoomRef.current;
-            if (w >= 18 && h >= 18 && w <= 420 && h <= 100) {
+            if (rect.width >= 16 && rect.height >= 16 && rect.width <= 420 && rect.height <= 100) {
                 return { type: 'button', el: buttonCandidate };
             }
         }
@@ -173,9 +156,8 @@ export default function CustomCursor() {
             !cardCandidate.closest('[data-no-morph="true"], .no-morph')
         ) {
             const rect = cardCandidate.getBoundingClientRect();
-            const w = rect.width / cachedZoomRef.current;
-            const h = rect.height / cachedZoomRef.current;
-            if (w >= 70 && h >= 40 && w <= 1400 && h <= 950) {
+            // Valida dimensões de card real (evita containers de tela inteira)
+            if (rect.width >= 70 && rect.height >= 40 && rect.width <= 1400 && rect.height <= 950) {
                 return { type: 'card', el: cardCandidate };
             }
         }
@@ -198,10 +180,9 @@ export default function CustomCursor() {
         if (isTouch) return;
 
         const onMouseMove = (e) => {
-            const zoom = cachedZoomRef.current;
             posRef.current = {
-                x: e.clientX / zoom,
-                y: e.clientY / zoom,
+                x: e.clientX,
+                y: e.clientY,
             };
             isOffscreenRef.current = false;
 
@@ -297,7 +278,7 @@ export default function CustomCursor() {
                       }
                     : cursorState.mode === 'button'
                     ? {
-                          // Morph translúcido em botões: contorno suave e texto 100% legível
+                          // Morph translúcido em botões: contorno suave, sem blur e com texto 100% legível
                           x: cursorState.x,
                           y: cursorState.y,
                           width: cursorState.width,
@@ -306,15 +287,15 @@ export default function CustomCursor() {
                           opacity: 1,
                           scale: 1,
                           backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                          border: '1px solid rgba(255, 255, 255, 0.4)',
-                          boxShadow: '0 0 20px rgba(255, 255, 255, 0.08)',
-                          backdropFilter: 'blur(2px)',
-                          WebkitBackdropFilter: 'blur(2px)',
+                          border: '1px solid rgba(255, 255, 255, 0.45)',
+                          boxShadow: '0 0 20px rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                           mixBlendMode: 'normal',
                       }
                     : cursorState.mode === 'card'
                     ? {
-                          // Morph translúcido elegante em cards: contorno sem fundo branco opaco
+                          // Morph em cards: 100% transparente (ZERO opacidade, ZERO blur) para legibilidade absoluta
                           x: cursorState.x,
                           y: cursorState.y,
                           width: cursorState.width,
@@ -322,16 +303,16 @@ export default function CustomCursor() {
                           borderRadius: cursorState.borderRadius,
                           opacity: 1,
                           scale: 1,
-                          backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          boxShadow: '0 0 30px rgba(255, 255, 255, 0.04)',
-                          backdropFilter: 'blur(2px)',
-                          WebkitBackdropFilter: 'blur(2px)',
+                          backgroundColor: 'transparent',
+                          border: '1.5px solid rgba(var(--color-accent-rgb, 140, 106, 74), 0.55)',
+                          boxShadow: '0 0 25px rgba(var(--color-accent-rgb, 140, 106, 74), 0.15)',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                           mixBlendMode: 'normal',
                       }
                     : cursorState.mode === 'text'
                     ? {
-                          // Expansão suave de 60% em textos livres com inversão dinâmica
+                          // Expansão suave de 60% em textos livres com inversão dinâmica e contraste perfeito
                           x: mousePos.x - DEFAULT_SIZE / 2,
                           y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
