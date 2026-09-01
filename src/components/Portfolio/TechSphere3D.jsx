@@ -112,7 +112,7 @@ export default function TechSphere3D({ skills = [] }) {
         projectedCoords.current = baseNodes.map(() => ({ px: 0, py: 0, z2: 0, scale: 1 }));
     }, [baseNodes]);
 
-    // Atualização visual cirúrgica: todos os nós permanecem monocromáticos metálicos, e APENAS o nó com mouse encima muda para sua cor oficial
+    // Atualização visual cirúrgica: todos os nós permanecem monocromáticos metálicos, e APENAS o nó com mouse encima muda para sua cor oficial e expande suavemente
     const updateNodeVisuals = useCallback((targetHoverId, targetActiveId) => {
         const wrappers = iconWrappersRef.current;
         const icons = iconElementsRef.current;
@@ -129,27 +129,33 @@ export default function TechSphere3D({ skills = [] }) {
             const brand = node.brandColor || node.color;
 
             if (isFocused) {
-                // Apenas o ícone hovered/ativo ganha a cor oficial com glow calibrado
+                // Apenas o ícone hovered/ativo ganha a cor oficial com glow calibrado e expansão suave e amortecida
                 wrapper.style.backgroundColor = `${brand}25`;
                 wrapper.style.borderColor = brand;
-                wrapper.style.boxShadow = `0 0 24px ${brand}99`;
+                wrapper.style.boxShadow = `0 0 28px ${brand}99`;
+                wrapper.style.transform = 'scale(1.2)';
                 icon.style.color = brand;
                 icon.style.filter = `drop-shadow(0 0 8px ${brand}80)`;
+                icon.style.transform = 'scale(1.08)';
 
                 label.style.color = '#FFFFFF';
                 label.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 label.style.borderColor = brand;
+                label.style.transform = 'scale(1.05) translateY(2px)';
             } else {
-                // Todos os outros nós mantêm a cor metálica/monocromática elegante
+                // Todos os outros nós mantêm a cor metálica/monocromática elegante e tamanho neutro
                 wrapper.style.backgroundColor = 'rgba(18, 20, 26, 0.85)';
                 wrapper.style.borderColor = 'rgba(255, 255, 255, 0.12)';
                 wrapper.style.boxShadow = 'none';
+                wrapper.style.transform = 'scale(1)';
                 icon.style.color = '#D1D5DB';
                 icon.style.filter = 'none';
+                icon.style.transform = 'scale(1)';
 
                 label.style.color = '#9CA3AF';
                 label.style.backgroundColor = 'rgba(0, 0, 0, 0.65)';
                 label.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                label.style.transform = 'scale(1) translateY(0)';
             }
         }
     }, [baseNodes]);
@@ -210,11 +216,10 @@ export default function TechSphere3D({ skills = [] }) {
             if (el) {
                 const isFiltered = currentCat !== 'all' && node.category !== currentCat;
                 const isFocused = (hovId === node.id) || (actId === node.id);
-                const finalScale = isFocused ? clampedScale * 1.25 : clampedScale;
                 const finalAlpha = isFiltered ? 0.12 : isFocused ? 1 : depthAlpha;
                 const finalZIndex = isFocused ? 999 : Math.round((z2 + 2) * 100);
 
-                el.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${finalScale})`;
+                el.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${clampedScale})`;
                 el.style.opacity = finalAlpha;
                 el.style.zIndex = finalZIndex;
             }
@@ -403,10 +408,13 @@ export default function TechSphere3D({ skills = [] }) {
                             {/* Card do Ícone */}
                             <div
                                 ref={(el) => (iconWrappersRef.current[idx] = el)}
-                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border transition-all duration-200 pointer-events-auto cursor-pointer"
+                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border pointer-events-auto cursor-pointer will-change-transform"
                                 style={{
                                     backgroundColor: 'rgba(18, 20, 26, 0.85)',
                                     borderColor: 'rgba(255, 255, 255, 0.12)',
+                                    transform: 'scale(1)',
+                                    transformOrigin: 'center center',
+                                    transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease',
                                 }}
                                 onPointerDown={(e) => {
                                     // Propaga o pointerdown para o container não travar o drag
@@ -436,9 +444,12 @@ export default function TechSphere3D({ skills = [] }) {
                             >
                                 <i
                                     ref={(el) => (iconElementsRef.current[idx] = el)}
-                                    className={`${node.icon} text-lg sm:text-xl transition-all duration-200`}
+                                    className={`${node.icon} text-lg sm:text-xl will-change-transform`}
                                     style={{
                                         color: '#D1D5DB',
+                                        transform: 'scale(1)',
+                                        transformOrigin: 'center center',
+                                        transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease, filter 0.3s ease',
                                     }}
                                 />
                             </div>
@@ -446,7 +457,7 @@ export default function TechSphere3D({ skills = [] }) {
                             {/* Label da Tecnologia (Tipografia HD Nítida Anti-Aliasing) */}
                             <span
                                 ref={(el) => (labelElementsRef.current[idx] = el)}
-                                className="mt-1.5 text-[11px] font-sans font-semibold tracking-wide whitespace-nowrap px-2.5 py-0.5 rounded-full shadow-md pointer-events-none transition-all duration-200 antialiased"
+                                className="mt-1.5 text-[11px] font-sans font-semibold tracking-wide whitespace-nowrap px-2.5 py-0.5 rounded-full shadow-md pointer-events-none antialiased will-change-transform"
                                 style={{
                                     color: '#9CA3AF',
                                     backgroundColor: 'rgba(0, 0, 0, 0.65)',
@@ -454,6 +465,9 @@ export default function TechSphere3D({ skills = [] }) {
                                     textRendering: 'optimizeLegibility',
                                     WebkitFontSmoothing: 'antialiased',
                                     MozOsxFontSmoothing: 'grayscale',
+                                    transform: 'scale(1) translateY(0)',
+                                    transformOrigin: 'top center',
+                                    transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease',
                                 }}
                             >
                                 {node.name}
