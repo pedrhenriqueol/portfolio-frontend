@@ -1,22 +1,22 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-// Diâmetro padrão em repouso (22px, tamanho ideal e discreto)
+// Diâmetro padrão em repouso (22px)
 const DEFAULT_SIZE = 22;
 
-// Física de mola calibrada (Framer Motion Spring Physics)
+// Física de mola ultra-fluida e responsiva
 const SPRING_TRANSITION = {
     type: 'spring',
-    damping: 25,
-    stiffness: 250,
-    mass: 0.6,
+    damping: 26,
+    stiffness: 260,
+    mass: 0.55,
 };
 
 export default function CustomCursor() {
     const [isTouch, setIsTouch] = useState(false);
     const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
     const [cursorState, setCursorState] = useState({
-        mode: 'default', // 'default' | 'text' | 'button'
+        mode: 'default', // 'default' | 'text' | 'button' | 'card'
         x: -100,
         y: -100,
         width: DEFAULT_SIZE,
@@ -28,6 +28,8 @@ export default function CustomCursor() {
 
     const posRef = useRef({ x: -100, y: -100 });
     const targetRef = useRef(null);
+    const lastCardRef = useRef(null);
+    const leaveCardTimerRef = useRef(null);
     const isNoMorphRef = useRef(false);
     const isOffscreenRef = useRef(true);
     const rafRef = useRef(null);
@@ -55,7 +57,7 @@ export default function CustomCursor() {
         return () => window.removeEventListener('resize', updateZoom);
     }, []);
 
-    // Atualiza estado e dimensões com renderização de alta precisão
+    // Atualiza estado e dimensões com precisão pixel-perfect
     const updateCursor = useCallback(() => {
         const zoom = cachedZoomRef.current;
         const currentPos = posRef.current;
@@ -90,7 +92,6 @@ export default function CustomCursor() {
             const targetWidth = rect.width / zoom + pad * 2;
             const targetHeight = rect.height / zoom + pad * 2;
 
-            // Atração magnética sutil em direção ao cursor dentro do botão
             const centerX = targetLeft + targetWidth / 2;
             const centerY = targetTop + targetHeight / 2;
             const pullX = (currentPos.x - centerX) * 0.14;
@@ -106,8 +107,35 @@ export default function CustomCursor() {
                 isNoMorph: false,
                 isOffscreen: false,
             });
+        } else if (targetData?.type === 'card') {
+            // Morph em cards: fixação precisa nas bordas do card sob zoom
+            const rect = targetData.el.getBoundingClientRect();
+            const comp = window.getComputedStyle(targetData.el);
+            let radius = comp.borderRadius || '16px';
+
+            if (radius.includes('%') || parseFloat(radius) >= 24) {
+                radius = '24px';
+            } else {
+                radius = comp.borderRadius || '16px';
+            }
+
+            const targetLeft = rect.left / zoom;
+            const targetTop = rect.top / zoom;
+            const targetWidth = rect.width / zoom;
+            const targetHeight = rect.height / zoom;
+
+            setCursorState({
+                mode: 'card',
+                x: targetLeft,
+                y: targetTop,
+                width: targetWidth,
+                height: targetHeight,
+                borderRadius: radius,
+                isNoMorph: false,
+                isOffscreen: false,
+            });
         } else if (targetData?.type === 'text') {
-            // Superfície de texto: expansão suave de 60% com mix-blend-mode difference
+            // Superfície de texto livre: expansão suave de 60% com mix-blend-mode difference
             setCursorState({
                 mode: 'text',
                 x: currentPos.x - DEFAULT_SIZE / 2,
@@ -119,7 +147,7 @@ export default function CustomCursor() {
                 isOffscreen: false,
             });
         } else {
-            // Estado livre: tamanho padrão (22px)
+            // Estado livre: bolinha compacta de 22px
             setCursorState({
                 mode: 'default',
                 x: currentPos.x - DEFAULT_SIZE / 2,
@@ -133,12 +161,12 @@ export default function CustomCursor() {
         }
     }, []);
 
-    // Identifica com precisão o elemento sob o ponteiro
+    // Identifica o elemento e categoria sob o ponteiro
     const resolveTarget = (el) => {
         if (!el || el === document.body || el === document.documentElement) return null;
         if (el.closest('[data-no-morph="true"], .no-morph, canvas')) return null;
 
-        // 1. Botões, links, switches de aba, pílulas de filtro e ícones sociais (morph restrito e perfeito)
+        // 1. Botões, links, switches e pílulas (maior prioridade interativa)
         const buttonCandidate = el.closest(
             'button, a, [data-cursor-morph="true"], .cursor-morph, [role="button"], input[type="submit"], input[type="button"]'
         );
@@ -146,17 +174,31 @@ export default function CustomCursor() {
             const rect = buttonCandidate.getBoundingClientRect();
             const w = rect.width / cachedZoomRef.current;
             const h = rect.height / cachedZoomRef.current;
-            // Valida alvos interativos compactos (evita cards inteiros)
             if (w >= 16 && h >= 16 && w <= 380 && h <= 90) {
                 return { type: 'button', el: buttonCandidate };
             }
         }
 
-        // 2. Superfícies de texto (títulos, parágrafos, biografia, subtítulos, tags)
+        // 2. Cards explícitos (Sobre Mim: Bio, Educação, Horário, 3 Pilares; Experiência: Stats, Timeline)
+        // Exclui especificamente Projetos e Grade Detalhada de Habilidades conforme solicitado
+        const cardCandidate = el.closest('[data-cursor-card="true"]');
+        if (
+            cardCandidate &&
+            !cardCandidate.closest('[data-no-morph="true"], [data-no-card-morph="true"], #projetos, #conhecimentos')
+        ) {
+            const rect = cardCandidate.getBoundingClientRect();
+            const w = rect.width / cachedZoomRef.current;
+            const h = rect.height / cachedZoomRef.current;
+            if (w >= 70 && h >= 40 && w <= 1400 && h <= 950) {
+                return { type: 'card', el: cardCandidate };
+            }
+        }
+
+        // 3. Superfícies de texto livre fora de cards
         const textCandidate = el.closest(
             'h1, h2, h3, h4, h5, h6, p, span, strong, em, b, i, blockquote, li, code, label'
         );
-        if (textCandidate && !textCandidate.closest('[data-no-morph="true"], .no-morph')) {
+        if (textCandidate && !textCandidate.closest('[data-no-morph="true"], .no-morph, [data-cursor-card="true"]')) {
             const text = textCandidate.textContent?.trim?.();
             if (text && text.length > 0) {
                 return { type: 'text', el: textCandidate };
@@ -177,11 +219,44 @@ export default function CustomCursor() {
             };
             isOffscreenRef.current = false;
 
-            // Verificação em tempo real de saída suave na área do Canvas 3D
+            // Verificação de saída suave na área do Canvas 3D
             const hitNoMorph = Boolean(e.target?.closest?.('[data-no-morph="true"], .no-morph, canvas'));
             isNoMorphRef.current = hitNoMorph;
 
-            targetRef.current = hitNoMorph ? null : resolveTarget(e.target);
+            if (hitNoMorph) {
+                targetRef.current = null;
+                lastCardRef.current = null;
+                if (leaveCardTimerRef.current) clearTimeout(leaveCardTimerRef.current);
+            } else {
+                const detected = resolveTarget(e.target);
+
+                if (detected?.type === 'card') {
+                    // Cancela qualquer timer de saída: transição direta e suave entre cards
+                    if (leaveCardTimerRef.current) {
+                        clearTimeout(leaveCardTimerRef.current);
+                        leaveCardTimerRef.current = null;
+                    }
+                    lastCardRef.current = detected;
+                    targetRef.current = detected;
+                } else if (detected?.type === 'button' || detected?.type === 'text') {
+                    if (leaveCardTimerRef.current) clearTimeout(leaveCardTimerRef.current);
+                    lastCardRef.current = null;
+                    targetRef.current = detected;
+                } else {
+                    // Se estiver no gap entre cards (ao mover de um card para o outro):
+                    // Mantém o estado do card por 70ms para permitir que a mola deslize direto para o próximo card sem pipocar em branco!
+                    if (lastCardRef.current && !leaveCardTimerRef.current) {
+                        leaveCardTimerRef.current = setTimeout(() => {
+                            lastCardRef.current = null;
+                            leaveCardTimerRef.current = null;
+                            targetRef.current = null;
+                            updateCursor();
+                        }, 70);
+                    } else if (!lastCardRef.current) {
+                        targetRef.current = null;
+                    }
+                }
+            }
 
             if (!rafRef.current) {
                 rafRef.current = requestAnimationFrame(() => {
@@ -192,7 +267,7 @@ export default function CustomCursor() {
         };
 
         const onScroll = () => {
-            if (targetRef.current?.type === 'button') {
+            if (targetRef.current?.type === 'button' || targetRef.current?.type === 'card') {
                 if (!rafRef.current) {
                     rafRef.current = requestAnimationFrame(() => {
                         rafRef.current = null;
@@ -205,6 +280,8 @@ export default function CustomCursor() {
         const onMouseLeave = () => {
             isOffscreenRef.current = true;
             targetRef.current = null;
+            lastCardRef.current = null;
+            if (leaveCardTimerRef.current) clearTimeout(leaveCardTimerRef.current);
             updateCursor();
         };
 
@@ -213,10 +290,11 @@ export default function CustomCursor() {
             updateCursor();
         };
 
-        // Handlers de saída e retorno suaves na Esfera 3D
         const onNoMorphEnter = () => {
             isNoMorphRef.current = true;
             targetRef.current = null;
+            lastCardRef.current = null;
+            if (leaveCardTimerRef.current) clearTimeout(leaveCardTimerRef.current);
             updateCursor();
         };
 
@@ -239,6 +317,7 @@ export default function CustomCursor() {
             document.removeEventListener('mouseenter', onMouseEnter);
             window.removeEventListener('cursor-no-morph-enter', onNoMorphEnter);
             window.removeEventListener('cursor-no-morph-leave', onNoMorphLeave);
+            if (leaveCardTimerRef.current) clearTimeout(leaveCardTimerRef.current);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
     }, [isTouch, updateCursor]);
@@ -263,11 +342,13 @@ export default function CustomCursor() {
                           backgroundColor: '#ffffff',
                           border: '0px solid transparent',
                           boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                           mixBlendMode: 'difference',
                       }
                     : cursorState.mode === 'button'
                     ? {
-                          // Morph em botões: contorno translúcido fino sem blur, com texto 100% legível
+                          // Morph em botões: contorno translúcido fino sem blur
                           x: cursorState.x,
                           y: cursorState.y,
                           width: cursorState.width,
@@ -278,11 +359,30 @@ export default function CustomCursor() {
                           backgroundColor: 'rgba(255, 255, 255, 0.08)',
                           border: '1px solid rgba(255, 255, 255, 0.45)',
                           boxShadow: '0 0 20px rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          mixBlendMode: 'normal',
+                      }
+                    : cursorState.mode === 'card'
+                    ? {
+                          // Morph em cards: 100% transparente (ZERO opacidade, ZERO blur, texto 100% nítido)
+                          x: cursorState.x,
+                          y: cursorState.y,
+                          width: cursorState.width,
+                          height: cursorState.height,
+                          borderRadius: cursorState.borderRadius,
+                          opacity: 1,
+                          scale: 1,
+                          backgroundColor: 'transparent',
+                          border: '1.5px solid rgba(var(--color-accent-rgb, 140, 106, 74), 0.55)',
+                          boxShadow: '0 0 25px rgba(var(--color-accent-rgb, 140, 106, 74), 0.15)',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                           mixBlendMode: 'normal',
                       }
                     : cursorState.mode === 'text'
                     ? {
-                          // Expansão suave de 60% em textos com inversão dinâmica (mix-blend-mode difference contínuo, zero pipocamento)
+                          // Expansão suave de 60% em textos livres fora de cards
                           x: mousePos.x - DEFAULT_SIZE / 2,
                           y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
@@ -293,10 +393,12 @@ export default function CustomCursor() {
                           backgroundColor: '#ffffff',
                           border: '0px solid transparent',
                           boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                           mixBlendMode: 'difference',
                       }
                     : {
-                          // Estado livre padrão: bolinha compacta de 22px com inversão dinâmica
+                          // Estado livre padrão: bolinha compacta de 22px
                           x: mousePos.x - DEFAULT_SIZE / 2,
                           y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
@@ -307,6 +409,8 @@ export default function CustomCursor() {
                           backgroundColor: '#ffffff',
                           border: '0px solid transparent',
                           boxShadow: 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                           mixBlendMode: 'difference',
                       }
             }
