@@ -74,7 +74,6 @@ export default function TechSphere3D({ skills = [] }) {
     const selectedCategoryRef = useRef('all');
     const hoveredTechIdRef = useRef(null);
     const activeTechIdRef = useRef(null);
-    const isGlobeHoveredRef = useRef(false);
 
     useEffect(() => {
         selectedCategoryRef.current = selectedCategory;
@@ -113,9 +112,8 @@ export default function TechSphere3D({ skills = [] }) {
         projectedCoords.current = baseNodes.map(() => ({ px: 0, py: 0, z2: 0, scale: 1 }));
     }, [baseNodes]);
 
-    // Função de atualização visual dos nós (cor/hover/foco) sem re-render do React
-    const updateNodeVisuals = useCallback((targetHoverId, targetActiveId, isGlobeHovered) => {
-        const domNodes = nodeElementsRef.current;
+    // Atualização visual cirúrgica: todos os nós permanecem monocromáticos metálicos, e APENAS o nó com mouse encima muda para sua cor oficial
+    const updateNodeVisuals = useCallback((targetHoverId, targetActiveId) => {
         const wrappers = iconWrappersRef.current;
         const icons = iconElementsRef.current;
         const labels = labelElementsRef.current;
@@ -131,7 +129,7 @@ export default function TechSphere3D({ skills = [] }) {
             const brand = node.brandColor || node.color;
 
             if (isFocused) {
-                // Nó focado/hovered: Acende com glow e cor oficial de marca vibrante
+                // Apenas o ícone hovered/ativo ganha a cor oficial com glow calibrado
                 wrapper.style.backgroundColor = `${brand}25`;
                 wrapper.style.borderColor = brand;
                 wrapper.style.boxShadow = `0 0 24px ${brand}99`;
@@ -141,19 +139,8 @@ export default function TechSphere3D({ skills = [] }) {
                 label.style.color = '#FFFFFF';
                 label.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 label.style.borderColor = brand;
-            } else if (isGlobeHovered) {
-                // Cursor dentro do Globo: Revela cores de marca com estética límpida
-                wrapper.style.backgroundColor = 'rgba(18, 20, 26, 0.85)';
-                wrapper.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                wrapper.style.boxShadow = 'none';
-                icon.style.color = brand;
-                icon.style.filter = 'none';
-
-                label.style.color = '#E5E7EB';
-                label.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                label.style.borderColor = 'rgba(255, 255, 255, 0.1)';
             } else {
-                // Repouso/Idle (Cursor fora do Globo): Monocromático elegante e sóbrio
+                // Todos os outros nós mantêm a cor metálica/monocromática elegante
                 wrapper.style.backgroundColor = 'rgba(18, 20, 26, 0.85)';
                 wrapper.style.borderColor = 'rgba(255, 255, 255, 0.12)';
                 wrapper.style.boxShadow = 'none';
@@ -316,7 +303,7 @@ export default function TechSphere3D({ skills = [] }) {
         return () => window.removeEventListener('resize', updateCanvasSize);
     }, []);
 
-    // Interações de Arrastar com Damping (Mouse e Touch)
+    // Interações de Arrastar 100% fluidas com Damping contínuo
     const onPointerDown = (e) => {
         isDraggingRef.current = true;
         dragDistanceRef.current = 0;
@@ -380,15 +367,12 @@ export default function TechSphere3D({ skills = [] }) {
                 data-no-morph="true"
                 onPointerDown={onPointerDown}
                 onPointerEnter={() => {
-                    isGlobeHoveredRef.current = true;
-                    updateNodeVisuals(hoveredTechIdRef.current, activeTechIdRef.current, true);
                     window.dispatchEvent(new CustomEvent('cursor-no-morph-enter'));
                 }}
                 onPointerLeave={() => {
-                    isGlobeHoveredRef.current = false;
                     hoveredTechIdRef.current = null;
                     setHoveredTech(null);
-                    updateNodeVisuals(null, activeTechIdRef.current, false);
+                    updateNodeVisuals(null, activeTechIdRef.current);
                     window.dispatchEvent(new CustomEvent('cursor-no-morph-leave'));
                 }}
                 className="no-morph relative w-full max-w-[580px] h-[480px] mt-8 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl"
@@ -405,8 +389,6 @@ export default function TechSphere3D({ skills = [] }) {
 
                 {/* Nós da Esfera (Renderização HD Ultra Nítida) */}
                 {baseNodes.map((node, idx) => {
-                    const brand = node.brandColor || node.color;
-
                     return (
                         <div
                             key={node.id}
@@ -421,20 +403,26 @@ export default function TechSphere3D({ skills = [] }) {
                             {/* Card do Ícone */}
                             <div
                                 ref={(el) => (iconWrappersRef.current[idx] = el)}
-                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border transition-all duration-300 pointer-events-auto"
+                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border transition-all duration-200 pointer-events-auto cursor-pointer"
                                 style={{
                                     backgroundColor: 'rgba(18, 20, 26, 0.85)',
                                     borderColor: 'rgba(255, 255, 255, 0.12)',
                                 }}
+                                onPointerDown={(e) => {
+                                    // Propaga o pointerdown para o container não travar o drag
+                                    onPointerDown(e);
+                                }}
                                 onMouseEnter={() => {
-                                    hoveredTechIdRef.current = node.id;
-                                    setHoveredTech(node);
-                                    updateNodeVisuals(node.id, activeTechIdRef.current, true);
+                                    if (!isDraggingRef.current) {
+                                        hoveredTechIdRef.current = node.id;
+                                        setHoveredTech(node);
+                                        updateNodeVisuals(node.id, activeTechIdRef.current);
+                                    }
                                 }}
                                 onMouseLeave={() => {
                                     hoveredTechIdRef.current = null;
                                     setHoveredTech(null);
-                                    updateNodeVisuals(null, activeTechIdRef.current, isGlobeHoveredRef.current);
+                                    updateNodeVisuals(null, activeTechIdRef.current);
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -442,23 +430,23 @@ export default function TechSphere3D({ skills = [] }) {
                                         const newActive = activeTechIdRef.current === node.id ? null : node;
                                         activeTechIdRef.current = newActive?.id ?? null;
                                         setActiveTech(newActive);
-                                        updateNodeVisuals(hoveredTechIdRef.current, newActive?.id ?? null, isGlobeHoveredRef.current);
+                                        updateNodeVisuals(hoveredTechIdRef.current, newActive?.id ?? null);
                                     }
                                 }}
                             >
                                 <i
                                     ref={(el) => (iconElementsRef.current[idx] = el)}
-                                    className={`${node.icon} text-lg sm:text-xl transition-all duration-300`}
+                                    className={`${node.icon} text-lg sm:text-xl transition-all duration-200`}
                                     style={{
                                         color: '#D1D5DB',
                                     }}
                                 />
                             </div>
 
-                            {/* Label da Tecnologia (Tipografia HD Nítida Anti-Aliasing com subpixel rendering) */}
+                            {/* Label da Tecnologia (Tipografia HD Nítida Anti-Aliasing) */}
                             <span
                                 ref={(el) => (labelElementsRef.current[idx] = el)}
-                                className="mt-1.5 text-[11px] font-sans font-semibold tracking-wide whitespace-nowrap px-2.5 py-0.5 rounded-full shadow-md pointer-events-none transition-all duration-300 antialiased"
+                                className="mt-1.5 text-[11px] font-sans font-semibold tracking-wide whitespace-nowrap px-2.5 py-0.5 rounded-full shadow-md pointer-events-none transition-all duration-200 antialiased"
                                 style={{
                                     color: '#9CA3AF',
                                     backgroundColor: 'rgba(0, 0, 0, 0.65)',
