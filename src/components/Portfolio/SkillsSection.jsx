@@ -36,11 +36,11 @@ const CATEGORY_STYLES = {
 };
 
 function SkillCard({ skill, index }) {
-    const style = CATEGORY_STYLES[skill?.category] || {
-        color: 'var(--color-accent, #8C6A4A)',
-        border: 'rgba(140, 106, 74, 0.25)',
-        badgeBg: 'rgba(140, 106, 74, 0.12)',
-        iconBg: 'rgba(140, 106, 74, 0.15)',
+    const brandColor = skill?.color || '#8C6A4A';
+    const catStyle = CATEGORY_STYLES[skill?.category] || {
+        color: '#8C6A4A',
+        border: 'rgba(255, 255, 255, 0.1)',
+        badgeBg: 'rgba(255, 255, 255, 0.05)',
     };
 
     return (
@@ -50,29 +50,26 @@ function SkillCard({ skill, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -4, scale: 1.01 }}
-            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:border-opacity-60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden"
-            style={{
-                border: `1px solid ${style.border}`,
-            }}
+            className="cursor-morph relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:border-opacity-60 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/20"
         >
-            {/* Top row: Icon + Category Badge */}
+            {/* Top row: Icon with Official Brand Color + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
                 <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 shrink-0"
-                    style={{ backgroundColor: style.iconBg }}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110 shrink-0 border border-white/10"
+                    style={{ backgroundColor: `${brandColor}18` }}
                 >
                     <i
-                        className={`${skill?.icon_class} text-lg sm:text-xl transition-colors duration-200`}
-                        style={{ color: style.color }}
+                        className={`${skill?.icon_class} text-xl transition-transform duration-200`}
+                        style={{ color: brandColor }}
                     />
                 </div>
 
                 <span
                     className="text-[10px] font-mono px-2.5 py-0.5 rounded-full font-medium"
                     style={{
-                        backgroundColor: style.badgeBg,
-                        color: style.color,
-                        border: `1px solid ${style.border}`,
+                        backgroundColor: catStyle.badgeBg,
+                        color: catStyle.color,
+                        border: `1px solid ${catStyle.border}`,
                     }}
                 >
                     {skill?.category}

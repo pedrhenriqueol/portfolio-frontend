@@ -94,14 +94,15 @@ export default function TechSphere3D({ skills = [] }) {
     const isVisibleRef = useRef(true);
     const rafIdRef = useRef(null);
 
-    // Tecnologias formatadas e categorizadas
+    // Tecnologias formatadas com cores oficiais de marca
     const localizedSkills = useMemo(() => {
         const raw = (skills && Array.isArray(skills) && skills.length > 0) ? skills : t('skills.list');
         const list = Array.isArray(raw) ? raw : [];
         return list.map((item) => ({
             ...item,
             icon: item?.icon_class || item?.icon || 'fas fa-code',
-            color: CATEGORY_THEME[item?.category]?.color || '#8C6A4A',
+            brandColor: item?.color || CATEGORY_THEME[item?.category]?.color || '#8C6A4A',
+            color: item?.color || CATEGORY_THEME[item?.category]?.color || '#8C6A4A',
         }));
     }, [skills, t]);
 
@@ -345,6 +346,7 @@ export default function TechSphere3D({ skills = [] }) {
                 {/* Nós da Esfera (Atualizados diretamente no DOM a 60 FPS sem re-renders) */}
                 {baseNodes.map((node, idx) => {
                     const isFocused = (hoveredTech?.id === node.id) || (activeTech?.id === node.id);
+                    const brand = node.brandColor || node.color;
 
                     return (
                         <div
@@ -355,7 +357,7 @@ export default function TechSphere3D({ skills = [] }) {
                                 transform: 'translate3d(0px, 0px, 0) scale(1)',
                                 willChange: 'transform, opacity',
                             }}
-                            className="pointer-events-auto cursor-pointer flex flex-col items-center justify-center"
+                            className="pointer-events-auto cursor-pointer flex flex-col items-center justify-center group"
                             onMouseEnter={() => setHoveredTech(node)}
                             onMouseLeave={() => setHoveredTech(null)}
                             onClick={() => {
@@ -368,22 +370,28 @@ export default function TechSphere3D({ skills = [] }) {
                                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border transition-all duration-200"
                                 style={{
                                     backgroundColor: isFocused
-                                        ? 'rgba(255, 255, 255, 0.2)'
+                                        ? `${brand}25`
                                         : 'rgba(18, 20, 26, 0.85)',
-                                    boxShadow: isFocused ? `0 0 20px ${node.color}90` : 'none',
-                                    borderColor: isFocused ? node.color : 'rgba(255,255,255,0.12)',
+                                    boxShadow: isFocused ? `0 0 24px ${brand}99` : 'none',
+                                    borderColor: isFocused ? brand : 'rgba(255, 255, 255, 0.12)',
                                 }}
                             >
-                                <i className={`${node.icon} text-lg sm:text-xl`} style={{ color: node.color }} />
+                                <i
+                                    className={`${node.icon} text-lg sm:text-xl transition-all duration-200`}
+                                    style={{
+                                        color: isFocused ? brand : '#D1D5DB',
+                                        filter: isFocused ? `drop-shadow(0 0 8px ${brand}80)` : 'none',
+                                    }}
+                                />
                             </div>
 
                             {/* Label da Tecnologia (Sempre legível e nítido) */}
                             <span
-                                className="mt-1.5 text-[10.5px] font-mono tracking-tight whitespace-nowrap font-bold px-2 py-0.5 rounded-full shadow-md pointer-events-none"
+                                className="mt-1.5 text-[10.5px] font-mono tracking-tight whitespace-nowrap font-bold px-2 py-0.5 rounded-full shadow-md pointer-events-none transition-all duration-200"
                                 style={{
-                                    color: isFocused ? '#FFFFFF' : node.color,
-                                    backgroundColor: isFocused ? 'rgba(0,0,0,0.92)' : 'rgba(0,0,0,0.6)',
-                                    border: isFocused ? `1px solid ${node.color}` : '1px solid rgba(255,255,255,0.08)',
+                                    color: isFocused ? '#FFFFFF' : '#9CA3AF',
+                                    backgroundColor: isFocused ? 'rgba(0,0,0,0.92)' : 'rgba(0,0,0,0.65)',
+                                    border: isFocused ? `1px solid ${brand}` : '1px solid rgba(255,255,255,0.08)',
                                 }}
                             >
                                 {node.name}
