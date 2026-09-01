@@ -83,9 +83,9 @@ export default function CursorMorph() {
 
                 cursorEl.style.transition = isScroll ? T_SCROLL : T_MORPH;
                 cursorEl.style.mixBlendMode = 'normal';
-                cursorEl.style.backgroundColor = 'rgba(var(--color-accent-rgb, 140, 106, 74), 0.08)';
-                cursorEl.style.border = '1.5px solid var(--color-accent, #8C6A4A)';
-                cursorEl.style.boxShadow = '0 0 24px rgba(var(--color-accent-rgb, 140, 106, 74), 0.18)';
+                cursorEl.style.backgroundColor = 'rgba(0, 0, 0, 0.35)';
+                cursorEl.style.border = '1.5px solid #000000';
+                cursorEl.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.45)';
                 cursorEl.style.borderRadius = radius;
                 cursorEl.style.width = `${w}px`;
                 cursorEl.style.height = `${h}px`;
@@ -97,7 +97,7 @@ export default function CursorMorph() {
 
                 cursorEl.style.transition = T_FREE;
                 cursorEl.style.mixBlendMode = 'difference';
-                cursorEl.style.backgroundColor = '#ffffff';
+                cursorEl.style.backgroundColor = '#000000';
                 cursorEl.style.border = 'none';
                 cursorEl.style.boxShadow = 'none';
                 cursorEl.style.borderRadius = '50%';
@@ -178,7 +178,7 @@ export default function CursorMorph() {
     if (isTouchDevice()) return null;
 
     return (
-        /* Elemento Único e Elástico: A bolinha física se elastifica/estica no card e retorna à esfera naturalmente */
+        /* Elemento Único e Elástico com cores invertidas (preto / contraste) */
         <div
             ref={cursorRef}
             className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform transform-gpu"
@@ -186,7 +186,7 @@ export default function CursorMorph() {
                 width: `${DEFAULT_SIZE}px`,
                 height: `${DEFAULT_SIZE}px`,
                 borderRadius: '50%',
-                backgroundColor: '#ffffff',
+                backgroundColor: '#000000',
                 mixBlendMode: 'difference',
                 transform: 'translate3d(-200px, -200px, 0)',
                 contain: 'layout style',
