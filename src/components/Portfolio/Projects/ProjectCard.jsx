@@ -15,7 +15,6 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.04 }}
-                data-cursor-card="true"
                 className={`group flex items-center gap-4 sm:gap-6 bg-darker border border-primary/30 rounded-xl p-4 sm:p-5 hover:border-secondary/40 transition-all duration-300 ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
@@ -95,7 +94,6 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
             transition={{ duration: 0.35, delay: index * 0.05 }}
         >
             <div
-                data-cursor-card="true"
                 className={`bg-darker rounded-xl overflow-hidden border border-primary/30 group hover:border-secondary/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col h-full ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
