@@ -5,11 +5,7 @@ const isTouchDevice = () =>
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
 const DEFAULT_SIZE = 32;
-const TEXT_HOVER_SIZE = 56;
-const BEZIER = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const T_MORPH = `transform 0.38s ${BEZIER}, width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}, background-color 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease`;
-const T_SCROLL = `width 0.38s ${BEZIER}, height 0.38s ${BEZIER}, border-radius 0.38s ${BEZIER}`;
-const T_FREE = `width 0.32s ${BEZIER}, height 0.32s ${BEZIER}, border-radius 0.32s ${BEZIER}, background-color 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease`;
+const TEXT_HOVER_SIZE = 58;
 
 export default function CursorMorph() {
     const cursorRef = useRef(null);
@@ -24,12 +20,32 @@ export default function CursorMorph() {
         let mouseY = -200;
         let ringX = -200;
         let ringY = -200;
-        let activeCard = null;
+        let curSize = DEFAULT_SIZE;
+        let targetSize = DEFAULT_SIZE;
+
+        // Propriedades contínuas do Morph interpoladas a 60fps
+        let morphState = {
+            active: false,
+            left: 0,
+            top: 0,
+            width: DEFAULT_SIZE,
+            height: DEFAULT_SIZE,
+            radius: '50%',
+            progress: 0, // 0 = esfera livre, 1 = morph no card
+        };
+
+        let targetMorph = {
+            active: false,
+            left: 0,
+            top: 0,
+            width: DEFAULT_SIZE,
+            height: DEFAULT_SIZE,
+            radius: '50%',
+        };
+
         let moveRaf = null;
-        let scrollRaf = null;
         let loopRaf = null;
         let cachedZoom = 0.8;
-        let isTextHovered = false;
 
         const updateZoom = () => {
             cachedZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
@@ -71,94 +87,125 @@ export default function CursorMorph() {
             return hasText;
         };
 
-        // Aplica o morph / elasticidade contínua no elemento único
-        const updateCursorState = (isScroll = false) => {
-            if (activeCard) {
-                const rect = activeCard.getBoundingClientRect();
-                const radius = getComputedStyle(activeCard).borderRadius || '16px';
-                const left = rect.left / cachedZoom;
-                const top = rect.top / cachedZoom;
-                const w = rect.width / cachedZoom;
-                const h = rect.height / cachedZoom;
+        const lerp = (a, b, t) => a + (b - a) * t;
 
-                cursorEl.style.transition = isScroll ? T_SCROLL : T_MORPH;
-                cursorEl.style.mixBlendMode = 'normal';
-                cursorEl.style.backgroundColor = 'rgba(var(--color-accent-rgb, 140, 106, 74), 0.08)';
-                cursorEl.style.border = '1.5px solid var(--color-accent, #8C6A4A)';
-                cursorEl.style.boxShadow = '0 0 24px rgba(var(--color-accent-rgb, 140, 106, 74), 0.18)';
-                cursorEl.style.borderRadius = radius;
-                cursorEl.style.width = `${w}px`;
-                cursorEl.style.height = `${h}px`;
-                cursorEl.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-            } else {
-                const size = isTextHovered ? TEXT_HOVER_SIZE : DEFAULT_SIZE;
-                const curX = ringX - size / 2;
-                const curY = ringY - size / 2;
-
-                cursorEl.style.transition = T_FREE;
-                cursorEl.style.mixBlendMode = 'difference';
-                cursorEl.style.backgroundColor = '#ffffff';
-                cursorEl.style.border = 'none';
-                cursorEl.style.boxShadow = 'none';
-                cursorEl.style.borderRadius = '50%';
-                cursorEl.style.width = `${size}px`;
-                cursorEl.style.height = `${size}px`;
-                cursorEl.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
-            }
-        };
-
-        // Loop contínuo com física suave (0.02)
+        // Loop contínuo com interpolação física ultra-suave
         const renderLoop = () => {
             const targetX = mouseX / cachedZoom;
             const targetY = mouseY / cachedZoom;
 
+            // Inércia de perseguição da bolinha
             ringX += (targetX - ringX) * 0.02;
             ringY += (targetY - ringY) * 0.02;
 
-            // Se o cursor estiver livre (fora de um card), atualiza a translação contínua
-            if (!activeCard) {
-                const size = isTextHovered ? TEXT_HOVER_SIZE : DEFAULT_SIZE;
-                cursorEl.style.transform = `translate3d(${ringX - size / 2}px, ${ringY - size / 2}px, 0)`;
+            // Transição física orgânica de tamanho para textos (sem saltos secos)
+            curSize = lerp(curSize, targetSize, 0.08);
+
+            // Interpolação suave do estado Morph (0 = livre, 1 = card)
+            const targetProgress = targetMorph.active ? 1 : 0;
+            morphState.progress = lerp(morphState.progress, targetProgress, 0.12);
+
+            if (targetMorph.active) {
+                morphState.left = lerp(morphState.left, targetMorph.left, 0.14);
+                morphState.top = lerp(morphState.top, targetMorph.top, 0.14);
+                morphState.width = lerp(morphState.width, targetMorph.width, 0.14);
+                morphState.height = lerp(morphState.height, targetMorph.height, 0.14);
+                morphState.radius = targetMorph.radius;
+            }
+
+            if (morphState.progress > 0.01) {
+                // Estado híbrido/interpolando entre bolinha e card
+                const p = morphState.progress;
+                const ballLeft = ringX - curSize / 2;
+                const ballTop = ringY - curSize / 2;
+
+                const curLeft = lerp(ballLeft, morphState.left, p);
+                const curTop = lerp(ballTop, morphState.top, p);
+                const curW = lerp(curSize, morphState.width, p);
+                const curH = lerp(curSize, morphState.height, p);
+
+                cursorEl.style.transform = `translate3d(${curLeft}px, ${curTop}px, 0)`;
+                cursorEl.style.width = `${curW}px`;
+                cursorEl.style.height = `${curH}px`;
+                cursorEl.style.borderRadius = p > 0.5 ? morphState.radius : '50%';
+
+                if (p > 0.6) {
+                    cursorEl.style.mixBlendMode = 'normal';
+                    cursorEl.style.backgroundColor = 'rgba(var(--color-accent-rgb, 140, 106, 74), 0.08)';
+                    cursorEl.style.border = '1.5px solid var(--color-accent, #8C6A4A)';
+                    cursorEl.style.boxShadow = '0 0 24px rgba(var(--color-accent-rgb, 140, 106, 74), 0.18)';
+                } else {
+                    cursorEl.style.mixBlendMode = 'difference';
+                    cursorEl.style.backgroundColor = '#ffffff';
+                    cursorEl.style.border = 'none';
+                    cursorEl.style.boxShadow = 'none';
+                }
+            } else {
+                // Estado 100% livre esférico
+                const curLeft = ringX - curSize / 2;
+                const curTop = ringY - curSize / 2;
+
+                cursorEl.style.transform = `translate3d(${curLeft}px, ${curTop}px, 0)`;
+                cursorEl.style.width = `${curSize}px`;
+                cursorEl.style.height = `${curSize}px`;
+                cursorEl.style.borderRadius = '50%';
+                cursorEl.style.mixBlendMode = 'difference';
+                cursorEl.style.backgroundColor = '#ffffff';
+                cursorEl.style.border = 'none';
+                cursorEl.style.boxShadow = 'none';
             }
 
             loopRaf = requestAnimationFrame(renderLoop);
         };
         loopRaf = requestAnimationFrame(renderLoop);
 
+        const updateCardDimensions = (card) => {
+            if (!card) {
+                targetMorph.active = false;
+                return;
+            }
+            const rect = card.getBoundingClientRect();
+            targetMorph.active = true;
+            targetMorph.left = rect.left / cachedZoom;
+            targetMorph.top = rect.top / cachedZoom;
+            targetMorph.width = rect.width / cachedZoom;
+            targetMorph.height = rect.height / cachedZoom;
+            targetMorph.radius = getComputedStyle(card).borderRadius || '16px';
+        };
+
         const onMouseMove = (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            // Detecta se está sobre texto legível
+            // Detecta texto e define o tamanho alvo para interpolação suave
             const isText = checkIsText(e.target);
-            if (isText !== isTextHovered) {
-                isTextHovered = isText;
-                if (!activeCard) {
-                    const targetSize = isTextHovered ? TEXT_HOVER_SIZE : DEFAULT_SIZE;
-                    cursorEl.style.width = `${targetSize}px`;
-                    cursorEl.style.height = `${targetSize}px`;
-                }
-            }
+            targetSize = isText ? TEXT_HOVER_SIZE : DEFAULT_SIZE;
 
             if (moveRaf) return;
 
             moveRaf = requestAnimationFrame(() => {
                 moveRaf = null;
                 const card = findCard(e.target);
-
-                if (card !== activeCard) {
-                    activeCard = card;
-                    updateCursorState(false);
+                if (card) {
+                    if (!targetMorph.active) {
+                        morphState.left = ringX - curSize / 2;
+                        morphState.top = ringY - curSize / 2;
+                        morphState.width = curSize;
+                        morphState.height = curSize;
+                    }
+                    updateCardDimensions(card);
+                } else {
+                    targetMorph.active = false;
                 }
             });
         };
 
         const onScroll = () => {
-            if (activeCard && !scrollRaf) {
-                scrollRaf = requestAnimationFrame(() => {
-                    scrollRaf = null;
-                    updateCursorState(true);
-                });
+            if (targetMorph.active) {
+                const hoveredEl = document.elementFromPoint(mouseX, mouseY);
+                const card = findCard(hoveredEl);
+                if (card) updateCardDimensions(card);
+                else targetMorph.active = false;
             }
         };
 
@@ -170,7 +217,6 @@ export default function CursorMorph() {
             window.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', updateZoom);
             if (moveRaf) cancelAnimationFrame(moveRaf);
-            if (scrollRaf) cancelAnimationFrame(scrollRaf);
             if (loopRaf) cancelAnimationFrame(loopRaf);
         };
     }, []);
@@ -178,7 +224,7 @@ export default function CursorMorph() {
     if (isTouchDevice()) return null;
 
     return (
-        /* Elemento Único e Elástico: Bola nítida em modo difference e morph elegante */
+        /* Cursor com interpolação física fluida a 60 FPS */
         <div
             ref={cursorRef}
             className="pointer-events-none fixed top-0 left-0 z-[99999] will-change-transform transform-gpu"
