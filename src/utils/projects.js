@@ -7,9 +7,14 @@ export const FILTER_ICONS = {
 };
 
 export const TAG_MAP = {
-    fullstack: ['React', 'TypeScript', 'Laravel', 'Multi-tenant', 'RBAC', 'Dashboard', 'API REST', 'Tailwind CSS'],
+    fullstack: [
+        'React', 'TypeScript', 'Laravel', 'Multi-tenant', 'RBAC', 
+        'Dashboard', 'API REST', 'Tailwind CSS', 'Fastify', 'Prisma', 
+        'Framer Motion', 'Fintech', 'IoT Telemetry', 'FSM', 
+        'OpenAPI', 'Chaos Engineering', 'p95 SLA'
+    ],
     desktop:   ['Delphi 11', 'UniGui', 'Java', 'Swing', 'JVCL', 'ACBr', 'FortesReport'],
-    backend:   ['PHP', 'Python', 'Flask', 'Node.js', 'MySQL', 'SQL Server', 'PostgreSQL'],
+    backend:   ['PHP', 'Python', 'Flask', 'Node.js', 'MySQL', 'SQL Server', 'PostgreSQL', 'HMAC-SHA256'],
     outros:    ['Tkinter', 'Paradox', 'BDE'],
 };
 

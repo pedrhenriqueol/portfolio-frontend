@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { GAMES_INFO } from './TerminalGames';
 
 export const ALL_CMD_STRINGS = [
-    'pedro --help', 'pedro --skills', 'pedro --experience', 'pedro --contact',
+    'pedro --help', 'pedro --projects', 'pedro --skills', 'pedro --experience', 'pedro --contact',
     'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
     'pedro --play trivia', 'pedro --play aim-test', 'pedro --sudo matrix',
     'pedro --sudo rm -rf /', 'pedro --version', 'clear', 'exit',
@@ -35,6 +35,7 @@ export const getCommands = (lang) => [
             if (lang === 'en') {
                 return [
                     { text: '── Portfolio Commands ──', color: 'text-secondary font-bold' },
+                    { text: '  pedro --projects       Flagship engineering projects & architecture', color: 'text-accent' },
                     { text: '  pedro --skills         List all technologies and stack', color: 'text-primary' },
                     { text: '  pedro --experience     Detailed professional career path', color: 'text-primary' },
                     { text: '  pedro --contact        Direct contact links and channels', color: 'text-primary' },
@@ -53,6 +54,7 @@ export const getCommands = (lang) => [
             if (lang === 'es') {
                 return [
                     { text: '── Comandos de Portafolio ──', color: 'text-secondary font-bold' },
+                    { text: '  pedro --projects       Proyectos de ingeniería destacados y arquitectura', color: 'text-accent' },
                     { text: '  pedro --skills         Lista todas las tecnologías y stack', color: 'text-primary' },
                     { text: '  pedro --experience     Trayectoria profesional detallada', color: 'text-primary' },
                     { text: '  pedro --contact        Enlaces y canales de contacto directo', color: 'text-primary' },
@@ -70,6 +72,7 @@ export const getCommands = (lang) => [
             }
             return [
                 { text: '── Comandos de Portfólio ──', color: 'text-secondary font-bold' },
+                { text: '  pedro --projects       Projetos de engenharia em destaque e arquitetura', color: 'text-accent' },
                 { text: '  pedro --skills         Lista todas as tecnologias e stacks', color: 'text-primary' },
                 { text: '  pedro --experience     Trajetória profissional detalhada', color: 'text-primary' },
                 { text: '  pedro --contact        Links e canais de contato direto', color: 'text-primary' },
@@ -129,6 +132,27 @@ export const getCommands = (lang) => [
                 { text: '5. pedro --sudo matrix       🕶️ Efeito visual clássico Chuva Matrix', color: 'text-accent' },
                 { text: '', color: '' },
                 { text: '💡 Digite o comando acima ou "exit" para voltar a qualquer momento.', color: 'text-primary/60' },
+            ];
+        },
+    },
+    {
+        cmd: 'projects',
+        desc: lang === 'en' ? 'Flagship projects' : lang === 'es' ? 'Proyectos destacados' : 'Projetos em destaque',
+        output: () => {
+            const title = lang === 'en' ? '// Flagship Software Engineering Projects 🚀' : lang === 'es' ? '// Proyectos de Ingeniería de Software Destacados 🚀' : '// Projetos de Engenharia de Software em Destaque 🚀';
+            return [
+                { text: title, color: 'text-accent font-bold' },
+                { text: '1. PayStream Gateway  →  Fintech Core Banking & Idempotent Webhooks', color: 'text-secondary font-bold' },
+                { text: '   Fastify + TypeScript + Prisma + PostgreSQL | Split em Centavos & HMAC-SHA256', color: 'text-primary' },
+                { text: '   GitHub: https://github.com/pedrhenriqueol/paystream-gateway', color: 'text-primary/70' },
+                { text: '', color: '' },
+                { text: '2. PortLog OS  →  Terminal Logistics, Kanban FSM & IoT Telemetry', color: 'text-secondary font-bold' },
+                { text: '   React + Fastify + Multi-tenant RBAC | STS/RTG Cranes & MTTR in UTC', color: 'text-primary' },
+                { text: '   GitHub: https://github.com/pedrhenriqueol/portlog-os', color: 'text-primary/70' },
+                { text: '', color: '' },
+                { text: '3. SPECTR TestOps  →  Postman-Grade API Testing & Chaos Engineering', color: 'text-secondary font-bold' },
+                { text: '   React + Fastify + OpenAPI Schema | Percentis p50/p90/p95/p99 & Chaos Lab', color: 'text-primary' },
+                { text: '   GitHub: https://github.com/pedrhenriqueol/spectr-testops', color: 'text-primary/70' },
             ];
         },
     },

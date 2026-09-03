@@ -203,6 +203,106 @@ export const translations = {
             filterOthers: 'Outros',
             list: [
                 {
+                    id: 101,
+                    title: 'PayStream Gateway',
+                    description: 'Gateway corporativo de pagamentos fintech com liquidação de split multipartes em centavos inteiros, idempotência atômica P2002 no PostgreSQL, webhooks com assinatura HMAC-SHA256 e proteção estrita contra timing attacks.',
+                    image_url: '/paystream_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/paystream-gateway',
+                    demo_link: 'https://paystream-gateway.onrender.com',
+                    tags: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256', 'Fintech', 'React', 'Tailwind CSS'],
+                    details: {
+                        subtitle: 'Core Banking & Gateway de Pagamentos Resiliente com Split e Idempotência Atômica',
+                        fullDescription: 'Arquitetura corporativa de processamento financeiro desenvolvida em Node.js com Fastify e Prisma ORM sobre PostgreSQL. O gateway implementa processamento atômico de transações PIX e Cartão de Crédito com split de pagamentos rigorosamente calculado em inteiros (centavos), garantindo a conservação contábil absoluta da equação taxa + soma(sellers) == valor_bruto. Conta com chave de idempotência composta única, webhooks assinados criptograficamente com timestamp binding e verificação de assinatura em tempo constante com crypto.timingSafeEqual.',
+                        metrics: [
+                            { label: 'Idempotência', value: 'Zero Double-Spending (P2002)', icon: 'fas fa-fingerprint' },
+                            { label: 'Precisão Contábil', value: '100% Split em Centavos', icon: 'fas fa-coins' },
+                            { label: 'Criptografia', value: 'HMAC-SHA256 + Timing-Safe', icon: 'fas fa-shield-alt' }
+                        ],
+                        architecture: [
+                            { layer: 'Client / Checkout SPA', tech: 'React 18 + Tailwind CSS + Framer Motion', role: 'Interface interativa de checkout com geração instantânea de PIX QR Code e validação de cartão' },
+                            { layer: 'Gateway API & Auth', tech: 'Fastify + JWT Stateless + Rate Limiting', role: 'Validação Zod de payloads, controle de requisições por IP/chave e sanitização estrita de dados PCI' },
+                            { layer: 'Transaction Engine', tech: 'Prisma ORM + PostgreSQL ACID', role: 'Garantia de idempotência com @@unique([merchantId, externalId]) e locking otimista em concorrência' },
+                            { layer: 'Webhook Dispatcher', tech: 'HMAC-SHA256 + Exponential Backoff', role: 'Disparo assíncrono resiliente de notificações para merchants com 3 tentativas e jitter aleatório' }
+                        ],
+                        challenge: 'Eliminar condições de corrida em transações financeiras simultâneas que provocavam risco de double-spending, além de proteger a infraestrutura de webhooks contra timing attacks e falhas de arredondamento de ponto flutuante em splits de marketplace.',
+                        solution: 'Implementação de chave de idempotência com captura de erro P2002 no PostgreSQL com replay idempotente (HTTP 200), cálculos financeiros estritamente em centavos inteiros (Math.round), assinatura HMAC vinculada a timestamp e comparação constante com crypto.timingSafeEqual.',
+                        highlights: [
+                            'Idempotência atômica comprovada: concorrência resolvida via restrição de unicidade no PostgreSQL com retorno X-Idempotent-Replay: true',
+                            'Split contábil matematicamente exato: validação estrita que rejeita divergências com status 422 Unprocessable Entity',
+                            'Blindagem criptográfica: assinaturas de webhook blindadas contra timing attacks e replay attacks via timestamp binding',
+                            'Webhook dispatcher assíncrono com retentativas automáticas, timeout de 5 segundos e backoff exponencial com jitter',
+                            'Sanitização estrita PCI-DSS: número de cartão e CVV nunca persistidos em banco nem expostos em logs de erro'
+                        ]
+                    }
+                },
+                {
+                    id: 102,
+                    title: 'PortLog OS',
+                    description: 'Sistema operacional de logística portuária e manutenção de guindastes pesados (STS/RTG) com governança RBAC multi-tenant estrita, máquina de estados finita (FSM) no Kanban, telemetria preditiva IoT e MTTR auditado em UTC.',
+                    image_url: '/portlog_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/portlog-os',
+                    demo_link: 'https://portlog-os.vercel.app',
+                    tags: ['React', 'TypeScript', 'Fastify', 'Prisma', 'PostgreSQL', 'Multi-tenant', 'RBAC', 'IoT Telemetry', 'FSM'],
+                    details: {
+                        subtitle: 'Logística Portuária, FSM de Ordens de Serviço & Telemetria Preditiva Industrial',
+                        fullDescription: 'Plataforma de missão crítica para gestão de operações em terminais de contêineres e zonas de processamento de exportação (ZPE). Desenvolvida em React 18, Fastify e PostgreSQL com Prisma ORM, a aplicação orquestra a manutenção preventiva e corretiva de guindastes Ship-to-Shore (STS), guindastes de pórtico sobre pneus (RTG) e Reach Stackers. A governança baseia-se em isolamento multi-tenant intransponível por terminalId e controle de acesso baseado em papéis (RBAC) com máquina de estados finita determinística, impedindo transições ilegais no Kanban e assegurando telemetria de sensores de vibração e temperatura com tolerância a falhas.',
+                        metrics: [
+                            { label: 'Isolamento', value: 'Zero Data Leakage (Multi-tenant)', icon: 'fas fa-building' },
+                            { label: 'Confiabilidade FSM', value: '100% Transições Válidas', icon: 'fas fa-project-diagram' },
+                            { label: 'Telemetria IoT', value: '< 200ms Atualização Contínua', icon: 'fas fa-satellite-dish' }
+                        ],
+                        architecture: [
+                            { layer: 'Frontend UI / Kanban', tech: 'React 18 + Framer Motion + Tailwind', role: 'Quadro Kanban interativo com drag-and-drop, rollback otimista automático e visualização de telemetria' },
+                            { layer: 'Tenant Isolation & RBAC', tech: 'Fastify Hook + JWT + Tenant Guard', role: 'Injeção compulsória de terminalId em 100% das rotas e validação de claims de perfil administrativo' },
+                            { layer: 'FSM Workflow Engine', tech: 'Domain State Machine Validator', role: 'Matriz estrita de transições de status (TRIAGEM -> APROVADA -> EM_EXECUCAO -> CONCLUIDA) com validação de checklist' },
+                            { layer: 'IoT Ingestion & Metrics', tech: 'Zod Sensor Limits + UTC MTTR Math', role: 'Filtro contra anomalias físicas em sensores e cálculo de MTTR (Mean Time to Repair) preciso em milissegundos UTC' }
+                        ],
+                        challenge: 'Impedir vazamento de dados confidenciais entre operadores portuários concorrentes que compartilham a mesma infraestrutura de banco de dados e evitar estados inconsistentes nas ordens de serviço de guindastes pesados.',
+                        solution: 'Injeção obrigatória do terminalId em nível de middleware e query, validação de transições permitidas por uma máquina de estados finita e bloqueio de conclusão caso checklists obrigatórios não estejam cumpridos.',
+                        highlights: [
+                            'Isolamento multi-tenant absoluto: 100% das operações protegidas por escopo de terminal, impedindo acesso cruzado não autorizado',
+                            'Máquina de estados finita robusta: transições ilegais no ciclo de vida de manutenção são barradas com HTTP 422',
+                            'Governança RBAC granular: aprovação e cancelamento restritos a supervisores e administradores master',
+                            'Trilha de auditoria append-only: histórico imutável com registro de usuário, IP e timestamp de cada transição',
+                            'Telemetria IoT blindada com sanitização Zod de limites físicos para temperatura, vibração e pressão hidráulica'
+                        ]
+                    }
+                },
+                {
+                    id: 103,
+                    title: 'SPECTR TestOps',
+                    description: 'Plataforma corporativa de TestOps inspirada na ergonomia do Postman com runner de coleções e requisições isoladas, validação recursiva de contratos OpenAPI/JSON Schema, Chaos Engineering e percentis estatísticos p50/p90/p95/p99.',
+                    image_url: '/spectr_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/spectr-testops',
+                    demo_link: 'https://spectr-testops.vercel.app',
+                    tags: ['React', 'TypeScript', 'Fastify', 'Tailwind CSS', 'Framer Motion', 'OpenAPI', 'Chaos Engineering', 'p95 SLA'],
+                    details: {
+                        subtitle: 'Plataforma Corporativa de TestOps, Validação de Contratos & Engenharia do Caos',
+                        fullDescription: 'Solução corporativa de engenharia de qualidade e observabilidade de APIs inspirada no Postman, Datadog e K6. Desenvolvida em React 18 com Framer Motion e backend Fastify com TypeScript, a plataforma permite a criação de suítes de testes de regressão, execução de requests individuais com visualizador JSON com syntax highlighting em tempo real, validação recursiva profunda de esquemas OpenAPI/JSON Schema e testes de estresse no Chaos Lab (latência artificial, falhas 503 e conexões intermitentes). A análise de desempenho utiliza o método Nearest Rank padronizado pelo NIST para cálculo de percentis p50, p90, p95 e p99 sem distorções.',
+                        metrics: [
+                            { label: 'Conformidade OpenAPI', value: '100% Validação Recursiva', icon: 'fas fa-file-contract' },
+                            { label: 'Métricas de Latência', value: 'p50 / p90 / p95 / p99', icon: 'fas fa-chart-line' },
+                            { label: 'Resiliência', value: 'Chaos Lab + Zero Memory Leaks', icon: 'fas fa-biohazard' }
+                        ],
+                        architecture: [
+                            { layer: 'Workstation UI', tech: 'React 18 + Postman Design Tokens + Framer Motion', role: 'Interface moderna com Dark/Light mode calibrado, dropdown de idiomas com zero layout shift e syntax highlighter' },
+                            { layer: 'Execution Engine', tech: 'Fastify + AbortController + Fetch Engine', role: 'Motor de execução sequencial e concorrente com cancelamento assíncrono imediato de in-flight requests' },
+                            { layer: 'Assertion & Contract Validator', tech: 'Recursive Schema Validator', role: 'Validação estrita de contratos OpenAPI com suporte a tipos primitivos, objetos aninhados e arrays tipados' },
+                            { layer: 'Chaos & Telemetry Lab', tech: 'Socket Lifecycle Timers + Statistical Math', role: 'Injeção de estresse com liberação imediata de timers em socket close e cálculo de percentis Nearest Rank' }
+                        ],
+                        challenge: 'Garantir que validações de esquemas complexos em JSON Schema não gerem falsos-positivos em dados aninhados e evitar memory leaks no Node.js causados por timers pendentes em testes de caos sob alta concorrência.',
+                        solution: 'Desenvolvimento de um motor de validação recursivo com checagem de tipos estritos, cálculo de percentis de latência pelo método Nearest Rank e liberação de timers de simulação no fechamento de conexão.',
+                        highlights: [
+                            'Ergonomia corporativa estilo Postman: branding vetorial dinâmico, paleta escura (#1C1C1C) e clara com contraste WCAG AA',
+                            'Validador recursivo de contratos OpenAPI: checagem profunda de propriedades aninhadas, tipos primitivos e arrays',
+                            'Análise matemática de latência: percentis de cauda p50, p90, p95 e p99 calculados com precisão estatística',
+                            'Chaos Engineering integrado: injeção de latência com descarte de timers, erros 503 e falhas intermitentes',
+                            'Exportação real de relatórios de SLA e auditoria em formatos JSON e CSV estruturados'
+                        ]
+                    }
+                },
+
+                {
                     id: 1,
                     title: 'Retaguarda ERP',
                     description: 'Desenvolvimento full-stack de módulo administrativo de alta carga para gestão de ERP/PDV. Arquitetura desacoplada com API RESTful em Laravel e SPA cliente em React + TypeScript.',
@@ -570,6 +670,106 @@ export const translations = {
             filterBackend: 'Backend & APIs',
             filterOthers: 'Others',
             list: [
+                {
+                    id: 101,
+                    title: 'PayStream Gateway',
+                    description: 'High-performance fintech payment gateway with integer-cents split settlement, atomic P2002 idempotency in PostgreSQL, HMAC-SHA256 signed webhooks, and timing attack resistance.',
+                    image_url: '/paystream_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/paystream-gateway',
+                    demo_link: 'https://paystream-gateway.onrender.com',
+                    tags: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256', 'Fintech', 'React', 'Tailwind CSS'],
+                    details: {
+                        subtitle: 'Core Banking & Resilient Payment Gateway with Split Settlement and Atomic Idempotency',
+                        fullDescription: 'Enterprise financial processing architecture engineered with Node.js, Fastify, and Prisma ORM over PostgreSQL. The gateway delivers atomic transaction processing for PIX and Credit Card with split settlement strictly computed in integer cents, guaranteeing zero accounting drift fee + sum(sellers) == gross_amount. Features composite unique key idempotency, cryptographically signed webhooks with timestamp binding, and constant-time signature verification via crypto.timingSafeEqual.',
+                        metrics: [
+                            { label: 'Idempotency', value: 'Zero Double-Spending (P2002)', icon: 'fas fa-fingerprint' },
+                            { label: 'Accounting Precision', value: '100% Integer-Cent Split', icon: 'fas fa-coins' },
+                            { label: 'Cryptography', value: 'HMAC-SHA256 + Timing-Safe', icon: 'fas fa-shield-alt' }
+                        ],
+                        architecture: [
+                            { layer: 'Client / Checkout SPA', tech: 'React 18 + Tailwind CSS + Framer Motion', role: 'Interactive checkout interface with instant PIX QR Code rendering and card validation' },
+                            { layer: 'Gateway API & Auth', tech: 'Fastify + Stateless JWT + Rate Limiting', role: 'Zod payload validation, IP/key throttling and strict PCI memory redaction' },
+                            { layer: 'Transaction Engine', tech: 'Prisma ORM + PostgreSQL ACID', role: 'Idempotency guarantee via @@unique([merchantId, externalId]) and optimistic concurrency locking' },
+                            { layer: 'Webhook Dispatcher', tech: 'HMAC-SHA256 + Exponential Backoff', role: 'Resilient asynchronous merchant notification dispatch with 3 retries and random jitter' }
+                        ],
+                        challenge: 'Eliminating race conditions in concurrent transactions that caused double-spending vulnerabilities, shielding webhook delivery against timing attacks, and eliminating floating-point rounding errors in marketplace splits.',
+                        solution: 'Implementation of composite unique idempotency keys handling PostgreSQL P2002 conflicts with idempotent replay (HTTP 200), pure integer-cent financial math (Math.round), timestamp-bound HMAC signatures, and constant-time crypto.timingSafeEqual comparisons.',
+                        highlights: [
+                            'Proven atomic idempotency: race conditions eliminated via PostgreSQL uniqueness constraints with X-Idempotent-Replay: true',
+                            'Mathematically exact accounting split: strict validation rejecting fractional discrepancies with HTTP 422 Unprocessable Entity',
+                            'Cryptographic shielding: webhook signatures protected against timing attacks and replay attacks via timestamp binding',
+                            'Asynchronous webhook dispatcher with automatic retries, 5-second timeout, and exponential backoff with jitter',
+                            'Strict PCI-DSS hygiene: PAN and CVV never stored in database and redacted from memory and application logs'
+                        ]
+                    }
+                },
+                {
+                    id: 102,
+                    title: 'PortLog OS',
+                    description: 'Port logistics and heavy crane (STS/RTG) maintenance OS with strict multi-tenant RBAC governance, finite state machine (FSM) Kanban, IoT predictive telemetry, and UTC-audited MTTR.',
+                    image_url: '/portlog_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/portlog-os',
+                    demo_link: 'https://portlog-os.vercel.app',
+                    tags: ['React', 'TypeScript', 'Fastify', 'Prisma', 'PostgreSQL', 'Multi-tenant', 'RBAC', 'IoT Telemetry', 'FSM'],
+                    details: {
+                        subtitle: 'Port Logistics, Work Order Finite State Machine & Industrial Predictive Telemetry',
+                        fullDescription: 'Mission-critical operations platform for container terminals and export processing zones (EPZ). Engineered with React 18, Fastify, and PostgreSQL with Prisma ORM, the application orchestrates preventive and corrective maintenance for Ship-to-Shore (STS) Cranes, Rubber-Tired Gantry (RTG) Cranes, and Reach Stackers. Governance is built upon uncompromised multi-tenant isolation by terminalId and role-based access control (RBAC) with a deterministic finite state machine, preventing illegal Kanban transitions and delivering fault-tolerant vibration and thermal IoT telemetry.',
+                        metrics: [
+                            { label: 'Isolation', value: 'Zero Data Leakage (Multi-tenant)', icon: 'fas fa-building' },
+                            { label: 'FSM Reliability', value: '100% Validated Transitions', icon: 'fas fa-project-diagram' },
+                            { label: 'IoT Telemetry', value: '< 200ms Continuous Stream', icon: 'fas fa-satellite-dish' }
+                        ],
+                        architecture: [
+                            { layer: 'Frontend UI / Kanban', tech: 'React 18 + Framer Motion + Tailwind', role: 'Interactive drag-and-drop Kanban board with automatic optimistic rollback and live telemetry' },
+                            { layer: 'Tenant Isolation & RBAC', tech: 'Fastify Hook + JWT + Tenant Guard', role: 'Compulsory terminalId injection in 100% of routes and role-based permissions validation' },
+                            { layer: 'FSM Workflow Engine', tech: 'Domain State Machine Validator', role: 'Strict status transition matrix (TRIAGEM -> APROVADA -> EM_EXECUCAO -> CONCLUIDA) with checklist guard' },
+                            { layer: 'IoT Ingestion & Metrics', tech: 'Zod Sensor Limits + UTC MTTR Math', role: 'Sanitization of physical sensor telemetry anomalies and precise UTC MTTR calculation in milliseconds' }
+                        ],
+                        challenge: 'Preventing confidential data leaks between competing port terminal operators sharing the same database infrastructure, and preventing corrupted states in heavy machinery maintenance work orders.',
+                        solution: 'Enforcing terminalId injection at the middleware and query level, validating permissible status progressions via a finite state machine, and gating completion behind completed checklist items.',
+                        highlights: [
+                            'Absolute multi-tenant isolation: 100% of queries scoped by terminalId, completely eliminating cross-tenant leakage',
+                            'Robust finite state machine: illegal work order status progressions blocked with HTTP 422 Unprocessable Entity',
+                            'Granular RBAC governance: critical actions restricted to authorized operational supervisors and administrators',
+                            'Append-only audit trail: immutable log recording user, client IP, and UTC timestamp for every status change',
+                            'Sanitized IoT telemetry with physical threshold bounds in Zod for temperature, vibration, and hydraulic pressure'
+                        ]
+                    }
+                },
+                {
+                    id: 103,
+                    title: 'SPECTR TestOps',
+                    description: 'Enterprise TestOps platform inspired by Postman ergonomics with suite and single request runners, recursive OpenAPI/JSON Schema contract validation, Chaos Engineering, and p50/p90/p95/p99 latency percentiles.',
+                    image_url: '/spectr_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/spectr-testops',
+                    demo_link: 'https://spectr-testops.vercel.app',
+                    tags: ['React', 'TypeScript', 'Fastify', 'Tailwind CSS', 'Framer Motion', 'OpenAPI', 'Chaos Engineering', 'p95 SLA'],
+                    details: {
+                        subtitle: 'Enterprise TestOps Platform, Contract Validation & Chaos Engineering',
+                        fullDescription: 'Enterprise quality engineering and API observability workstation inspired by Postman, Datadog, and K6 ergonomics. Engineered with React 18, Framer Motion, and a high-throughput Fastify backend in TypeScript, the platform supports regression test suite authoring, single request dispatch with real-time JSON syntax highlighting, deep recursive OpenAPI/JSON Schema contract validation, and Chaos Lab stress testing (artificial latency, 503 outages, flaky connections). Performance analytics employ the standardized NIST Nearest Rank method for unbiased p50, p90, p95, and p99 percentile calculation.',
+                        metrics: [
+                            { label: 'OpenAPI Compliance', value: '100% Recursive Validation', icon: 'fas fa-file-contract' },
+                            { label: 'Latency Analytics', value: 'p50 / p90 / p95 / p99 Percentiles', icon: 'fas fa-chart-line' },
+                            { label: 'Resilience', value: 'Chaos Lab + Zero Memory Leaks', icon: 'fas fa-biohazard' }
+                        ],
+                        architecture: [
+                            { layer: 'Workstation UI', tech: 'React 18 + Postman Design Tokens + Framer Motion', role: 'Modern UI with calibrated Dark/Light theme, zero layout shift language dropdown, and syntax highlighter' },
+                            { layer: 'Execution Engine', tech: 'Fastify + AbortController + Fetch Engine', role: 'Sequential and concurrent test runner with instant cancellation of in-flight requests' },
+                            { layer: 'Assertion & Contract Validator', tech: 'Recursive Schema Validator', role: 'Strict OpenAPI contract validation supporting primitive types, nested objects, and typed arrays' },
+                            { layer: 'Chaos & Telemetry Lab', tech: 'Socket Lifecycle Timers + Statistical Math', role: 'Stress injection with immediate timer release on socket close and Nearest Rank percentile calculation' }
+                        ],
+                        challenge: 'Ensuring complex JSON Schema validations eliminate false-positives in deeply nested payloads, and preventing Node.js event loop memory leaks caused by lingering timers during high-concurrency chaos simulations.',
+                        solution: 'Engineering a deep recursive schema validation engine with strict typing, Nearest Rank percentile statistics, and socket close cleanup for simulation timers.',
+                        highlights: [
+                            'Postman-grade enterprise ergonomics: dynamic vector branding, calibrated #1C1C1C dark and light palettes with WCAG AA',
+                            'Recursive OpenAPI contract validator: deep validation for nested objects, primitive types, and typed array items',
+                            'Mathematical latency analytics: p50, p90, p95, and p99 tail percentiles calculated with statistical rigor',
+                            'Integrated Chaos Engineering: delay injection with connection-close cleanup, 503 errors, and intermittent failures',
+                            'Real structured SLA and compliance report exports in JSON and CSV formats'
+                        ]
+                    }
+                },
+
                 {
                     id: 1,
                     title: 'ERP Backoffice',
@@ -939,6 +1139,106 @@ export const translations = {
             filterBackend: 'Backend & APIs',
             filterOthers: 'Otros',
             list: [
+                {
+                    id: 101,
+                    title: 'PayStream Gateway',
+                    description: 'Pasarela de pagos fintech de alto rendimiento con liquidación de split en centavos enteros, idempotencia atómica P2002 en PostgreSQL, webhooks firmados con HMAC-SHA256 y protección contra timing attacks.',
+                    image_url: '/paystream_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/paystream-gateway',
+                    demo_link: 'https://paystream-gateway.onrender.com',
+                    tags: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256', 'Fintech', 'React', 'Tailwind CSS'],
+                    details: {
+                        subtitle: 'Core Banking y Pasarela de Pagos Resiliente con Liquidación Split e Idempotencia Atómica',
+                        fullDescription: 'Arquitectura corporativa de procesamiento financiero desarrollada con Node.js, Fastify y Prisma ORM sobre PostgreSQL. La pasarela implementa procesamiento atómico de transacciones PIX y Tarjeta de Crédito con liquidación split calculada estrictamente en centavos enteros, garantizando la conservación contable absoluta tasa + suma(sellers) == valor_bruto. Cuenta con idempotencia por clave compuesta única, webhooks firmados criptográficamente con timestamp binding y verificación en tiempo constante con crypto.timingSafeEqual.',
+                        metrics: [
+                            { label: 'Idempotencia', value: 'Cero Double-Spending (P2002)', icon: 'fas fa-fingerprint' },
+                            { label: 'Precisión Contable', value: '100% Split en Centavos', icon: 'fas fa-coins' },
+                            { label: 'Criptografía', value: 'HMAC-SHA256 + Timing-Safe', icon: 'fas fa-shield-alt' }
+                        ],
+                        architecture: [
+                            { layer: 'Client / Checkout SPA', tech: 'React 18 + Tailwind CSS + Framer Motion', role: 'Interfaz interactiva de checkout con generación instantánea de PIX QR Code y validación de tarjeta' },
+                            { layer: 'Gateway API & Auth', tech: 'Fastify + JWT Stateless + Rate Limiting', role: 'Validación Zod de payloads, control de solicitudes por IP/clave y sanitización estricta de datos PCI' },
+                            { layer: 'Transaction Engine', tech: 'Prisma ORM + PostgreSQL ACID', role: 'Garantía de idempotencia vía @@unique([merchantId, externalId]) y bloqueo optimista en concurrencia' },
+                            { layer: 'Webhook Dispatcher', tech: 'HMAC-SHA256 + Exponential Backoff', role: 'Envío asíncrono resiliente de notificaciones para comercios con 3 reintentos y jitter aleatorio' }
+                        ],
+                        challenge: 'Eliminar condiciones de carrera en transacciones simultáneas que provocaban vulnerabilidades de double-spending, proteger los webhooks contra timing attacks y erradicar errores de redondeo de punto flotante en splits de marketplace.',
+                        solution: 'Implementación de clave compuesta única de idempotencia manejando conflictos P2002 con respuesta idempotente (HTTP 200), aritmética financiera en centavos enteros (Math.round), firmas HMAC vinculadas a timestamp y crypto.timingSafeEqual en tiempo constante.',
+                        highlights: [
+                            'Idempotencia atómica comprobada: condiciones de carrera resueltas vía restricción de unicidad en PostgreSQL con X-Idempotent-Replay: true',
+                            'Split contable matemáticamente exacto: validación estricta que rechaza divergencias con HTTP 422 Unprocessable Entity',
+                            'Blindaje criptográfico: firmas de webhook protegidas contra timing attacks y replay attacks vía timestamp binding',
+                            'Dispatcher de webhooks asíncrono con reintentos automáticos, timeout de 5 segundos y backoff exponencial con jitter',
+                            'Higiene estricta PCI-DSS: número de tarjeta y CVV nunca almacenados en base de datos y redactados en memoria y logs'
+                        ]
+                    }
+                },
+                {
+                    id: 102,
+                    title: 'PortLog OS',
+                    description: 'Sistema operativo de logística portuaria y mantenimiento de grúas pesadas (STS/RTG) con gobernanza RBAC multi-tenant estricta, máquina de estados finita (FSM) en Kanban, telemetría predictiva IoT y MTTR en UTC.',
+                    image_url: '/portlog_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/portlog-os',
+                    demo_link: 'https://portlog-os.vercel.app',
+                    tags: ['React', 'TypeScript', 'Fastify', 'Prisma', 'PostgreSQL', 'Multi-tenant', 'RBAC', 'IoT Telemetry', 'FSM'],
+                    details: {
+                        subtitle: 'Logística Portuaria, FSM de Órdenes de Trabajo y Telemetría Predictiva Industrial',
+                        fullDescription: 'Plataforma de misión crítica para la gestión operativa en terminales de contenedores y zonas francas (ZPE). Desarrollada con React 18, Fastify y PostgreSQL con Prisma ORM, la aplicación orquesta el mantenimiento preventivo y correctivo de grúas pórtico para buques (STS), grúas pórtico sobre neumáticos (RTG) y Reach Stackers. La gobernanza se fundamenta en un aislamiento multi-tenant estricto por terminalId y control de acceso basado en roles (RBAC) con máquina de estados finita determinista.',
+                        metrics: [
+                            { label: 'Aislamiento', value: 'Cero Fugas de Datos (Multi-tenant)', icon: 'fas fa-building' },
+                            { label: 'Fiabilidad FSM', value: '100% Transiciones Validadas', icon: 'fas fa-project-diagram' },
+                            { label: 'Telemetría IoT', value: '< 200ms Streaming Continuo', icon: 'fas fa-satellite-dish' }
+                        ],
+                        architecture: [
+                            { layer: 'Frontend UI / Kanban', tech: 'React 18 + Framer Motion + Tailwind', role: 'Tablero Kanban interactivo con drag-and-drop, rollback optimista automático y telemetría en vivo' },
+                            { layer: 'Tenant Isolation & RBAC', tech: 'Fastify Hook + JWT + Tenant Guard', role: 'Inyección obligatoria de terminalId en 100% de rutas y validación de permisos por rol' },
+                            { layer: 'FSM Workflow Engine', tech: 'Domain State Machine Validator', role: 'Matriz estricta de transiciones (TRIAGEM -> APROVADA -> EM_EXECUCAO -> CONCLUIDA) con validación de checklist' },
+                            { layer: 'IoT Ingestion & Metrics', tech: 'Zod Sensor Limits + UTC MTTR Math', role: 'Sanitización contra anomalías físicas en sensores y cálculo determinista de MTTR en milisegundos UTC' }
+                        ],
+                        challenge: 'Prevenir fugas de información confidencial entre operadores portuarios competidores que comparten la misma base de datos, y evitar estados corruptos en órdenes de trabajo de maquinaria pesada.',
+                        solution: 'Inyección forzada del terminalId a nivel de middleware y consulta, validación estricta de progresiones de estado mediante una máquina de estados finita y bloqueo de cierre ante checklists incompletos.',
+                        highlights: [
+                            'Aislamiento multi-tenant absoluto: 100% de consultas acotadas por terminalId, eliminando fugas entre operadores',
+                            'Máquina de estados finita robusta: transiciones ilegales en el ciclo de mantenimiento bloqueadas con HTTP 422',
+                            'Gobernanza RBAC granular: acciones críticas restringidas a supervisores y administradores maestros autorizados',
+                            'Registro de auditoría append-only: historial inmutable con usuario, IP y timestamp UTC para cada cambio de estado',
+                            'Telemetría IoT sanitizada con umbrales físicos Zod para temperatura, vibración y presión hidráulica'
+                        ]
+                    }
+                },
+                {
+                    id: 103,
+                    title: 'SPECTR TestOps',
+                    description: 'Plataforma corporativa de TestOps inspirada en la ergonomía de Postman con runner de colecciones e requisições isoladas, validação recursiva de contratos OpenAPI/JSON Schema, Chaos Engineering e percentis estatísticos p50/p90/p95/p99.',
+                    image_url: '/spectr_mockup.jpg',
+                    repo_link: 'https://github.com/pedrhenriqueol/spectr-testops',
+                    demo_link: 'https://spectr-testops.vercel.app',
+                    tags: ['React', 'TypeScript', 'Fastify', 'Tailwind CSS', 'Framer Motion', 'OpenAPI', 'Chaos Engineering', 'p95 SLA'],
+                    details: {
+                        subtitle: 'Plataforma Corporativa de TestOps, Validación de Contratos y Chaos Engineering',
+                        fullDescription: 'Estación de ingeniería de calidad y observabilidad de APIs inspirada en la ergonomía de Postman, Datadog y K6. Desarrollada con React 18, Framer Motion y Fastify en TypeScript, la plataforma permite crear suites de pruebas de regresión, disparar peticiones individuales con visor JSON y syntax highlighting, validar contratos OpenAPI/JSON Schema recursivos y ejecutar pruebas de resiliencia en Chaos Lab. Los percentiles p50, p90, p95 y p99 se calculan mediante el método estandarizado Nearest Rank del NIST.',
+                        metrics: [
+                            { label: 'Conformidad OpenAPI', value: '100% Validación Recursiva', icon: 'fas fa-file-contract' },
+                            { label: 'Métricas de Latencia', value: 'Percentiles p50 / p90 / p95 / p99', icon: 'fas fa-chart-line' },
+                            { label: 'Resiliencia', value: 'Chaos Lab + Cero Memory Leaks', icon: 'fas fa-biohazard' }
+                        ],
+                        architecture: [
+                            { layer: 'Workstation UI', tech: 'React 18 + Postman Design Tokens + Framer Motion', role: 'Interfaz moderna con tema Claro/Oscuro calibrado, dropdown de idioma sin layout shift y visor JSON' },
+                            { layer: 'Execution Engine', tech: 'Fastify + AbortController + Fetch Engine', role: 'Motor de ejecución secuencial y concurrente con cancelación asíncrona inmediata de peticiones en vuelo' },
+                            { layer: 'Assertion & Contract Validator', tech: 'Recursive Schema Validator', role: 'Validación estricta de contratos OpenAPI con soporte a tipos primitivos, objetos anidados y arrays' },
+                            { layer: 'Chaos & Telemetry Lab', tech: 'Socket Lifecycle Timers + Statistical Math', role: 'Inyección de estrés con liberación de temporizadores en cierre de socket y cálculo estadístico Nearest Rank' }
+                        ],
+                        challenge: 'Garantizar que las validaciones de esquemas JSON no produzcan falsos positivos en estructuras anidadas, y prevenir fugas de memoria en Node.js por temporizadores pendientes en simulaciones de caos.',
+                        solution: 'Desarrollo de un motor de validación recursivo con tipado estricto, cálculo de percentiles por Nearest Rank y liberación de temporizadores al cierre de conexión.',
+                        highlights: [
+                            'Ergonomía empresarial estilo Postman: logotipo vectorial dinámico, paleta oscura (#1C1C1C) y clara con WCAG AA',
+                            'Validador recursivo de contratos OpenAPI: inspección profunda de objetos anidados, tipos primitivos y arrays',
+                            'Analítica matemática de latencia: percentiles de cola p50, p90, p95 y p99 calculados con rigor estadístico',
+                            'Chaos Engineering integrado: inyección de retardo con descarte de temporizadores, errores 503 y fallos intermitentes',
+                            'Exportación real de informes de SLA y auditoría en formatos estructurados JSON y CSV'
+                        ]
+                    }
+                },
+
                 {
                     id: 1,
                     title: 'Backoffice ERP',

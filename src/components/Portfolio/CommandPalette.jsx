@@ -31,6 +31,41 @@ export default function CommandPalette() {
             ],
         },
         {
+            group: lang === 'en' ? 'Flagship Projects' : lang === 'es' ? 'Proyectos Principales' : 'Projetos em Destaque',
+            items: [
+                {
+                    id: 'proj-paystream',
+                    icon: 'fas fa-coins',
+                    label: 'PayStream Gateway (Fintech Core Banking)',
+                    hint: 'Fastify + Prisma + HMAC',
+                    action: () => {
+                        scrollTo('projetos');
+                        window.open('https://github.com/pedrhenriqueol/paystream-gateway', '_blank');
+                    },
+                },
+                {
+                    id: 'proj-portlog',
+                    icon: 'fas fa-ship',
+                    label: 'PortLog OS (Terminal Operations & FSM)',
+                    hint: 'React + Multi-tenant + IoT',
+                    action: () => {
+                        scrollTo('projetos');
+                        window.open('https://github.com/pedrhenriqueol/portlog-os', '_blank');
+                    },
+                },
+                {
+                    id: 'proj-spectr',
+                    icon: 'fas fa-vial',
+                    label: 'SPECTR TestOps (API Quality & Chaos Lab)',
+                    hint: 'Postman-grade + OpenAPI + SLA',
+                    action: () => {
+                        scrollTo('projetos');
+                        window.open('https://github.com/pedrhenriqueol/spectr-testops', '_blank');
+                    },
+                },
+            ],
+        },
+        {
             group: lang === 'en' ? 'Actions' : lang === 'es' ? 'Acciones' : 'Ações',
             items: [
                 {
