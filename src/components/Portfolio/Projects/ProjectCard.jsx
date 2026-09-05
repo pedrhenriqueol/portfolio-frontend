@@ -191,8 +191,8 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                     <i className="fab fa-github text-[13px] shrink-0" />
                                     <span className="truncate">{t ? t('projects.btnRepo') : 'Repositório'}</span>
                                 </a>
-                            ) : isPrivate && !hasDetails ? (
-                                <span className="flex-1 py-2 px-2.5 bg-darker/40 border border-primary/20 text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed">
+                            ) : isPrivate ? (
+                                <span className="flex-1 py-2 px-2.5 bg-darker/40 border border-primary/20 text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed" title={t ? t('projects.privado') : 'Projeto Corporativo Privado'}>
                                     <i className="fas fa-lock text-[10px] shrink-0" />
                                     <span className="truncate">{t ? t('projects.privado') : 'Privado'}</span>
                                 </span>
