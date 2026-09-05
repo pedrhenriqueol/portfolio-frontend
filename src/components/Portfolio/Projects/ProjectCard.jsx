@@ -1,30 +1,56 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useCallback } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { projectCategory } from '../../../utils/projects';
 import ProjectThumbnail from './ProjectThumbnail';
 
+/**
+ * ProjectCard - Card Refatorado com Tilt Magnético 3D, Spotlight CSS e Vocabulário PT-BR Técnico
+ * 
+ * - Rotação tridimensional (rotateX, rotateY) baseada no centro do card (máx 6°).
+ * - Física de mola desacoplada via useSpring (stiffness: 220, damping: 25).
+ * - Spotlight radial injetado via CSS Custom Properties (--mouse-x, --mouse-y) sem re-render.
+ * - Vocabulário estritamente técnico em Português: "Acessar Demonstração", "Detalhes Técnicos", "Código-Fonte".
+ */
 export default function ProjectCard({ project, viewMode = 'grid', index = 0, onSelect, t, lang }) {
     const hasDetails = Boolean(project?.details);
     const isPrivate = !project?.repo_link && !project?.demo_link;
     const category = projectCategory(project);
 
-    // ── Spotlight Mouse Glow (Grid Mode) ──
     const cardRef = useRef(null);
-    const [glowPos, setGlowPos] = useState({ x: 0, y: 0, active: false });
+
+    // ── Física de Tilt Magnético 3D desacoplada ──
+    const xPct = useMotionValue(0);
+    const yPct = useMotionValue(0);
+
+    const springConfig = { damping: 25, stiffness: 220, mass: 0.5 };
+    const xSpring = useSpring(xPct, springConfig);
+    const ySpring = useSpring(yPct, springConfig);
+
+    const rotateX = useTransform(ySpring, [-0.5, 0.5], ['6deg', '-6deg']);
+    const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-6deg', '6deg']);
 
     const handleMouseMove = useCallback((e) => {
         if (!cardRef.current) return;
         const rect = cardRef.current.getBoundingClientRect();
-        setGlowPos({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-            active: true,
-        });
-    }, []);
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // 1. Injeta coordenadas no CSS para o Spotlight luminoso sem disparar re-render
+        cardRef.current.style.setProperty('--mouse-x', `${mouseX}px`);
+        cardRef.current.style.setProperty('--mouse-y', `${mouseY}px`);
+        cardRef.current.style.setProperty('--glow-opacity', '1');
+
+        // 2. Calcula deslocamento relativo normalizado em relação ao centro (-0.5 a 0.5)
+        xPct.set(mouseX / rect.width - 0.5);
+        yPct.set(mouseY / rect.height - 0.5);
+    }, [xPct, yPct]);
 
     const handleMouseLeave = useCallback(() => {
-        setGlowPos(prev => ({ ...prev, active: false }));
-    }, []);
+        if (!cardRef.current) return;
+        cardRef.current.style.setProperty('--glow-opacity', '0');
+        xPct.set(0);
+        yPct.set(0);
+    }, [xPct, yPct]);
 
     // ── MODO DE VISUALIZAÇÃO EM LISTA ──
     if (viewMode === 'list') {
@@ -94,7 +120,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                             className="py-1.5 px-3 border border-white/15 bg-darker/80 text-primary text-xs font-semibold rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer flex items-center gap-1.5"
                         >
                             <i className="fas fa-info-circle text-accent text-[11px]" />
-                            <span>{t ? t('projects.btnDetails') : 'Detalhes'}</span>
+                            <span>Detalhes Técnicos</span>
                         </button>
                     )}
 
@@ -106,7 +132,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
                             className="p-2 border border-white/15 bg-darker/80 text-primary hover:text-white hover:border-white/30 text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center"
-                            title={t ? t('projects.btnRepo') : 'Repositório GitHub'}
+                            title="Código-Fonte no GitHub"
                         >
                             <i className="fab fa-github text-[13px]" />
                         </a>
@@ -121,7 +147,7 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                             data-cursor-morph="true"
                             className="py-1.5 px-3 bg-accent text-darker text-xs font-bold rounded-lg hover:bg-accent-hover transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                         >
-                            <span>{t ? t('projects.btnDemo') : 'Demo'}</span>
+                            <span>Acessar Demonstração</span>
                             <i className="fas fa-external-link-alt text-[9px]" />
                         </a>
                     )}
@@ -130,33 +156,37 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
         );
     }
 
-    // ── MODO DE VISUALIZAÇÃO EM GRID ──
+    // ── MODO DE VISUALIZAÇÃO EM GRID COM TILT MAGNÉTICO 3D ──
     return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.94 }}
-            transition={{ duration: 0.35, delay: index * 0.05 }}
-            className="h-full flex flex-col"
-        >
-            <div
+        <div style={{ perspective: 1000 }} className="h-full">
+            <motion.div
+                layout
                 ref={cardRef}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
-                className={`bg-darker rounded-xl overflow-hidden border border-primary/30 group hover:border-secondary/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col h-full relative ${
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.94 }}
+                transition={{ duration: 0.35, delay: index * 0.05 }}
+                style={{
+                    rotateX,
+                    rotateY,
+                    transformStyle: 'preserve-3d',
+                }}
+                className={`bg-darker rounded-xl overflow-hidden border border-primary/30 group hover:border-secondary/50 hover:shadow-[0_25px_60px_rgba(0,0,0,0.65)] transition-shadow duration-300 flex flex-col h-full relative will-change-transform ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
                 onClick={hasDetails ? () => onSelect(project) : undefined}
             >
-                {/* ── 0. Spotlight Mouse Glow Overlay ── */}
+                {/* ── 0. Spotlight Mouse Glow Overlay (Zero Re-render) ── */}
                 <div
-                    className="absolute inset-0 z-10 pointer-events-none rounded-xl transition-opacity duration-300"
+                    className="absolute inset-0 z-10 pointer-events-none select-none rounded-xl transition-opacity duration-200"
                     style={{
-                        opacity: glowPos.active ? 1 : 0,
-                        background: `radial-gradient(600px circle at ${glowPos.x}px ${glowPos.y}px, rgba(var(--color-accent-rgb), 0.07), transparent 40%)`,
+                        opacity: 'var(--glow-opacity, 0)',
+                        background: 'radial-gradient(500px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(var(--color-accent-rgb), 0.085), transparent 45%)',
                     }}
                 />
+
                 {/* ── 1. Thumbnail Real (Split Dual-Pane ou Single Panorâmico) ── */}
                 <ProjectThumbnail 
                     project={project} 
@@ -190,9 +220,8 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                         {project.description}
                     </p>
 
-                    {/* ── 3. Footer de Ações Reestruturado em Hierarquia de 2 Linhas (Zero Overflow) ── */}
+                    {/* ── 3. Footer de Ações com Hierarquia e Vocabulário Normalizado ── */}
                     <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-2.5">
-                        {/* Linha Superior: Ações Secundárias (Detalhes Técnicos & Repositório) */}
                         <div className="flex items-center gap-2">
                             {hasDetails && (
                                 <button
@@ -201,10 +230,10 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                         onSelect(project);
                                     }}
                                     data-cursor-morph="true"
-                                    className="flex-1 py-2 px-2.5 bg-darker/80 border border-white/15 text-primary hover:text-accent hover:border-accent/40 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                                    className="flex-1 py-2 px-2.5 bg-darker/80 border border-white/15 text-primary hover:text-accent hover:border-accent/40 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                                 >
-                                    <i className="fas fa-info-circle text-accent text-[11px] shrink-0" />
-                                    <span className="truncate">{t ? t('projects.btnDetails') : 'Detalhes'}</span>
+                                    <i className="fas fa-microchip text-accent text-[11px] shrink-0" />
+                                    <span className="truncate">Detalhes Técnicos</span>
                                 </button>
                             )}
 
@@ -215,20 +244,19 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                     rel="noreferrer"
                                     onClick={(e) => e.stopPropagation()}
                                     data-cursor-morph="true"
-                                    className="flex-1 py-2 px-2.5 bg-darker/80 border border-white/15 text-primary hover:text-white hover:border-white/30 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                                    className="flex-1 py-2 px-2.5 bg-darker/80 border border-white/15 text-primary hover:text-white hover:border-white/30 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                                 >
                                     <i className="fab fa-github text-[13px] shrink-0" />
-                                    <span className="truncate">{t ? t('projects.btnRepo') : 'Repositório'}</span>
+                                    <span className="truncate">Código-Fonte</span>
                                 </a>
                             ) : isPrivate ? (
-                                <span className="flex-1 py-2 px-2.5 bg-darker/40 border border-primary/20 text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed" title={t ? t('projects.privado') : 'Projeto Corporativo Privado'}>
+                                <span className="flex-1 py-2 px-2.5 bg-darker/40 border border-primary/20 text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed" title="Sistema Corporativo Privado">
                                     <i className="fas fa-lock text-[10px] shrink-0" />
-                                    <span className="truncate">{t ? t('projects.privado') : 'Privado'}</span>
+                                    <span className="truncate">Corporativo</span>
                                 </span>
                             ) : null}
                         </div>
 
-                        {/* Linha Inferior: Ação Primária de Destaque (Acessar Demo em Largura Total) */}
                         {project.demo_link && (
                             <a
                                 href={project.demo_link}
@@ -236,15 +264,15 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 data-cursor-morph="true"
-                                className="w-full py-2.5 px-4 bg-accent text-darker font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(255,108,55,0.3)] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer text-center"
+                                className="w-full py-2.5 px-4 bg-accent text-darker font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(255,108,55,0.3)] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer text-center active:scale-95"
                             >
-                                <span>{t ? t('projects.btnDemo') : 'Acessar Demo'}</span>
+                                <span>Acessar Demonstração</span>
                                 <i className="fas fa-external-link-alt text-[10px]" />
                             </a>
                         )}
                     </div>
                 </div>
-            </div>
-        </motion.div>
+            </motion.div>
+        </div>
     );
 }

@@ -1,4 +1,6 @@
 import { lazy, Suspense, useState, useCallback, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import InteractiveParticleField from './components/Portfolio/InteractiveParticleField';
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import NavBar from './components/Portfolio/NavBar';
@@ -10,12 +12,14 @@ import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import { useLanguage } from './context/LanguageContext';
 
 // ── Lazy-loaded below-the-fold sections for instant first load & optimal TTI ──
-const ExperienceSection = lazy(() => import('./components/Portfolio/ExperienceSection'));
-const SkillsSection     = lazy(() => import('./components/Portfolio/SkillsSection'));
-const ProjectsSection   = lazy(() => import('./components/Portfolio/ProjectsSection'));
-const ContactSection    = lazy(() => import('./components/Portfolio/ContactSection'));
-const CommandPalette    = lazy(() => import('./components/Portfolio/CommandPalette'));
-const LiveTelemetryMesh = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
+const FeaturedProjectsCarousel = lazy(() => import('./components/Portfolio/Projects/FeaturedProjectsCarousel'));
+const ExperienceSection        = lazy(() => import('./components/Portfolio/ExperienceSection'));
+const SkillsSection            = lazy(() => import('./components/Portfolio/SkillsSection'));
+const ProjectsSection          = lazy(() => import('./components/Portfolio/ProjectsSection'));
+const ProjectModal             = lazy(() => import('./components/Portfolio/ProjectModal'));
+const ContactSection           = lazy(() => import('./components/Portfolio/ContactSection'));
+const CommandPalette           = lazy(() => import('./components/Portfolio/CommandPalette'));
+const LiveTelemetryMesh        = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
 
 function SectionSkeleton() {
     return (
@@ -46,6 +50,7 @@ export default function App() {
     const [telemetryOpen, setTelemetryOpen] = useState(false);
     const [avgLatency, setAvgLatency] = useState(null);
     const [viewMode, setViewMode] = useState('grid');
+    const [selectedProject, setSelectedProject] = useState(null);
 
     const toggleTelemetry = useCallback(() => {
         setTelemetryOpen(v => !v);
@@ -63,7 +68,10 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker">
+        <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative">
+            {/* Lusion Canvas 2D Physical Particle Field */}
+            <InteractiveParticleField />
+
             {/* Global micro-effects */}
             <CustomCursor />
             <ClickSparks />
@@ -94,6 +102,14 @@ export default function App() {
             <main className="pb-8 lg:pb-10">
                 <HeroSection />
                 <AboutSection />
+
+                {/* ── Camada 1: Destaque Principal (Carrossel Arrastável Sem Scroll Hijacking) ── */}
+                <Suspense fallback={<SectionSkeleton />}>
+                    <FeaturedProjectsCarousel
+                        onSelectProject={setSelectedProject}
+                        projects={PROJECTS}
+                    />
+                </Suspense>
                 
                 <Suspense fallback={<SectionSkeleton />}>
                     <ExperienceSection experiences={EXPERIENCES} />
@@ -103,6 +119,7 @@ export default function App() {
                     <SkillsSection skills={SKILLS} />
                 </Suspense>
 
+                {/* ── Camada 2: Projetos Corporativos & Soluções (Grid com Filtros) ── */}
                 <Suspense fallback={<SectionSkeleton />}>
                     <ProjectsSection 
                         projects={PROJECTS} 
@@ -115,6 +132,18 @@ export default function App() {
                     <ContactSection />
                 </Suspense>
             </main>
+
+            {/* Global Modal para projetos inspecionados via KineticShowcase */}
+            <AnimatePresence>
+                {selectedProject && (
+                    <Suspense fallback={null}>
+                        <ProjectModal
+                            project={selectedProject}
+                            onClose={() => setSelectedProject(null)}
+                        />
+                    </Suspense>
+                )}
+            </AnimatePresence>
 
             <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
                 <p>© {new Date().getFullYear()} {t('contact.rights')}</p>

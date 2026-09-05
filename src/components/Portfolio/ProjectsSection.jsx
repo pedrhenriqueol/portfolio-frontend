@@ -4,6 +4,7 @@ import ProjectModal from './ProjectModal';
 import ProjectCard from './Projects/ProjectCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { FILTER_ICONS, projectCategory } from '../../utils/projects';
+import { playTabSwitch, playMechanicalClick } from '../../lib/sound';
 
 export default function ProjectsSection({ projects, viewMode: propViewMode, onViewModeChange }) {
     const [selected, setSelected]   = useState(null);
@@ -21,11 +22,18 @@ export default function ProjectsSection({ projects, viewMode: propViewMode, onVi
         { id: 'outros',    label: t('projects.filterOthers')    || 'Outros' },
     ], [t]);
 
-    const filtered = useMemo(() => {
+    const FLAGSHIP_IDS = [101, 102, 103];
+
+    // Separação em Camadas: Remove a tríade flagship para eliminar 100% da duplicação
+    const corporateProjects = useMemo(() => {
         if (!Array.isArray(projects)) return [];
-        if (activeFilter === 'all') return projects;
-        return projects.filter(p => projectCategory(p) === activeFilter);
-    }, [projects, activeFilter]);
+        return projects.filter(p => !FLAGSHIP_IDS.includes(p.id));
+    }, [projects]);
+
+    const filtered = useMemo(() => {
+        if (activeFilter === 'all') return corporateProjects;
+        return corporateProjects.filter(p => projectCategory(p) === activeFilter);
+    }, [corporateProjects, activeFilter]);
 
     return (
         <section id="projetos" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30">
@@ -35,7 +43,7 @@ export default function ProjectsSection({ projects, viewMode: propViewMode, onVi
             </AnimatePresence>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
+                {/* Header Camada 2: Projetos Corporativos & Soluções */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -44,13 +52,15 @@ export default function ProjectsSection({ projects, viewMode: propViewMode, onVi
                     className="text-center mb-10"
                 >
                     <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                        {t('projects.tag')}
+                        {lang === 'en' ? 'CORPORATE PORTFOLIO & SOLUTIONS' : 'PORTFÓLIO CORPORATIVO & SOLUÇÕES'}
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
-                        {t('projects.title')}
+                        {lang === 'en' ? 'Enterprise Systems & Utilities' : 'Projetos Corporativos & Soluções'}
                     </h2>
                     <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
-                        {t('projects.subtitle')}
+                        {lang === 'en'
+                            ? 'ERP administration, legacy desktop migration, fiscal compliance, and software engineering tools.'
+                            : 'Sistemas de gestão empresarial (ERP/PDV), modernização de legados, módulos fiscais e utilitários.'}
                     </p>
                 </motion.div>
 
@@ -62,23 +72,30 @@ export default function ProjectsSection({ projects, viewMode: propViewMode, onVi
                     transition={{ duration: 0.5, delay: 0.15 }}
                     className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8"
                 >
-                    {/* Filter tabs */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        {FILTERS.map(f => (
-                            <button
-                                key={f.id}
-                                onClick={() => setFilter(f.id)}
-                                data-cursor-morph="true"
-                                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded-full transition-all duration-200 cursor-pointer ${
-                                    activeFilter === f.id
-                                        ? 'bg-accent text-darker border-accent shadow-xs'
-                                        : 'bg-darker/50 text-primary border-primary/25 hover:border-accent/40 hover:text-accent'
-                                }`}
-                            >
-                                <i className={`${FILTER_ICONS[f.id]} text-[9px]`} />
-                                {f.label}
-                            </button>
-                        ))}
+                    {/* Filter tabs com overflow rígido e máscara de gradiente */}
+                    <div className="relative max-w-full w-full sm:w-auto overflow-hidden">
+                        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-dark to-transparent z-10 sm:hidden" />
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-dark to-transparent z-10 sm:hidden" />
+                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 px-1">
+                            {FILTERS.map(f => (
+                                <button
+                                    key={f.id}
+                                    onClick={() => {
+                                        playTabSwitch();
+                                        setFilter(f.id);
+                                    }}
+                                    data-cursor-morph="true"
+                                    className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded-full transition-all duration-200 cursor-pointer shrink-0 ${
+                                        activeFilter === f.id
+                                            ? 'bg-accent text-darker border-accent shadow-xs font-bold'
+                                            : 'bg-darker/50 text-primary border-primary/25 hover:border-accent/40 hover:text-accent'
+                                    }`}
+                                >
+                                    <i className={`${FILTER_ICONS[f.id]} text-[9px]`} />
+                                    <span>{f.label}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* View toggle (Grid / Lista) */}

@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 import { useLanguage } from '../../../context/LanguageContext';
+import { isMuted, toggleMute, playMechanicalClick } from '../../../lib/sound';
 
 function DockTooltip({ label, shortcut, visible }) {
     return (
@@ -75,8 +76,22 @@ export default function Dock({
     const { palette, setPalette, palettes } = useTheme();
     const { lang } = useLanguage();
     const [mobileExpanded, setMobileExpanded] = useState(false);
+    const [audioMuted, setAudioMuted] = useState(() => isMuted());
 
-    // Cycle through palette keys
+    // Sincroniza estado de áudio com eventos globais
+    useEffect(() => {
+        const handler = (e) => {
+            if (e?.detail?.muted !== undefined) {
+                setAudioMuted(e.detail.muted);
+            } else {
+                setAudioMuted(isMuted());
+            }
+        };
+        window.addEventListener('audio-mute-change', handler);
+        return () => window.removeEventListener('audio-mute-change', handler);
+    }, []);
+
+    // Ciclo de paletas
     const paletteKeys = useMemo(() => Object.keys(palettes), [palettes]);
     const cycleTheme = useCallback(() => {
         const currentIdx = paletteKeys.indexOf(palette);
@@ -84,13 +99,18 @@ export default function Dock({
         setPalette(paletteKeys[nextIdx]);
     }, [palette, paletteKeys, setPalette]);
 
-    // Open Command Palette via global shortcut event
+    // Dispara Command Palette
     const openCommandPalette = useCallback(() => {
         window.dispatchEvent(new KeyboardEvent('keydown', {
             key: 'k',
             ctrlKey: true,
             bubbles: true,
         }));
+    }, []);
+
+    const handleAudioToggle = useCallback(() => {
+        const newMuted = toggleMute();
+        setAudioMuted(newMuted);
     }, []);
 
     const dockItems = useMemo(() => [
@@ -117,6 +137,14 @@ export default function Dock({
                 ? (lang === 'en' ? 'Switch to List' : lang === 'es' ? 'Ver en Lista' : 'Alternar para Lista') 
                 : (lang === 'en' ? 'Switch to Grid' : lang === 'es' ? 'Ver en Grade' : 'Alternar para Grade') 
         },
+        { 
+            id: 'audio', 
+            icon: audioMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up', 
+            labelKey: audioMuted 
+                ? (lang === 'en' ? 'Unmute Audio Haptics' : lang === 'es' ? 'Activar Audio Háptico' : 'Ativar Áudio Háptico') 
+                : (lang === 'en' ? 'Mute Audio Haptics' : lang === 'es' ? 'Silenciar Audio' : 'Silenciar Áudio'),
+            shortcut: 'M'
+        },
         { id: 'divider' },
         { 
             id: 'github', 
@@ -136,9 +164,10 @@ export default function Dock({
             labelKey: lang === 'en' ? 'Email' : 'E-mail', 
             href: 'mailto:pedrohc.forza@gmail.com' 
         },
-    ], [lang, viewMode]);
+    ], [lang, viewMode, audioMuted]);
 
     const handleClick = useCallback((id) => {
+        playMechanicalClick();
         switch (id) {
             case 'cmd':
                 openCommandPalette();
@@ -152,16 +181,20 @@ export default function Dock({
             case 'density':
                 onToggleViewMode?.();
                 break;
+            case 'audio':
+                handleAudioToggle();
+                break;
             default:
                 break;
         }
-    }, [openCommandPalette, onToggleTelemetry, cycleTheme, onToggleViewMode]);
+    }, [openCommandPalette, onToggleTelemetry, cycleTheme, onToggleViewMode, handleAudioToggle]);
 
     const getActiveState = useCallback((id) => {
         if (id === 'telemetry') return isTelemetryOpen;
         if (id === 'density') return viewMode === 'list';
+        if (id === 'audio') return !audioMuted;
         return false;
-    }, [isTelemetryOpen, viewMode]);
+    }, [isTelemetryOpen, viewMode, audioMuted]);
 
     return (
         <>
@@ -208,7 +241,7 @@ export default function Dock({
                                         <Tag
                                             {...linkProps}
                                             onClick={!isLink ? () => { handleClick(item.id); setMobileExpanded(false); } : undefined}
-                                            className="flex items-center gap-2 px-3.5 py-2 bg-darker/95 border border-white/15 rounded-xl backdrop-blur-xl text-primary text-xs shadow-lg"
+                                            className="flex items-center gap-2 px-3.5 py-2 bg-darker/95 border border-white/15 rounded-xl backdrop-blur-xl text-primary text-xs shadow-lg cursor-pointer"
                                         >
                                             <i className={`${item.icon} text-accent w-4`} />
                                             <span>{item.labelKey}</span>
@@ -222,7 +255,7 @@ export default function Dock({
 
                 <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setMobileExpanded(v => !v)}
+                    onClick={() => { playMechanicalClick(); setMobileExpanded(v => !v); }}
                     className="w-12 h-12 rounded-full bg-accent text-darker flex items-center justify-center shadow-xl cursor-pointer"
                     aria-label="Abrir Menu da Workstation"
                 >
