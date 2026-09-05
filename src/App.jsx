@@ -12,7 +12,7 @@ import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import { useLanguage } from './context/LanguageContext';
 
 // ── Lazy-loaded below-the-fold sections for instant first load & optimal TTI ──
-const FeaturedProjectsCarousel = lazy(() => import('./components/Portfolio/Projects/FeaturedProjectsCarousel'));
+const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
 const ExperienceSection        = lazy(() => import('./components/Portfolio/ExperienceSection'));
 const SkillsSection            = lazy(() => import('./components/Portfolio/SkillsSection'));
 const ProjectsSection          = lazy(() => import('./components/Portfolio/ProjectsSection'));
@@ -103,9 +103,9 @@ export default function App() {
                 <HeroSection />
                 <AboutSection />
 
-                {/* ── Camada 1: Destaque Principal (Carrossel Arrastável Sem Scroll Hijacking) ── */}
+                {/* ── Camada 1: Destaque Principal (Esteira Cilíndrica 3D Contínua) ── */}
                 <Suspense fallback={<SectionSkeleton />}>
-                    <FeaturedProjectsCarousel
+                    <Cylindrical3DShowcase
                         onSelectProject={setSelectedProject}
                         projects={PROJECTS}
                     />
