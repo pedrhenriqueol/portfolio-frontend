@@ -3,8 +3,8 @@ import React, { useEffect, useRef } from 'react';
 /**
  * InteractiveParticleField - Lusion-inspired Physical Particle Mesh in Canvas 2D
  * 
- * - Discrete technical grid nodes in translucent slate/white.
- * - Cursor exerts elastic repulsion force within 120px radius.
+ * - Discrete technical grid nodes and subtle connections in translucent slate/white.
+ * - Cursor acceleration generates gentle dispersion waves up to 180px.
  * - Restored to rest position via Hooke's Law spring-damping physics.
  * - requestAnimationFrame paused when document is hidden (zero battery drain).
  * - High-DPI (Retina) calibration and automatic window resize.
@@ -21,17 +21,24 @@ export default function InteractiveParticleField() {
         let animationFrameId = null;
         let isVisible = !document.hidden;
 
-        // Mouse coordinates and radius
-        const mouse = { x: -1000, y: -1000, radius: 120 };
+        // Mouse coordinates, velocity and dynamic radius
+        const mouse = {
+            x: -1000,
+            y: -1000,
+            lastX: -1000,
+            lastY: -1000,
+            speed: 0,
+            baseRadius: 120,
+            currentRadius: 120,
+        };
 
-        // Grid particles array
         let particles = [];
 
-        // Density configuration
-        const SPACING = 55; // pixels between nodes
-        const SPRING_K = 0.04; // Spring stiffness
-        const DAMPING = 0.86; // Velocity damping (friction)
-        const REPULSION_FORCE = 7.5; // Mouse push strength
+        // Density & Physics constants
+        const SPACING = 54; // pixels between nodes
+        const SPRING_K = 0.045; // Spring stiffness
+        const DAMPING = 0.86; // Velocity friction
+        const REPULSION_FORCE = 8.0;
 
         const handleResize = () => {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -62,31 +69,44 @@ export default function InteractiveParticleField() {
                         vx: 0,
                         vy: 0,
                         radius: (i + j) % 4 === 0 ? 1.4 : 1.0,
-                        baseAlpha: (i + j) % 5 === 0 ? 0.12 : 0.06,
+                        baseAlpha: (i + j) % 5 === 0 ? 0.11 : 0.05,
                     });
                 }
             }
         };
 
+        let lastMoveTime = performance.now();
+
         const handleMouseMove = (e) => {
+            const now = performance.now();
+            const dt = Math.max(now - lastMoveTime, 1);
+            const dist = Math.hypot(e.clientX - mouse.x, e.clientY - mouse.y);
+            mouse.speed = dist / dt; // px/ms
+
+            mouse.lastX = mouse.x;
+            mouse.lastY = mouse.y;
             mouse.x = e.clientX;
             mouse.y = e.clientY;
+            lastMoveTime = now;
+
+            // Onda de dispersão suave expandindo o raio de força conforme a aceleração do mouse
+            const targetRadius = Math.min(180, mouse.baseRadius + mouse.speed * 30);
+            mouse.currentRadius = targetRadius;
         };
 
         const handleMouseLeave = () => {
             mouse.x = -1000;
             mouse.y = -1000;
+            mouse.speed = 0;
+            mouse.currentRadius = mouse.baseRadius;
         };
 
         const handleVisibilityChange = () => {
             isVisible = !document.hidden;
             if (isVisible) {
-                lastTime = performance.now();
                 render();
             }
         };
-
-        let lastTime = performance.now();
 
         const render = () => {
             if (!isVisible) return;
@@ -96,24 +116,31 @@ export default function InteractiveParticleField() {
 
             ctx.clearRect(0, 0, width, height);
 
-            // Render loop with physics step
+            // Decaimento suave do raio de dispersão do mouse
+            mouse.currentRadius += (mouse.baseRadius - mouse.currentRadius) * 0.08;
+
+            const activeRadius = mouse.currentRadius;
+            const displacedNodes = [];
+
+            // 1. Atualização da física de cada partícula
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
 
-                // 1. Mouse Repulsion Force
+                // Repulsão pelo cursor do mouse
                 const dx = mouse.x - p.x;
                 const dy = mouse.y - p.y;
                 const dist = Math.hypot(dx, dy);
 
-                if (dist < mouse.radius && dist > 0.1) {
-                    const factor = (1 - dist / mouse.radius);
+                if (dist < activeRadius && dist > 0.1) {
+                    const factor = (1 - dist / activeRadius);
                     const angle = Math.atan2(dy, dx);
-                    const force = factor * REPULSION_FORCE;
+                    // Força amplificada com a aceleração do mouse
+                    const force = factor * (REPULSION_FORCE + mouse.speed * 4);
                     p.vx -= Math.cos(angle) * force;
                     p.vy -= Math.sin(angle) * force;
                 }
 
-                // 2. Spring force returning to rest origin (Hooke's Law + Damping)
+                // Mola retornando ao repouso (Hooke's Law + Damping)
                 const ax = (p.originX - p.x) * SPRING_K;
                 const ay = (p.originY - p.y) * SPRING_K;
 
@@ -123,22 +150,44 @@ export default function InteractiveParticleField() {
                 p.x += p.vx;
                 p.y += p.vy;
 
-                // 3. Draw particle
                 const displacement = Math.hypot(p.x - p.originX, p.y - p.originY);
-                const dynamicAlpha = Math.min(p.baseAlpha + displacement * 0.015, 0.45);
+                if (displacement > 2) {
+                    displacedNodes.push(p);
+                }
+
+                // Desenha a partícula
+                const dynamicAlpha = Math.min(p.baseAlpha + displacement * 0.02, 0.45);
 
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius + (displacement > 2 ? 0.4 : 0), 0, Math.PI * 2);
-                ctx.fillStyle = displacement > 4 
-                    ? `rgba(217, 119, 87, ${dynamicAlpha})` // Sutil tom accent ao deslocar
+                ctx.arc(p.x, p.y, p.radius + (displacement > 3 ? 0.4 : 0), 0, Math.PI * 2);
+                ctx.fillStyle = displacement > 4
+                    ? `rgba(217, 119, 87, ${dynamicAlpha})`
                     : `rgba(255, 255, 255, ${dynamicAlpha})`;
                 ctx.fill();
+            }
+
+            // 2. Conexões translúcidas entre nós deslocados adjacentes
+            const maxConnectDist = 62;
+            for (let i = 0; i < displacedNodes.length; i++) {
+                for (let j = i + 1; j < displacedNodes.length; j++) {
+                    const p1 = displacedNodes[i];
+                    const p2 = displacedNodes[j];
+                    const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                    if (dist < maxConnectDist) {
+                        const alpha = (1 - dist / maxConnectDist) * 0.14;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(217, 119, 87, ${alpha})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
             }
 
             animationFrameId = requestAnimationFrame(render);
         };
 
-        // Initialize
         handleResize();
         render();
 

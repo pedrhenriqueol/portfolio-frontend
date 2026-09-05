@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
 /** Faz highlight de métricas numéricas e termos técnicos-chave no texto */
@@ -20,8 +21,123 @@ function HighlightedText({ text }) {
     );
 }
 
+/** Card de Experiência com Micro-tilt 3D sutil de ±4° interpolado por física de mola */
+function ExperienceCard({ exp, isCurrent, lang }) {
+    const cardRef = useRef(null);
+    const xPct = useMotionValue(0);
+    const yPct = useMotionValue(0);
+
+    const springConfig = { damping: 24, stiffness: 200, mass: 0.4 };
+    const xSpring = useSpring(xPct, springConfig);
+    const ySpring = useSpring(yPct, springConfig);
+
+    const rotateX = useTransform(ySpring, [-0.5, 0.5], ['4deg', '-4deg']);
+    const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-4deg', '4deg']);
+
+    const handleMouseMove = (e) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        xPct.set((e.clientX - rect.left) / rect.width - 0.5);
+        yPct.set((e.clientY - rect.top) / rect.height - 0.5);
+    };
+
+    const handleMouseLeave = () => {
+        xPct.set(0);
+        yPct.set(0);
+    };
+
+    return (
+        <div style={{ perspective: 1000 }} className="w-full">
+            <motion.div
+                ref={cardRef}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                    rotateX,
+                    rotateY,
+                    transformStyle: 'preserve-3d',
+                }}
+                data-cursor-card="true"
+                className="bg-darker rounded-2xl border border-primary/30 hover:border-accent/50 transition-colors duration-300 shadow-2xl overflow-hidden group will-change-transform"
+            >
+                {/* Card Header */}
+                <div className="p-6 sm:p-8 border-b border-primary/20 bg-white/[0.01]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
+                                {exp.company}
+                            </h3>
+                            {isCurrent && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-green-500/10 text-green-400 border border-green-500/30">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    {lang === 'en' ? 'Current Role' : lang === 'es' ? 'Puesto Actual' : 'Cargo Atual'}
+                                </span>
+                            )}
+                        </div>
+                        <span className="text-xs font-mono text-primary/70 bg-dark px-3 py-1 rounded-md border border-primary/20 self-start sm:self-auto">
+                            {exp.period}
+                        </span>
+                    </div>
+
+                    <p className="text-secondary font-medium text-sm sm:text-base font-sans mb-4">
+                        {exp.role}
+                    </p>
+
+                    {/* Tech Badges */}
+                    {exp.techBadges && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                            {exp.techBadges.map((badge, bIdx) => (
+                                <span
+                                    key={bIdx}
+                                    className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/5 text-primary/80 border border-white/10 group-hover:border-accent/30 transition-colors"
+                                >
+                                    {badge}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Card Groups (Responsabilidades / Conquistas) */}
+                {exp.groups && exp.groups.length > 0 && (
+                    <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-dark/40">
+                        {exp.groups.map((group, gIdx) => (
+                            <div key={gIdx} className="space-y-3">
+                                <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
+                                    <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
+                                    <span>{group.title}</span>
+                                </div>
+                                <ul className="space-y-2">
+                                    {group.items && group.items.map((item, iIdx) => (
+                                        <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
+                                            <span className="text-accent mt-1.5 text-[8px]">•</span>
+                                            <span><HighlightedText text={item} /></span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </motion.div>
+        </div>
+    );
+}
+
 export default function ExperienceSection({ experiences }) {
     const { t, lang } = useLanguage();
+    const sectionRef = useRef(null);
+
+    // Linha de progresso da timeline preenchida dinamicamente conforme a rolagem vertical
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ['start 75%', 'end 60%'],
+    });
+
+    const timelineScaleY = useSpring(scrollYProgress, {
+        stiffness: 180,
+        damping: 25,
+    });
 
     const summaryStats = [
         {
@@ -47,7 +163,11 @@ export default function ExperienceSection({ experiences }) {
     ];
 
     return (
-        <section id="experiencia" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30">
+        <section
+            id="experiencia"
+            ref={sectionRef}
+            className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30"
+        >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* ── Section Header ── */}
@@ -96,8 +216,14 @@ export default function ExperienceSection({ experiences }) {
 
                 {/* ── Timeline de Experiências ── */}
                 <div className="space-y-8 relative">
-                    {/* Linha vertical conectora */}
-                    <div className="hidden md:block absolute left-8 top-6 bottom-6 w-[2px] bg-gradient-to-b from-accent via-secondary/40 to-primary/20 pointer-events-none" />
+                    {/* Linha vertical conectora de base */}
+                    <div className="hidden md:block absolute left-8 top-6 bottom-6 w-[2px] bg-white/10 pointer-events-none rounded-full overflow-hidden">
+                        {/* Linha preenchida dinamicamente conforme scroll */}
+                        <motion.div
+                            style={{ scaleY: timelineScaleY, originY: 0 }}
+                            className="w-full h-full bg-gradient-to-b from-accent via-secondary to-accent shadow-[0_0_8px_rgba(217,119,87,0.6)]"
+                        />
+                    </div>
 
                     {experiences && experiences.length > 0 ? (
                         experiences.map((exp, expIdx) => {
@@ -113,75 +239,12 @@ export default function ExperienceSection({ experiences }) {
                                     className="relative md:pl-20"
                                 >
                                     {/* Marcador na linha do tempo (Desktop) */}
-                                    <div className="hidden md:flex absolute left-6 top-8 -translate-x-1/2 w-8 h-8 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.5)] z-10">
+                                    <div className="hidden md:flex absolute left-8 top-8 -translate-x-1/2 w-8 h-8 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.5)] z-10">
                                         <div className={`w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-green-400 animate-ping' : 'bg-accent'}`} />
                                     </div>
 
-                                    {/* Card de Experiência */}
-                                    <div
-                                        data-cursor-card="true"
-                                        className="bg-darker rounded-2xl border border-primary/30 hover:border-accent/50 transition-all duration-300 shadow-2xl overflow-hidden group"
-                                    >
-                                        {/* Card Header */}
-                                        <div className="p-6 sm:p-8 border-b border-primary/20 bg-white/[0.01]">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-                                                <div className="flex items-center gap-3">
-                                                    <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
-                                                        {exp.company}
-                                                    </h3>
-                                                    {isCurrent && (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-green-500/10 text-green-400 border border-green-500/30">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                                            {lang === 'en' ? 'Current Role' : lang === 'es' ? 'Puesto Actual' : 'Cargo Atual'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <span className="text-xs font-mono text-primary/70 bg-dark px-3 py-1 rounded-md border border-primary/20 self-start sm:self-auto">
-                                                    {exp.period}
-                                                </span>
-                                            </div>
-
-                                            <p className="text-secondary font-medium text-sm sm:text-base font-sans mb-4">
-                                                {exp.role}
-                                            </p>
-
-                                            {/* Tech Badges */}
-                                            {exp.techBadges && (
-                                                <div className="flex flex-wrap gap-1.5 pt-1">
-                                                    {exp.techBadges.map((badge, bIdx) => (
-                                                        <span
-                                                            key={bIdx}
-                                                            className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/5 text-primary/80 border border-white/10 group-hover:border-accent/30 transition-colors"
-                                                        >
-                                                            {badge}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Card Groups (Responsabilidades / Conquistas) */}
-                                        {exp.groups && exp.groups.length > 0 && (
-                                            <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-dark/40">
-                                                {exp.groups.map((group, gIdx) => (
-                                                    <div key={gIdx} className="space-y-3">
-                                                        <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
-                                                            <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
-                                                            <span>{group.title}</span>
-                                                        </div>
-                                                        <ul className="space-y-2">
-                                                            {group.items && group.items.map((item, iIdx) => (
-                                                                <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
-                                                                    <span className="text-accent mt-1.5 text-[8px]">•</span>
-                                                                    <span><HighlightedText text={item} /></span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                    {/* Card com Micro-tilt 3D */}
+                                    <ExperienceCard exp={exp} isCurrent={isCurrent} lang={lang} />
                                 </motion.div>
                             );
                         })

@@ -49,9 +49,9 @@ function SkillCard({ skill, index }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.35, delay: index * 0.03 }}
-            whileHover={{ y: -4, scale: 1.01 }}
+            whileHover={{ y: -3, scale: 1.03 }}
             data-no-card-morph="true"
-            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transform-gpu overflow-hidden border border-white/10 hover:border-white/25"
+            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-accent/40 transform-gpu overflow-hidden border border-white/10"
         >
             {/* Top row: Icon (Neutro no repouso -> Revela Brand Color no Hover) + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
@@ -144,28 +144,42 @@ export default function SkillsSection({ skills = [] }) {
                     </p>
 
                     {/* Visualizer Mode Toggle */}
-                    <div className="inline-flex items-center p-1 rounded-full bg-darker border border-primary/25 shadow-lg">
+                    <div className="inline-flex items-center p-1 rounded-full bg-darker border border-primary/25 shadow-lg relative">
                         <button
                             onClick={() => setViewMode('sphere')}
                             data-cursor-morph="true"
-                            className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 cursor-pointer ${
+                            className={`relative z-10 flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-colors duration-200 cursor-pointer ${
                                 viewMode === 'sphere'
-                                    ? 'bg-accent text-darker shadow-md'
+                                    ? 'text-darker'
                                     : 'text-gray-400 hover:text-white'
                             }`}
                         >
+                            {viewMode === 'sphere' && (
+                                <motion.div
+                                    layoutId="skillsViewModePill"
+                                    className="absolute inset-0 bg-accent rounded-full -z-10 shadow-md"
+                                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                />
+                            )}
                             <i className="fas fa-globe text-xs" />
                             <span>{lang === 'en' ? 'Orbital 3D Sphere' : lang === 'es' ? 'Esfera 3D Orbital' : 'Esfera 3D Orbital'}</span>
                         </button>
                         <button
                             onClick={() => setViewMode('grid')}
                             data-cursor-morph="true"
-                            className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 cursor-pointer ${
+                            className={`relative z-10 flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold tracking-wider transition-colors duration-200 cursor-pointer ${
                                 viewMode === 'grid'
-                                    ? 'bg-accent text-darker shadow-md'
+                                    ? 'text-darker'
                                     : 'text-gray-400 hover:text-white'
                             }`}
                         >
+                            {viewMode === 'grid' && (
+                                <motion.div
+                                    layoutId="skillsViewModePill"
+                                    className="absolute inset-0 bg-accent rounded-full -z-10 shadow-md"
+                                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                />
+                            )}
                             <i className="fas fa-th-large text-xs" />
                             <span>{lang === 'en' ? 'Detailed Grid' : lang === 'es' ? 'Grade Detallada' : 'Grade Detalhada'}</span>
                         </button>
@@ -195,22 +209,34 @@ export default function SkillsSection({ skills = [] }) {
                                 transition={{ duration: 0.3 }}
                                 className="w-full flex flex-col items-center"
                             >
-                                {/* Categorias Filtro do Grid */}
+                                {/* Categorias Filtro do Grid com Pílula Deslizante layoutId */}
                                 <div className="flex flex-wrap justify-center gap-2 mb-8">
-                                    {CATEGORIES.map((cat) => (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => setSelectedCategory(cat.id)}
-                                            data-cursor-morph="true"
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
-                                                selectedCategory === cat.id
-                                                    ? 'bg-accent text-darker shadow-sm'
-                                                    : 'bg-darker/60 text-primary border border-primary/25 hover:border-accent/40 hover:text-accent'
-                                            }`}
-                                        >
-                                            {lang === 'en' ? cat.labelEn : lang === 'es' ? cat.labelEs : cat.labelPt}
-                                        </button>
-                                    ))}
+                                    {CATEGORIES.map((cat) => {
+                                        const isSelected = selectedCategory === cat.id;
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                onClick={() => setSelectedCategory(cat.id)}
+                                                data-cursor-morph="true"
+                                                className={`relative z-10 px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-colors duration-200 cursor-pointer ${
+                                                    isSelected
+                                                        ? 'text-darker font-bold'
+                                                        : 'bg-darker/60 text-primary border border-primary/25 hover:border-accent/40 hover:text-accent'
+                                                }`}
+                                            >
+                                                {isSelected && (
+                                                    <motion.div
+                                                        layoutId="skillsCategoryPill"
+                                                        className="absolute inset-0 bg-accent rounded-full -z-10 shadow-[0_2px_10px_rgba(217,119,87,0.3)]"
+                                                        transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                                    />
+                                                )}
+                                                <span className="relative z-10">
+                                                    {lang === 'en' ? cat.labelEn : lang === 'es' ? cat.labelEs : cat.labelPt}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
 
                                 {/* Cards em Grid Harmonioso */}

@@ -19,7 +19,7 @@ export default function MagneticButton({
     href,
     target,
     rel,
-    as: Tag = 'button',
+    as,
     playSound = true,
     ...props
 }) {
@@ -66,7 +66,8 @@ export default function MagneticButton({
         }
     }, [onClick, playSound]);
 
-    const MotionComponent = Tag === 'a' ? motion.a : motion.button;
+    const resolvedTag = as || (href ? 'a' : (onClick ? 'button' : 'div'));
+    const MotionComponent = resolvedTag === 'a' ? motion.a : (resolvedTag === 'button' ? motion.button : motion.div);
 
     return (
         <MotionComponent
