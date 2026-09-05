@@ -66,6 +66,48 @@ export default function CommandPalette() {
             ],
         },
         {
+            group: lang === 'en' ? 'Live Deploys' : lang === 'es' ? 'Deploys en Vivo' : 'Deploys ao Vivo',
+            items: [
+                {
+                    id: 'deploy-paystream',
+                    icon: 'fas fa-rocket',
+                    label: 'PayStream Gateway — Vercel Production',
+                    hint: 'paystream-gateway.vercel.app',
+                    action: () => window.open('https://paystream-gateway.vercel.app', '_blank'),
+                },
+                {
+                    id: 'deploy-portlog',
+                    icon: 'fas fa-rocket',
+                    label: 'PortLog OS — Vercel Production',
+                    hint: 'portlog-os.vercel.app',
+                    action: () => window.open('https://portlog-os.vercel.app', '_blank'),
+                },
+                {
+                    id: 'deploy-spectr',
+                    icon: 'fas fa-rocket',
+                    label: 'SPECTR TestOps — Vercel Production',
+                    hint: 'spectr-testops.vercel.app',
+                    action: () => window.open('https://spectr-testops.vercel.app', '_blank'),
+                },
+            ],
+        },
+        {
+            group: lang === 'en' ? 'Engineering' : lang === 'es' ? 'Ingeniería' : 'Engenharia',
+            items: [
+                {
+                    id: 'health-check',
+                    icon: 'fas fa-heartbeat',
+                    label: lang === 'en' ? 'Health Check — API Mesh Scan' : lang === 'es' ? 'Health Check — Escaneo de API Mesh' : 'Health Check — Varredura da Malha de APIs',
+                    hint: '3 endpoints',
+                    action: () => {
+                        window.dispatchEvent(new CustomEvent('trigger-health-check'));
+                        window.dispatchEvent(new CustomEvent('open-telemetry'));
+                        toast(lang === 'en' ? 'Health check triggered! 📡' : lang === 'es' ? '¡Health check iniciado! 📡' : 'Health check disparado! 📡');
+                    },
+                },
+            ],
+        },
+        {
             group: lang === 'en' ? 'Actions' : lang === 'es' ? 'Acciones' : 'Ações',
             items: [
                 {

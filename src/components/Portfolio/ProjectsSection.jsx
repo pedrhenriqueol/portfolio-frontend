@@ -5,10 +5,12 @@ import ProjectCard from './Projects/ProjectCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { FILTER_ICONS, projectCategory } from '../../utils/projects';
 
-export default function ProjectsSection({ projects }) {
+export default function ProjectsSection({ projects, viewMode: propViewMode, onViewModeChange }) {
     const [selected, setSelected]   = useState(null);
     const [activeFilter, setFilter] = useState('all');
-    const [viewMode, setViewMode]   = useState('grid'); // 'grid' | 'list'
+    const [internalViewMode, setInternalViewMode] = useState('grid');
+    const viewMode = propViewMode !== undefined ? propViewMode : internalViewMode;
+    const setViewMode = onViewModeChange || setInternalViewMode;
     const { t, lang } = useLanguage();
 
     const FILTERS = useMemo(() => [

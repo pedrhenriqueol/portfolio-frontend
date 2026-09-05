@@ -1,10 +1,12 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useCallback, useEffect } from 'react';
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import NavBar from './components/Portfolio/NavBar';
 import HeroSection from './components/Portfolio/HeroSection';
 import AboutSection from './components/Portfolio/AboutSection';
 import SoundEngine from './components/Portfolio/SoundEngine';
+import Dock from './components/Portfolio/Workstation/Dock';
+import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import { useLanguage } from './context/LanguageContext';
 
 // ── Lazy-loaded below-the-fold sections for instant first load & optimal TTI ──
@@ -13,6 +15,7 @@ const SkillsSection     = lazy(() => import('./components/Portfolio/SkillsSectio
 const ProjectsSection   = lazy(() => import('./components/Portfolio/ProjectsSection'));
 const ContactSection    = lazy(() => import('./components/Portfolio/ContactSection'));
 const CommandPalette    = lazy(() => import('./components/Portfolio/CommandPalette'));
+const LiveTelemetryMesh = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
 
 function SectionSkeleton() {
     return (
@@ -39,6 +42,26 @@ export default function App() {
     const SKILLS = Array.isArray(skillsData) ? skillsData : [];
     const PROJECTS = Array.isArray(projectsData) ? projectsData : [];
 
+    // ── Workstation State ──
+    const [telemetryOpen, setTelemetryOpen] = useState(false);
+    const [avgLatency, setAvgLatency] = useState(null);
+    const [viewMode, setViewMode] = useState('grid');
+
+    const toggleTelemetry = useCallback(() => {
+        setTelemetryOpen(v => !v);
+    }, []);
+
+    const toggleViewMode = useCallback(() => {
+        setViewMode(v => v === 'grid' ? 'list' : 'grid');
+    }, []);
+
+    // Listen for open-telemetry events from CommandPalette
+    useEffect(() => {
+        const handler = () => setTelemetryOpen(true);
+        window.addEventListener('open-telemetry', handler);
+        return () => window.removeEventListener('open-telemetry', handler);
+    }, []);
+
     return (
         <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker">
             {/* Global micro-effects */}
@@ -50,9 +73,25 @@ export default function App() {
                 <CommandPalette />
             </Suspense>
 
+            {/* ── Workstation Layer (Additive — does NOT replace existing content) ── */}
+            <Dock
+                onToggleTelemetry={toggleTelemetry}
+                isTelemetryOpen={telemetryOpen}
+                viewMode={viewMode}
+                onToggleViewMode={toggleViewMode}
+            />
+            <StatusBar avgLatency={avgLatency} />
+            <Suspense fallback={null}>
+                <LiveTelemetryMesh
+                    isOpen={telemetryOpen}
+                    onClose={() => setTelemetryOpen(false)}
+                    onLatencyUpdate={setAvgLatency}
+                />
+            </Suspense>
+
             <NavBar />
 
-            <main>
+            <main className="pb-8 lg:pb-10">
                 <HeroSection />
                 <AboutSection />
                 
@@ -65,7 +104,11 @@ export default function App() {
                 </Suspense>
 
                 <Suspense fallback={<SectionSkeleton />}>
-                    <ProjectsSection projects={PROJECTS} />
+                    <ProjectsSection 
+                        projects={PROJECTS} 
+                        viewMode={viewMode}
+                        onViewModeChange={setViewMode}
+                    />
                 </Suspense>
 
                 <Suspense fallback={<SectionSkeleton />}>
@@ -73,7 +116,7 @@ export default function App() {
                 </Suspense>
             </main>
 
-            <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm">
+            <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
                 <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
             </footer>
         </div>

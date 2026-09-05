@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { projectCategory } from '../../../utils/projects';
 import ProjectThumbnail from './ProjectThumbnail';
@@ -7,6 +7,24 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
     const hasDetails = Boolean(project?.details);
     const isPrivate = !project?.repo_link && !project?.demo_link;
     const category = projectCategory(project);
+
+    // ── Spotlight Mouse Glow (Grid Mode) ──
+    const cardRef = useRef(null);
+    const [glowPos, setGlowPos] = useState({ x: 0, y: 0, active: false });
+
+    const handleMouseMove = useCallback((e) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        setGlowPos({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+            active: true,
+        });
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+        setGlowPos(prev => ({ ...prev, active: false }));
+    }, []);
 
     // ── MODO DE VISUALIZAÇÃO EM LISTA ──
     if (viewMode === 'list') {
@@ -123,11 +141,22 @@ export default function ProjectCard({ project, viewMode = 'grid', index = 0, onS
             className="h-full flex flex-col"
         >
             <div
-                className={`bg-darker rounded-xl overflow-hidden border border-primary/30 group hover:border-secondary/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col h-full ${
+                ref={cardRef}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                className={`bg-darker rounded-xl overflow-hidden border border-primary/30 group hover:border-secondary/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6)] transition-all duration-300 flex flex-col h-full relative ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
                 onClick={hasDetails ? () => onSelect(project) : undefined}
             >
+                {/* ── 0. Spotlight Mouse Glow Overlay ── */}
+                <div
+                    className="absolute inset-0 z-10 pointer-events-none rounded-xl transition-opacity duration-300"
+                    style={{
+                        opacity: glowPos.active ? 1 : 0,
+                        background: `radial-gradient(600px circle at ${glowPos.x}px ${glowPos.y}px, rgba(var(--color-accent-rgb), 0.07), transparent 40%)`,
+                    }}
+                />
                 {/* ── 1. Thumbnail Real (Split Dual-Pane ou Single Panorâmico) ── */}
                 <ProjectThumbnail 
                     project={project} 
