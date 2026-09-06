@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ProjectModal from './ProjectModal';
+import ProjectInspectorDrawer from './ProjectInspectorDrawer';
+import ModalErrorBoundary from './Common/ModalErrorBoundary';
 import ProjectCard from './Projects/ProjectCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { FILTER_ICONS, projectCategory } from '../../utils/projects';
@@ -37,10 +38,18 @@ export default function ProjectsSection({ projects, viewMode: propViewMode, onVi
 
     return (
         <section id="projetos" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30">
-            {/* Modal de Detalhes com AnimatePresence */}
-            <AnimatePresence>
-                {selected && <ProjectModal project={selected} onClose={() => setSelected(null)} />}
-            </AnimatePresence>
+            {/* Drawer de Detalhes Técnicos com AnimatePresence e Error Boundary */}
+            <ModalErrorBoundary onClose={() => setSelected(null)}>
+                <AnimatePresence mode="wait">
+                    {selected && (
+                        <ProjectInspectorDrawer
+                            key={`inspector-${selected.id}`}
+                            project={selected}
+                            onClose={() => setSelected(null)}
+                        />
+                    )}
+                </AnimatePresence>
+            </ModalErrorBoundary>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header Camada 2: Projetos Corporativos & Soluções */}

@@ -521,8 +521,10 @@ export default function TechSphere3D({ skills = [] }) {
                         </motion.div>
                     ) : (
                         <motion.p
+                            key="tech-sphere-prompt"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             className="text-xs text-gray-400 font-sans tracking-wide flex items-center gap-2 antialiased"
                         >
                             <i className="fas fa-arrows-alt text-[10px] text-accent animate-pulse" />

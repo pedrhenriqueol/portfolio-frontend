@@ -139,9 +139,10 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
     }, [results]);
 
     return (
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
             {isOpen && (
                 <motion.div
+                    key="telemetry-window"
                     ref={windowRef}
                     drag
                     dragMomentum={false}
@@ -194,9 +195,10 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                         </div>
 
                         {/* ── Corpo da Janela de Telemetria ── */}
-                        <AnimatePresence>
+                        <AnimatePresence mode="wait">
                             {!minimized ? (
                                 <motion.div
+                                    key="telemetry-expanded-body"
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
@@ -255,8 +257,13 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                     </div>
                                 </motion.div>
                             ) : (
-                                /* Estado Minimizado */
-                                <div className="px-4 py-2 flex items-center justify-between text-xs font-mono text-primary/70">
+                                <motion.div
+                                    key="telemetry-minimized-body"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="px-4 py-2 flex items-center justify-between text-xs font-mono text-primary/70"
+                                >
                                     <span className="flex items-center gap-2">
                                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                                         Monitor ativo em background
@@ -267,7 +274,7 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                     >
                                         Restaurar
                                     </button>
-                                </div>
+                                </motion.div>
                             )}
                         </AnimatePresence>
                     </div>

@@ -78,6 +78,7 @@ export default function MagneticButton({
             onClick={handleClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            whileTap={{ scale: 0.97 }}
             style={{ x: springX, y: springY }}
             className={`inline-flex items-center justify-center cursor-pointer will-change-transform ${className}`}
             {...props}

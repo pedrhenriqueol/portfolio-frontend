@@ -15,10 +15,11 @@ const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Proje
 const ExperienceSection        = lazy(() => import('./components/Portfolio/ExperienceSection'));
 const SkillsSection            = lazy(() => import('./components/Portfolio/SkillsSection'));
 const ProjectsSection          = lazy(() => import('./components/Portfolio/ProjectsSection'));
-const ProjectModal             = lazy(() => import('./components/Portfolio/ProjectModal'));
+const ProjectInspectorDrawer   = lazy(() => import('./components/Portfolio/ProjectInspectorDrawer'));
 const ContactSection           = lazy(() => import('./components/Portfolio/ContactSection'));
 const CommandPalette           = lazy(() => import('./components/Portfolio/CommandPalette'));
 const LiveTelemetryMesh        = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
+import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
 
 function SectionSkeleton() {
     return (
@@ -132,17 +133,20 @@ export default function App() {
                 </Suspense>
             </main>
 
-            {/* Global Modal para projetos inspecionados via KineticShowcase */}
-            <AnimatePresence>
-                {selectedProject && (
-                    <Suspense fallback={null}>
-                        <ProjectModal
-                            project={selectedProject}
-                            onClose={() => setSelectedProject(null)}
-                        />
-                    </Suspense>
-                )}
-            </AnimatePresence>
+            {/* Global Console para projetos inspecionados via KineticShowcase */}
+            <Suspense fallback={null}>
+                <ModalErrorBoundary onClose={() => setSelectedProject(null)}>
+                    <AnimatePresence mode="wait">
+                        {selectedProject && (
+                            <ProjectInspectorDrawer
+                                key={`inspector-${selectedProject.id}`}
+                                project={selectedProject}
+                                onClose={() => setSelectedProject(null)}
+                            />
+                        )}
+                    </AnimatePresence>
+                </ModalErrorBoundary>
+            </Suspense>
 
             <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
                 <p>© {new Date().getFullYear()} {t('contact.rights')}</p>

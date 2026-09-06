@@ -4,9 +4,10 @@ import ThemeDropdown from './ThemeDropdown';
 
 export default function MobileMenu({ isOpen, navLinks, active, scrollTo, onClose, t }) {
     return (
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
             {isOpen && (
                 <motion.div
+                    key="mobile-nav-menu"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}

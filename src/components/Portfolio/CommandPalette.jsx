@@ -281,9 +281,10 @@ export default function CommandPalette() {
             </button>
 
             {/* Toast Feedback */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {toastMsg && (
                     <motion.div
+                        key="cp-toast"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
@@ -295,7 +296,7 @@ export default function CommandPalette() {
             </AnimatePresence>
 
             {/* Modal Command Palette */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {open && (
                     <motion.div
                         key="cp-backdrop"

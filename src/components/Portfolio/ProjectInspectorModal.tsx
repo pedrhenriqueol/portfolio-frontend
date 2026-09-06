@@ -1,2 +1,2 @@
-export { default } from './ProjectModal.jsx';
-export * from './ProjectModal.jsx';
+export { default } from './ProjectInspectorDrawer';
+export * from './ProjectInspectorDrawer';

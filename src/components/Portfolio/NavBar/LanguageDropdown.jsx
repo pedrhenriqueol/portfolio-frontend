@@ -54,9 +54,10 @@ export default function LanguageDropdown({ isMobile = false, onSelect }) {
                 <i className={`fas fa-chevron-down text-[9px] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
             </button>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {open && (
                     <motion.div
+                        key="lang-dropdown-menu"
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}

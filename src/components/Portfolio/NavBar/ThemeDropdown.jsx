@@ -83,9 +83,10 @@ export default function ThemeDropdown({ isMobile = false, onSelect }) {
                 <i className={`fas fa-chevron-down text-[8px] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
             </button>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {open && (
                     <motion.div
+                        key="theme-dropdown-menu"
                         initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.97 }}

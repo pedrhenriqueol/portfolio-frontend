@@ -217,9 +217,10 @@ export default function Dock({
 
             {/* ── Mobile Floating Action Button ── */}
             <div className="lg:hidden fixed bottom-5 right-5 z-[9980]">
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {mobileExpanded && (
                         <motion.div
+                            key="dock-mobile-menu"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}

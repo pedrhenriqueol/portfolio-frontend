@@ -186,16 +186,16 @@ export default function SkillsSection({ skills = [] }) {
                     </div>
                 </motion.div>
 
-                {/* Alternância Fluida de Visualização */}
-                <div className="min-h-[500px]">
+                {/* Alternância Fluida de Visualização com layout & cross-fade amortecido */}
+                <motion.div layout transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="min-h-[520px] w-full">
                     <AnimatePresence mode="wait">
                         {viewMode === 'sphere' ? (
                             <motion.div
                                 key="sphere-view"
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -15 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                                 className="w-full flex flex-col items-center"
                             >
                                 <TechSphere3D skills={skills} />
@@ -203,10 +203,10 @@ export default function SkillsSection({ skills = [] }) {
                         ) : (
                             <motion.div
                                 key="grid-view"
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -15 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                                 className="w-full flex flex-col items-center"
                             >
                                 {/* Categorias Filtro do Grid com Pílula Deslizante layoutId */}
@@ -248,7 +248,7 @@ export default function SkillsSection({ skills = [] }) {
                             </motion.div>
                         )}
                     </AnimatePresence>
-                </div>
+                </motion.div>
 
             </div>
         </section>

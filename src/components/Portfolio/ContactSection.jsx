@@ -176,9 +176,10 @@ export default function ContactSection() {
                         <div className="relative bg-darker/90 border border-primary/25 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
                             <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
 
-                            <AnimatePresence>
+                            <AnimatePresence mode="wait">
                                 {success && (
                                     <motion.div
+                                        key="contact-success-alert"
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
@@ -191,6 +192,7 @@ export default function ContactSection() {
 
                                 {submitError && (
                                     <motion.div
+                                        key="contact-error-alert"
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
