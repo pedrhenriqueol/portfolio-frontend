@@ -17,7 +17,7 @@ const FLAGSHIP_CONFIGS = [
         description: 'Gateway corporativo de pagamentos fintech com liquidação de split multipartes em centavos inteiros, idempotência atômica via restrição P2002 no PostgreSQL e webhooks assinados com HMAC-SHA256 com proteção contra timing attacks.',
         image: '/projects/paystream-dash.png',
         techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
-        url: 'https://paystream-gateway.vercel.app',
+        url: 'https://paystream-gateaway.vercel.app',
         repo: 'https://github.com/pedrhenriqueol/paystream-gateway',
     },
     {

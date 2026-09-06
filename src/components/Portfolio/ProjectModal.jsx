@@ -524,7 +524,7 @@ function EngineeringTab({ project }) {
         setIsPinging(true);
         playPingPulse();
         const start = performance.now();
-        const targetUrl = project.demo_link || 'https://paystream-gateway.vercel.app';
+        const targetUrl = project.demo_link || project.url || 'https://paystream-gateaway.vercel.app';
 
         try {
             await fetch(targetUrl, { method: 'HEAD', mode: 'no-cors' });

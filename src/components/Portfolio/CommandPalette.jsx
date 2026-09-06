@@ -72,8 +72,8 @@ export default function CommandPalette() {
                     id: 'deploy-paystream',
                     icon: 'fas fa-rocket',
                     label: 'PayStream Gateway — Vercel Production',
-                    hint: 'paystream-gateway.vercel.app',
-                    action: () => window.open('https://paystream-gateway.vercel.app', '_blank'),
+                    hint: 'paystream-gateaway.vercel.app',
+                    action: () => window.open('https://paystream-gateaway.vercel.app', '_blank'),
                 },
                 {
                     id: 'deploy-portlog',

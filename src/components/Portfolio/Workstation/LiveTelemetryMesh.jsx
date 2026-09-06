@@ -7,7 +7,7 @@ const SERVICES = [
         id: 'paystream',
         name: 'PayStream Gateway',
         icon: 'fas fa-coins',
-        url: 'https://paystream-gateway.vercel.app',
+        url: 'https://paystream-gateaway.vercel.app',
         hint: 'Fintech Core & Split',
     },
     {
