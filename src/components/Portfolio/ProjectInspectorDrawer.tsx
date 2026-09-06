@@ -2,38 +2,40 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { playTabSwitch, playMechanicalClick } from '../../lib/sound';
-
-export interface ProjectDetails {
-    subtitle?: string;
-    fullDescription?: string;
-    challenge?: string;
-    solution?: string;
-    highlights?: string[];
-    metrics?: Array<{ label?: string; value: string; icon?: string } | string>;
-    architecture?: Array<{ layer: string; tech: string; role: string }>;
-}
-
-export interface ProjectItem {
-    id: number | string;
-    title: string;
-    description?: string;
-    image_url?: string;
-    repo_link?: string;
-    demo_link?: string;
-    tags?: string[];
-    details?: ProjectDetails;
-    [key: string]: any;
-}
+import { Project, ApiContractData, TestOpsData, ArchitectureDetailsData } from '../../types/project';
 
 interface ProjectInspectorDrawerProps {
-    project: ProjectItem;
+    project: Project;
     onClose: () => void;
+}
+
+interface ProjectEnrichedSpecs {
+    version: string;
+    ecosystemIcon: string;
+    domain: string;
+    architectureType: string;
+    volume: string;
+    database: string;
+    codeSnippet?: string;
+    concurrencyTable?: Array<{
+        lockMechanism: string;
+        exceptionHandling: string;
+        acidGuarantee: string;
+    }>;
+    challenges?: Array<{
+        problem: string;
+        impactChip: string;
+        solution: string;
+    }>;
+    apiContracts?: ApiContractData;
+    engineeringTests?: TestOpsData;
 }
 
 /* ─────────────────────────────────────────────────────────────────
    ── ESPECIFICAÇÕES DE ENGENHARIA DE ALTA DENSIDADE (FLAGSHIPS) ──
    ───────────────────────────────────────────────────────────────── */
-const FLAGSHIP_SPECS: Record<number, any> = {
+const FLAGSHIP_SPECS: Record<number, ProjectEnrichedSpecs> = {
+    // 101: PayStream Gateway
     101: {
         version: 'v1.4.2 • Produção',
         ecosystemIcon: 'fas fa-coins',
@@ -92,70 +94,6 @@ export async function executeAtomicTransfer(
                 acidGuarantee: 'Imutabilidade do payload e idempotência do dispatcher de webhooks'
             }
         ],
-        endpoints: [
-            {
-                method: 'POST',
-                route: '/api/v1/transactions',
-                description: 'Processar transação PIX ou Cartão com split de liquidação',
-                headers: [
-                    { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT assinado' },
-                    { name: 'X-Idempotency-Key', value: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', desc: 'UUID v4' },
-                    { name: 'Content-Type', value: 'application/json', desc: 'JSON estrito' }
-                ],
-                requestBody: JSON.stringify({
-                    merchantId: "mch_live_9f81a7b4",
-                    externalId: "tx_2026_0905_001",
-                    paymentMethod: "PIX",
-                    amountInCents: 15000,
-                    splits: [
-                        { recipientId: "rec_platform", amountInCents: 1500 },
-                        { recipientId: "rec_seller_1", amountInCents: 13500 }
-                    ]
-                }, null, 2),
-                responseBody: JSON.stringify({
-                    transactionId: "tx_live_8841a29f",
-                    status: "APPROVED",
-                    amountInCents: 15000,
-                    feeInCents: 1500,
-                    netAmountInCents: 13500,
-                    pixQrCode: "00020126580014br.gov.bcb.pix...",
-                    idempotentReplay: false
-                }, null, 2),
-                status: '201 Created',
-                latency: '18ms'
-            },
-            {
-                method: 'GET',
-                route: '/api/v1/merchants/:id/balance',
-                description: 'Consultar saldo consolidado e reservas financeiras do merchant',
-                headers: [
-                    { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT com scope read:balance' }
-                ],
-                requestBody: '{}',
-                responseBody: JSON.stringify({
-                    merchantId: "mch_live_9f81a7b4",
-                    availableBalanceInCents: 489200,
-                    pendingBalanceInCents: 32000,
-                    currency: "BRL"
-                }, null, 2),
-                status: '200 OK',
-                latency: '6ms'
-            }
-        ],
-        assertions: [
-            { name: 'Atomic Idempotency (P2002 Replay)', status: 'PASSED', latency: '12ms', details: 'Zero duplicações de transação em 500 chamadas concorrentes' },
-            { name: 'Split Balance Math (Centavos Inteiros)', status: 'PASSED', latency: '2ms', details: 'Conservação exata: taxa + sum(vendedores) === bruto' },
-            { name: 'HMAC-SHA256 Timing-Safe Comparison', status: 'PASSED', latency: '4ms', details: 'crypto.timingSafeEqual imune a side-channel timing attacks' },
-            { name: 'PCI-DSS Zero PAN/CVV Persistence', status: 'PASSED', latency: '1ms', details: 'Sanitização Zod antes de persistência ou logs' }
-        ],
-        percentiles: { p50: 22, p95: 44, p99: 72 },
-        coverage: 98.6,
-        uptime: '99.98%',
-        chaosLab: [
-            { scenario: 'Latência Injetada na Adquirente (2500ms)', outcome: 'Timeout adaptativo aos 3000ms com fallback assíncrono' },
-            { scenario: 'Erro 504 no Webhook do Merchant', outcome: '3 retentativas com backoff exponencial (1s, 2s, 4s) e jitter' },
-            { scenario: 'Injeção de 500 Threads Concorrentes', outcome: '1 débito atômico efetuado e 499 respostas idempotentes' }
-        ],
         challenges: [
             {
                 problem: 'Risco de double-spending financeiro e débitos duplicados em instâncias concorrentes sob oscilação de rede móvel do pagador.',
@@ -172,9 +110,78 @@ export async function executeAtomicTransfer(
                 impactChip: 'crypto.timingSafeEqual',
                 solution: 'Assinaturas HMAC-SHA256 com timestamp e comparação em tempo de clock constante para blindagem criptográfica.'
             }
-        ]
+        ],
+        apiContracts: {
+            endpoints: [
+                {
+                    method: 'POST',
+                    route: '/api/v1/transactions',
+                    description: 'Processar transação PIX ou Cartão com split de liquidação',
+                    headers: [
+                        { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT assinado' },
+                        { name: 'X-Idempotency-Key', value: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', desc: 'UUID v4' },
+                        { name: 'Content-Type', value: 'application/json', desc: 'JSON estrito' }
+                    ],
+                    requestBody: JSON.stringify({
+                        merchantId: "mch_live_9f81a7b4",
+                        externalId: "tx_2026_0905_001",
+                        paymentMethod: "PIX",
+                        amountInCents: 15000,
+                        splits: [
+                            { recipientId: "rec_platform", amountInCents: 1500 },
+                            { recipientId: "rec_seller_1", amountInCents: 13500 }
+                        ]
+                    }, null, 2),
+                    responseBody: JSON.stringify({
+                        transactionId: "tx_live_8841a29f",
+                        status: "APPROVED",
+                        amountInCents: 15000,
+                        feeInCents: 1500,
+                        netAmountInCents: 13500,
+                        pixQrCode: "00020126580014br.gov.bcb.pix...",
+                        idempotentReplay: false
+                    }, null, 2),
+                    status: '201 Created',
+                    latency: '18ms'
+                },
+                {
+                    method: 'GET',
+                    route: '/api/v1/merchants/:id/balance',
+                    description: 'Consultar saldo consolidado e reservas financeiras do merchant',
+                    headers: [
+                        { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT com scope read:balance' }
+                    ],
+                    requestBody: '{}',
+                    responseBody: JSON.stringify({
+                        merchantId: "mch_live_9f81a7b4",
+                        availableBalanceInCents: 489200,
+                        pendingBalanceInCents: 32000,
+                        currency: "BRL"
+                    }, null, 2),
+                    status: '200 OK',
+                    latency: '6ms'
+                }
+            ]
+        },
+        engineeringTests: {
+            assertions: [
+                { name: 'Atomic Idempotency (P2002 Replay)', status: 'PASSED', latency: '12ms', details: 'Zero duplicações de transação em 500 chamadas concorrentes' },
+                { name: 'Split Balance Math (Centavos Inteiros)', status: 'PASSED', latency: '2ms', details: 'Conservação exata: taxa + sum(vendedores) === bruto' },
+                { name: 'HMAC-SHA256 Timing-Safe Comparison', status: 'PASSED', latency: '4ms', details: 'crypto.timingSafeEqual imune a side-channel timing attacks' },
+                { name: 'PCI-DSS Zero PAN/CVV Persistence', status: 'PASSED', latency: '1ms', details: 'Sanitização Zod antes de persistência ou logs' }
+            ],
+            percentiles: { p50: 22, p95: 44, p99: 72 },
+            coverage: 98.6,
+            uptime: '99.98%',
+            chaosLab: [
+                { scenario: 'Latência Injetada na Adquirente (2500ms)', outcome: 'Timeout adaptativo aos 3000ms com fallback assíncrono' },
+                { scenario: 'Erro 504 no Webhook do Merchant', outcome: '3 retentativas com backoff exponencial (1s, 2s, 4s) e jitter' },
+                { scenario: 'Injeção de 500 Threads Concorrentes', outcome: '1 débito atômico efetuado e 499 respostas idempotentes' }
+            ]
+        }
     },
 
+    // 102: PortLog OS
     102: {
         version: 'v2.1.0 • Produção',
         ecosystemIcon: 'fas fa-ship',
@@ -227,66 +234,6 @@ export async function transitionWorkOrder(orderId: string, event: WorkOrderEvent
                 acidGuarantee: 'Preservação do histórico de manutenção e MTTR auditado em UTC'
             }
         ],
-        endpoints: [
-            {
-                method: 'PATCH',
-                route: '/api/v1/work-orders/:id/transition',
-                description: 'Executar transição determinística de estado na ordem de serviço',
-                headers: [
-                    { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT com role OPERADOR' },
-                    { name: 'X-Tenant-Id', value: 'terminal_santos_01', desc: 'Isolamento do terminal' },
-                    { name: 'Content-Type', value: 'application/json', desc: 'JSON UTF-8' }
-                ],
-                requestBody: JSON.stringify({
-                    event: "CONCLUIR",
-                    checklistCompleted: true,
-                    technicianNotes: "Substituição preventiva do cabo de aço do guindaste STS-04 concluída.",
-                    timestamp: new Date().toISOString()
-                }, null, 2),
-                responseBody: JSON.stringify({
-                    id: "wo_8841a29f",
-                    currentState: "CONCLUIDA",
-                    craneId: "crane_sts_04",
-                    durationMinutes: 145,
-                    auditLogged: true
-                }, null, 2),
-                status: '200 OK',
-                latency: '24ms'
-            },
-            {
-                method: 'GET',
-                route: '/api/v1/cranes/:id/telemetry',
-                description: 'Telemetria IoT de vibração e temperatura dos rolamentos do guindaste',
-                headers: [
-                    { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT de Supervisor' },
-                    { name: 'X-Tenant-Id', value: 'terminal_santos_01', desc: 'Identificador do terminal' }
-                ],
-                requestBody: '{}',
-                responseBody: JSON.stringify({
-                    craneId: "crane_sts_04",
-                    bearingVibrationMmS: 2.14,
-                    motorTemperatureC: 68.5,
-                    status: "OPTIMAL",
-                    lastInspection: "2026-09-05T18:00:00Z"
-                }, null, 2),
-                status: '200 OK',
-                latency: '11ms'
-            }
-        ],
-        assertions: [
-            { name: 'FSM Transition Guard Validation', status: 'PASSED', latency: '4ms', details: 'Transições sem checklist rejeitadas com status 422' },
-            { name: 'Multi-Tenant Data Isolation', status: 'PASSED', latency: '5ms', details: '100% das queries escopadas compulsoriamente por tenantId' },
-            { name: 'Pessimistic Row Lock Contention', status: 'PASSED', latency: '18ms', details: 'Resolução sequencial ordenada sem deadlocks' },
-            { name: 'MTTR Audit Calculation Accuracy', status: 'PASSED', latency: '2ms', details: 'Cálculo de tempo médio até reparo com timezone UTC' }
-        ],
-        percentiles: { p50: 19, p95: 38, p99: 64 },
-        coverage: 99.1,
-        uptime: '99.99%',
-        chaosLab: [
-            { scenario: 'Colisão de Operadores em Tempo Real', outcome: 'Lock pessimista bloqueia a 2ª chamada e retorna estado já atualizado' },
-            { scenario: 'Tentativa de Injeção de tenantId Alheio', outcome: 'Middleware Fastify intercepta e anula payload com HTTP 403' },
-            { scenario: 'Desconexão do Sensor IoT em Campo', outcome: 'Timeout adaptativo marca o sensor como DEGRADED sem travar a FSM' }
-        ],
         challenges: [
             {
                 problem: 'Colisão de ordens de serviço no Kanban quando dois mecânicos clicavam para assumir a mesma manutenção de guindaste.',
@@ -298,9 +245,74 @@ export async function transitionWorkOrder(orderId: string, event: WorkOrderEvent
                 impactChip: 'Zero Data Leakage',
                 solution: 'Injeção compulsória do tenantId nos middlewares de autenticação, impedindo qualquer consulta sem filtro de terminal.'
             }
-        ]
+        ],
+        apiContracts: {
+            endpoints: [
+                {
+                    method: 'PATCH',
+                    route: '/api/v1/work-orders/:id/transition',
+                    description: 'Executar transição determinística de estado na ordem de serviço',
+                    headers: [
+                        { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT com role OPERADOR' },
+                        { name: 'X-Tenant-Id', value: 'terminal_santos_01', desc: 'Isolamento do terminal' },
+                        { name: 'Content-Type', value: 'application/json', desc: 'JSON UTF-8' }
+                    ],
+                    requestBody: JSON.stringify({
+                        event: "CONCLUIR",
+                        checklistCompleted: true,
+                        technicianNotes: "Substituição preventiva do cabo de aço do guindaste STS-04 concluída.",
+                        timestamp: new Date().toISOString()
+                    }, null, 2),
+                    responseBody: JSON.stringify({
+                        id: "wo_8841a29f",
+                        currentState: "CONCLUIDA",
+                        craneId: "crane_sts_04",
+                        durationMinutes: 145,
+                        auditLogged: true
+                    }, null, 2),
+                    status: '200 OK',
+                    latency: '24ms'
+                },
+                {
+                    method: 'GET',
+                    route: '/api/v1/cranes/:id/telemetry',
+                    description: 'Telemetria IoT de vibração e temperatura dos rolamentos do guindaste',
+                    headers: [
+                        { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'JWT de Supervisor' },
+                        { name: 'X-Tenant-Id', value: 'terminal_santos_01', desc: 'Identificador do terminal' }
+                    ],
+                    requestBody: '{}',
+                    responseBody: JSON.stringify({
+                        craneId: "crane_sts_04",
+                        bearingVibrationMmS: 2.14,
+                        motorTemperatureC: 68.5,
+                        status: "OPTIMAL",
+                        lastInspection: "2026-09-05T18:00:00Z"
+                    }, null, 2),
+                    status: '200 OK',
+                    latency: '11ms'
+                }
+            ]
+        },
+        engineeringTests: {
+            assertions: [
+                { name: 'FSM Transition Guard Validation', status: 'PASSED', latency: '4ms', details: 'Transições sem checklist rejeitadas com status 422' },
+                { name: 'Multi-Tenant Data Isolation', status: 'PASSED', latency: '5ms', details: '100% das queries escopadas compulsoriamente por tenantId' },
+                { name: 'Pessimistic Row Lock Contention', status: 'PASSED', latency: '18ms', details: 'Resolução sequencial ordenada sem deadlocks' },
+                { name: 'MTTR Audit Calculation Accuracy', status: 'PASSED', latency: '2ms', details: 'Cálculo de tempo médio até reparo com timezone UTC' }
+            ],
+            percentiles: { p50: 19, p95: 38, p99: 64 },
+            coverage: 99.1,
+            uptime: '99.99%',
+            chaosLab: [
+                { scenario: 'Colisão de Operadores em Tempo Real', outcome: 'Lock pessimista bloqueia a 2ª chamada e retorna estado já atualizado' },
+                { scenario: 'Tentativa de Injeção de tenantId Alheio', outcome: 'Middleware Fastify intercepta e anula payload com HTTP 403' },
+                { scenario: 'Desconexão do Sensor IoT em Campo', outcome: 'Timeout adaptativo marca o sensor como DEGRADED sem travar a FSM' }
+            ]
+        }
     },
 
+    // 103: Spectr TestOps
     103: {
         version: 'v1.1.4 • Produção',
         ecosystemIcon: 'fas fa-vial',
@@ -348,68 +360,6 @@ export function calculateLatencyPercentiles(samples: number[]): PercentileReport
                 acidGuarantee: 'Prevenção contra payloads maliciosos ou contratos incompatíveis'
             }
         ],
-        endpoints: [
-            {
-                method: 'POST',
-                route: '/api/v1/collections/run',
-                description: 'Disparar bateria automatizada de testes com validação OpenAPI',
-                headers: [
-                    { name: 'X-Runner-Token', value: 'spec_live_77218af', desc: 'Token de execução do runner' },
-                    { name: 'Content-Type', value: 'application/json', desc: 'Configuração da bateria' }
-                ],
-                requestBody: JSON.stringify({
-                    targetUrl: "https://api.empresa.com/v1/checkout",
-                    concurrency: 25,
-                    iterations: 100,
-                    assertions: [
-                        { type: "status_code", expected: 201 },
-                        { type: "response_time", maxMs: 120 }
-                    ]
-                }, null, 2),
-                responseBody: JSON.stringify({
-                    runId: "run_8812af",
-                    status: "COMPLETED",
-                    totalRequests: 2500,
-                    passedAssertions: 5000,
-                    failedAssertions: 0,
-                    p95LatencyMs: 42.6,
-                    slaBreach: false
-                }, null, 2),
-                status: '200 OK',
-                latency: '42ms'
-            },
-            {
-                method: 'GET',
-                route: '/api/v1/telemetry/report/:id',
-                description: 'Obter relatório analítico consolidado com percentis NIST',
-                headers: [
-                    { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'Token de leitura' }
-                ],
-                requestBody: '{}',
-                responseBody: JSON.stringify({
-                    runId: "run_8812af",
-                    percentiles: { p50: 18, p90: 32, p95: 42, p99: 68 },
-                    errorRate: "0.00%",
-                    uptime: "100.0%"
-                }, null, 2),
-                status: '200 OK',
-                latency: '8ms'
-            }
-        ],
-        assertions: [
-            { name: 'Recursive OpenAPI Contract Validator', status: 'PASSED', latency: '6ms', details: 'Validação de esquemas JSON Schema profundamente aninhados' },
-            { name: 'Nearest Rank NIST Percentiles Math', status: 'PASSED', latency: '1ms', details: 'Cálculo estatístico padronizado sem distorção em amostras' },
-            { name: 'AbortController Socket Termination', status: 'PASSED', latency: '1ms', details: 'Descarte limpo de streams e sockets sem memory leaks' },
-            { name: 'Chaos Lab Jitter Generation', status: 'PASSED', latency: '2ms', details: 'Injeção de atraso gaussiano com distribuição estocástica' }
-        ],
-        percentiles: { p50: 16, p95: 35, p99: 52 },
-        coverage: 100,
-        uptime: '99.99%',
-        chaosLab: [
-            { scenario: 'Injeção de Jitter Gaussiano (±150ms)', outcome: 'Tolerância calibrada do timeout adaptativo sem falsos positivos' },
-            { scenario: 'Queda Intermitente de Servidor (503 Service Unavailable)', outcome: 'Medição exata da taxa de erro e ativação de circuit breaker' },
-            { scenario: 'Payload JSON Truncado na Rede', outcome: 'Captura graciosa no validador com diagnóstico sem crash do runner' }
-        ],
         challenges: [
             {
                 problem: 'Distorções no cálculo de percentis de latência causadas por interpolações lineares errôneas em amostras pequenas.',
@@ -421,102 +371,269 @@ export function calculateLatencyPercentiles(samples: number[]): PercentileReport
                 impactChip: 'AbortController Lifecycle',
                 solution: 'Gerenciamento determinístico de sinal com cancelamento atômico e limpeza de buffers a cada ciclo.'
             }
-        ]
+        ],
+        apiContracts: {
+            endpoints: [
+                {
+                    method: 'POST',
+                    route: '/api/v1/collections/run',
+                    description: 'Disparar bateria automatizada de testes com validação OpenAPI',
+                    headers: [
+                        { name: 'X-Runner-Token', value: 'spec_live_77218af', desc: 'Token de execução do runner' },
+                        { name: 'Content-Type', value: 'application/json', desc: 'Configuração da bateria' }
+                    ],
+                    requestBody: JSON.stringify({
+                        targetUrl: "https://api.empresa.com/v1/checkout",
+                        concurrency: 25,
+                        iterations: 100,
+                        assertions: [
+                            { type: "status_code", expected: 201 },
+                            { type: "response_time", maxMs: 120 }
+                        ]
+                    }, null, 2),
+                    responseBody: JSON.stringify({
+                        runId: "run_8812af",
+                        status: "COMPLETED",
+                        totalRequests: 2500,
+                        passedAssertions: 5000,
+                        failedAssertions: 0,
+                        p95LatencyMs: 42.6,
+                        slaBreach: false
+                    }, null, 2),
+                    status: '200 OK',
+                    latency: '42ms'
+                },
+                {
+                    method: 'GET',
+                    route: '/api/v1/telemetry/report/:id',
+                    description: 'Obter relatório analítico consolidado com percentis NIST',
+                    headers: [
+                        { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1Ni...', desc: 'Token de leitura' }
+                    ],
+                    requestBody: '{}',
+                    responseBody: JSON.stringify({
+                        runId: "run_8812af",
+                        percentiles: { p50: 18, p90: 32, p95: 42, p99: 68 },
+                        errorRate: "0.00%",
+                        uptime: "100.0%"
+                    }, null, 2),
+                    status: '200 OK',
+                    latency: '8ms'
+                }
+            ]
+        },
+        engineeringTests: {
+            assertions: [
+                { name: 'Recursive OpenAPI Contract Validator', status: 'PASSED', latency: '6ms', details: 'Validação de esquemas JSON Schema profundamente aninhados' },
+                { name: 'Nearest Rank NIST Percentiles Math', status: 'PASSED', latency: '1ms', details: 'Cálculo estatístico padronizado sem distorção em amostras' },
+                { name: 'AbortController Socket Termination', status: 'PASSED', latency: '1ms', details: 'Descarte limpo de streams e sockets sem memory leaks' },
+                { name: 'Chaos Lab Jitter Generation', status: 'PASSED', latency: '2ms', details: 'Injeção de atraso gaussiano com distribuição estocástica' }
+            ],
+            percentiles: { p50: 16, p95: 35, p99: 52 },
+            coverage: 100,
+            uptime: '99.99%',
+            chaosLab: [
+                { scenario: 'Injeção de Jitter Gaussiano (±150ms)', outcome: 'Tolerância calibrada do timeout adaptativo sem falsos positivos' },
+                { scenario: 'Queda Intermitente de Servidor (503 Service Unavailable)', outcome: 'Medição exata da taxa de erro e ativação de circuit breaker' },
+                { scenario: 'Payload JSON Truncado na Rede', outcome: 'Captura graciosa no validador com diagnóstico sem crash do runner' }
+            ]
+        }
     }
 };
 
 /* ─────────────────────────────────────────────────────────────────
-   ── ESPECIFICAÇÃO DE ENGENHARIA GENÉRICA (CORPORATE FALLBACK) ───
+   ── ESPECIFICAÇÕES CORPORATIVAS REAIS (SEM DADOS FICTÍCIOS) ──────
    ───────────────────────────────────────────────────────────────── */
-function getGenericSpecs(project: ProjectItem) {
-    const isFullstack = (project.tags || []).some(t => /react|vue|node|laravel/i.test(t));
-    const isDesktop = (project.tags || []).some(t => /delphi|vcl|desktop/i.test(t));
+function getCorporateRealSpecs(project: Project): ProjectEnrichedSpecs {
+    const idNum = Number(project.id);
 
-    return {
-        version: 'v1.2.0 • Estável',
-        ecosystemIcon: isDesktop ? 'fas fa-desktop' : (isFullstack ? 'fas fa-network-wired' : 'fas fa-layer-group'),
-        domain: project.details?.subtitle || 'Sistemas Corporativos & Arquitetura de Dados',
-        architectureType: isDesktop ? 'Monolito Desktop / UniGui Modernizado' : 'Arquitetura em Camadas (Service-Repository)',
-        volume: 'Centenas de Transações Diárias',
-        database: 'SQL Server / PostgreSQL / MySQL',
-        codeSnippet: `// Arquitetura Corporativa: Camada de Serviços & Validação
-export async function executeTransactionalOperation(
-    payload: Record<string, unknown>,
-    ctx: SecurityContext
-): Promise<OperationResult> {
-    // 1. Sanitização estrita e validação de permissões RBAC
-    ctx.assertAuthorized(['ADMIN', 'OPERADOR_SENIOR']);
+    // 1: Retaguarda ERP (Laravel + React + SQL Server + ACBr)
+    if (idNum === 1 || project.title.includes('Retaguarda ERP')) {
+        return {
+            version: 'v2.4.0 • Produção Corporativa',
+            ecosystemIcon: 'fas fa-cash-register',
+            domain: 'Módulo Administrativo Full-Stack — Gestão ERP/PDV',
+            architectureType: 'API RESTful Desacoplada (Laravel) + SPA (React + TypeScript)',
+            volume: '100+ Operadores Simultâneos',
+            database: 'SQL Server / MySQL Pool (Índices Cobridores)',
+            codeSnippet: `// Retaguarda ERP: Faturamento Transacional com Contingência Fiscal ACBr
+public function processarVenda(Request $request, FaturamentoService $service): JsonResponse 
+{
+    $validated = $request->validate([
+        'operador_id' => 'required|integer',
+        'itens'       => 'required|array|min:1',
+        'itens.*.sku' => 'required|string',
+        'itens.*.qtd' => 'required|numeric|min:0.01',
+    ]);
 
-    // 2. Execução transacional com integridade referencial
-    return await db.transaction(async (session) => {
-        const sanitized = sanitizeInput(payload);
-        const record = await session.repository.insert(sanitized);
-        await session.auditLog.recordEvent({
-            entity: '${project.title}',
-            recordId: record.id,
-            operator: ctx.userId,
-            timestamp: new Date().toISOString()
-        });
-        return { success: true, recordId: record.id, status: 200 };
+    // 1. Transação ACID com Eager Loading (eliminação de queries N+1)
+    return DB::transaction(function () use ($validated, $service) {
+        $venda = Venda::create([...$validated, 'status' => 'PROCESSANDO']);
+        
+        // 2. Reserva atômica de inventário e cálculo de alíquota fiscal
+        $service->abaterEstoqueComposto($venda);
+        
+        // 3. Emissão fiscal via componente ACBr com fila de contingência
+        $resultadoFiscal = $service->emitirNFCeAssincrona($venda);
+        
+        return response()->json([
+            'venda_id' => $venda->id,
+            'status'   => 'CONCLUIDA',
+            'chave_acbr' => $resultadoFiscal->chaveAcesso
+        ], 200);
     });
 }`,
-        concurrencyTable: [
-            {
-                lockMechanism: 'Transação ACID Relacional com Nível Read Committed',
-                exceptionHandling: 'Rollback automático em caso de exceção de chave estrangeira ou duplicidade',
-                acidGuarantee: 'Consistência total de dados e integridade referencial no banco'
-            },
-            {
-                lockMechanism: 'Auditoria Append-Only Imutável',
-                exceptionHandling: 'Falhas de gravação em auditoria impedem a conclusão da transação principal',
-                acidGuarantee: 'Rastreabilidade completa de todas as operações sensíveis'
-            },
-            {
-                lockMechanism: 'Validação de Permissões RBAC em Camada de Domínio',
-                exceptionHandling: 'Exceção com HTTP 403 Forbidden para requisições de perfis não autorizados',
-                acidGuarantee: 'Proteção contra elevação de privilégios e acessos indevidos'
-            }
-        ],
-        endpoints: [
-            {
-                method: 'POST',
-                route: '/api/v1/operations',
-                description: `Processamento corporativo de dados para ${project.title}`,
-                headers: [
-                    { name: 'Authorization', value: 'Bearer <token_jwt>', desc: 'Token de autenticação' },
-                    { name: 'Content-Type', value: 'application/json', desc: 'Payload UTF-8' }
-                ],
-                requestBody: JSON.stringify({
-                    action: "EXECUTE_PIPELINE",
-                    entityId: "ent_9921",
-                    params: { autoCommit: true }
-                }, null, 2),
-                responseBody: JSON.stringify({
-                    status: "SUCCESS",
-                    code: 200,
-                    processedAt: new Date().toISOString()
-                }, null, 2),
-                status: '200 OK',
-                latency: '26ms'
-            }
-        ],
-        assertions: [
-            { name: 'Integridade Referencial de Dados', status: 'PASSED', latency: '8ms', details: 'Chaves estrangeiras e relacionamentos 100% íntegros' },
-            { name: 'Controle de Acesso RBAC', status: 'PASSED', latency: '3ms', details: 'Validação rigorosa de escopo e perfis de usuário' },
-            { name: 'Otimização de Query Indexada', status: 'PASSED', latency: '12ms', details: 'Execução sob índice composto sem full-table-scan' }
-        ],
-        percentiles: { p50: 24, p95: 58, p99: 112 },
-        coverage: 97.4,
-        uptime: '99.95%',
-        chaosLab: [
-            { scenario: 'Conexão Instável com Banco de Dados', outcome: 'Pool de conexões com reconexão automática e retentativas' },
-            { scenario: 'Tentativa de Acesso com Token Expirado', outcome: 'Rejeição imediata com HTTP 401 e instrução de refresh' }
-        ],
+            concurrencyTable: [
+                {
+                    lockMechanism: 'Eager Loading com Índices Compostos no SQL Server',
+                    exceptionHandling: 'Eliminação comprovada de queries N+1, reduzindo a latência média de 2s para < 500ms',
+                    acidGuarantee: 'Consistência transacional absoluta em fechamento de caixa e faturamento concorrente'
+                },
+                {
+                    lockMechanism: 'Laravel Sanctum RBAC por Perfil de Operador',
+                    exceptionHandling: 'Rejeição de requisições de operadores sem privilégio de estorno com HTTP 403',
+                    acidGuarantee: 'Blindagem de integridade contábil e rastreamento de auditoria fiscal'
+                },
+                {
+                    lockMechanism: 'Fila de Contingência Fiscal ACBr',
+                    exceptionHandling: 'Se a SEFAZ estiver offline, o sistema emite NFC-e em contingência sem interromper a frente de caixa',
+                    acidGuarantee: 'Continuidade de negócio no PDV com transmissão automática ao reestabelecer conexão'
+                }
+            ],
+            challenges: [
+                {
+                    problem: 'Gargalos de concorrência em horários de pico durante a emissão de notas fiscais e lentidão em relatórios de inventário com milhares de SKUs em banco de dados relacional.',
+                    impactChip: 'Latência 2s → <500ms',
+                    solution: 'Refatoração completa para arquitetura desacoplada (Laravel REST API + React SPA), aplicação de Eager Loading com índices compostos no banco e processamento assíncrono para emissão fiscal via ACBr.'
+                },
+                {
+                    problem: 'Inconsistência contábil em emissões fiscais simultâneas em PDVs descentralizados.',
+                    impactChip: '100% Fiscal ACBr',
+                    solution: 'Implementação de pool de conexões com transações atômicas e fila de contingência assíncrona.'
+                }
+            ]
+            // apiContracts e engineeringTests são estritamente OMITIDOS (não existem endpoints públicos inventados)
+        };
+    }
+
+    // 2: Portal Conglomerados (Multi-tenant Lógico + RBAC)
+    if (idNum === 2 || project.title.includes('Conglomerados')) {
+        return {
+            version: 'v3.0.1 • Produção Corporativa',
+            ecosystemIcon: 'fas fa-building',
+            domain: 'Plataforma Multi-tenant de Gestão Empresarial',
+            architectureType: 'Multi-tenant Lógico com Resolução de Contexto por Filial',
+            volume: 'Dezenas de Filiais em Único Ecossistema',
+            database: 'SQL Server (Multi-Tenant Engine com Isolamento por TenantId)',
+            codeSnippet: `// Portal Conglomerados: Dynamic Tenant Scope & RBAC Resolution
+class ResolveTenantMiddleware 
+{
+    public function handle(Request $request, Closure $next): Response 
+    {
+        $tenantId = $request->header('X-Tenant-Filial') ?? auth()->user()->filial_padrao_id;
+        
+        // 1. Validação se o usuário autenticado possui vínculo ativo com a filial
+        abort_unless(auth()->user()->temAcessoFilial($tenantId), 403, 'Acesso proibido à unidade');
+        
+        // 2. Injeção compulsória do TenantScope em todos os modelos Eloquent
+        FilialContext::set($tenantId);
+        
+        // 3. Aplicação do isolamento em nível de banco de dados
+        return $next($request);
+    }
+}`,
+            concurrencyTable: [
+                {
+                    lockMechanism: 'Tenant Resolution Middleware no Laravel',
+                    exceptionHandling: 'Rejeição sumária com HTTP 403 se houver tentativa de consulta a filial não autorizada',
+                    acidGuarantee: 'Isolamento lógico estrito de dados entre empresas do mesmo conglomerado'
+                },
+                {
+                    lockMechanism: 'RBAC Granular por Cargo e Filial',
+                    exceptionHandling: 'Políticas de autorização (Gates/Policies) impedem visualização de saldos consolidados por perfis operacionais',
+                    acidGuarantee: 'Privacidade e governança financeira estrita'
+                },
+                {
+                    lockMechanism: 'Consultas Agregadas Multi-Filial com Cache de Métricas',
+                    exceptionHandling: 'Tuning de consultas de conciliação mantendo o tempo de resposta inferior a 300ms',
+                    acidGuarantee: 'Disponibilidade de dashboards analíticos executivos sem travar o banco produtivo'
+                }
+            ],
+            challenges: [
+                {
+                    problem: 'Garantir isolamento rigoroso de dados entre dezenas de empresas do mesmo grupo sem duplicar infraestrutura e sem perda de performance em consultas financeiras consolidadas.',
+                    impactChip: 'Latência < 300ms',
+                    solution: 'Implementação de arquitetura Multi-Tenant com resolução dinâmica de contexto por tenant, segurança via RBAC e queries agregadas com cache inteligente de métricas executivas.'
+                }
+            ]
+        };
+    }
+
+    // 3: Migração Delphi → UniGui Web
+    if (idNum === 3 || project.title.includes('UniGui') || project.title.includes('Delphi')) {
+        return {
+            version: 'v11.2 • Modernização Estável',
+            ecosystemIcon: 'fas fa-desktop',
+            domain: 'Modernização de Sistema Monolítico Legado para Web',
+            architectureType: 'RAD Studio Delphi 11 + UniGui Web (ExtJS Server-Side Engine)',
+            volume: 'Modernização de Monólito de 15+ Anos',
+            database: 'SQL Server via FireDAC Connection Pool',
+            codeSnippet: `// Migração Delphi UniGui: ServerModule Session Isolation & FireDAC Pooling
+procedure TUniServerModule.UniGUIServerModuleCreate(Sender: TObject);
+begin
+    // 1. Configuração do pool de conexões FireDAC para múltiplos operadores web
+    FDManager.ConnectionDefFile := ExtractFilePath(ParamStr(0)) + 'fddrivers.ini';
+    FDManager.Active := True;
+end;
+
+procedure TMainForm.UniButtonEmitirFiscalClick(Sender: TObject);
+begin
+    // 2. Execução assíncrona com ciclo de vida server-side mantendo conformidade ACBr
+    ACBrEngine.ConfigurarAmbienteWeb(UniApplication.RemoteAddress);
+    ACBrEngine.EmitirNFe(CurrentPedidoId);
+    UniApplication.ShowToast('Nota Fiscal emitida com sucesso via UniGui Server!');
+end;`,
+            concurrencyTable: [
+                {
+                    lockMechanism: 'Isolamento de Sessão por ServerModule / MainModule',
+                    exceptionHandling: 'Cada conexão web do navegador instancia seu próprio contexto de formulário sem vazar estado para outros operadores',
+                    acidGuarantee: 'Eliminação completa de conflitos de memória e 40% de redução de falhas visuais legadas'
+                },
+                {
+                    lockMechanism: 'FireDAC Connection Pooling com Transações ACID',
+                    exceptionHandling: 'Reconexão resiliente ao SQL Server em oscilações de rede sem derrubar o serviço UniGui',
+                    acidGuarantee: 'Integridade contábil e fiscal em operações simultâneas de PDV'
+                },
+                {
+                    lockMechanism: 'Componentes ACBr Server-Side e FortesReport Web',
+                    exceptionHandling: 'Geração assíncrona de DANFE em PDF server-side para download no navegador sem travar a interface',
+                    acidGuarantee: '100% de conformidade fiscal preservada na transição de Desktop para Web'
+                }
+            ],
+            challenges: [
+                {
+                    problem: 'Migrar um sistema monolítico Desktop VCL de 15+ anos com bibliotecas legadas (JEDI/JVCL) para Web sem quebrar regras de negócio fiscais e sem perda de estabilidade.',
+                    impactChip: 'Zero Perda Fiscal',
+                    solution: 'Reestruturação do ciclo de vida das telas para UniGui MainModule/ServerModule, upgrade do framework ACBr para execução server-side e criação de pool de conexões FireDAC para suportar múltiplos operadores simultâneos via browser.'
+                }
+            ]
+        };
+    }
+
+    // Outros projetos corporativos (Java Swing, Flask, Python Tkinter)
+    const isDesktop = (project.tags || []).some(t => /desktop|swing|tkinter/i.test(t));
+    return {
+        version: 'v1.0.0 • Estável',
+        ecosystemIcon: isDesktop ? 'fas fa-laptop-code' : 'fas fa-layer-group',
+        domain: project.details?.subtitle || project.description || 'Soluções Corporativas & Engenharia de Software',
+        architectureType: isDesktop ? 'Arquitetura Desktop / Componentes de Interface' : 'Arquitetura em Camadas (Service-Repository)',
+        volume: 'Uso Empresarial / Ferramenta de Engenharia',
+        database: (project.tags || []).includes('MySQL') ? 'MySQL Relacional' : 'Banco Relacional / Local Storage',
         challenges: [
             {
-                problem: project.details?.challenge || 'Garantir alto desempenho e confiabilidade em regras de negócio complexas.',
-                impactChip: 'ACID Guarantee',
-                solution: project.details?.solution || 'Implementação de arquitetura desacoplada com separação de responsabilidades e tuning de consultas.'
+                problem: project.details?.challenge || 'Garantir consistência estrutural, baixo acoplamento e ergonomia de uso.',
+                impactChip: 'Engenharia Limpa',
+                solution: project.details?.solution || 'Modelagem orientada a objetos com separação clara de responsabilidades.'
             }
         ]
     };
@@ -527,17 +644,70 @@ export async function executeTransactionalOperation(
    ───────────────────────────────────────────────────────────────── */
 export default function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProps) {
     const { lang } = useLanguage();
-    const [activeTab, setActiveTab] = useState<'overview' | 'architecture' | 'contracts' | 'engineering'>('overview');
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [selectedEndpointIndex, setSelectedEndpointIndex] = useState(0);
 
-    // Carregar dados de engenharia enriquecidos ou fallback corporativo
-    const specs = useMemo(() => {
+    // Carregar dados de engenharia enriquecidos (Flagships ou Corporativos Reais)
+    const specs: ProjectEnrichedSpecs = useMemo(() => {
         const idNum = Number(project.id);
-        return FLAGSHIP_SPECS[idNum] || getGenericSpecs(project);
+        if (FLAGSHIP_SPECS[idNum]) {
+            return FLAGSHIP_SPECS[idNum];
+        }
+        return getCorporateRealSpecs(project);
     }, [project]);
 
-    const activeEndpoint = specs.endpoints[selectedEndpointIndex] || specs.endpoints[0];
+    // ── Auditoria de Conteúdo: Abas Condicionais Rigorosamente Verdadeiras ──
+    const hasContracts = Boolean(specs.apiContracts?.endpoints && specs.apiContracts.endpoints.length > 0);
+    const hasEngineeringTests = Boolean(specs.engineeringTests?.assertions && specs.engineeringTests.assertions.length > 0);
+
+    // Construção estritamente dinâmica das abas
+    const availableTabs = useMemo(() => {
+        const tabs: Array<{ id: 'overview' | 'architecture' | 'contracts' | 'engineering'; label: string; icon: string }> = [
+            { id: 'overview', label: lang === 'en' ? 'Overview & Scope' : 'Visão Geral & Escopo', icon: 'fas fa-layer-group' },
+            { id: 'architecture', label: lang === 'en' ? 'Architecture & Resilience' : 'Arquitetura & Engenharia', icon: 'fas fa-shield-alt' },
+        ];
+
+        if (hasContracts) {
+            tabs.push({ id: 'contracts', label: lang === 'en' ? 'API Contracts' : 'Contratos de API', icon: 'fas fa-file-contract' });
+        }
+
+        if (hasEngineeringTests) {
+            tabs.push({ id: 'engineering', label: lang === 'en' ? 'Engineering & Tests' : 'Engenharia & Testes', icon: 'fas fa-vial' });
+        }
+
+        return tabs;
+    }, [lang, hasContracts, hasEngineeringTests]);
+
+    const [activeTab, setActiveTab] = useState<'overview' | 'architecture' | 'contracts' | 'engineering'>('overview');
+
+    // Fallback de segurança caso a aba ativa não pertença às abas disponíveis do projeto
+    useEffect(() => {
+        if (!availableTabs.some(t => t.id === activeTab)) {
+            setActiveTab(availableTabs[0]?.id || 'overview');
+        }
+    }, [availableTabs, activeTab]);
+
+    // ── FSM State Machine para Runner de Asserções (apenas se hasEngineeringTests) ──
+    const [runnerState, setRunnerState] = useState<'IDLE' | 'RUNNING' | 'COMPLETED'>('IDLE');
+    const [activeAssertionIndex, setActiveAssertionIndex] = useState<number | null>(null);
+    const [chaosActive, setChaosActive] = useState(false);
+
+    // Percentis dinâmicos recalculados ao vivo conforme injeção de caos
+    const currentPercentiles = useMemo(() => {
+        if (!specs.engineeringTests?.percentiles) {
+            return { p50: 0, p95: 0, p99: 0 };
+        }
+        if (!chaosActive) return specs.engineeringTests.percentiles;
+        return {
+            p50: specs.engineeringTests.percentiles.p50 + 94,
+            p95: specs.engineeringTests.percentiles.p95 + 162,
+            p99: specs.engineeringTests.percentiles.p99 + 280,
+        };
+    }, [chaosActive, specs.engineeringTests]);
+
+    const activeEndpoint = hasContracts && specs.apiContracts?.endpoints
+        ? specs.apiContracts.endpoints[selectedEndpointIndex] || specs.apiContracts.endpoints[0]
+        : null;
 
     // Feedback sonoro e toast ao copiar
     const showToast = useCallback((msg: string) => {
@@ -555,19 +725,40 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
 
     // Copiar cURL da rota ativa
     const copyCurlCommand = useCallback(() => {
-        const ep = activeEndpoint;
-        if (!ep) return;
-        const headersStr = (ep.headers || [])
+        if (!activeEndpoint) return;
+        const headersStr = (activeEndpoint.headers || [])
             .map((h: any) => `-H "${h.name}: ${h.value}"`)
             .join(' ');
-        const bodyStr = ep.method !== 'GET' && ep.requestBody && ep.requestBody !== '{}'
-            ? `-d '${ep.requestBody.replace(/\n/g, '')}'`
+        const bodyStr = activeEndpoint.method !== 'GET' && activeEndpoint.requestBody && activeEndpoint.requestBody !== '{}'
+            ? `-d '${activeEndpoint.requestBody.replace(/\n/g, '')}'`
             : '';
-        const curl = `curl -X ${ep.method} "https://api.pedrohenrique.dev${ep.route}" ${headersStr} ${bodyStr}`.trim();
-        copyToClipboard(curl, 'cURL da rota');
+        const curl = `curl -X ${activeEndpoint.method} "https://api.pedrohenrique.dev${activeEndpoint.route}" ${headersStr} ${bodyStr}`.trim();
+        copyToClipboard(curl, 'Comando cURL');
     }, [activeEndpoint, copyToClipboard]);
 
-    // Navegação por teclado: ESC para fechar, setas para alternar abas
+    // Disparar execução da bateria de testes com FSM determinística
+    const runAssertionsSimulation = useCallback(() => {
+        if (!specs.engineeringTests?.assertions?.length || runnerState === 'RUNNING') return;
+        playMechanicalClick();
+        setRunnerState('RUNNING');
+        setActiveAssertionIndex(0);
+
+        let step = 0;
+        const total = specs.engineeringTests.assertions.length;
+        const interval = setInterval(() => {
+            step++;
+            if (step < total) {
+                setActiveAssertionIndex(step);
+            } else {
+                clearInterval(interval);
+                setActiveAssertionIndex(null);
+                setRunnerState('COMPLETED');
+                showToast('Bateria de asserções executada com 100% de sucesso!');
+            }
+        }, 420);
+    }, [runnerState, specs.engineeringTests, showToast]);
+
+    // Navegação por teclado: ESC para fechar, setas para alternar estritamente entre as abas disponíveis
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -577,26 +768,24 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                 e.preventDefault();
                 playTabSwitch();
                 setActiveTab(curr => {
-                    if (curr === 'overview') return 'architecture';
-                    if (curr === 'architecture') return 'contracts';
-                    if (curr === 'contracts') return 'engineering';
-                    return 'overview';
+                    const idx = availableTabs.findIndex(t => t.id === curr);
+                    const nextIdx = (idx + 1) % availableTabs.length;
+                    return availableTabs[nextIdx].id;
                 });
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 playTabSwitch();
                 setActiveTab(curr => {
-                    if (curr === 'engineering') return 'contracts';
-                    if (curr === 'contracts') return 'architecture';
-                    if (curr === 'architecture') return 'overview';
-                    return 'engineering';
+                    const idx = availableTabs.findIndex(t => t.id === curr);
+                    const prevIdx = (idx - 1 + availableTabs.length) % availableTabs.length;
+                    return availableTabs[prevIdx].id;
                 });
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
+    }, [onClose, availableTabs]);
 
     // Bloqueio de scroll no body durante a exibição da gaveta
     useEffect(() => {
@@ -606,13 +795,6 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
             document.body.style.overflow = originalOverflow;
         };
     }, []);
-
-    const TABS = useMemo(() => [
-        { id: 'overview', label: lang === 'en' ? 'Overview' : 'Visão Geral', icon: 'fas fa-layer-group' },
-        { id: 'architecture', label: lang === 'en' ? 'Architecture & Resilience' : 'Arquitetura & Resiliência', icon: 'fas fa-shield-alt' },
-        { id: 'contracts', label: lang === 'en' ? 'API Contracts' : 'Contratos de API', icon: 'fas fa-file-contract' },
-        { id: 'engineering', label: lang === 'en' ? 'Engineering & Tests' : 'Engenharia & Testes', icon: 'fas fa-vial' },
-    ] as const, [lang]);
 
     return (
         <motion.div
@@ -626,7 +808,7 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
             role="dialog"
             aria-modal="true"
         >
-            {/* ── Toast de Feedback Flutuante ── */}
+            {/* Toast de Feedback Flutuante */}
             <AnimatePresence mode="wait">
                 {toastMessage && (
                     <motion.div
@@ -642,49 +824,56 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                 )}
             </AnimatePresence>
 
-            {/* ── Console Lateral DevTools (Linear & Stripe Inspired - w-full max-w-2xl) ── */}
+            {/* Console Lateral DevTools (Linear & Stripe Inspired) */}
             <motion.div
                 key={`inspector-drawer-${project.id}`}
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
-                transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-0 h-full w-full max-w-2xl bg-darker/98 border-l border-white/10 shadow-[−25px_0_70px_rgba(0,0,0,0.8)] flex flex-col font-sans overflow-hidden text-gray-200"
+                className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#0C0E14] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden"
             >
-                {/* ── A. Cabeçalho de Console Técnico Fixo ── */}
-                <header className="shrink-0 border-b border-white/10 bg-darker/95 backdrop-blur-md px-6 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center text-accent text-lg shrink-0">
-                            <i className={specs.ecosystemIcon} />
+                {/* ── A. Cabeçalho Fixo do Console de Engenharia ── */}
+                <header className="shrink-0 border-b border-white/10 bg-darker/90 backdrop-blur-xl px-6 py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                            <i className={`${specs.ecosystemIcon} text-accent text-sm`} />
                         </div>
                         <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                                <h2 className="text-base sm:text-lg font-bold text-white truncate">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-base font-bold text-white tracking-tight truncate">
                                     {project.title}
                                 </h2>
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 shrink-0">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    {specs.version}
+                                    <span>{specs.version}</span>
                                 </span>
                             </div>
-                            <p className="text-xs text-primary/70 font-mono truncate">
-                                Engineering Console • ID #{project.id}
+                            <p className="text-xs text-primary/60 truncate font-mono">
+                                {specs.domain}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        {/* Botão de Ação Rápida: Copiar cURL */}
-                        <button
-                            onClick={copyCurlCommand}
-                            data-cursor-morph="true"
-                            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono bg-white/5 hover:bg-white/10 text-primary hover:text-white border border-white/10 rounded-lg transition-colors cursor-pointer"
-                            title="Copiar cURL de execução para terminal"
-                        >
-                            <i className="fas fa-terminal text-[10px] text-accent" />
-                            <span>Copiar cURL</span>
-                        </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* Botão Copiar cURL condicional à presença real de contratos de API */}
+                        {hasContracts && activeEndpoint ? (
+                            <button
+                                onClick={copyCurlCommand}
+                                data-cursor-morph="true"
+                                title="Copiar comando cURL de teste"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-primary/80 hover:text-white text-xs font-mono transition-colors cursor-pointer"
+                            >
+                                <i className="fas fa-terminal text-[10px] text-accent" />
+                                <span className="hidden sm:inline">Copiar cURL</span>
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-primary/70 text-[10px] font-mono select-none">
+                                <i className="fas fa-shield-alt text-accent text-[9px]" />
+                                <span>Sistema Corporativo</span>
+                            </div>
+                        )}
 
                         {/* Botão Fechar com Atalho ESC Visível */}
                         <button
@@ -701,9 +890,9 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                     </div>
                 </header>
 
-                {/* ── B. Navegação de Abas Fluida com Indicador Deslizante layoutId ── */}
+                {/* ── B. Navegação de Abas Dinâmica com layoutId ── */}
                 <nav className="shrink-0 border-b border-white/10 bg-darker/60 px-6 py-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
-                    {TABS.map((tab) => {
+                    {availableTabs.map((tab) => {
                         const isActive = activeTab === tab.id;
                         return (
                             <button
@@ -759,104 +948,81 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
 
                                     <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-cubes text-accent" />
-                                            <span>Tipo de Arquitetura</span>
+                                            <i className="fas fa-sitemap text-accent" />
+                                            <span>Padrão Arquitetural</span>
                                         </div>
-                                        <div className="text-xs sm:text-sm font-semibold text-white">
+                                        <div className="text-xs sm:text-sm font-semibold text-white truncate">
                                             {specs.architectureType}
                                         </div>
                                     </div>
 
                                     <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-tachometer-alt text-accent" />
-                                            <span>Volume Transacional</span>
+                                            <i className="fas fa-database text-accent" />
+                                            <span>Persistência / Banco</span>
                                         </div>
-                                        <div className="text-xs sm:text-sm font-semibold text-white">
-                                            {specs.volume}
+                                        <div className="text-xs sm:text-sm font-semibold text-white truncate">
+                                            {specs.database}
                                         </div>
                                     </div>
 
                                     <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-database text-accent" />
-                                            <span>Banco de Dados</span>
+                                            <i className="fas fa-chart-line text-accent" />
+                                            <span>Escala & Volume</span>
                                         </div>
                                         <div className="text-xs sm:text-sm font-semibold text-white">
-                                            {specs.database}
+                                            {specs.volume}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Descrição da Arquitetura & Escopo */}
-                                <div className="space-y-2">
-                                    <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                        <i className="fas fa-info-circle text-xs" />
-                                        <span>Escopo & Arquitetura Geral</span>
-                                    </h3>
-                                    <p className="text-xs sm:text-sm text-gray-300 leading-relaxed bg-white/[0.01] border border-white/5 p-4 rounded-xl">
-                                        {project.details?.fullDescription || project.description}
-                                    </p>
-                                </div>
-
-                                {/* Desafios de Negócio com Chips de Impacto Técnico */}
-                                <div className="space-y-3">
-                                    <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                        <i className="fas fa-shield-alt text-xs" />
-                                        <span>Desafios Críticos & Mitigação de Engenharia</span>
-                                    </h3>
+                                {/* Desafios Técnicos & Decisões de Engenharia */}
+                                {specs.challenges && specs.challenges.length > 0 && (
                                     <div className="space-y-3">
-                                        {specs.challenges.map((ch: any, idx: number) => (
-                                            <div key={idx} className="bg-darker/90 border border-white/10 rounded-xl p-4 space-y-2">
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <span className="text-xs font-semibold text-red-300 flex items-center gap-1.5">
-                                                        <i className="fas fa-exclamation-triangle text-[11px] text-red-400" />
-                                                        <span>Desafio de Negócio</span>
-                                                    </span>
-                                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30">
-                                                        {ch.impactChip}
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs text-gray-300">{ch.problem}</p>
-                                                <div className="pt-2 border-t border-white/5">
-                                                    <div className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5 mb-1">
-                                                        <i className="fas fa-check-circle text-[10px]" />
-                                                        <span>Solução de Engenharia</span>
+                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
+                                            <i className="fas fa-tools text-xs" />
+                                            <span>Desafios Críticos & Soluções Aplicadas</span>
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {specs.challenges.map((ch, idx) => (
+                                                <div key={idx} className="bg-darker border border-white/10 rounded-xl p-4 space-y-2">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <p className="text-xs text-gray-300 font-sans leading-relaxed">
+                                                            <strong className="text-white">Problema:</strong> {ch.problem}
+                                                        </p>
+                                                        <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-accent/15 text-accent border border-accent/30">
+                                                            {ch.impactChip}
+                                                        </span>
                                                     </div>
-                                                    <p className="text-xs text-gray-400 leading-relaxed font-mono">
-                                                        {ch.solution}
+                                                    <p className="text-xs text-emerald-300/90 font-mono leading-relaxed pl-3 border-l-2 border-emerald-500/40">
+                                                        ↳ <strong className="text-emerald-400">Solução:</strong> {ch.solution}
                                                     </p>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                {/* Links Oficiais & Repositório */}
-                                <div className="flex flex-wrap items-center gap-3 pt-2">
-                                    {project.demo_link && (
-                                        <a
-                                            href={project.demo_link}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-darker text-xs font-bold rounded-xl hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20 cursor-pointer"
-                                        >
-                                            <i className="fas fa-external-link-alt text-xs" />
-                                            <span>Acessar Demonstração em Produção</span>
-                                        </a>
-                                    )}
-                                    {project.repo_link && (
-                                        <a
-                                            href={project.repo_link}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-mono rounded-xl border border-white/15 transition-colors cursor-pointer"
-                                        >
-                                            <i className="fab fa-github text-sm" />
-                                            <span>Inspecionar Repositório</span>
-                                        </a>
-                                    )}
-                                </div>
+                                {/* Stack Técnica Consolidada */}
+                                {project.tags && project.tags.length > 0 && (
+                                    <div className="space-y-2.5">
+                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
+                                            <i className="fas fa-layer-group text-xs" />
+                                            <span>Tecnologias & Ferramentas Validadas</span>
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {project.tags.map((tag, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-gray-200"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
 
@@ -869,65 +1035,62 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                                 transition={{ duration: 0.18 }}
                                 className="space-y-6"
                             >
-                                {/* Bloco de Código com Visualizador de Tipagem & Transação */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-code text-xs" />
-                                            <span>Implementação & Fluxo Transacional</span>
-                                        </h3>
-                                        <button
-                                            onClick={() => copyToClipboard(specs.codeSnippet, 'Código TypeScript')}
-                                            className="text-[11px] font-mono text-primary/70 hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                                        >
-                                            <i className="fas fa-copy text-[10px]" />
-                                            <span>Copiar Código</span>
-                                        </button>
+                                {/* Trecho de Código Central (Code Snippet) */}
+                                {specs.codeSnippet && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
+                                                <i className="fas fa-code text-xs" />
+                                                <span>Padrão de Implementação no Core</span>
+                                            </h3>
+                                            <button
+                                                onClick={() => copyToClipboard(specs.codeSnippet || '', 'Código-fonte')}
+                                                data-cursor-morph="true"
+                                                className="text-[10px] font-mono text-primary/70 hover:text-white flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 cursor-pointer"
+                                            >
+                                                <i className="fas fa-copy text-[9px]" />
+                                                <span>Copiar Código</span>
+                                            </button>
+                                        </div>
+                                        <div className="rounded-xl border border-white/10 bg-black/60 p-4 font-mono text-xs overflow-x-auto text-gray-300 leading-relaxed shadow-inner">
+                                            <pre><code>{specs.codeSnippet}</code></pre>
+                                        </div>
                                     </div>
-                                    <div className="rounded-xl border border-white/10 bg-black/60 p-4 font-mono text-xs overflow-x-auto shadow-inner">
-                                        <pre className="text-gray-300 leading-relaxed">
-                                            <code>{specs.codeSnippet}</code>
-                                        </pre>
-                                    </div>
-                                </div>
+                                )}
 
-                                {/* Tabela Limpa de Mitigação de Concorrência */}
-                                <div className="space-y-3">
-                                    <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                        <i className="fas fa-table text-xs" />
-                                        <span>Matriz de Mitigação de Concorrência & Confiabilidade</span>
-                                    </h3>
-                                    <div className="rounded-xl border border-white/10 overflow-hidden">
-                                        <table className="w-full text-left text-xs border-collapse">
-                                            <thead className="bg-white/5 text-[10px] font-mono uppercase tracking-wider text-primary/70 border-b border-white/10">
-                                                <tr>
-                                                    <th className="p-3">Mecanismo de Lock</th>
-                                                    <th className="p-3">Tratamento de Exceções</th>
-                                                    <th className="p-3">Garantia ACID</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-white/5 font-sans">
-                                                {specs.concurrencyTable.map((row: any, idx: number) => (
-                                                    <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
-                                                        <td className="p-3 font-mono font-semibold text-accent text-[11px] align-top">
-                                                            {row.lockMechanism}
-                                                        </td>
-                                                        <td className="p-3 text-gray-300 text-[11px] leading-relaxed align-top font-mono">
-                                                            {row.exceptionHandling}
-                                                        </td>
-                                                        <td className="p-3 text-emerald-400 text-[11px] font-mono align-top">
-                                                            {row.acidGuarantee}
-                                                        </td>
+                                {/* Matriz de Resiliência & Concorrência ACID */}
+                                {specs.concurrencyTable && specs.concurrencyTable.length > 0 && (
+                                    <div className="space-y-3">
+                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
+                                            <i className="fas fa-shield-halved text-xs" />
+                                            <span>Mecanismos de Resiliência & Concorrência</span>
+                                        </h3>
+                                        <div className="rounded-xl border border-white/10 overflow-hidden">
+                                            <table className="w-full text-left text-xs font-mono border-collapse">
+                                                <thead>
+                                                    <tr className="border-b border-white/10 bg-white/[0.03] text-[10px] uppercase tracking-wider text-primary/60">
+                                                        <th className="py-2.5 px-3.5">Mecanismo / Trava</th>
+                                                        <th className="py-2.5 px-3.5">Tratamento de Exceção</th>
+                                                        <th className="py-2.5 px-3.5">Garantia ACID</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody className="divide-y divide-white/5">
+                                                    {specs.concurrencyTable.map((row, idx) => (
+                                                        <tr key={idx} className="hover:bg-white/[0.01]">
+                                                            <td className="py-3 px-3.5 font-bold text-accent">{row.lockMechanism}</td>
+                                                            <td className="py-3 px-3.5 text-gray-300">{row.exceptionHandling}</td>
+                                                            <td className="py-3 px-3.5 text-emerald-400">{row.acidGuarantee}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </motion.div>
                         )}
 
-                        {activeTab === 'contracts' && (
+                        {activeTab === 'contracts' && hasContracts && activeEndpoint && (
                             <motion.div
                                 key="tab-contracts"
                                 initial={{ opacity: 0, y: 8 }}
@@ -936,88 +1099,73 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                                 transition={{ duration: 0.18 }}
                                 className="space-y-6"
                             >
-                                {/* Seletor de Endpoints Estilo Postman */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-mono text-primary/60 uppercase tracking-wider">
-                                        Selecione o Endpoint da API:
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {specs.endpoints.map((ep: any, idx: number) => {
-                                            const isSelected = selectedEndpointIndex === idx;
-                                            const methodColor = ep.method === 'POST' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
-                                                : ep.method === 'GET' ? 'text-sky-400 bg-sky-500/10 border-sky-500/30'
-                                                : ep.method === 'PATCH' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
-                                                : 'text-rose-400 bg-rose-500/10 border-rose-500/30';
-
-                                            return (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => {
-                                                        playTabSwitch();
-                                                        setSelectedEndpointIndex(idx);
-                                                    }}
-                                                    className={`px-3 py-1.5 rounded-lg border text-xs font-mono flex items-center gap-2 transition-all cursor-pointer ${
-                                                        isSelected
-                                                            ? 'bg-white/10 border-accent text-white shadow-xs'
-                                                            : 'bg-white/[0.02] border-white/10 text-primary/70 hover:border-white/20'
-                                                    }`}
-                                                >
-                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${methodColor}`}>
-                                                        {ep.method}
-                                                    </span>
-                                                    <span>{ep.route}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                {/* Seletor de Endpoints da API */}
+                                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+                                    {(specs.apiContracts?.endpoints || []).map((ep, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                playMechanicalClick();
+                                                setSelectedEndpointIndex(idx);
+                                            }}
+                                            data-cursor-morph="true"
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-2 border transition-all cursor-pointer shrink-0 ${
+                                                selectedEndpointIndex === idx
+                                                    ? 'bg-accent/20 border-accent/60 text-white font-bold'
+                                                    : 'bg-white/5 border-white/10 text-primary/70 hover:text-white'
+                                            }`}
+                                        >
+                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                                ep.method === 'POST' ? 'bg-amber-500/20 text-amber-300' :
+                                                ep.method === 'PATCH' ? 'bg-sky-500/20 text-sky-300' :
+                                                'bg-emerald-500/20 text-emerald-300'
+                                            }`}>
+                                                {ep.method}
+                                            </span>
+                                            <span>{ep.route}</span>
+                                        </button>
+                                    ))}
                                 </div>
 
-                                {activeEndpoint && (
-                                    <div className="space-y-4">
-                                        {/* Barra de Rota & Latência Estimada */}
-                                        <div className="bg-darker border border-white/10 rounded-xl p-3.5 flex items-center justify-between gap-3 font-mono text-xs">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                                    activeEndpoint.method === 'POST' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
-                                                    : 'text-sky-400 bg-sky-500/10 border-sky-500/30'
-                                                }`}>
-                                                    {activeEndpoint.method}
-                                                </span>
-                                                <span className="text-white font-semibold truncate">{activeEndpoint.route}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                <span className="text-emerald-400 text-[11px] font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
-                                                    {activeEndpoint.status}
-                                                </span>
-                                                <span className="text-primary/60 text-[10px]">
-                                                    {activeEndpoint.latency}
-                                                </span>
-                                            </div>
+                                {/* Detalhes do Endpoint Selecionado */}
+                                <div className="bg-darker border border-white/10 rounded-xl p-4 space-y-4">
+                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                        <div className="flex items-center gap-2 font-mono text-xs">
+                                            <span className="font-bold text-accent">{activeEndpoint.method}</span>
+                                            <span className="text-white font-bold">{activeEndpoint.route}</span>
                                         </div>
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                            Latência: {activeEndpoint.latency || '12ms'}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-300 font-sans">{activeEndpoint.description}</p>
 
-                                        {/* Tabela de Headers Obrigatórios */}
+                                    {/* Headers Obrigatórios */}
+                                    {activeEndpoint.headers && activeEndpoint.headers.length > 0 && (
                                         <div className="space-y-1.5">
                                             <div className="text-[10px] font-mono uppercase tracking-wider text-primary/60">
-                                                Headers Obrigatórios:
+                                                Headers Auditados:
                                             </div>
-                                            <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden font-mono text-xs">
-                                                {activeEndpoint.headers.map((h: any, idx: number) => (
-                                                    <div key={idx} className="flex items-center justify-between p-2.5 border-b border-white/5 last:border-0">
-                                                        <span className="text-accent font-semibold">{h.name}</span>
-                                                        <span className="text-gray-400 text-[11px] truncate max-w-xs">{h.value}</span>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
+                                                {activeEndpoint.headers.map((h, hIdx) => (
+                                                    <div key={hIdx} className="p-2 rounded bg-black/40 border border-white/5">
+                                                        <div className="text-accent font-bold">{h.name}</div>
+                                                        <div className="text-primary/70 text-[11px] truncate">{h.value}</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
+                                    )}
 
-                                        {/* Payload JSON de Requisição */}
+                                    {/* Payload JSON de Requisição */}
+                                    {activeEndpoint.requestBody && activeEndpoint.requestBody !== '{}' && (
                                         <div className="space-y-1.5">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-mono uppercase tracking-wider text-primary/60">
                                                     Request Body (JSON Schema):
                                                 </span>
                                                 <button
-                                                    onClick={() => copyToClipboard(activeEndpoint.requestBody, 'Payload JSON')}
+                                                    onClick={() => copyToClipboard(activeEndpoint.requestBody || '', 'Payload JSON')}
                                                     className="text-[10px] font-mono text-primary/70 hover:text-white flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <i className="fas fa-copy text-[9px]" />
@@ -1028,8 +1176,10 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                                                 <pre><code>{activeEndpoint.requestBody}</code></pre>
                                             </div>
                                         </div>
+                                    )}
 
-                                        {/* Payload JSON de Resposta */}
+                                    {/* Payload JSON de Resposta */}
+                                    {activeEndpoint.responseBody && (
                                         <div className="space-y-1.5">
                                             <div className="text-[10px] font-mono uppercase tracking-wider text-primary/60">
                                                 Response Body ({activeEndpoint.status}):
@@ -1038,12 +1188,12 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                                                 <pre><code>{activeEndpoint.responseBody}</code></pre>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </motion.div>
                         )}
 
-                        {activeTab === 'engineering' && (
+                        {activeTab === 'engineering' && hasEngineeringTests && specs.engineeringTests && (
                             <motion.div
                                 key="tab-engineering"
                                 initial={{ opacity: 0, y: 8 }}
@@ -1060,48 +1210,48 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                                             <span>SLA Auditado & Percentis de Latência (NIST)</span>
                                         </h3>
                                         <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
-                                            {specs.uptime} Uptime
+                                            {specs.engineeringTests.uptime || '99.9%'} Uptime
                                         </span>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5 transition-all">
                                             <div className="flex items-center justify-between text-xs font-mono">
                                                 <span className="text-emerald-400 font-bold">p50</span>
-                                                <span className="text-white font-bold">{specs.percentiles.p50}ms</span>
+                                                <span className="text-white font-bold">{currentPercentiles.p50}ms</span>
                                             </div>
                                             <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
                                                 <div
-                                                    className="h-full bg-emerald-400 rounded-full"
-                                                    style={{ width: `${Math.min(100, specs.percentiles.p50 * 2)}%` }}
+                                                    className="h-full bg-emerald-400 rounded-full transition-all duration-300"
+                                                    style={{ width: `${Math.min(100, currentPercentiles.p50 * 2)}%` }}
                                                 />
                                             </div>
                                             <span className="text-[10px] font-mono text-primary/50">Mediana de latência</span>
                                         </div>
 
-                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5 transition-all">
                                             <div className="flex items-center justify-between text-xs font-mono">
                                                 <span className="text-sky-400 font-bold">p95</span>
-                                                <span className="text-white font-bold">{specs.percentiles.p95}ms</span>
+                                                <span className="text-white font-bold">{currentPercentiles.p95}ms</span>
                                             </div>
                                             <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
                                                 <div
-                                                    className="h-full bg-sky-400 rounded-full"
-                                                    style={{ width: `${Math.min(100, specs.percentiles.p95 * 1.5)}%` }}
+                                                    className="h-full bg-sky-400 rounded-full transition-all duration-300"
+                                                    style={{ width: `${Math.min(100, currentPercentiles.p95 * 1.5)}%` }}
                                                 />
                                             </div>
                                             <span className="text-[10px] font-mono text-primary/50">95% das requisições</span>
                                         </div>
 
-                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5 transition-all">
                                             <div className="flex items-center justify-between text-xs font-mono">
                                                 <span className="text-amber-400 font-bold">p99</span>
-                                                <span className="text-white font-bold">{specs.percentiles.p99}ms</span>
+                                                <span className="text-white font-bold">{currentPercentiles.p99}ms</span>
                                             </div>
                                             <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
                                                 <div
-                                                    className="h-full bg-amber-400 rounded-full"
-                                                    style={{ width: `${Math.min(100, specs.percentiles.p99 * 0.8)}%` }}
+                                                    className="h-full bg-amber-400 rounded-full transition-all duration-300"
+                                                    style={{ width: `${Math.min(100, currentPercentiles.p99 * 0.8)}%` }}
                                                 />
                                             </div>
                                             <span className="text-[10px] font-mono text-primary/50">Cauda crítica de latência</span>
@@ -1109,50 +1259,119 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                                     </div>
                                 </div>
 
-                                {/* Bateria de Asserções Executadas */}
+                                {/* Bateria de Asserções Executadas com Runner FSM Interativo */}
                                 <div className="space-y-3">
-                                    <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                        <i className="fas fa-check-double text-xs" />
-                                        <span>Bateria de Asserções Automatizadas</span>
-                                    </h3>
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
+                                            <i className="fas fa-check-double text-xs" />
+                                            <span>Bateria de Asserções Automatizadas</span>
+                                        </h3>
+                                        <button
+                                            onClick={runAssertionsSimulation}
+                                            disabled={runnerState === 'RUNNING'}
+                                            data-cursor-morph="true"
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                runnerState === 'RUNNING'
+                                                    ? 'bg-accent/20 border-accent text-accent animate-pulse'
+                                                    : runnerState === 'COMPLETED'
+                                                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30'
+                                                    : 'bg-white/5 border-white/15 text-white hover:bg-accent/15 hover:border-accent/40'
+                                            }`}
+                                        >
+                                            <i className={`fas ${
+                                                runnerState === 'RUNNING'
+                                                    ? 'fa-circle-notch fa-spin text-accent'
+                                                    : runnerState === 'COMPLETED'
+                                                    ? 'fa-check text-emerald-400'
+                                                    : 'fa-play text-accent'
+                                            } text-[10px]`} />
+                                            <span>
+                                                {runnerState === 'RUNNING'
+                                                    ? 'Testando...'
+                                                    : runnerState === 'COMPLETED'
+                                                    ? 'Re-executar Testes'
+                                                    : 'Executar Bateria'}
+                                            </span>
+                                        </button>
+                                    </div>
+
                                     <div className="rounded-xl border border-white/10 overflow-hidden font-mono text-xs">
-                                        {specs.assertions.map((as: any, idx: number) => (
-                                            <div key={idx} className="p-3 border-b border-white/5 last:border-0 bg-white/[0.01] flex items-center justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-                                                            {as.status}
-                                                        </span>
-                                                        <span className="text-white font-semibold truncate">{as.name}</span>
+                                        {specs.engineeringTests.assertions.map((as, idx) => {
+                                            const isRunningThis = activeAssertionIndex === idx;
+                                            const isDone = runnerState === 'COMPLETED' || (activeAssertionIndex !== null && activeAssertionIndex > idx);
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={`p-3 border-b border-white/5 last:border-0 flex items-center justify-between gap-3 transition-colors ${
+                                                        isRunningThis
+                                                            ? 'bg-accent/10 border-accent/30'
+                                                            : 'bg-white/[0.01]'
+                                                    }`}
+                                                >
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                                                                isRunningThis
+                                                                    ? 'bg-accent/20 text-accent border-accent/40 animate-pulse'
+                                                                    : isDone
+                                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                                                                    : 'bg-white/5 text-gray-400 border-white/10'
+                                                            }`}>
+                                                                {isRunningThis ? 'EXECUTING' : as.status}
+                                                            </span>
+                                                            <span className="text-white font-semibold truncate">{as.name}</span>
+                                                        </div>
+                                                        <p className="text-[11px] text-gray-400 mt-0.5">{as.details}</p>
                                                     </div>
-                                                    <p className="text-[11px] text-gray-400 mt-0.5">{as.details}</p>
+                                                    <span className="text-primary/60 text-[11px] shrink-0">{as.latency}</span>
                                                 </div>
-                                                <span className="text-primary/60 text-[11px] shrink-0">{as.latency}</span>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
-                                {/* Laboratório de Caos (Chaos Engineering) */}
-                                <div className="space-y-3">
-                                    <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                        <i className="fas fa-biohazard text-xs" />
-                                        <span>Resultados do Chaos Engineering Lab</span>
-                                    </h3>
-                                    <div className="space-y-2.5">
-                                        {specs.chaosLab.map((ch: any, idx: number) => (
-                                            <div key={idx} className="bg-darker border border-white/10 rounded-xl p-3.5 font-sans space-y-1">
-                                                <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
-                                                    <i className="fas fa-bolt text-[10px]" />
-                                                    <span>{ch.scenario}</span>
+                                {/* Laboratório de Caos (Chaos Engineering) com Toggle de Injeção ao Vivo */}
+                                {specs.engineeringTests.chaosLab && specs.engineeringTests.chaosLab.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
+                                                <i className="fas fa-biohazard text-xs" />
+                                                <span>Resultados do Chaos Engineering Lab</span>
+                                            </h3>
+                                            <button
+                                                onClick={() => {
+                                                    playMechanicalClick();
+                                                    setChaosActive(curr => !curr);
+                                                    showToast(!chaosActive ? 'Injeção de estresse ativada (+150ms jitter)' : 'Injeção de caos desativada');
+                                                }}
+                                                data-cursor-morph="true"
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                    chaosActive
+                                                        ? 'bg-red-500/20 border-red-500/50 text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
+                                                        : 'bg-white/5 border-white/15 text-primary/80 hover:text-white hover:bg-white/10'
+                                                }`}
+                                            >
+                                                <i className={`fas fa-bolt text-[10px] ${chaosActive ? 'text-red-400 animate-bounce' : 'text-amber-400'}`} />
+                                                <span>{chaosActive ? 'Injeção de Caos Ativa' : 'Simular Injeção de Caos'}</span>
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-2.5">
+                                            {specs.engineeringTests.chaosLab.map((ch, idx) => (
+                                                <div key={idx} className="bg-darker border border-white/10 rounded-xl p-3.5 font-sans space-y-1">
+                                                    <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
+                                                        <i className="fas fa-bolt text-[10px]" />
+                                                        <span>{ch.scenario}</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-300 font-mono pl-4 leading-relaxed">
+                                                        ↳ {ch.outcome}
+                                                    </p>
                                                 </div>
-                                                <p className="text-xs text-gray-300 font-mono pl-4 leading-relaxed">
-                                                    ↳ {ch.outcome}
-                                                </p>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>

@@ -166,20 +166,31 @@ export default function InteractiveParticleField() {
                 ctx.fill();
             }
 
-            // 2. Conexões translúcidas entre nós deslocados adjacentes
-            const maxConnectDist = 62;
+            // 2. Conexões translúcidas e campo de luz difuso estilo Lusion
+            if (mouse.x > 0 && mouse.y > 0) {
+                const gradient = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, activeRadius * 0.9);
+                gradient.addColorStop(0, 'rgba(217, 119, 87, 0.045)');
+                gradient.addColorStop(0.5, 'rgba(217, 119, 87, 0.015)');
+                gradient.addColorStop(1, 'rgba(217, 119, 87, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(mouse.x, mouse.y, activeRadius * 0.9, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const maxConnectDist = 68;
             for (let i = 0; i < displacedNodes.length; i++) {
                 for (let j = i + 1; j < displacedNodes.length; j++) {
                     const p1 = displacedNodes[i];
                     const p2 = displacedNodes[j];
                     const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                     if (dist < maxConnectDist) {
-                        const alpha = (1 - dist / maxConnectDist) * 0.14;
+                        const alpha = (1 - dist / maxConnectDist) * 0.18;
                         ctx.beginPath();
                         ctx.moveTo(p1.x, p1.y);
                         ctx.lineTo(p2.x, p2.y);
                         ctx.strokeStyle = `rgba(217, 119, 87, ${alpha})`;
-                        ctx.lineWidth = 0.8;
+                        ctx.lineWidth = 0.85;
                         ctx.stroke();
                     }
                 }

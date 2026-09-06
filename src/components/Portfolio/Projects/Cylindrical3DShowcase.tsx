@@ -266,17 +266,18 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     const [activeIndex, setActiveIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // ── Motion Values de Posição com Mola Amortecida (stiffness: 260, damping: 28) ──
+    // ── Motion Values de Posição com Mola Amortecida & Inércia (Jesper Landberg Physics) ──
     const progress = useMotionValue(0);
     const smoothProgress = useSpring(progress, {
-        stiffness: 260,
-        damping: 28,
-        mass: 0.6,
+        stiffness: 220,
+        damping: 26,
+        mass: 0.5,
     });
 
-    // Velocity Skew no eixo Z (inclinação orgânica proporcional à velocidade do arraste)
+    // Velocity Skew nos eixos Z e X (inclinação orgânica proporcional à velocidade do arraste)
     const progressVelocity = useVelocity(smoothProgress);
-    const velocityRotateZ = useTransform(progressVelocity, [-6, 0, 6], [2.8, 0, -2.8]);
+    const velocityRotateZ = useTransform(progressVelocity, [-8, 0, 8], [3.6, 0, -3.6]);
+    const velocitySkewX = useTransform(progressVelocity, [-8, 0, 8], [-2.2, 0, 2.2]);
 
     // Refs para arraste e inércia contínua
     const isDraggingRef = useRef(false);
@@ -367,8 +368,8 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
         const currentP = progress.get();
         const v = velocityRef.current; // px / ms
 
-        // Projeção com inércia e desaceleração orgânica
-        let targetIndex = Math.round(currentP - v * 0.16);
+        // Projeção com inércia contínua e desaceleração orgânica (Jesper Landberg Momentum)
+        let targetIndex = Math.round(currentP - v * 0.22);
         targetIndex = Math.max(0, Math.min(totalSlides - 1, targetIndex));
 
         progress.set(targetIndex);
@@ -488,10 +489,11 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                     }}
                     className="w-full max-w-6xl mx-auto min-h-[520px] sm:min-h-[550px] lg:min-h-[620px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
                 >
-                    {/* Track central 3D com Velocity Skew no eixo Z */}
+                    {/* Track central 3D com Velocity Skew nos eixos Z e X */}
                     <motion.div
                         style={{
                             rotateZ: velocityRotateZ,
+                            skewX: velocitySkewX,
                             transformStyle: 'preserve-3d',
                         }}
                         className="relative w-full h-full min-h-[480px] sm:min-h-[500px] lg:min-h-[520px] will-change-transform"
