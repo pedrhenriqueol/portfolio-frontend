@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProjectInspectorDrawer from './ProjectInspectorDrawer';
 import ModalErrorBoundary from './Common/ModalErrorBoundary';
-import CorporateProjectsGrid from './Projects/CorporateProjectsGrid';
+import CorporateProjectsShowcase from './Projects/CorporateProjectsShowcase';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProjectsSection({ projects }) {
@@ -54,8 +54,8 @@ export default function ProjectsSection({ projects }) {
                     </p>
                 </motion.div>
 
-                {/* Grid & Tabela Secundária com Ergonomia Cinemática e Filtros com layoutId */}
-                <CorporateProjectsGrid
+                {/* Esteira Cilíndrica 3D com Rotação Espacial e Filtros com layoutId */}
+                <CorporateProjectsShowcase
                     projects={corporateProjects}
                     onSelectProject={setSelected}
                     t={t}

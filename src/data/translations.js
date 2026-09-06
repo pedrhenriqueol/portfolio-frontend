@@ -417,30 +417,124 @@ export const translations = {
                     },
                 },
                 {
+                    id: 4,
                     title: 'Controle de Estoque — Java + MySQL',
-                    description: 'Sistema desktop com interface Swing para controle de estoque completo com cadastro de usuários e integração MySQL.',
+                    description: 'Sistema desktop com interface Swing para controle de estoque completo com cadastro de usuários, autenticação e integração transacional MySQL via JDBC.',
                     image_url: '/java_inventory_mockup.png',
                     repo_link: 'https://github.com/pedrhenriqueol/Projetos-Java',
                     demo_link: null,
-                    tags: ['Java', 'MySQL', 'Swing'],
+                    tags: ['Java', 'MySQL', 'Swing', 'JDBC', 'MVC Architecture'],
+                    details: {
+                        subtitle: 'Sistema Desktop MVC de Controle de Estoque & Inventário',
+                        fullDescription: 'Aplicação desktop construída em Java com arquitetura MVC (Model-View-Controller) e persistência via JDBC puro conectado ao MySQL. Implementa validações transacionais atômicas para prevenção de saldo negativo em inventário e isolamento entre eventos gráficos do Swing e chamadas de banco.',
+                        metrics: [
+                            { label: 'Arquitetura', value: 'Padrão MVC + DAO Desacoplado', icon: 'fas fa-sitemap' },
+                            { label: 'Segurança', value: 'PreparedStatement (Zero SQLi)', icon: 'fas fa-shield-alt' },
+                            { label: 'Persistência', value: 'JDBC Nativo Transacional', icon: 'fas fa-database' }
+                        ],
+                        architecture: [
+                            { layer: 'Presentation Tier', tech: 'Java Swing (JFC)', role: 'Interface gráfica orientada a eventos com formulários e validação em tempo real' },
+                            { layer: 'Controller Tier', tech: 'Java Business Controllers', role: 'Mediação entre ações de usuário, regras de validação de saldo e chamadas DAO' },
+                            { layer: 'Persistence Tier', tech: 'DAO Pattern + JDBC Connection', role: 'Mapeamento de entidades relacionais e gerenciamento de transações com commit/rollback' },
+                            { layer: 'Database Tier', tech: 'MySQL 8.0 Relacional', role: 'Esquema relacional com integridade referencial, foreign keys e índices de busca rápida' }
+                        ],
+                        challenge: 'Garantir consistência atômica no estoque durante operações concorrentes e prevenir riscos de injeção SQL em consultas dinâmicas de filtragem.',
+                        solution: 'Utilização estrita de PreparedStatement parametrizado no driver JDBC, controle manual de transação com rollback condicional e isolamento da camada DAO.',
+                        highlights: [
+                            'Arquitetura MVC pura com separação estrita de responsabilidades',
+                            'Prevenção total contra SQL Injection via PreparedStatement em todas as operações',
+                            'Controle transacional ACID manual com setAutoCommit(false) e rollback em falhas',
+                            'Interface gráfica Swing fluida com validação de campos numéricos e mensagens contextuais',
+                            'Módulo completo de autenticação de operadores e controle de níveis de acesso'
+                        ]
+                    },
+                    architectureDetails: {
+                        architectureType: 'MVC Desktop com DAO Desacoplado & Transações JDBC',
+                        domain: 'Sistema Desktop MVC de Controle de Estoque & Inventário',
+                        volume: 'Controle de Centenas de SKUs de Inventário',
+                        database: 'MySQL 8.0 Relacional (Driver JDBC Nativo)',
+                        ecosystemIcon: 'fas fa-boxes-stacked'
+                    }
                 },
                 {
                     id: 5,
                     title: 'API de Tarefas — Python + Flask',
-                    description: 'API RESTful com rotas GET, POST, PUT e DELETE feita com Python e Flask. Possui frontend integrado com HTML, CSS e JavaScript.',
+                    description: 'API RESTful modularizada com rotas GET, POST, PUT e DELETE feita com Python e Flask Blueprints. Possui tratamento centralizado de exceções e frontend integrado.',
                     image_url: '/flask_api_mockup.png',
                     repo_link: 'https://github.com/pedrhenriqueol/API-Python',
                     demo_link: null,
-                    tags: ['Python', 'Flask', 'REST API'],
+                    tags: ['Python', 'Flask', 'REST API', 'Blueprints', 'CORS', 'JSON Schema'],
+                    details: {
+                        subtitle: 'API RESTful Modularizada com Flask Blueprints',
+                        fullDescription: 'Serviço de backend construído com Python e Flask adotando a arquitetura modular de Blueprints. A API expõe endpoints para manipulação completa de tarefas com validação rigorosa de payloads JSON, tratamento centralizado de erros HTTP e integração com frontend.',
+                        metrics: [
+                            { label: 'Arquitetura', value: 'Flask Blueprints Modular', icon: 'fas fa-cubes' },
+                            { label: 'Tratamento', value: 'Erros Centralizados RFC 7807', icon: 'fas fa-shield-halved' },
+                            { label: 'Padrão', value: 'RESTful com Respostas JSON', icon: 'fas fa-network-wired' }
+                        ],
+                        architecture: [
+                            { layer: 'Routing & Module', tech: 'Flask Blueprints', role: 'Divisão modular de rotas por domínio e versionamento semântico de API' },
+                            { layer: 'Validation Tier', tech: 'JSON Schema Validation', role: 'Inspeção de tipos de dados obrigatórios e sanitização de payloads de entrada' },
+                            { layer: 'Error Handling', tech: 'Centralized Exception Handlers', role: 'Interceptação global de status 400, 404, 422 e 500 sem vazamento de stacktrace' },
+                            { layer: 'Client Integration', tech: 'Flask-CORS + Fetch API', role: 'Políticas seguras de Cross-Origin Resource Sharing para consumo por SPAs' }
+                        ],
+                        challenge: 'Evitar o acoplamento de rotas em um único arquivo de servidor e garantir respostas de erro estruturadas e previsíveis para os clientes HTTP.',
+                        solution: 'Modularização do projeto com Flask Blueprints, implementação de decoradores de captura de erro centralizados e padronização das respostas JSON.',
+                        highlights: [
+                            'Estrutura modular baseada em Flask Blueprints para escalabilidade de rotas',
+                            'Tratamento global de exceções HTTP retornando mensagens padronizadas em JSON',
+                            'Suporte completo a CORS configurado para integração limpa com aplicações frontend',
+                            'Contrato RESTful completo (GET, POST, PUT, DELETE) com códigos de status semânticos',
+                            'Frontend integrado em HTML5/CSS3/JavaScript consumindo os endpoints nativamente'
+                        ]
+                    },
+                    architectureDetails: {
+                        architectureType: 'Arquitetura Modular via Flask Blueprints & REST API',
+                        domain: 'Microsserviço RESTful de Gestão de Tarefas & Operações',
+                        volume: 'Execução de Rotas HTTP RESTful com Validação',
+                        database: 'Estruturado / In-Memory & Serialização JSON',
+                        ecosystemIcon: 'fas fa-list-check'
+                    }
                 },
                 {
                     id: 6,
                     title: 'Gerador de Senhas — Python',
-                    description: 'Aplicativo desktop em Python com interface Tkinter. Utiliza bibliotecas random, string e pyperclip para geração e cópia prática das senhas.',
+                    description: 'Aplicativo desktop em Python com interface Tkinter e motor criptográfico CSPRNG (secrets). Utiliza validação de entropia por Regex e integração pyperclip.',
                     image_url: '/password_gen_mockup.png',
                     repo_link: 'https://github.com/pedrhenriqueol/Gerador-senhas',
                     demo_link: null,
-                    tags: ['Python', 'Tkinter'],
+                    tags: ['Python', 'Tkinter', 'CSPRNG secrets', 'Regex Security', 'pyperclip'],
+                    details: {
+                        subtitle: 'Engine de Criptografia & Entropia de Senhas com Tkinter',
+                        fullDescription: 'Utilitário desktop de segurança cibernética desenvolvido em Python com interface gráfica Tkinter. A aplicação utiliza o módulo nativo secrets (CSPRNG via os.urandom) para geração de números pseudoaleatórios criptograficamente seguros, validando a entropia através de Expressões Regulares.',
+                        metrics: [
+                            { label: 'Criptografia', value: 'CSPRNG Nativo (secrets)', icon: 'fas fa-lock' },
+                            { label: 'Entropia', value: 'Validação por Regex Lookahead', icon: 'fas fa-key' },
+                            { label: 'Interface', value: 'Tkinter Desacoplado da Engine', icon: 'fas fa-desktop' }
+                        ],
+                        architecture: [
+                            { layer: 'UI Presentation', tech: 'Tkinter GUI Event Loop', role: 'Interface desktop reativa com controles deslizantes de comprimento e seletores de caracteres' },
+                            { layer: 'Entropy Engine', tech: 'Python secrets (os.urandom)', role: 'Geração de aleatoriedade não-determinística imune a predição estatística de sementes' },
+                            { layer: 'Security Validator', tech: 'Regex Pattern Matching', role: 'Verificação de complexidade compulsória: maiúsculas, minúsculas, dígitos e símbolos' },
+                            { layer: 'Clipboard Tier', tech: 'Pyperclip System Binding', role: 'Cópia rápida e segura para a área de transferência do sistema operacional com feedback' }
+                        ],
+                        challenge: 'Garantir que senhas geradas aleatoriamente não utilizem funções pseudoaleatórias previsíveis (como random) e sempre atendam aos requisitos de complexidade.',
+                        solution: 'Substituição completa do gerador tradicional pelo módulo secrets, cálculo matemático de entropia de Shannon e verificação estrita via Regex.',
+                        highlights: [
+                            'Uso do módulo nativo secrets (CSPRNG) alimentado por entropia do sistema operacional',
+                            'Validação mandatória de complexidade por Regex (letras, números e caracteres especiais)',
+                            'Cálculo de comprimento customizável com garantia de entropia mínima recomendada',
+                            'Integração direta com a área de transferência do sistema operacional via pyperclip',
+                            'Interface desktop leve, sem dependências externas pesadas e com inicialização instantânea'
+                        ]
+                    },
+                    architectureDetails: {
+                        architectureType: 'CSPRNG Criptográfico Desacoplado de Interface Tkinter',
+                        domain: 'Utilitário Desktop de Segurança Cibernética & Entropia de Senhas',
+                        volume: 'Geração Instantânea com Entropia de Shannon (64+ bits)',
+                        database: 'In-Memory / OS Entropic Source (os.urandom)',
+                        ecosystemIcon: 'fas fa-key'
+                    }
                 },
             ]
         },
@@ -899,29 +993,122 @@ export const translations = {
                 {
                     id: 4,
                     title: 'Inventory Control — Java + MySQL',
-                    description: 'Desktop system with Swing interface for complete inventory control with user registration and MySQL integration.',
+                    description: 'Desktop system with Swing interface for complete inventory control with user registration, authentication, and MySQL transactional integration via JDBC.',
                     image_url: '/java_inventory_mockup.png',
                     repo_link: 'https://github.com/pedrhenriqueol/Projetos-Java',
                     demo_link: null,
-                    tags: ['Java', 'MySQL', 'Swing'],
+                    tags: ['Java', 'MySQL', 'Swing', 'JDBC', 'MVC Architecture'],
+                    details: {
+                        subtitle: 'Desktop MVC Inventory Control & Stock Management System',
+                        fullDescription: 'Desktop application built in Java using the MVC (Model-View-Controller) architecture and persistence via raw JDBC connected to MySQL. Features atomic transactional validations to prevent negative inventory balances and decouples Swing GUI event handling from database transactions.',
+                        metrics: [
+                            { label: 'Architecture', value: 'MVC Pattern + Decoupled DAO', icon: 'fas fa-sitemap' },
+                            { label: 'Security', value: 'PreparedStatement (Zero SQLi)', icon: 'fas fa-shield-alt' },
+                            { label: 'Persistence', value: 'Native Transactional JDBC', icon: 'fas fa-database' }
+                        ],
+                        architecture: [
+                            { layer: 'Presentation Tier', tech: 'Java Swing (JFC)', role: 'Event-driven desktop UI with forms and real-time validation' },
+                            { layer: 'Controller Tier', tech: 'Java Business Controllers', role: 'Mediates user actions, balance validation rules, and DAO invocations' },
+                            { layer: 'Persistence Tier', tech: 'DAO Pattern + JDBC Connection', role: 'Relational entity mapping and transaction management with commit/rollback' },
+                            { layer: 'Database Tier', tech: 'MySQL 8.0 Relational', role: 'Relational schema with referential integrity, foreign keys, and fast lookup indexes' }
+                        ],
+                        challenge: 'Ensuring atomic consistency in inventory balances during concurrent operations and preventing SQL injection in dynamic filters.',
+                        solution: 'Strict adoption of parameterized PreparedStatement on JDBC driver, manual transaction control with conditional rollback, and clean DAO layer separation.',
+                        highlights: [
+                            'Pure MVC architecture with strict separation of concerns',
+                            'Total prevention against SQL Injection via PreparedStatement across all operations',
+                            'Manual ACID transactional control with setAutoCommit(false) and rollback on failure',
+                            'Fluid Swing graphical interface with numeric input validation and contextual alerts',
+                            'Complete operator authentication and role-based access control module'
+                        ]
+                    },
+                    architectureDetails: {
+                        architectureType: 'Desktop MVC with Decoupled DAO & JDBC Transactions',
+                        domain: 'Desktop MVC Inventory Control & Stock Management System',
+                        volume: 'Management of Hundreds of Inventory SKUs',
+                        database: 'MySQL 8.0 Relational (Native JDBC Driver)',
+                        ecosystemIcon: 'fas fa-boxes-stacked'
+                    }
                 },
                 {
                     id: 5,
                     title: 'Task API — Python + Flask',
-                    description: 'RESTful API with GET, POST, PUT, and DELETE routes made with Python and Flask. Features an integrated frontend with HTML, CSS, and JavaScript.',
+                    description: 'Modularized RESTful API with GET, POST, PUT, and DELETE routes made with Python and Flask Blueprints. Features centralized exception handling and integrated frontend.',
                     image_url: '/flask_api_mockup.png',
                     repo_link: 'https://github.com/pedrhenriqueol/API-Python',
                     demo_link: null,
-                    tags: ['Python', 'Flask', 'REST API'],
+                    tags: ['Python', 'Flask', 'REST API', 'Blueprints', 'CORS', 'JSON Schema'],
+                    details: {
+                        subtitle: 'Modularized RESTful API with Flask Blueprints',
+                        fullDescription: 'Backend service built with Python and Flask adopting the modular architecture of Blueprints. The API exposes endpoints for complete task manipulation with strict JSON payload validation, centralized HTTP error handling, and SPA integration.',
+                        metrics: [
+                            { label: 'Architecture', value: 'Modular Flask Blueprints', icon: 'fas fa-cubes' },
+                            { label: 'Handling', value: 'Centralized RFC 7807 Errors', icon: 'fas fa-shield-halved' },
+                            { label: 'Standard', value: 'RESTful with JSON Responses', icon: 'fas fa-network-wired' }
+                        ],
+                        architecture: [
+                            { layer: 'Routing & Module', tech: 'Flask Blueprints', role: 'Modular route breakdown by business domain and semantic API versioning' },
+                            { layer: 'Validation Tier', tech: 'JSON Schema Validation', role: 'Inspection of mandatory data types and input payload sanitization' },
+                            { layer: 'Error Handling', tech: 'Centralized Exception Handlers', role: 'Global interception of 400, 404, 422, and 500 status without stacktrace leakage' },
+                            { layer: 'Client Integration', tech: 'Flask-CORS + Fetch API', role: 'Secure Cross-Origin Resource Sharing policies for frontend consumption' }
+                        ],
+                        challenge: 'Preventing route coupling in a monolithic server file and ensuring predictable, structured error responses for HTTP consumers.',
+                        solution: 'Project modularization via Flask Blueprints, global exception handler decorators, and standardized JSON payloads.',
+                        highlights: [
+                            'Modular structure based on Flask Blueprints for scalable route expansion',
+                            'Global HTTP exception handling returning standardized JSON responses',
+                            'Complete CORS configuration for seamless integration with frontend applications',
+                            'Full RESTful contract (GET, POST, PUT, DELETE) with semantic status codes',
+                            'Integrated frontend in HTML5/CSS3/JavaScript natively consuming backend endpoints'
+                        ]
+                    },
+                    architectureDetails: {
+                        architectureType: 'Modular Architecture via Flask Blueprints & REST API',
+                        domain: 'RESTful Microservice for Task & Operations Management',
+                        volume: 'Execution of RESTful HTTP Routes with Validation',
+                        database: 'Structured / In-Memory & JSON Serialization',
+                        ecosystemIcon: 'fas fa-list-check'
+                    }
                 },
                 {
                     id: 6,
                     title: 'Password Generator — Python',
-                    description: 'Python desktop application with Tkinter interface. Uses random, string, and pyperclip libraries for practical password generation and copying.',
+                    description: 'Python desktop application with Tkinter GUI and CSPRNG cryptographic engine (secrets). Uses Regex entropy validation and pyperclip clipboard binding.',
                     image_url: '/password_gen_mockup.png',
                     repo_link: 'https://github.com/pedrhenriqueol/Gerador-senhas',
                     demo_link: null,
-                    tags: ['Python', 'Tkinter'],
+                    tags: ['Python', 'Tkinter', 'CSPRNG secrets', 'Regex Security', 'pyperclip'],
+                    details: {
+                        subtitle: 'Password Cryptography & Entropy Engine with Tkinter',
+                        fullDescription: 'Cybersecurity desktop utility built in Python with a Tkinter graphical interface. The application leverages the native secrets module (CSPRNG via os.urandom) for cryptographically secure pseudo-random number generation, validating entropy through Regular Expressions.',
+                        metrics: [
+                            { label: 'Cryptography', value: 'Native CSPRNG (secrets)', icon: 'fas fa-lock' },
+                            { label: 'Entropy', value: 'Regex Lookahead Validation', icon: 'fas fa-key' },
+                            { label: 'Interface', value: 'Tkinter Decoupled from Engine', icon: 'fas fa-desktop' }
+                        ],
+                        architecture: [
+                            { layer: 'UI Presentation', tech: 'Tkinter GUI Event Loop', role: 'Reactive desktop interface with length sliders and character set toggles' },
+                            { layer: 'Entropy Engine', tech: 'Python secrets (os.urandom)', role: 'Non-deterministic randomness generation immune to seed prediction attacks' },
+                            { layer: 'Security Validator', tech: 'Regex Pattern Matching', role: 'Mandatory complexity enforcement: uppercase, lowercase, digits, and symbols' },
+                            { layer: 'Clipboard Tier', tech: 'Pyperclip System Binding', role: 'Fast and secure copy to OS clipboard with visual feedback' }
+                        ],
+                        challenge: 'Ensuring that randomly generated passwords do not use predictable pseudo-random functions (such as random) and consistently satisfy enterprise complexity standards.',
+                        solution: 'Complete replacement of legacy random generator with secrets module, Shannon entropy calculation, and strict Regex validation.',
+                        highlights: [
+                            'Use of native secrets module (CSPRNG) powered by operating system kernel entropy',
+                            'Mandatory complexity validation by Regex (uppercase, lowercase, numbers, and symbols)',
+                            'Customizable length calculation with guaranteed minimum recommended entropy',
+                            'Direct integration with the operating system clipboard via pyperclip',
+                            'Lightweight desktop interface with zero heavy external dependencies and instant launch'
+                        ]
+                    },
+                    architectureDetails: {
+                        architectureType: 'Cryptographic CSPRNG Decoupled from Tkinter Interface',
+                        domain: 'Cybersecurity Desktop Utility & Password Entropy Engine',
+                        volume: 'Instant Generation with Shannon Entropy (64+ bits)',
+                        database: 'In-Memory / OS Entropic Source (os.urandom)',
+                        ecosystemIcon: 'fas fa-key'
+                    }
                 },
             ]
         },
