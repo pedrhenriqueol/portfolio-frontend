@@ -11,7 +11,7 @@ import Dock from './components/Portfolio/Workstation/Dock';
 import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import { useLanguage } from './context/LanguageContext';
 
-const CylindricalWebGLShowcase = lazy(() => import('./components/Portfolio/Projects/CylindricalWebGLShowcase'));
+const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
 const ExperienceSection        = lazy(() => import('./components/Portfolio/ExperienceSection'));
 const SkillsSection            = lazy(() => import('./components/Portfolio/SkillsSection'));
 const ProjectsSection          = lazy(() => import('./components/Portfolio/ProjectsSection'));
@@ -102,9 +102,9 @@ export default function App() {
                 <HeroSection />
                 <AboutSection />
 
-                {/* ── Camada 1: Destaque Principal (Showcase Cilíndrico WebGL com Shaders GLSL) ── */}
+                {/* ── Camada 1: Destaque Principal (Showcase Cilíndrico 3D em Escala Monumental) ── */}
                 <Suspense fallback={<SectionSkeleton />}>
-                    <CylindricalWebGLShowcase
+                    <Cylindrical3DShowcase
                         onSelectProject={setSelectedProject}
                         projects={PROJECTS}
                     />
