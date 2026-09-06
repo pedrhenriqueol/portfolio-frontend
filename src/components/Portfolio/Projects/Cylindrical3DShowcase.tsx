@@ -62,38 +62,45 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
 interface CylindricalCardProps {
     project: FlagshipProject;
     index: number;
+    activeIndex: number;
     smoothProgress: any;
     onSelect: (project: FlagshipProject) => void;
     onCardFocus: (index: number) => void;
 }
 
 /**
- * CylindricalCard - Card 3D individual em escala monumental com anatomia técnica integrada
+ * CylindricalCard - Card 3D individual com isolamento de empilhamento estrito,
+ * separação espacial calibrada e botões integrados sem interceptação.
  */
 function CylindricalCard({
     project,
     index,
+    activeIndex,
     smoothProgress,
     onSelect,
     onCardFocus,
 }: CylindricalCardProps) {
-    // ── Transformações 3D Cilíndricas (stiffness: 260, damping: 28) ──
-    // Foco: rotateY(0deg), translateZ(0px), scale(1.0), opacity: 1.0, zIndex: 30
-    // Adjacentes: rotateY(±28deg), translateZ(-160px), scale(0.92), opacity: 0.45, zIndex: 10
-    const rotateY = useTransform(smoothProgress, (p: number) => `${(index - p) * 28}deg`);
-    const translateZ = useTransform(smoothProgress, (p: number) => `${-Math.abs(index - p) * 160}px`);
-    const translateX = useTransform(smoothProgress, (p: number) => `${(index - p) * 82}%`);
-    const scale = useTransform(smoothProgress, (p: number) => Math.max(0.82, 1 - Math.abs(index - p) * 0.08));
-    const opacity = useTransform(smoothProgress, (p: number) => Math.max(0.2, 1 - Math.abs(index - p) * 0.55));
-    const zIndex = useTransform(smoothProgress, (p: number) => (Math.abs(index - p) < 0.5 ? 30 : 10));
-    const shadowOpacity = useTransform(smoothProgress, (p: number) => Math.max(0, 0.85 - Math.abs(index - p) * 0.4));
+    const isCurrent = index === activeIndex;
 
-    const handleClick = (e: React.MouseEvent) => {
-        const currentP = smoothProgress.get();
-        const diff = Math.abs(index - currentP);
-        // Se for um card lateral clicado, gira a esteira para focalizá-lo
-        if (diff >= 0.4) {
-            e.stopPropagation();
+    // ── 1. Gestão Estrita de Z-Index & Empilhamento ──
+    // Card ativo tem prioridade máxima (50) para nunca sofrer interceptação de cards laterais
+    const zIndex = isCurrent ? 50 : 20 - Math.abs(index - activeIndex);
+
+    // ── 2. Calibração Espacial Tridimensional ──
+    // Deslocamento X com 115% de espaçamento lateral evitando colisões de bordas
+    const translateX = useTransform(smoothProgress, (p: number) => `${(index - p) * 115}%`);
+    // Rotação Y com -24deg no arco côncavo cilíndrico
+    const rotateY = useTransform(smoothProgress, (p: number) => `${(index - p) * -24}deg`);
+    // Recuo em Z: 0px no ativo, -220px nos laterais
+    const translateZ = useTransform(smoothProgress, (p: number) => `${-Math.abs(index - p) * 220}px`);
+    // Escala: 1.0 no ativo, 0.86 nos adjacentes
+    const scale = useTransform(smoothProgress, (p: number) => Math.max(0.86, 1 - Math.abs(index - p) * 0.14));
+    // Opacidade: 1.0 no ativo, 0.40 nos adjacentes
+    const opacity = useTransform(smoothProgress, (p: number) => Math.max(0.2, 1 - Math.abs(index - p) * 0.6));
+    const shadowOpacity = useTransform(smoothProgress, (p: number) => Math.max(0, 0.85 - Math.abs(index - p) * 0.45));
+
+    const handleCardContainerClick = () => {
+        if (!isCurrent) {
             onCardFocus(index);
         }
     };
@@ -107,17 +114,25 @@ function CylindricalCard({
                 scale,
                 opacity,
                 zIndex,
+                isolation: 'isolate',
                 transformStyle: 'preserve-3d',
                 transformOrigin: '50% 50%',
             }}
-            onClick={handleClick}
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[92vw] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[520px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased"
+            onClick={handleCardContainerClick}
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[92vw] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[520px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
+                isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
+            }`}
         >
             {/* Card Tridimensional Principal em Escala Monumental */}
-            <div className="w-full h-full rounded-2xl bg-[#0C0F17] border border-white/15 overflow-hidden flex flex-col md:flex-row shadow-[0_30px_90px_rgba(0,0,0,0.95)] relative group backdrop-blur-[2px]">
-                
-                {/* ── Lado Esquerdo: Área Visual e Preview Nítido com Aspect Ratio Consistente ── */}
-                <div className="w-full md:w-[48%] h-48 sm:h-56 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-white/10 shrink-0">
+            <div
+                className={`w-full h-full rounded-2xl bg-[#0C0F17] border border-white/15 overflow-hidden flex flex-col md:flex-row shadow-[0_30px_90px_rgba(0,0,0,0.95)] relative group transition-all duration-300 ${
+                    isCurrent
+                        ? 'brightness-100 pointer-events-auto'
+                        : 'brightness-[0.4] backdrop-blur-[1px] filter pointer-events-none'
+                }`}
+            >
+                {/* ── Lado Esquerdo: Área Visual e Preview Nítido ── */}
+                <div className="w-full md:w-[48%] h-48 sm:h-56 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-white/10 shrink-0 pointer-events-none">
                     <img
                         src={project.image}
                         alt={project.title}
@@ -140,7 +155,7 @@ function CylindricalCard({
                     </div>
                 </div>
 
-                {/* ── Lado Direito: Especificações Técnicas e Anatomia Integrada (Totalmente Opaco) ── */}
+                {/* ── Lado Direito: Especificações Técnicas e Anatomia Integrada ── */}
                 <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden bg-[#0C0F17]">
                     <div>
                         {/* Cabeçalho Interno: Tag de Passo + Indicador de Confiabilidade */}
@@ -182,43 +197,50 @@ function CylindricalCard({
                         </div>
                     </div>
 
-                    {/* ── Rodapé Integrado: Ações Diretas no Card (Sem HUD Separado) ── */}
-                    <div className="flex flex-wrap items-center gap-2.5 pt-4 border-t border-white/10 mt-auto">
+                    {/* ── Rodapé Integrado: Ações Diretas no Card sem Interceptação ── */}
+                    <div className="flex flex-wrap items-center gap-2.5 pt-4 border-t border-white/10 mt-auto relative z-20">
+                        {/* Botão Detalhes Técnicos */}
                         <button
+                            type="button"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onSelect(project);
                             }}
                             data-cursor-morph="true"
-                            className="flex-1 min-w-[135px] py-3 px-4 bg-accent/20 border border-accent/40 hover:bg-accent hover:text-darker text-accent font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95"
+                            className="flex-1 min-w-[135px] py-3 px-4 bg-accent/20 border border-accent/40 hover:bg-accent hover:text-darker text-accent font-semibold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 relative z-30"
                         >
                             <i className="fas fa-microchip text-xs" />
                             <span>Detalhes Técnicos</span>
                         </button>
                         
-                        <MagneticButton
-                            as="a"
+                        {/* Botão Acessar Demonstração */}
+                        <a
                             href={project.url}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="flex-1 min-w-[155px] py-3 px-4 bg-accent text-darker font-bold text-xs rounded-xl hover:bg-accent-hover transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95"
+                            className="flex-1 min-w-[155px] py-3 px-4 bg-accent hover:bg-accent-hover text-darker font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md active:scale-95 relative z-30 cursor-pointer"
                         >
                             <span>Acessar Demonstração</span>
                             <i className="fas fa-external-link-alt text-[9px]" />
-                        </MagneticButton>
+                        </a>
 
-                        <MagneticButton
-                            as="a"
+                        {/* Botão de Repositório GitHub */}
+                        <a
                             href={project.repo}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="p-3 bg-dark border border-white/15 text-primary hover:text-white rounded-xl transition-colors active:scale-95"
+                            className="p-3 bg-dark/90 hover:bg-dark border border-white/15 hover:border-accent/50 text-primary hover:text-white rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center shrink-0 shadow-sm relative z-30 cursor-pointer"
                             title="Código-Fonte no GitHub"
+                            aria-label={`Código-fonte de ${project.title} no GitHub`}
                         >
-                            <i className="fab fa-github text-sm" />
-                        </MagneticButton>
+                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                            </svg>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -258,6 +280,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
 
     // Refs para arraste e inércia contínua
     const isDraggingRef = useRef(false);
+    const hasDraggedRef = useRef(false);
     const startXRef = useRef(0);
     const startProgressRef = useRef(0);
     const lastXRef = useRef(0);
@@ -300,6 +323,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     const handlePointerDown = (e: React.PointerEvent) => {
         if (e.button !== undefined && e.button !== 0) return;
         isDraggingRef.current = true;
+        hasDraggedRef.current = false;
         startXRef.current = e.clientX;
         startProgressRef.current = progress.get();
         lastXRef.current = e.clientX;
@@ -321,8 +345,12 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
         lastTimeRef.current = now;
 
         const totalDeltaX = e.clientX - startXRef.current;
-        // 450px de deslocamento correspondem a 1 slide completo
-        const DRAG_FACTOR = 450;
+        if (Math.abs(totalDeltaX) > 8) {
+            hasDraggedRef.current = true;
+        }
+
+        // 460px de deslocamento correspondem a 1 slide completo
+        const DRAG_FACTOR = 460;
         const targetProgress = startProgressRef.current - (totalDeltaX / DRAG_FACTOR);
         const bounded = Math.max(-0.25, Math.min(totalSlides - 0.75, targetProgress));
         progress.set(bounded);
@@ -349,6 +377,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     };
 
     const handleInspect = (config: FlagshipProject) => {
+        if (hasDraggedRef.current) return;
         playMechanicalClick();
         if (onSelectProject) {
             const fullProject = projects.find((p) => p.id === config.id) || config;
@@ -472,6 +501,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                                 key={project.id}
                                 project={project}
                                 index={idx}
+                                activeIndex={activeIndex}
                                 smoothProgress={smoothProgress}
                                 onSelect={handleInspect}
                                 onCardFocus={navigateTo}
