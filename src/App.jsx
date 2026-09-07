@@ -76,7 +76,7 @@ export default function App() {
     }, []);
 
     return (
-        <>
+        <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative">
             {/* ── Sequência de Inicialização / Preloader Minimalista Jesper Landberg ── */}
             <AnimatePresence mode="wait">
                 {!isLoaded && (
@@ -87,7 +87,33 @@ export default function App() {
                 )}
             </AnimatePresence>
 
-            {/* ── Header (Descida Sutil do Topo — Revelação em Pinça) ── */}
+            {/* ── Camadas Globais Fixadas na Viewport (NUNCA dentro de containers transformados) ── */}
+            <InteractiveParticleField />
+            <CustomCursor />
+            <ClickSparks />
+            <SoundEngine />
+            
+            <Suspense fallback={null}>
+                <CommandPalette />
+            </Suspense>
+
+            {/* ── Workstation Layer (Overlays Fixos na Viewport) ── */}
+            <Dock
+                onToggleTelemetry={toggleTelemetry}
+                isTelemetryOpen={telemetryOpen}
+                viewMode={viewMode}
+                onToggleViewMode={toggleViewMode}
+            />
+            <StatusBar avgLatency={avgLatency} />
+            <Suspense fallback={null}>
+                <LiveTelemetryMesh
+                    isOpen={telemetryOpen}
+                    onClose={() => setTelemetryOpen(false)}
+                    onLatencyUpdate={setAvgLatency}
+                />
+            </Suspense>
+
+            {/* ── Header (Fixo no Topo com Revelação Sincronizada) ── */}
             <Header isLoaded={isLoaded} />
 
             {/* ── Hero & Conteúdo Principal (Elevação do Fundo — Revelação em Pinça) ── */}
@@ -100,37 +126,9 @@ export default function App() {
                     damping: 26,
                     mass: 0.6,
                 }}
-                style={{ willChange: 'transform, opacity' }}
-                className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative"
+                style={{ willChange: isLoaded ? 'auto' : 'transform, opacity' }}
+                className="relative z-10 w-full"
             >
-                {/* Lusion Canvas 2D Physical Particle Field */}
-                <InteractiveParticleField />
-
-                {/* Global micro-effects */}
-                <CustomCursor />
-                <ClickSparks />
-                <SoundEngine />
-                
-                <Suspense fallback={null}>
-                    <CommandPalette />
-                </Suspense>
-
-                {/* ── Workstation Layer (Additive — does NOT replace existing content) ── */}
-                <Dock
-                    onToggleTelemetry={toggleTelemetry}
-                    isTelemetryOpen={telemetryOpen}
-                    viewMode={viewMode}
-                    onToggleViewMode={toggleViewMode}
-                />
-                <StatusBar avgLatency={avgLatency} />
-                <Suspense fallback={null}>
-                    <LiveTelemetryMesh
-                        isOpen={telemetryOpen}
-                        onClose={() => setTelemetryOpen(false)}
-                        onLatencyUpdate={setAvgLatency}
-                    />
-                </Suspense>
-
                 {/* ── Container Principal Estático, Estável e Ortogonal (Padrão Rauno Freiberg) ── */}
                 <main className="relative z-10 w-full overflow-x-hidden pb-8 lg:pb-10">
                     <HeroSection />
@@ -166,25 +164,25 @@ export default function App() {
                     </Suspense>
                 </main>
 
-                {/* Global Console para projetos inspecionados via KineticShowcase */}
-                <Suspense fallback={null}>
-                    <ModalErrorBoundary onClose={() => setSelectedProject(null)}>
-                        <AnimatePresence mode="wait">
-                            {selectedProject && (
-                                <ProjectInspectorDrawer
-                                    key={`inspector-${selectedProject.id}`}
-                                    project={selectedProject}
-                                    onClose={() => setSelectedProject(null)}
-                                />
-                            )}
-                        </AnimatePresence>
-                    </ModalErrorBoundary>
-                </Suspense>
-
                 <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
                     <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
                 </footer>
             </motion.div>
-        </>
+
+            {/* Global Console para projetos inspecionados via KineticShowcase */}
+            <Suspense fallback={null}>
+                <ModalErrorBoundary onClose={() => setSelectedProject(null)}>
+                    <AnimatePresence mode="wait">
+                        {selectedProject && (
+                            <ProjectInspectorDrawer
+                                key={`inspector-${selectedProject.id}`}
+                                project={selectedProject}
+                                onClose={() => setSelectedProject(null)}
+                            />
+                        )}
+                    </AnimatePresence>
+                </ModalErrorBoundary>
+            </Suspense>
+        </div>
     );
 }

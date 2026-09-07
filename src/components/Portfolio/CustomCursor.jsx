@@ -32,7 +32,7 @@ export default function CustomCursor() {
     const isNoMorphRef = useRef(false);
     const isOffscreenRef = useRef(true);
     const rafRef = useRef(null);
-    const cachedZoomRef = useRef(1);
+    const cachedZoomRef = useRef(0.8);
 
     // Desativa o cursor virtual em dispositivos touch
     useEffect(() => {
@@ -46,10 +46,22 @@ export default function CustomCursor() {
         setIsTouch(checkTouch());
     }, []);
 
-    // Sincroniza o zoom global do CSS (0.8)
+    // Sincroniza o zoom global do CSS (0.8) com fallback universal
     useEffect(() => {
         const updateZoom = () => {
-            cachedZoomRef.current = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+            const styleZoom = parseFloat(getComputedStyle(document.documentElement).zoom);
+            if (!isNaN(styleZoom) && styleZoom > 0) {
+                cachedZoomRef.current = styleZoom;
+                return;
+            }
+            if (document.documentElement.clientWidth > 0) {
+                const ratio = window.innerWidth / document.documentElement.clientWidth;
+                if (ratio > 0.4 && ratio < 2.0) {
+                    cachedZoomRef.current = ratio;
+                    return;
+                }
+            }
+            cachedZoomRef.current = 0.8;
         };
         updateZoom();
         window.addEventListener('resize', updateZoom, { passive: true });
@@ -191,12 +203,25 @@ export default function CustomCursor() {
 
         const onScroll = () => {
             if (targetRef.current?.type === 'button') {
-                if (!rafRef.current) {
-                    rafRef.current = requestAnimationFrame(() => {
-                        rafRef.current = null;
-                        updateCursor();
-                    });
+                const el = targetRef.current.el;
+                const rect = el.getBoundingClientRect();
+                const zoom = cachedZoomRef.current;
+                const mouseX = posRef.current.x * zoom;
+                const mouseY = posRef.current.y * zoom;
+                if (
+                    mouseX < rect.left - 15 ||
+                    mouseX > rect.right + 15 ||
+                    mouseY < rect.top - 15 ||
+                    mouseY > rect.bottom + 15
+                ) {
+                    targetRef.current = null;
                 }
+            }
+            if (!rafRef.current) {
+                rafRef.current = requestAnimationFrame(() => {
+                    rafRef.current = null;
+                    updateCursor();
+                });
             }
         };
 
