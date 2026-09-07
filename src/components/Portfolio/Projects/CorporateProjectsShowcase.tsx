@@ -594,7 +594,7 @@ export default function CorporateProjectsShowcase({
                                         <motion.div
                                             layoutId="activeCorporateCategoryTab"
                                             className="absolute inset-0 bg-accent/20 border border-accent/50 rounded-xl shadow-[0_0_15px_rgba(255,108,55,0.25)]"
-                                            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                            transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                                         />
                                     )}
                                     <span className="relative z-10">{f.label}</span>
@@ -667,7 +667,7 @@ export default function CorporateProjectsShowcase({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.25 }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                         className="relative w-full overflow-hidden py-4 sm:py-6"
                     >
                         {/* ── Palco 3D Tridimensional com Curvatura Cilíndrica e Perspectiva ── */}
@@ -761,7 +761,7 @@ export default function CorporateProjectsShowcase({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.22 }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                         className="rounded-2xl border border-white/10 bg-darker/80 backdrop-blur-xl overflow-hidden shadow-2xl"
                     >
                         <div className="overflow-x-auto scrollbar-thin">

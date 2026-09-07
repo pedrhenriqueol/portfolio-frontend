@@ -9,6 +9,7 @@ import AboutSection from './components/Portfolio/AboutSection';
 import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
 import StatusBar from './components/Portfolio/Workstation/StatusBar';
+import KineticVelocityRig from './components/Portfolio/KineticVelocityRig';
 import { useLanguage } from './context/LanguageContext';
 
 const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
@@ -100,6 +101,7 @@ export default function App() {
             <NavBar />
 
             <main className="pb-8 lg:pb-10">
+              <KineticVelocityRig>
                 <HeroSection />
                 <AboutSection />
 
@@ -131,6 +133,7 @@ export default function App() {
                 <Suspense fallback={<SectionSkeleton />}>
                     <ContactSection />
                 </Suspense>
+              </KineticVelocityRig>
             </main>
 
             {/* Global Console para projetos inspecionados via KineticShowcase */}

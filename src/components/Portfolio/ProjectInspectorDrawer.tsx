@@ -1057,7 +1057,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
             onClick={onClose}
             className="fixed inset-0 z-[99998] bg-black/60 backdrop-blur-sm"
             role="dialog"
@@ -1167,7 +1167,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <motion.div
                                         layoutId="activeDrawerTab"
                                         className="absolute inset-0 bg-accent/20 border border-accent/40 rounded-xl"
-                                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                                     />
                                 )}
                                 <i className={`${tab.icon} relative z-10 text-xs ${isActive ? 'text-accent' : 'text-primary/50'}`} />
@@ -1186,7 +1186,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.18 }}
+                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
                                 className="space-y-6"
                             >
                                 {/* Cartão de Contexto de Engenharia (Grid 2x2) */}
@@ -1287,7 +1287,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.18 }}
+                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
                                 className="space-y-6"
                             >
                                 {/* Camadas de Arquitetura do Projeto (se declaradas) */}
@@ -1374,7 +1374,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.18 }}
+                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
                                 className="space-y-6"
                             >
                                 {/* Seletor de Endpoints da API */}
@@ -1477,7 +1477,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.18 }}
+                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
                                 className="space-y-6"
                             >
                                 {/* Painel de Telemetria com Barras de Progresso & Percentis NIST */}
