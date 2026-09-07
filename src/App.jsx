@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import InteractiveParticleField from './components/Portfolio/InteractiveParticleField';
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
-import NavBar from './components/Portfolio/NavBar';
+import Header from './components/Portfolio/Header';
 import HeroSection from './components/Portfolio/HeroSection';
 import AboutSection from './components/Portfolio/AboutSection';
 import SoundEngine from './components/Portfolio/SoundEngine';
@@ -49,10 +49,10 @@ export default function App() {
     const PROJECTS = Array.isArray(projectsData) ? projectsData : [];
 
     // ── Boot Sequence & Preloader State ──
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const handlePreloaderComplete = useCallback(() => {
-        setIsLoading(false);
+        setIsLoaded(true);
     }, []);
 
     // ── Workstation State ──
@@ -78,9 +78,9 @@ export default function App() {
 
     return (
         <>
-            {/* ── Sequência de Inicialização / Preloader Monumental ── */}
+            {/* ── Sequência de Inicialização / Preloader Minimalista Jesper Landberg ── */}
             <AnimatePresence mode="wait">
-                {isLoading && (
+                {!isLoaded && (
                     <SystemPreloader
                         key="system-preloader"
                         onComplete={handlePreloaderComplete}
@@ -88,15 +88,20 @@ export default function App() {
                 )}
             </AnimatePresence>
 
-            {/* ── Entrada com Profundidade no Hero (Fase 4 da Coreografia) ── */}
+            {/* ── Header (Descida Sutil do Topo — Revelação em Pinça) ── */}
+            <Header isLoaded={isLoaded} />
+
+            {/* ── Hero & Conteúdo Principal (Elevação do Fundo — Revelação em Pinça) ── */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.975, y: 16 }}
-                animate={isLoading ? { opacity: 0, scale: 0.975, y: 16 } : { opacity: 1, scale: 1, y: 0 }}
+                initial={{ y: 14, opacity: 0, scale: 0.98 }}
+                animate={isLoaded ? { y: 0, opacity: 1, scale: 1 } : { y: 14, opacity: 0, scale: 0.98 }}
                 transition={{
-                    duration: 0.8,
-                    ease: [0.16, 1, 0.3, 1],
-                    delay: 0.1,
+                    type: 'spring',
+                    stiffness: 240,
+                    damping: 26,
+                    mass: 0.6,
                 }}
+                style={{ willChange: 'transform, opacity' }}
                 className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative"
             >
                 {/* Lusion Canvas 2D Physical Particle Field */}
@@ -126,8 +131,6 @@ export default function App() {
                         onLatencyUpdate={setAvgLatency}
                     />
                 </Suspense>
-
-                <NavBar />
 
                 <main className="pb-8 lg:pb-10">
                   <KineticVelocityRig>
