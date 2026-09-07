@@ -164,20 +164,21 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const timelineRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // Progresso de scroll escopado estritamente ao contêiner dos marcos da timeline
+    // Progresso de scroll centrado na visão do usuário (start center -> end center)
     const { scrollYProgress } = useScroll({
         target: timelineRef,
-        offset: ['start 70%', 'end 65%'],
+        offset: ['start center', 'end center'],
     });
 
-    // Física de mola com inércia sedosa sem pulos (Styfen Sagala style)
+    // Mola física de inércia contínua calibrada (sem atraso excessivo)
     const smoothProgress = useSpring(scrollYProgress, {
-        stiffness: 220,
-        damping: 26,
-        mass: 0.3,
+        stiffness: 300,
+        damping: 32,
+        mass: 0.2,
     });
 
-    // Mapeamento vertical percentual da bolinha sobre a espinha dorsal
+    // Mapeamento cravado entre 0% e 100% da altura do trilho
+    const progressHeight = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
     const trackerTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
 
     // Reatividade dos nós dos marcos temporais (transição inativo -> iluminado) e micro-escala no ano
@@ -425,41 +426,40 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
 
                 {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
                 <div ref={timelineRef} className="relative">
-                    {/* Espinha Dorsal Central (visível em desktop md+) */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-16 bottom-16 w-[2px] hidden md:block pointer-events-none">
-                        {/* 1. Linha Base Guia (Trilho Escuro) */}
+                    {/* TRILHO CENTRAL COMPARTILHADO (Apenas Desktop md+) */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-32 bottom-32 w-[2px] hidden md:block pointer-events-none z-20">
+                        {/* 1. Trilho Base Guia (Linha cinza inativa) */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
 
-                        {/* 2. Linha Preenchida Reativa (Circuito Ativo) */}
+                        {/* 2. Linha Ativa Iluminada (Preenchimento progressivo) */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white/90 via-white/50 to-white/20 rounded-full origin-top"
-                            style={{ scaleY: smoothProgress }}
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/20 rounded-full origin-top"
+                            style={{ height: progressHeight }}
                         />
 
-                        {/* 3. Bolinha Rastreadora / Puck de Trajeto */}
+                        {/* 3. Bolinha Rastreadora (Ancorada estritamente no trilho) */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.85)] border-2 border-[#090b10] flex items-center justify-center pointer-events-none z-30"
+                            className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_16px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
                             style={{ top: trackerTop }}
                         >
-                            {/* Núcleo interno pulsante */}
                             <div className="w-1.5 h-1.5 rounded-full bg-[#090b10]" />
                         </motion.div>
                     </div>
 
-                    {/* Espinha Dorsal Mobile (visível em telas < md) */}
-                    <div className="absolute left-4 sm:left-6 top-16 bottom-16 w-[2px] md:hidden pointer-events-none">
+                    {/* TRILHO MOBILE (Telas < md) */}
+                    <div className="absolute left-4 sm:left-6 top-32 bottom-32 w-[2px] md:hidden pointer-events-none z-20">
                         {/* 1. Linha Base Guia Mobile */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
 
-                        {/* 2. Linha Preenchida Reativa Mobile */}
+                        {/* 2. Linha Ativa Iluminada Mobile */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white/90 via-white/50 to-white/20 rounded-full origin-top"
-                            style={{ scaleY: smoothProgress }}
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/20 rounded-full origin-top"
+                            style={{ height: progressHeight }}
                         />
 
                         {/* 3. Bolinha Rastreadora Mobile */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.85)] border-2 border-[#090b10] flex items-center justify-center pointer-events-none z-30"
+                            className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
                             style={{ top: trackerTop }}
                         >
                             <div className="w-1 h-1 rounded-full bg-[#090b10]" />

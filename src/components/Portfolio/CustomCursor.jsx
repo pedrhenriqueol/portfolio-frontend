@@ -303,32 +303,32 @@ export default function CustomCursor() {
                       }
                     : cursorMode === 'card'
                     ? {
-                          // Cards Grandes & Textos: bolinha circular contínua, segue livremente o mouse com expansão suave
+                          // Cards Grandes & Superfícies: anel sutil translúcido, sem criar bolinha opaca que confunda com o puck da timeline
                           width: DEFAULT_SIZE,
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',
-                          opacity: 1,
-                          scale: 1.8,
-                          backgroundColor: '#ffffff',
-                          border: '0px solid transparent',
+                          opacity: 0.35,
+                          scale: 1.15,
+                          backgroundColor: 'transparent',
+                          border: '1px solid rgba(255, 255, 255, 0.4)',
                           boxShadow: 'none',
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'difference',
+                          mixBlendMode: 'normal',
                       }
                     : {
-                          // Estado livre padrão: bolinha circular compacta de 22px
-                          width: DEFAULT_SIZE,
-                          height: DEFAULT_SIZE,
+                          // Estado livre padrão: ponto compacto de precisão
+                          width: 10,
+                          height: 10,
                           borderRadius: '50%',
-                          opacity: 1,
+                          opacity: 0.75,
                           scale: 1.0,
-                          backgroundColor: '#ffffff',
+                          backgroundColor: 'rgba(255, 255, 255, 0.85)',
                           border: '0px solid transparent',
-                          boxShadow: 'none',
+                          boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)',
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'difference',
+                          mixBlendMode: 'normal',
                       }
             }
             transition={SPRING_TRANSITION}
