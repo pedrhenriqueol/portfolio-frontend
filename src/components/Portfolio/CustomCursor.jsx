@@ -4,12 +4,12 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 // Diâmetro base em repouso (22px)
 const DEFAULT_SIZE = 22;
 
-// Física de mola atenuada e sem oscilação agressiva
+// Física de resposta instantânea e amortecimento suave (sem delay)
 const SPRING_TRANSITION = {
     type: 'spring',
-    damping: 28,
-    stiffness: 320,
-    mass: 0.4,
+    damping: 36,
+    stiffness: 750,
+    mass: 0.1,
 };
 
 export default function CustomCursor() {
@@ -202,21 +202,18 @@ export default function CustomCursor() {
         };
 
         const onScroll = () => {
-            if (targetRef.current?.type === 'button') {
-                const el = targetRef.current.el;
-                const rect = el.getBoundingClientRect();
-                const zoom = cachedZoomRef.current;
-                const mouseX = posRef.current.x * zoom;
-                const mouseY = posRef.current.y * zoom;
-                if (
-                    mouseX < rect.left - 15 ||
-                    mouseX > rect.right + 15 ||
-                    mouseY < rect.top - 15 ||
-                    mouseY > rect.bottom + 15
-                ) {
-                    targetRef.current = null;
-                }
+            const zoom = cachedZoomRef.current;
+            const mouseX = posRef.current.x * zoom;
+            const mouseY = posRef.current.y * zoom;
+
+            // Se o mouse estiver sobre a página enquanto ela rola, atualiza dinamicamente o alvo
+            if (mouseX >= 0 && mouseY >= 0 && mouseX <= window.innerWidth && mouseY <= window.innerHeight) {
+                const elUnderPointer = document.elementFromPoint(mouseX, mouseY);
+                const hitNoMorph = Boolean(elUnderPointer?.closest?.('[data-no-morph="true"], .no-morph, canvas'));
+                isNoMorphRef.current = hitNoMorph;
+                targetRef.current = hitNoMorph ? null : resolveTarget(elUnderPointer);
             }
+
             if (!rafRef.current) {
                 rafRef.current = requestAnimationFrame(() => {
                     rafRef.current = null;

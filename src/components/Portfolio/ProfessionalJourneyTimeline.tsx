@@ -161,19 +161,24 @@ interface ProfessionalJourneyTimelineProps {
 export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [] }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement>(null);
+    const timelineTrackRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // Linha central preenchida suavemente conforme o scroll percorre a seção
+    // Linha central preenchida com precisão cirúrgica mapeada diretamente ao contêiner dos marcos
     const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ['start 80%', 'end 30%'],
+        target: timelineTrackRef,
+        offset: ['start 60%', 'end 50%'],
     });
 
+    // Mola de alta frequência e amortecimento crítico: resposta instantânea sem delay
     const timelineScaleY = useSpring(scrollYProgress, {
-        stiffness: 220,
-        damping: 28,
-        mass: 0.3,
+        stiffness: 900,
+        damping: 50,
+        mass: 0.05,
     });
+
+    // Marcador luminoso viajante na ponta exata da linha preenchida
+    const timelineBeadTop = useTransform(timelineScaleY, [0, 1], ['0%', '100%']);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -406,14 +411,24 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 </motion.div>
 
                 {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
-                <div className="relative">
+                <div ref={timelineTrackRef} className="relative">
                     {/* Linha vertical central estática (Desktop) */}
                     <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-[2px] bg-white/10 pointer-events-none rounded-full overflow-hidden">
-                        {/* Linha preenchida dinamicamente via scroll */}
+                        {/* Linha preenchida dinamicamente via scroll com precisão instantânea */}
                         <motion.div
                             style={{ scaleY: timelineScaleY, originY: 0 }}
                             className="w-full h-full bg-gradient-to-b from-accent via-secondary to-accent shadow-[0_0_12px_rgba(209,199,189,0.7)]"
                         />
+                    </div>
+
+                    {/* Marcador luminoso viajante (Puck / Bead) na ponta ativa da linha que acompanha o trajeto */}
+                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-[2px] pointer-events-none">
+                        <motion.div
+                            style={{ top: timelineBeadTop }}
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-accent border-2 border-white shadow-[0_0_16px_rgba(209,199,189,0.9)] flex items-center justify-center pointer-events-none z-30"
+                        >
+                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        </motion.div>
                     </div>
 
                     <div className="space-y-16 md:space-y-24">
