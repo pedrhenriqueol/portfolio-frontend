@@ -161,24 +161,37 @@ interface ProfessionalJourneyTimelineProps {
 export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [] }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement>(null);
-    const timelineTrackRef = useRef<HTMLDivElement>(null);
+    const timelineRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // Linha central preenchida com precisão cirúrgica mapeada diretamente ao contêiner dos marcos
+    // Progresso de scroll escopado estritamente ao contêiner dos marcos da timeline
     const { scrollYProgress } = useScroll({
-        target: timelineTrackRef,
-        offset: ['start 60%', 'end 50%'],
+        target: timelineRef,
+        offset: ['start 70%', 'end 65%'],
     });
 
-    // Mola de alta frequência e amortecimento crítico: resposta instantânea sem delay
-    const timelineScaleY = useSpring(scrollYProgress, {
-        stiffness: 900,
-        damping: 50,
-        mass: 0.05,
+    // Física de mola com inércia sedosa sem pulos (Styfen Sagala style)
+    const smoothProgress = useSpring(scrollYProgress, {
+        stiffness: 220,
+        damping: 26,
+        mass: 0.3,
     });
 
-    // Marcador luminoso viajante na ponta exata da linha preenchida
-    const timelineBeadTop = useTransform(timelineScaleY, [0, 1], ['0%', '100%']);
+    // Mapeamento vertical percentual da bolinha sobre a espinha dorsal
+    const trackerTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
+
+    // Reatividade dos nós dos marcos temporais (transição inativo -> iluminado) e micro-escala no ano
+    const node2026Border = useTransform(smoothProgress, [0, 0.12], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.7)']);
+    const node2026Shadow = useTransform(smoothProgress, [0, 0.12], ['0 0 0px rgba(255,255,255,0)', '0 0 16px rgba(255,255,255,0.35)']);
+    const year2026Scale = useTransform(smoothProgress, [0, 0.1, 0.2], [1, 1.05, 1]);
+
+    const node2025Border = useTransform(smoothProgress, [0.38, 0.52], ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.7)']);
+    const node2025Shadow = useTransform(smoothProgress, [0.38, 0.52], ['0 0 0px rgba(255,255,255,0)', '0 0 16px rgba(255,255,255,0.35)']);
+    const year2025Scale = useTransform(smoothProgress, [0.44, 0.52, 0.6], [1, 1.05, 1]);
+
+    const node2024Border = useTransform(smoothProgress, [0.78, 0.92], ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.7)']);
+    const node2024Shadow = useTransform(smoothProgress, [0.78, 0.92], ['0 0 0px rgba(255,255,255,0)', '0 0 16px rgba(255,255,255,0.35)']);
+    const year2024Scale = useTransform(smoothProgress, [0.84, 0.92, 1], [1, 1.05, 1]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -411,27 +424,49 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 </motion.div>
 
                 {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
-                <div ref={timelineTrackRef} className="relative">
-                    {/* Linha vertical central estática (Desktop) */}
-                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-[2px] bg-white/10 pointer-events-none rounded-full overflow-hidden">
-                        {/* Linha preenchida dinamicamente via scroll com precisão instantânea */}
-                        <motion.div
-                            style={{ scaleY: timelineScaleY, originY: 0 }}
-                            className="w-full h-full bg-gradient-to-b from-accent via-secondary to-accent shadow-[0_0_12px_rgba(209,199,189,0.7)]"
-                        />
-                    </div>
+                <div ref={timelineRef} className="relative">
+                    {/* Espinha Dorsal Central (visível em desktop md+) */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-16 bottom-16 w-[2px] hidden md:block pointer-events-none">
+                        {/* 1. Linha Base Guia (Trilho Escuro) */}
+                        <div className="absolute inset-0 bg-white/10 rounded-full" />
 
-                    {/* Marcador luminoso viajante (Puck / Bead) na ponta ativa da linha que acompanha o trajeto */}
-                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-[2px] pointer-events-none">
+                        {/* 2. Linha Preenchida Reativa (Circuito Ativo) */}
                         <motion.div
-                            style={{ top: timelineBeadTop }}
-                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-accent border-2 border-white shadow-[0_0_16px_rgba(209,199,189,0.9)] flex items-center justify-center pointer-events-none z-30"
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white/90 via-white/50 to-white/20 rounded-full origin-top"
+                            style={{ scaleY: smoothProgress }}
+                        />
+
+                        {/* 3. Bolinha Rastreadora / Puck de Trajeto */}
+                        <motion.div
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.85)] border-2 border-[#090b10] flex items-center justify-center pointer-events-none z-30"
+                            style={{ top: trackerTop }}
                         >
-                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            {/* Núcleo interno pulsante */}
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#090b10]" />
                         </motion.div>
                     </div>
 
-                    <div className="space-y-16 md:space-y-24">
+                    {/* Espinha Dorsal Mobile (visível em telas < md) */}
+                    <div className="absolute left-4 sm:left-6 top-16 bottom-16 w-[2px] md:hidden pointer-events-none">
+                        {/* 1. Linha Base Guia Mobile */}
+                        <div className="absolute inset-0 bg-white/10 rounded-full" />
+
+                        {/* 2. Linha Preenchida Reativa Mobile */}
+                        <motion.div
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white/90 via-white/50 to-white/20 rounded-full origin-top"
+                            style={{ scaleY: smoothProgress }}
+                        />
+
+                        {/* 3. Bolinha Rastreadora Mobile */}
+                        <motion.div
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.85)] border-2 border-[#090b10] flex items-center justify-center pointer-events-none z-30"
+                            style={{ top: trackerTop }}
+                        >
+                            <div className="w-1 h-1 rounded-full bg-[#090b10]" />
+                        </motion.div>
+                    </div>
+
+                    <div className="space-y-16 md:space-y-24 pl-8 sm:pl-12 md:pl-0">
 
                         {/* ══════════════════════════════════════════════════════════
                             MARCO 2026: SETE TECNOLOGIA (Analista de QA & Testes)
@@ -444,11 +479,14 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                             className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                         >
-                            {/* Nó Central na Espinha (Desktop) */}
-                            <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_16px_rgba(140,106,74,0.6)] z-20">
+                            {/* Nó Central na Espinha (Desktop) com iluminação reativa */}
+                            <motion.div
+                                style={{ borderColor: node2026Border, boxShadow: node2026Shadow }}
+                                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 items-center justify-center z-20 transition-colors duration-300"
+                            >
                                 <div className="w-3 h-3 rounded-full bg-green-400 animate-ping" />
                                 <div className="absolute w-2 h-2 rounded-full bg-green-400" />
-                            </div>
+                            </motion.div>
 
                             {/* Lado Esquerdo: Ano Escultural Monumental + Botão de Pasta Técnica */}
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
@@ -457,16 +495,17 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     <span>ATUALMENTE // EM PRODUÇÃO</span>
                                 </div>
 
-                                {/* Ano Monumental em Outline */}
-                                <span
-                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block"
+                                {/* Ano Monumental em Outline com micro-escala reativa */}
+                                <motion.span
                                     style={{
+                                        scale: year2026Scale,
                                         WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
                                         textShadow: '0 0 40px rgba(255,255,255,0.05)',
                                     }}
+                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-right"
                                 >
                                     2026
-                                </span>
+                                </motion.span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
                                     Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.
@@ -509,10 +548,18 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                             className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                         >
-                            {/* Nó Central na Espinha (Desktop) */}
-                            <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_16px_rgba(140,106,74,0.6)] z-20">
-                                <div className="w-2.5 h-2.5 rounded-full bg-accent" />
-                            </div>
+                            {/* Nó Central na Espinha (Desktop) com iluminação reativa */}
+                            <motion.div
+                                style={{ borderColor: node2025Border, boxShadow: node2025Shadow }}
+                                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 items-center justify-center z-20 transition-colors duration-300"
+                            >
+                                <motion.div
+                                    style={{
+                                        backgroundColor: useTransform(smoothProgress, [0.38, 0.52], ['rgba(255,255,255,0.25)', '#ffffff']),
+                                    }}
+                                    className="w-2.5 h-2.5 rounded-full"
+                                />
+                            </motion.div>
 
                             {/* Lado Esquerdo (Desktop): Card Detalhado Qualisoft */}
                             <div className="order-2 md:order-1">
@@ -534,16 +581,17 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     <span>CONCLUÍDO COM SUCESSO</span>
                                 </div>
 
-                                {/* Ano Monumental em Outline */}
-                                <span
-                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block"
+                                {/* Ano Monumental em Outline com micro-escala reativa */}
+                                <motion.span
                                     style={{
+                                        scale: year2025Scale,
                                         WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
                                         textShadow: '0 0 40px rgba(255,255,255,0.05)',
                                     }}
+                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-left"
                                 >
                                     2025
-                                </span>
+                                </motion.span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
                                     Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para &lt;500ms.
@@ -573,10 +621,18 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                             className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                         >
-                            {/* Nó Central na Espinha (Desktop) */}
-                            <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_16px_rgba(140,106,74,0.6)] z-20">
-                                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                            </div>
+                            {/* Nó Central na Espinha (Desktop) com iluminação reativa */}
+                            <motion.div
+                                style={{ borderColor: node2024Border, boxShadow: node2024Shadow }}
+                                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 items-center justify-center z-20 transition-colors duration-300"
+                            >
+                                <motion.div
+                                    style={{
+                                        backgroundColor: useTransform(smoothProgress, [0.78, 0.92], ['rgba(255,255,255,0.25)', '#ffffff']),
+                                    }}
+                                    className="w-2.5 h-2.5 rounded-full"
+                                />
+                            </motion.div>
 
                             {/* Lado Esquerdo: Ano 2024 Monumental + Botão de Pasta Técnica */}
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
@@ -585,16 +641,17 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     <span>ENSINO MÉDIO & TÉCNICO // 2023 - 2025</span>
                                 </div>
 
-                                {/* Ano Monumental em Outline */}
-                                <span
-                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block"
+                                {/* Ano Monumental em Outline com micro-escala reativa */}
+                                <motion.span
                                     style={{
+                                        scale: year2024Scale,
                                         WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
                                         textShadow: '0 0 40px rgba(255,255,255,0.05)',
                                     }}
+                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-right"
                                 >
                                     2024
-                                </span>
+                                </motion.span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
                                     Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.
