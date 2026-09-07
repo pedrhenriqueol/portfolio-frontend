@@ -6,16 +6,16 @@ export interface SystemPreloaderProps {
 }
 
 /**
- * SystemPreloader — Boot Sequence & Telemetria Cinemática (Lusion / Jesper Landberg)
+ * SystemPreloader — Preloader Minimalista e Equilibrado (Inspirado em Jesper Landberg)
  *
- * Arquitetura de Inicialização:
- * 1. Bloqueio estrito de rolagem no document.body durante toda a execução.
- * 2. Contador não-linear via requestAnimationFrame (000 -> 100%):
- *    - 0% a 65%: avanço rápido simulando montagem de bundles.
- *    - 65% a 92%: cadência moderada.
- *    - 92% a 100%: desaceleração com ease-out e parada calculada de 180ms em 100%.
- * 3. Transição de Cortina (Curtain Reveal): subida vertical y: "-100%" com curva [0.76, 0, 0.24, 1] em 0.85s.
- * 4. Desbloqueio seguro do scroll na desmontagem do componente no AnimatePresence.
+ * Arquitetura Sóbria & Cadência Calma:
+ * 1. Ponto Focal Central Único: Elimina 100% de poluição visual periférica nos 4 cantos.
+ * 2. 3 Barras Segmentadas: Cápsulas de 28px x 2px com gap de 6px (— — —) e preenchimento progressivo em branco com glow suave.
+ * 3. Tipografia Mono Serena: Indicador numérico discreto (00% a 100%) avançando de forma contínua e sem saltos bruscos.
+ * 4. Legenda Minimalista: "CARREGANDO WORKSTATION" em micro-caixa alta espaçada.
+ * 5. Cadência Temporal: 2.4 segundos contínuos a 60 FPS via requestAnimationFrame + pausa intencional de 200ms em 100%.
+ * 6. Dissolve & Profundidade: Transição de saída com fade-out e leve recuo em escala (opacity: 0, scale: 1.02).
+ * 7. Bloqueio Seguro: Trava do body overflow durante toda a execução com liberação na desmontagem.
  */
 export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
     const [progress, setProgress] = useState<number>(0);
@@ -37,10 +37,10 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
         };
     }, []);
 
-    // ── 2. Interpolação Matemática Não-Linear do Contador (000 ➔ 100%) ──
+    // ── 2. Cadência Temporal Suave (~2.4s) via requestAnimationFrame ──
     useEffect(() => {
-        const TOTAL_DURATION = 1320; // ms de contagem contínua
-        const HOLD_AT_100 = 180; // ms de parada no número 100 antes de disparar a cortina
+        const TOTAL_DURATION = 2400; // 2.4 segundos de progressão calma e contínua
+        const HOLD_AT_100 = 200; // 200ms de pausa de estabilização visual em 100%
 
         let animId: number;
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -51,25 +51,9 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
             const elapsed = currentTime - startTime;
             const ratio = Math.min(elapsed / TOTAL_DURATION, 1);
 
-            let currentVal = 0;
-            if (ratio < 0.38) {
-                // Fase 1: 0% a 65% (Avanço veloz e rítmico)
-                const t = ratio / 0.38;
-                currentVal = Math.round(t * 65);
-            } else if (ratio < 0.76) {
-                // Fase 2: 65% a 92% (Cadência moderada)
-                const t = (ratio - 0.38) / 0.38;
-                currentVal = Math.round(65 + t * (92 - 65));
-            } else {
-                // Fase 3: 92% a 100% (Desaceleração exponencial / Ease-out cúbico)
-                const t = (ratio - 0.76) / 0.24;
-                const easeOut = 1 - Math.pow(1 - t, 3);
-                currentVal = Math.round(92 + easeOut * 8);
-            }
+            // Progressão linear contínua e serena a 60 FPS
+            const currentVal = Math.min(Math.max(Math.round(ratio * 100), 0), 100);
 
-            currentVal = Math.min(Math.max(currentVal, 0), 100);
-
-            // Atualiza o estado apenas se houver mudança de número inteiro, evitando re-renders desnecessários
             if (currentVal !== lastProgressRef.current) {
                 lastProgressRef.current = currentVal;
                 setProgress(currentVal);
@@ -93,93 +77,62 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
         };
     }, [onComplete]);
 
-    // ── 3. Telemetria Técnica de Inicialização Conforme Percentual ──
-    const getStatusText = (val: number): string => {
-        if (val <= 35) return 'INICIALIZANDO NÚCLEO REACT & TOKENS...';
-        if (val <= 75) return 'CARREGANDO MATRIZ TRIDIMENSIONAL & SHADERS...';
-        if (val <= 99) return 'SINCRONIZANDO TELEMETRIA DE SISTEMAS...';
-        return 'ACESSO CONCEDIDO';
+    // Cálculo do preenchimento percentual individual de cada uma das 3 barras segmentadas
+    const getSegmentFill = (index: number): number => {
+        const segmentSpan = 100 / 3; // ~33.333% por segmento
+        const start = index * segmentSpan;
+        const end = (index + 1) * segmentSpan;
+        if (progress <= start) return 0;
+        if (progress >= end) return 100;
+        return ((progress - start) / segmentSpan) * 100;
     };
 
     return (
         <motion.aside
-            initial={{ y: 0 }}
+            initial={{ opacity: 1, scale: 1 }}
             exit={{
-                y: '-100%',
+                opacity: 0,
+                scale: 1.02,
                 transition: {
-                    duration: 0.85,
-                    ease: [0.76, 0, 0.24, 1],
+                    duration: 0.7,
+                    ease: [0.65, 0, 0.35, 1],
                 },
             }}
-            className="fixed inset-0 z-[9999] bg-[#090b10] flex flex-col justify-between p-8 md:p-14 select-none antialiased subpixel-antialiased pointer-events-auto"
+            className="fixed inset-0 z-[9999] bg-[#090b10] flex flex-col items-center justify-center select-none antialiased subpixel-antialiased pointer-events-auto"
             style={{
-                willChange: 'transform',
+                willChange: 'opacity, transform',
             }}
             aria-live="polite"
-            aria-label="Inicialização do Sistema"
+            aria-label="Carregando Workstation"
         >
-            {/* ── Cabeçalho Superior Editorial ── */}
-            <div className="flex items-center justify-between text-xs font-mono tracking-wider border-b border-white/5 pb-4">
-                <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(217,119,87,0.8)]" />
-                    <span className="text-gray-300 font-medium">
-                        • SISTEMA DE DESENVOLVIMENTO // WORKSTATION
-                    </span>
-                </div>
-                <div className="text-gray-500 font-mono hidden sm:block">
-                    CE ── BRASIL // 2026
-                </div>
-            </div>
-
-            {/* ── Núcleo Monumental: Contador (000 ➔ 100%) ── */}
-            <div className="my-auto flex flex-col items-start max-w-5xl">
-                <div className="flex items-center gap-3 mb-3">
-                    <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-accent font-semibold">
-                        BOOT // SEQ.01
-                    </span>
-                    <span className="h-px w-8 bg-accent/40" />
-                    <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest hidden sm:inline">
-                        PEDRO HENRIQUE OLIVEIRA
-                    </span>
+            <div className="flex flex-col items-center justify-center">
+                {/* ── Elemento 1: 3 Barras Segmentadas Minimalistas (28px x 2px, gap 6px) ── */}
+                <div className="flex items-center gap-[6px]" aria-hidden="true">
+                    {[0, 1, 2].map((idx) => {
+                        const fill = getSegmentFill(idx);
+                        return (
+                            <div
+                                key={idx}
+                                className="w-[28px] h-[2px] rounded-full bg-white/20 overflow-hidden relative"
+                            >
+                                <div
+                                    className="h-full bg-white rounded-full transition-all duration-75 ease-out shadow-[0_0_8px_rgba(255,255,255,0.7)]"
+                                    style={{ width: `${fill}%` }}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
 
-                <div className="flex items-baseline gap-2 sm:gap-4">
-                    <span className="text-6xl sm:text-8xl md:text-9xl font-mono font-bold tracking-tighter text-white tabular-nums leading-none">
-                        {String(progress).padStart(3, '0')}
-                    </span>
-                    <span className="text-3xl sm:text-4xl md:text-6xl font-mono font-bold text-accent">
-                        %
-                    </span>
-                </div>
+                {/* ── Elemento 2: Tipografia Mono Sóbria e Legível (00% ➔ 100%) ── */}
+                <span className="text-xs font-mono tracking-widest text-neutral-400 tabular-nums mt-4">
+                    {progress < 100 ? String(progress).padStart(2, '0') : '100'}%
+                </span>
 
-                <p className="mt-4 text-xs sm:text-sm font-mono text-gray-400 max-w-md leading-relaxed">
-                    Carregando ecossistema de engenharia de software de alta densidade, telemetria em tempo real e aceleração gráfica por hardware.
-                </p>
-            </div>
-
-            {/* ── Rodapé Inferior: Telemetria e Barra Ultra-Fina de 1px ── */}
-            <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
-                    <div className="flex items-center gap-2 text-accent">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
-                        <span className="font-semibold tracking-wider">
-                            {getStatusText(progress)}
-                        </span>
-                    </div>
-                    <div className="text-gray-500 text-[11px] font-mono">
-                        {progress === 100 ? 'PRONTO PARA ENTRADA' : 'CARREGANDO MÓDULOS DE INTERFACE...'}
-                    </div>
-                </div>
-
-                {/* Linha de progresso ultra-fina de 1px preenchendo 0% a 100% */}
-                <div className="w-full h-[1px] bg-white/10 relative overflow-hidden rounded-full">
-                    <div
-                        className="h-full bg-gradient-to-r from-accent/40 via-accent to-accent shadow-[0_0_10px_rgba(217,119,87,0.7)] transition-all duration-75 ease-linear"
-                        style={{
-                            width: `${progress}%`,
-                        }}
-                    />
-                </div>
+                {/* ── Elemento 3: Legenda Minimalista em Micro-Caixa Alta Espaçada ── */}
+                <span className="text-[10px] font-mono tracking-[0.25em] text-neutral-500 uppercase mt-2">
+                    CARREGANDO WORKSTATION
+                </span>
             </div>
         </motion.aside>
     );

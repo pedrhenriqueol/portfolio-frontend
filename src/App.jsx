@@ -88,13 +88,13 @@ export default function App() {
                 )}
             </AnimatePresence>
 
-            {/* ── Entrada Sincronizada do Conteúdo com Expansão de Profundidade ── */}
+            {/* ── Entrada Sincronizada do Conteúdo com Dissolve & Profundidade ── */}
             <motion.div
-                initial={{ scale: 0.96, y: 20, opacity: 0.8 }}
-                animate={isLoading ? { scale: 0.96, y: 20, opacity: 0.8 } : { scale: 1.0, y: 0, opacity: 1.0 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={isLoading ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }}
                 transition={{
-                    duration: 0.85,
-                    ease: [0.76, 0, 0.24, 1],
+                    duration: 0.7,
+                    ease: [0.65, 0, 0.35, 1],
                 }}
                 className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative"
             >
