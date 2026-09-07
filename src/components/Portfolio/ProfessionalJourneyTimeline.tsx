@@ -246,23 +246,23 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         '2024': {
             id: 'archive-2024',
             year: '2024',
-            company: 'Unifanor Wyden // Engenharia de Software',
-            role: 'Bacharelado em Engenharia de Software & Módulos Base',
-            archiveTitle: 'Fundamentos de Engenharia & Arquiteturas de Software',
-            archiveSubtitle: 'Estruturação de Algoritmos, POO e Módulos Corporativos Iniciais',
+            company: 'EEEP Luiza de Teodoro Vieira',
+            role: 'Ensino Médio Integrado ao Técnico em Informática',
+            archiveTitle: 'Formação Técnica // EEEP Luiza de Teodoro Vieira',
+            archiveSubtitle: 'Ensino Médio Integrado ao Técnico em Informática (2023 — 2025)',
             image: '/java_inventory_mockup.png',
-            badge: 'BASE ACADÊMICA & ENGENHARIA',
-            date: 'Abr 2026 — Dez 2030 (Graduação Ativa)',
-            location: 'Fortaleza, CE',
+            badge: 'FORMAÇÃO TÉCNICA (2023 — 2025)',
+            date: 'Jan 2023 — Dez 2025',
+            location: 'Pacatuba, CE',
             description:
-                'Desenvolvimento de competências essenciais em engenharia de software: POO sólida em Java, estruturas de dados clássicas, modelagem de dados relacional com conformidade ACID e construção dos primeiros protótipos corporativos com interfaces ricas e persistência limpa.',
+                'Período formativo integral na EEEP Luiza de Teodoro Vieira. Estudos práticos e consolidados em lógica e algoritmos, programação com Python e Java, desenvolvimento web (HTML5, CSS3, JavaScript), fundamentos de UI/UX Design e projetos de robótica e automação.',
             telemetry: [
-                { label: 'Fundamentos POO', value: 'Padrões de Projeto', highlight: true },
-                { label: 'Bancos de Dados', value: 'Normalização ACID' },
-                { label: 'Estruturas de Dados', value: 'Complexidade O(n)' },
-                { label: 'Status Acadêmico', value: 'Graduação em Andamento' },
+                { label: 'Linguagens Base', value: 'Python & Java', highlight: true },
+                { label: 'Desenvolvimento Web', value: 'HTML, CSS & JS' },
+                { label: 'Design & Hardware', value: 'UI/UX & Robótica' },
+                { label: 'Ciclo Formativo', value: '2023 — 2025 (Concluído)' },
             ],
-            tags: ['#ENGENHARIA-DE-SOFTWARE', '#ALGORITMOS', '#JAVA-POO', '#BANCOS-RELACIONAIS', '#ARQUITETURA-LIMPA'],
+            tags: ['#EEEP-LUIZA-TEODORO', '#TECNICO-INFORMATICA', '#PYTHON', '#JAVA', '#HTML-CSS-JS', '#ROBOTICA', '#DESIGN'],
         },
     };
 
@@ -318,26 +318,26 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         ],
     };
 
-    const acadExp = {
-        company: 'Unifanor Wyden',
-        role: 'Bacharelado em Engenharia de Software',
-        period: 'Abril de 2026 - Dezembro de 2030 (Em andamento)',
-        techBadges: ['Engenharia de Software', 'Java / Swing', 'POO', 'Estruturas de Dados', 'Modelagem ACID', 'Arquitetura de Software', 'Git'],
+    const tecnicoExp = {
+        company: 'EEEP Luiza de Teodoro Vieira',
+        role: 'Ensino Médio Integrado ao Técnico em Informática',
+        period: 'Janeiro de 2023 - Dezembro de 2025',
+        techBadges: ['Python', 'Java', 'HTML5', 'CSS3', 'JavaScript', 'Robótica', 'UI/UX Design', 'Algoritmos', 'Lógica de Programação'],
         groups: [
             {
-                title: 'Engenharia de Software & POO',
-                icon: 'fas fa-graduation-cap',
+                title: 'Programação & Desenvolvimento Web',
+                icon: 'fas fa-code',
                 items: [
-                    'Base sólida em engenharia de software com ênfase em arquitetura limpa, coesão e baixo acoplamento.',
-                    'Modelagem de sistemas corporativos baseados em princípios SOLID e padrões de projeto essenciais.',
+                    'Formação prática e contínua em lógica algorítmica, estruturas de dados e programação orientada a objetos com Python e Java.',
+                    'Construção de aplicações e interfaces web aplicando padrões semânticos de HTML5, estilização moderna com CSS3 e dinamismo com JavaScript.',
                 ],
             },
             {
-                title: 'Bancos Relacionais & Algoritmos',
-                icon: 'fas fa-code-branch',
+                title: 'Design, Robótica & Projetos Práticos',
+                icon: 'fas fa-robot',
                 items: [
-                    'Modelagem relacional estrita (1FN a 3FN), integridade referencial e índices compostos.',
-                    'Implementação prática de estruturas de dados e análise de complexidade algorítmica.',
+                    'Desenvolvimento e montagem de projetos práticos de robótica e circuitos integrando automação e hardware programável.',
+                    'Conceitos fundamentais de UI/UX Design, prototipagem visual e princípios de organização e código limpo.',
                 ],
             },
         ],
@@ -563,11 +563,11 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                             </div>
 
-                            {/* Lado Esquerdo: Ano 2024 Monumental + Botão de Pasta Acadêmica */}
+                            {/* Lado Esquerdo: Ano 2024 Monumental + Botão de Pasta Técnica */}
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/5 text-primary border border-white/10">
-                                    <i className="fas fa-university text-[10px]" />
-                                    <span>FORMAÇÃO & FUNDAMENTOS</span>
+                                    <i className="fas fa-graduation-cap text-[10px]" />
+                                    <span>ENSINO MÉDIO & TÉCNICO // 2023 - 2025</span>
                                 </div>
 
                                 {/* Ano Monumental em Outline */}
@@ -582,30 +582,30 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 </span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
-                                    Fundamentos de POO com Java, estruturas de dados, modelagem relacional ACID e desenvolvimento dos primeiros módulos corporativos.
+                                    Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.
                                 </p>
 
-                                {/* Botão de Pasta Interativo: Registro Acadêmico */}
+                                {/* Botão de Pasta Interativo: Registro Técnico */}
                                 <button
                                     onClick={() => setSelectedArchive(ARCHIVES['2024'])}
                                     data-cursor-morph="true"
                                     className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
                                 >
                                     <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
-                                    <span className="font-semibold tracking-wide">Registro Acadêmico & Módulos</span>
+                                    <span className="font-semibold tracking-wide">Registro Técnico // EEEP</span>
                                     <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
                                 </button>
                             </div>
 
-                            {/* Lado Direito: Card de Fundamentos & Graduação */}
+                            {/* Lado Direito: Card do Técnico em Informática EEEP */}
                             <div>
                                 <TimelineExperienceCard
-                                    company={acadExp.company}
-                                    role={acadExp.role}
-                                    period={acadExp.period}
+                                    company={tecnicoExp.company}
+                                    role={tecnicoExp.role}
+                                    period={tecnicoExp.period}
                                     isCurrent={false}
-                                    techBadges={acadExp.techBadges}
-                                    groups={acadExp.groups}
+                                    techBadges={tecnicoExp.techBadges}
+                                    groups={tecnicoExp.groups}
                                     lang={lang}
                                 />
                             </div>
