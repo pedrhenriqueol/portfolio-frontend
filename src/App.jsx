@@ -9,7 +9,6 @@ import AboutSection from './components/Portfolio/AboutSection';
 import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
 import StatusBar from './components/Portfolio/Workstation/StatusBar';
-import KineticVelocityRig from './components/Portfolio/KineticVelocityRig';
 import SystemPreloader from './components/Portfolio/SystemPreloader';
 import { useLanguage } from './context/LanguageContext';
 
@@ -132,8 +131,8 @@ export default function App() {
                     />
                 </Suspense>
 
-                <main className="pb-8 lg:pb-10">
-                  <KineticVelocityRig>
+                {/* ── Container Principal Estático, Estável e Ortogonal (Padrão Rauno Freiberg) ── */}
+                <main className="relative z-10 w-full overflow-x-hidden pb-8 lg:pb-10">
                     <HeroSection />
                     <AboutSection />
 
@@ -165,7 +164,6 @@ export default function App() {
                     <Suspense fallback={<SectionSkeleton />}>
                         <ContactSection />
                     </Suspense>
-                  </KineticVelocityRig>
                 </main>
 
                 {/* Global Console para projetos inspecionados via KineticShowcase */}
