@@ -1,1 +1,188 @@
-export { default } from './App.jsx';
+import React, { lazy, Suspense, useState, useCallback, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import InteractiveParticleField from './components/Portfolio/InteractiveParticleField';
+import CustomCursor from './components/Portfolio/CustomCursor';
+import ClickSparks from './components/Portfolio/ClickSparks';
+import NavBar from './components/Portfolio/NavBar';
+import HeroSection from './components/Portfolio/HeroSection';
+import AboutSection from './components/Portfolio/AboutSection';
+import SoundEngine from './components/Portfolio/SoundEngine';
+import Dock from './components/Portfolio/Workstation/Dock';
+import StatusBar from './components/Portfolio/Workstation/StatusBar';
+import KineticVelocityRig from './components/Portfolio/KineticVelocityRig';
+import SystemPreloader from './components/Portfolio/SystemPreloader';
+import { useLanguage } from './context/LanguageContext';
+
+const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
+const ExperienceSection        = lazy(() => import('./components/Portfolio/ExperienceSection'));
+const SkillsSection            = lazy(() => import('./components/Portfolio/SkillsSection'));
+const ProjectsSection          = lazy(() => import('./components/Portfolio/ProjectsSection'));
+const ProjectInspectorDrawer   = lazy(() => import('./components/Portfolio/ProjectInspectorDrawer'));
+const ContactSection           = lazy(() => import('./components/Portfolio/ContactSection'));
+const CommandPalette           = lazy(() => import('./components/Portfolio/CommandPalette'));
+const LiveTelemetryMesh        = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
+import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
+
+function SectionSkeleton() {
+    return (
+        <div className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
+            <div className="h-4 w-28 bg-primary/20 rounded mb-4 mx-auto" />
+            <div className="h-10 w-64 bg-primary/15 rounded mb-12 mx-auto" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="h-48 bg-darker/60 border border-white/5 rounded-2xl" />
+                <div className="h-48 bg-darker/60 border border-white/5 rounded-2xl" />
+                <div className="h-48 bg-darker/60 border border-white/5 rounded-2xl" />
+            </div>
+        </div>
+    );
+}
+
+export default function App() {
+    const { t } = useLanguage();
+
+    const experiencesData = t('experience.list');
+    const skillsData = t('skills.list');
+    const projectsData = t('projects.list');
+
+    const EXPERIENCES = Array.isArray(experiencesData) ? experiencesData : [];
+    const SKILLS = Array.isArray(skillsData) ? skillsData : [];
+    const PROJECTS = Array.isArray(projectsData) ? projectsData : [];
+
+    // ── Boot Sequence & Preloader State ──
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const handlePreloaderComplete = useCallback(() => {
+        setIsLoading(false);
+    }, []);
+
+    // ── Workstation State ──
+    const [telemetryOpen, setTelemetryOpen] = useState<boolean>(false);
+    const [avgLatency, setAvgLatency] = useState<number | null>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [selectedProject, setSelectedProject] = useState<any>(null);
+
+    const toggleTelemetry = useCallback(() => {
+        setTelemetryOpen(v => !v);
+    }, []);
+
+    const toggleViewMode = useCallback(() => {
+        setViewMode(v => v === 'grid' ? 'list' : 'grid');
+    }, []);
+
+    // Listen for open-telemetry events from CommandPalette
+    useEffect(() => {
+        const handler = () => setTelemetryOpen(true);
+        window.addEventListener('open-telemetry', handler);
+        return () => window.removeEventListener('open-telemetry', handler);
+    }, []);
+
+    return (
+        <>
+            {/* ── Sequência de Inicialização / Preloader Monumental ── */}
+            <AnimatePresence mode="wait">
+                {isLoading && (
+                    <SystemPreloader
+                        key="system-preloader"
+                        onComplete={handlePreloaderComplete}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* ── Entrada Sincronizada do Conteúdo com Expansão de Profundidade ── */}
+            <motion.div
+                initial={{ scale: 0.96, y: 20, opacity: 0.8 }}
+                animate={isLoading ? { scale: 0.96, y: 20, opacity: 0.8 } : { scale: 1.0, y: 0, opacity: 1.0 }}
+                transition={{
+                    duration: 0.85,
+                    ease: [0.76, 0, 0.24, 1],
+                }}
+                className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative"
+            >
+                {/* Lusion Canvas 2D Physical Particle Field */}
+                <InteractiveParticleField />
+
+                {/* Global micro-effects */}
+                <CustomCursor />
+                <ClickSparks />
+                <SoundEngine />
+                
+                <Suspense fallback={null}>
+                    <CommandPalette />
+                </Suspense>
+
+                {/* ── Workstation Layer (Additive — does NOT replace existing content) ── */}
+                <Dock
+                    onToggleTelemetry={toggleTelemetry}
+                    isTelemetryOpen={telemetryOpen}
+                    viewMode={viewMode}
+                    onToggleViewMode={toggleViewMode}
+                />
+                <StatusBar avgLatency={avgLatency} />
+                <Suspense fallback={null}>
+                    <LiveTelemetryMesh
+                        isOpen={telemetryOpen}
+                        onClose={() => setTelemetryOpen(false)}
+                        onLatencyUpdate={setAvgLatency}
+                    />
+                </Suspense>
+
+                <NavBar />
+
+                <main className="pb-8 lg:pb-10">
+                  <KineticVelocityRig>
+                    <HeroSection />
+                    <AboutSection />
+
+                    {/* ── Camada 1: Destaque Principal (Showcase Cilíndrico 3D em Escala Monumental) ── */}
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <Cylindrical3DShowcase
+                            onSelectProject={setSelectedProject}
+                            projects={PROJECTS}
+                        />
+                    </Suspense>
+                    
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <ExperienceSection experiences={EXPERIENCES} />
+                    </Suspense>
+
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <SkillsSection skills={SKILLS} />
+                    </Suspense>
+
+                    {/* ── Camada 2: Projetos Corporativos & Soluções (Grid com Filtros) ── */}
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <ProjectsSection 
+                            projects={PROJECTS} 
+                            viewMode={viewMode}
+                            onViewModeChange={setViewMode}
+                        />
+                    </Suspense>
+
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <ContactSection />
+                    </Suspense>
+                  </KineticVelocityRig>
+                </main>
+
+                {/* Global Console para projetos inspecionados via KineticShowcase */}
+                <Suspense fallback={null}>
+                    <ModalErrorBoundary onClose={() => setSelectedProject(null)}>
+                        <AnimatePresence mode="wait">
+                            {selectedProject && (
+                                <ProjectInspectorDrawer
+                                    key={`inspector-${selectedProject.id}`}
+                                    project={selectedProject}
+                                    onClose={() => setSelectedProject(null)}
+                                />
+                            )}
+                        </AnimatePresence>
+                    </ModalErrorBoundary>
+                </Suspense>
+
+                <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
+                    <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
+                </footer>
+            </motion.div>
+        </>
+    );
+}

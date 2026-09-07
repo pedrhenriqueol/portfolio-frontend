@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useCallback, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import InteractiveParticleField from './components/Portfolio/InteractiveParticleField';
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
@@ -10,6 +10,7 @@ import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
 import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import KineticVelocityRig from './components/Portfolio/KineticVelocityRig';
+import SystemPreloader from './components/Portfolio/SystemPreloader';
 import { useLanguage } from './context/LanguageContext';
 
 const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
@@ -47,6 +48,13 @@ export default function App() {
     const SKILLS = Array.isArray(skillsData) ? skillsData : [];
     const PROJECTS = Array.isArray(projectsData) ? projectsData : [];
 
+    // ── Boot Sequence & Preloader State ──
+    const [isLoading, setIsLoading] = useState(true);
+
+    const handlePreloaderComplete = useCallback(() => {
+        setIsLoading(false);
+    }, []);
+
     // ── Workstation State ──
     const [telemetryOpen, setTelemetryOpen] = useState(false);
     const [avgLatency, setAvgLatency] = useState(null);
@@ -69,91 +77,112 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative">
-            {/* Lusion Canvas 2D Physical Particle Field */}
-            <InteractiveParticleField />
-
-            {/* Global micro-effects */}
-            <CustomCursor />
-            <ClickSparks />
-            <SoundEngine />
-            
-            <Suspense fallback={null}>
-                <CommandPalette />
-            </Suspense>
-
-            {/* ── Workstation Layer (Additive — does NOT replace existing content) ── */}
-            <Dock
-                onToggleTelemetry={toggleTelemetry}
-                isTelemetryOpen={telemetryOpen}
-                viewMode={viewMode}
-                onToggleViewMode={toggleViewMode}
-            />
-            <StatusBar avgLatency={avgLatency} />
-            <Suspense fallback={null}>
-                <LiveTelemetryMesh
-                    isOpen={telemetryOpen}
-                    onClose={() => setTelemetryOpen(false)}
-                    onLatencyUpdate={setAvgLatency}
-                />
-            </Suspense>
-
-            <NavBar />
-
-            <main className="pb-8 lg:pb-10">
-              <KineticVelocityRig>
-                <HeroSection />
-                <AboutSection />
-
-                {/* ── Camada 1: Destaque Principal (Showcase Cilíndrico 3D em Escala Monumental) ── */}
-                <Suspense fallback={<SectionSkeleton />}>
-                    <Cylindrical3DShowcase
-                        onSelectProject={setSelectedProject}
-                        projects={PROJECTS}
+        <>
+            {/* ── Sequência de Inicialização / Preloader Monumental ── */}
+            <AnimatePresence mode="wait">
+                {isLoading && (
+                    <SystemPreloader
+                        key="system-preloader"
+                        onComplete={handlePreloaderComplete}
                     />
-                </Suspense>
+                )}
+            </AnimatePresence>
+
+            {/* ── Entrada Sincronizada do Conteúdo com Expansão de Profundidade ── */}
+            <motion.div
+                initial={{ scale: 0.96, y: 20, opacity: 0.8 }}
+                animate={isLoading ? { scale: 0.96, y: 20, opacity: 0.8 } : { scale: 1.0, y: 0, opacity: 1.0 }}
+                transition={{
+                    duration: 0.85,
+                    ease: [0.76, 0, 0.24, 1],
+                }}
+                className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative"
+            >
+                {/* Lusion Canvas 2D Physical Particle Field */}
+                <InteractiveParticleField />
+
+                {/* Global micro-effects */}
+                <CustomCursor />
+                <ClickSparks />
+                <SoundEngine />
                 
-                <Suspense fallback={<SectionSkeleton />}>
-                    <ExperienceSection experiences={EXPERIENCES} />
+                <Suspense fallback={null}>
+                    <CommandPalette />
                 </Suspense>
 
-                <Suspense fallback={<SectionSkeleton />}>
-                    <SkillsSection skills={SKILLS} />
-                </Suspense>
-
-                {/* ── Camada 2: Projetos Corporativos & Soluções (Grid com Filtros) ── */}
-                <Suspense fallback={<SectionSkeleton />}>
-                    <ProjectsSection 
-                        projects={PROJECTS} 
-                        viewMode={viewMode}
-                        onViewModeChange={setViewMode}
+                {/* ── Workstation Layer (Additive — does NOT replace existing content) ── */}
+                <Dock
+                    onToggleTelemetry={toggleTelemetry}
+                    isTelemetryOpen={telemetryOpen}
+                    viewMode={viewMode}
+                    onToggleViewMode={toggleViewMode}
+                />
+                <StatusBar avgLatency={avgLatency} />
+                <Suspense fallback={null}>
+                    <LiveTelemetryMesh
+                        isOpen={telemetryOpen}
+                        onClose={() => setTelemetryOpen(false)}
+                        onLatencyUpdate={setAvgLatency}
                     />
                 </Suspense>
 
-                <Suspense fallback={<SectionSkeleton />}>
-                    <ContactSection />
+                <NavBar />
+
+                <main className="pb-8 lg:pb-10">
+                  <KineticVelocityRig>
+                    <HeroSection />
+                    <AboutSection />
+
+                    {/* ── Camada 1: Destaque Principal (Showcase Cilíndrico 3D em Escala Monumental) ── */}
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <Cylindrical3DShowcase
+                            onSelectProject={setSelectedProject}
+                            projects={PROJECTS}
+                        />
+                    </Suspense>
+                    
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <ExperienceSection experiences={EXPERIENCES} />
+                    </Suspense>
+
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <SkillsSection skills={SKILLS} />
+                    </Suspense>
+
+                    {/* ── Camada 2: Projetos Corporativos & Soluções (Grid com Filtros) ── */}
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <ProjectsSection 
+                            projects={PROJECTS} 
+                            viewMode={viewMode}
+                            onViewModeChange={setViewMode}
+                        />
+                    </Suspense>
+
+                    <Suspense fallback={<SectionSkeleton />}>
+                        <ContactSection />
+                    </Suspense>
+                  </KineticVelocityRig>
+                </main>
+
+                {/* Global Console para projetos inspecionados via KineticShowcase */}
+                <Suspense fallback={null}>
+                    <ModalErrorBoundary onClose={() => setSelectedProject(null)}>
+                        <AnimatePresence mode="wait">
+                            {selectedProject && (
+                                <ProjectInspectorDrawer
+                                    key={`inspector-${selectedProject.id}`}
+                                    project={selectedProject}
+                                    onClose={() => setSelectedProject(null)}
+                                />
+                            )}
+                        </AnimatePresence>
+                    </ModalErrorBoundary>
                 </Suspense>
-              </KineticVelocityRig>
-            </main>
 
-            {/* Global Console para projetos inspecionados via KineticShowcase */}
-            <Suspense fallback={null}>
-                <ModalErrorBoundary onClose={() => setSelectedProject(null)}>
-                    <AnimatePresence mode="wait">
-                        {selectedProject && (
-                            <ProjectInspectorDrawer
-                                key={`inspector-${selectedProject.id}`}
-                                project={selectedProject}
-                                onClose={() => setSelectedProject(null)}
-                            />
-                        )}
-                    </AnimatePresence>
-                </ModalErrorBoundary>
-            </Suspense>
-
-            <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
-                <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
-            </footer>
-        </div>
+                <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
+                    <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
+                </footer>
+            </motion.div>
+        </>
     );
 }
