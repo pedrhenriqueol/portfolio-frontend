@@ -568,6 +568,8 @@ export default function CorporateProjectsShowcase({
                 contentVisibility: 'auto',
                 containIntrinsicSize: '0 650px',
                 transform: 'translateZ(0)',
+                isolation: 'isolate',
+                transformStyle: 'preserve-3d',
             }}
             className="w-full relative outline-hidden space-y-6 select-none"
             aria-label="Esteira Cilíndrica 3D de Projetos Corporativos"
@@ -677,6 +679,8 @@ export default function CorporateProjectsShowcase({
                             style={{
                                 perspective: '1200px',
                                 perspectiveOrigin: '50% 50%',
+                                isolation: 'isolate',
+                                transformStyle: 'preserve-3d',
                             }}
                         >
                             <motion.div

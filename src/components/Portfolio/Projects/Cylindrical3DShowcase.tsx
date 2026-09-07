@@ -419,6 +419,8 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                 contentVisibility: 'auto',
                 containIntrinsicSize: '0 700px',
                 transform: 'translateZ(0)',
+                isolation: 'isolate',
+                transformStyle: 'preserve-3d',
             }}
             className="py-16 md:py-24 bg-darker relative border-t border-primary/20 overflow-hidden focus:outline-none"
         >
@@ -507,6 +509,8 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                     style={{
                         perspective: '1400px',
                         perspectiveOrigin: '50% 50%',
+                        isolation: 'isolate',
+                        transformStyle: 'preserve-3d',
                     }}
                     className="w-full max-w-6xl mx-auto min-h-[520px] sm:min-h-[550px] lg:min-h-[620px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
                 >
