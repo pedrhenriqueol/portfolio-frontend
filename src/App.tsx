@@ -88,13 +88,14 @@ export default function App() {
                 )}
             </AnimatePresence>
 
-            {/* ── Entrada Sincronizada do Conteúdo com Dissolve & Profundidade ── */}
+            {/* ── Entrada com Profundidade no Hero (Fase 4 da Coreografia) ── */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={isLoading ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.975, y: 16 }}
+                animate={isLoading ? { opacity: 0, scale: 0.975, y: 16 } : { opacity: 1, scale: 1, y: 0 }}
                 transition={{
-                    duration: 0.7,
-                    ease: [0.65, 0, 0.35, 1],
+                    duration: 0.8,
+                    ease: [0.16, 1, 0.3, 1],
+                    delay: 0.1,
                 }}
                 className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative"
             >

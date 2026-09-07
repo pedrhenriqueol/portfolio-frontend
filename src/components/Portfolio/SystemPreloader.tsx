@@ -6,19 +6,18 @@ export interface SystemPreloaderProps {
 }
 
 /**
- * SystemPreloader — Preloader Minimalista e Equilibrado (Inspirado em Jesper Landberg)
+ * SystemPreloader — Preloader Minimalista em 3 Fases Coreografadas (Jesper Landberg)
  *
- * Arquitetura Sóbria & Cadência Calma:
- * 1. Ponto Focal Central Único: Elimina 100% de poluição visual periférica nos 4 cantos.
- * 2. 3 Barras Segmentadas: Cápsulas de 28px x 2px com gap de 6px (— — —) e preenchimento progressivo em branco com glow suave.
- * 3. Tipografia Mono Serena: Indicador numérico discreto (00% a 100%) avançando de forma contínua e sem saltos bruscos.
- * 4. Legenda Minimalista: "CARREGANDO WORKSTATION" em micro-caixa alta espaçada.
- * 5. Cadência Temporal: 2.4 segundos contínuos a 60 FPS via requestAnimationFrame + pausa intencional de 200ms em 100%.
- * 6. Dissolve & Profundidade: Transição de saída com fade-out e leve recuo em escala (opacity: 0, scale: 1.02).
- * 7. Bloqueio Seguro: Trava do body overflow durante toda a execução com liberação na desmontagem.
+ * Coreografia Temporal sem Ghosting (~2.3s total):
+ * - Contagem Contínua: 00% a 100% em 1900ms a 60 FPS via requestAnimationFrame.
+ * - Fase 1 (Hold): Estabilização estática absoluta de 180ms em 100%.
+ * - Fase 2 (Saída do Miolo): Barras e textos somem primeiro (opacity: 0, scale: 0.95 em 220ms).
+ * - Fase 3 (Dissolução da Cortina): Backdrop uniforme dissolve suavemente (opacity: 0 em 650ms).
+ * - Fase 4 (Entrada do Hero): Hero emerge no App com profundidade (opacity: 1, scale: 1, y: 0).
  */
 export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
     const [progress, setProgress] = useState<number>(0);
+    const [isExiting, setIsExiting] = useState<boolean>(false);
     const lastProgressRef = useRef<number>(0);
 
     // ── 1. Bloqueio Seguro de Rolagem no document.body ──
@@ -37,13 +36,15 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
         };
     }, []);
 
-    // ── 2. Cadência Temporal Suave (~2.4s) via requestAnimationFrame ──
+    // ── 2. Cadência Temporal Suave & Coreografia em Fases ──
     useEffect(() => {
-        const TOTAL_DURATION = 2400; // 2.4 segundos de progressão calma e contínua
-        const HOLD_AT_100 = 200; // 200ms de pausa de estabilização visual em 100%
+        const TOTAL_DURATION = 1900; // 1.9s para progressão suave e contínua
+        const HOLD_AT_100 = 180; // Fase 1: 180ms de repouso absoluto em 100%
+        const CONTENT_EXIT_DURATION = 220; // Fase 2: 220ms para o miolo central desaparecer completamente
 
         let animId: number;
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        let timeoutHold: ReturnType<typeof setTimeout> | null = null;
+        let timeoutExit: ReturnType<typeof setTimeout> | null = null;
         let startTime: number | null = null;
 
         const tick = (currentTime: number) => {
@@ -51,7 +52,7 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
             const elapsed = currentTime - startTime;
             const ratio = Math.min(elapsed / TOTAL_DURATION, 1);
 
-            // Progressão linear contínua e serena a 60 FPS
+            // Progressão serena e linear a 60 FPS
             const currentVal = Math.min(Math.max(Math.round(ratio * 100), 0), 100);
 
             if (currentVal !== lastProgressRef.current) {
@@ -63,8 +64,14 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
                 animId = requestAnimationFrame(tick);
             } else {
                 setProgress(100);
-                timeoutId = setTimeout(() => {
-                    onComplete();
+                // Fase 1: Estabilização estática absoluta no 100%
+                timeoutHold = setTimeout(() => {
+                    setIsExiting(true); // Dispara Fase 2: desaparecimento do miolo central
+                    
+                    // Fase 3: Dissolução do backdrop e liberação do Hero após limpeza visual
+                    timeoutExit = setTimeout(() => {
+                        onComplete();
+                    }, CONTENT_EXIT_DURATION);
                 }, HOLD_AT_100);
             }
         };
@@ -73,7 +80,8 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
 
         return () => {
             if (animId) cancelAnimationFrame(animId);
-            if (timeoutId) clearTimeout(timeoutId);
+            if (timeoutHold) clearTimeout(timeoutHold);
+            if (timeoutExit) clearTimeout(timeoutExit);
         };
     }, [onComplete]);
 
@@ -89,31 +97,40 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
 
     return (
         <motion.aside
-            initial={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 1 }}
             exit={{
                 opacity: 0,
-                scale: 1.02,
                 transition: {
-                    duration: 0.7,
-                    ease: [0.65, 0, 0.35, 1],
+                    duration: 0.65,
+                    ease: [0.16, 1, 0.3, 1],
                 },
             }}
-            className="fixed inset-0 z-[9999] bg-[#090b10] flex flex-col items-center justify-center select-none antialiased subpixel-antialiased pointer-events-auto"
+            className={`fixed inset-0 z-[9999] bg-[#090b10] flex flex-col items-center justify-center select-none antialiased subpixel-antialiased ${
+                isExiting ? 'pointer-events-none' : 'pointer-events-auto'
+            }`}
             style={{
-                willChange: 'opacity, transform',
+                willChange: 'opacity',
             }}
             aria-live="polite"
             aria-label="Carregando Workstation"
         >
-            <div className="flex flex-col items-center justify-center">
-                {/* ── Elemento 1: 3 Barras Segmentadas Minimalistas (28px x 2px, gap 6px) ── */}
-                <div className="flex items-center gap-[6px]" aria-hidden="true">
+            {/* ── Miolo Central: Desaparece na Fase 2 antes da dissolução do fundo ── */}
+            <motion.div
+                animate={isExiting ? { opacity: 0, scale: 0.95 } : { opacity: 1, scale: 1 }}
+                transition={{
+                    duration: 0.22,
+                    ease: [0.4, 0, 1, 1],
+                }}
+                className="flex flex-col items-center justify-center"
+            >
+                {/* ── Elemento 1: 3 Barras Segmentadas (34px x 2.5px, gap 8px) ── */}
+                <div className="flex items-center gap-2" aria-hidden="true">
                     {[0, 1, 2].map((idx) => {
                         const fill = getSegmentFill(idx);
                         return (
                             <div
                                 key={idx}
-                                className="w-[28px] h-[2px] rounded-full bg-white/20 overflow-hidden relative"
+                                className="w-[34px] h-[2.5px] rounded-full bg-white/20 overflow-hidden relative"
                             >
                                 <div
                                     className="h-full bg-white rounded-full transition-all duration-75 ease-out shadow-[0_0_8px_rgba(255,255,255,0.7)]"
@@ -124,16 +141,16 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
                     })}
                 </div>
 
-                {/* ── Elemento 2: Tipografia Mono Sóbria e Legível (00% ➔ 100%) ── */}
-                <span className="text-xs font-mono tracking-widest text-neutral-400 tabular-nums mt-4">
+                {/* ── Elemento 2: Indicador Numérico com Escala Aumentada (text-sm md:text-base) ── */}
+                <span className="text-sm md:text-base font-mono font-medium tracking-widest text-neutral-300 tabular-nums mt-5">
                     {progress < 100 ? String(progress).padStart(2, '0') : '100'}%
                 </span>
 
-                {/* ── Elemento 3: Legenda Minimalista em Micro-Caixa Alta Espaçada ── */}
-                <span className="text-[10px] font-mono tracking-[0.25em] text-neutral-500 uppercase mt-2">
+                {/* ── Elemento 3: Legenda Técnica Nítida (text-xs tracking-[0.28em]) ── */}
+                <span className="text-xs font-mono tracking-[0.28em] text-neutral-400 uppercase mt-2">
                     CARREGANDO WORKSTATION
                 </span>
-            </div>
+            </motion.div>
         </motion.aside>
     );
 }
