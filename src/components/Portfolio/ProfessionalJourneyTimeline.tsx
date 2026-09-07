@@ -161,25 +161,25 @@ interface ProfessionalJourneyTimelineProps {
 export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [] }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement>(null);
-    const timelineRef = useRef<HTMLDivElement>(null);
+    const trackRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // Progresso de scroll centrado na visão do usuário (start center -> end center)
+    // Escopo matemático exato: monitora estritamente o contêiner dos 3 marcos
     const { scrollYProgress } = useScroll({
-        target: timelineRef,
+        target: trackRef,
         offset: ['start center', 'end center'],
     });
 
-    // Mola física de inércia contínua calibrada (sem atraso excessivo)
+    // Mola de resposta imediata sem arrasto elástico excessivo
     const smoothProgress = useSpring(scrollYProgress, {
-        stiffness: 300,
-        damping: 32,
-        mass: 0.2,
+        stiffness: 400,
+        damping: 35,
+        mass: 0.15,
     });
 
-    // Mapeamento cravado entre 0% e 100% da altura do trilho
-    const progressHeight = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
+    // Mapeamento cravado com clamp nativo entre o primeiro e o último nó
     const trackerTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
+    const lineHeight = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
 
     // Reatividade dos nós dos marcos temporais (transição inativo -> iluminado) e micro-escala no ano
     const node2026Border = useTransform(smoothProgress, [0, 0.12], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.7)']);
@@ -425,39 +425,34 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 </motion.div>
 
                 {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
-                <div ref={timelineRef} className="relative">
-                    {/* TRILHO CENTRAL COMPARTILHADO (Apenas Desktop md+) */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-32 bottom-32 w-[2px] hidden md:block pointer-events-none z-20">
-                        {/* 1. Trilho Base Guia (Linha cinza inativa) */}
+                <div ref={trackRef} className="relative w-full max-w-5xl mx-auto py-12">
+                    {/* TRILHO CENTRAL: Altura restrita entre o primeiro e último nó (Apenas Desktop md+) */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-8 bottom-8 w-[2px] hidden md:block pointer-events-none z-10">
+                        {/* 1. Trilho Base Guia (Cinza translúcido) */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
 
-                        {/* 2. Linha Ativa Iluminada (Preenchimento progressivo) */}
+                        {/* 2. Linha Iluminada Ativa (Preenchimento gradual) */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/20 rounded-full origin-top"
-                            style={{ height: progressHeight }}
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/30 rounded-full origin-top"
+                            style={{ height: lineHeight }}
                         />
 
-                        {/* 3. Bolinha Rastreadora (Ancorada estritamente no trilho) */}
+                        {/* 3. Puck / Bolinha Rastreadora com Glow */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_16px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
+                            className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
                             style={{ top: trackerTop }}
                         >
                             <div className="w-1.5 h-1.5 rounded-full bg-[#090b10]" />
                         </motion.div>
                     </div>
 
-                    {/* TRILHO MOBILE (Telas < md) */}
-                    <div className="absolute left-4 sm:left-6 top-32 bottom-32 w-[2px] md:hidden pointer-events-none z-20">
-                        {/* 1. Linha Base Guia Mobile */}
+                    {/* TRILHO MOBILE (< md) */}
+                    <div className="absolute left-4 sm:left-6 top-8 bottom-8 w-[2px] md:hidden pointer-events-none z-10">
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
-
-                        {/* 2. Linha Ativa Iluminada Mobile */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/20 rounded-full origin-top"
-                            style={{ height: progressHeight }}
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/30 rounded-full origin-top"
+                            style={{ height: lineHeight }}
                         />
-
-                        {/* 3. Bolinha Rastreadora Mobile */}
                         <motion.div
                             className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
                             style={{ top: trackerTop }}
@@ -466,7 +461,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         </motion.div>
                     </div>
 
-                    <div className="space-y-16 md:space-y-24 pl-8 sm:pl-12 md:pl-0">
+                    {/* Grid / Itens da Timeline: 2026, 2025, 2024 */}
+                    <div className="space-y-24 md:space-y-36 pl-8 sm:pl-12 md:pl-0">
 
                         {/* ══════════════════════════════════════════════════════════
                             MARCO 2026: SETE TECNOLOGIA (Analista de QA & Testes)
