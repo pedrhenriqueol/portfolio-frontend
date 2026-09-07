@@ -409,9 +409,9 @@ export default function TechSphere3D({ skills = [] }) {
                             {/* Card do Ícone */}
                             <div
                                 ref={(el) => (iconWrappersRef.current[idx] = el)}
-                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md border pointer-events-auto cursor-pointer will-change-transform"
+                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg border border-white/10 pointer-events-auto cursor-pointer will-change-transform"
                                 style={{
-                                    backgroundColor: 'rgba(18, 20, 26, 0.85)',
+                                    backgroundColor: 'rgba(18, 20, 26, 0.95)',
                                     borderColor: 'rgba(255, 255, 255, 0.12)',
                                     transform: 'scale(1)',
                                     transformOrigin: 'center center',

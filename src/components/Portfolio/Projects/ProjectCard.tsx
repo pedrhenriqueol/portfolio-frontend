@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Project } from '../../../types/project';
 import { projectCategory } from '../../../utils/projects';
@@ -21,7 +21,7 @@ interface ProjectCardProps {
  * - Efeito de spotlight luminoso injetado diretamente no DOM via CSS Custom Properties (--mouse-x, --mouse-y).
  * - Ergonomia tátil com feedback haptic e vocabulário técnico rigoroso em PT-BR.
  */
-export default function ProjectCard({
+const ProjectCard = memo(function ProjectCard({
     project,
     viewMode = 'grid',
     index = 0,
@@ -34,6 +34,7 @@ export default function ProjectCard({
     const category = projectCategory(project);
 
     const cardRef = useRef<HTMLDivElement>(null);
+    const rafIdRef = useRef<number | null>(null);
 
     // ── Física de Micro-Tilt 3D Tátil (Jesper Landberg / Rauno Freiberg) ──
     const xPct = useMotionValue(0);
@@ -48,22 +49,29 @@ export default function ProjectCard({
     const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-5deg', '5deg']);
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        if (!cardRef.current) return;
-        const rect = cardRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const clientX = e.clientX;
+        const clientY = e.clientY;
 
-        // Injeção de coordenadas diretamente nas CSS Custom Properties (Zero Re-render)
-        cardRef.current.style.setProperty('--mouse-x', `${mouseX}px`);
-        cardRef.current.style.setProperty('--mouse-y', `${mouseY}px`);
-        cardRef.current.style.setProperty('--glow-opacity', '1');
+        if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = requestAnimationFrame(() => {
+            if (!cardRef.current) return;
+            const rect = cardRef.current.getBoundingClientRect();
+            const mouseX = clientX - rect.left;
+            const mouseY = clientY - rect.top;
 
-        // Cálculo relativo ao centro do card (-0.5 a 0.5)
-        xPct.set(mouseX / rect.width - 0.5);
-        yPct.set(mouseY / rect.height - 0.5);
+            // Injeção de coordenadas diretamente nas CSS Custom Properties (Zero Re-render)
+            cardRef.current.style.setProperty('--mouse-x', `${mouseX}px`);
+            cardRef.current.style.setProperty('--mouse-y', `${mouseY}px`);
+            cardRef.current.style.setProperty('--glow-opacity', '1');
+
+            // Cálculo relativo ao centro do card (-0.5 a 0.5)
+            xPct.set(mouseX / rect.width - 0.5);
+            yPct.set(mouseY / rect.height - 0.5);
+        });
     }, [xPct, yPct]);
 
     const handleMouseLeave = useCallback(() => {
+        if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         if (!cardRef.current) return;
         cardRef.current.style.setProperty('--glow-opacity', '0');
         xPct.set(0);
@@ -95,6 +103,8 @@ export default function ProjectCard({
                     <img
                         src={coverImage}
                         alt={project.title}
+                        width={112}
+                        height={80}
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
@@ -293,4 +303,6 @@ export default function ProjectCard({
             </motion.div>
         </div>
     );
-}
+});
+
+export default ProjectCard;

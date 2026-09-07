@@ -6,11 +6,20 @@ import { useRef } from 'react';
 export function TiltCard({ children, className = '', intensity = 8, onClick }) {
     const cardRef = useRef(null);
     const rectRef = useRef(null);
+    const rafRef  = useRef(null);
+    const rotRef  = useRef({ x: 0, y: 0 });
 
-    const onMouseEnter = (e) => {
+    const onMouseEnter = () => {
         const card = cardRef.current;
         if (!card) return;
         rectRef.current = card.getBoundingClientRect();
+    };
+
+    const applyTransform = () => {
+        rafRef.current = null;
+        const card = cardRef.current;
+        if (!card) return;
+        card.style.transform = `perspective(700px) rotateX(${rotRef.current.x}deg) rotateY(${rotRef.current.y}deg) scale3d(1.02,1.02,1.02)`;
     };
 
     const onMove = (e) => {
@@ -19,13 +28,21 @@ export function TiltCard({ children, className = '', intensity = 8, onClick }) {
         const rect = rectRef.current;
         const dx   = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
         const dy   = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
-        const rotY =  dx * intensity;
-        const rotX = -dy * intensity;
-        card.style.transform = `perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.02,1.02,1.02)`;
+        rotRef.current = {
+            x: -dy * intensity,
+            y: dx * intensity,
+        };
+        if (!rafRef.current) {
+            rafRef.current = requestAnimationFrame(applyTransform);
+        }
     };
 
     const onLeave = () => {
         rectRef.current = null;
+        if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+        }
         const card = cardRef.current;
         if (!card) return;
         card.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';

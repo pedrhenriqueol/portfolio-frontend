@@ -867,10 +867,7 @@ class PasswordEngine:
     };
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   ── COMPONENTE PRINCIPAL: PROJECT INSPECTOR DRAWER ───────────────
-   ───────────────────────────────────────────────────────────────── */
-export default function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProps) {
+function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProps) {
     const { lang } = useLanguage();
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [selectedEndpointIndex, setSelectedEndpointIndex] = useState(0);
@@ -1090,7 +1087,7 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 280 }}
                 onClick={(e) => e.stopPropagation()}
-                className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#0C0E14] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden"
+                className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#0C0E14] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden will-change-transform"
             >
                 {/* ── A. Cabeçalho Fixo do Console de Engenharia ── */}
                 <header className="shrink-0 border-b border-white/10 bg-darker/90 backdrop-blur-xl px-6 py-4 flex items-center justify-between gap-4">
@@ -1674,3 +1671,5 @@ export default function ProjectInspectorDrawer({ project, onClose }: ProjectInsp
         </motion.div>
     );
 }
+
+export default React.memo(ProjectInspectorDrawer);

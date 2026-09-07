@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
 import { playMechanicalClick, playTabSwitch } from '../../../lib/sound';
+import useSectionInView from '../../../hooks/useSectionInView';
 
 export interface FlagshipProject {
     id: number;
@@ -72,7 +73,7 @@ interface CylindricalCardProps {
  * CylindricalCard - Card 3D individual com isolamento de empilhamento estrito,
  * separação espacial calibrada e botões integrados sem interceptação.
  */
-function CylindricalCard({
+const CylindricalCard = memo(function CylindricalCard({
     project,
     index,
     activeIndex,
@@ -125,10 +126,14 @@ function CylindricalCard({
         >
             {/* Card Tridimensional Principal em Escala Monumental */}
             <div
-                className={`w-full h-full rounded-2xl bg-[#0C0F17] border border-white/15 overflow-hidden flex flex-col md:flex-row shadow-[0_30px_90px_rgba(0,0,0,0.95)] relative group transition-all duration-300 ${
+                style={{
+                    transform: 'translateZ(0)',
+                    willChange: 'transform',
+                }}
+                className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-all duration-300 transform-gpu ${
                     isCurrent
-                        ? 'brightness-100 pointer-events-auto'
-                        : 'brightness-[0.4] backdrop-blur-[1px] filter pointer-events-none'
+                        ? 'bg-[#0C0F17]/95 border border-white/20 backdrop-blur-md brightness-100 pointer-events-auto'
+                        : 'bg-[#0d1117]/90 border border-white/5 brightness-[0.4] pointer-events-none'
                 }`}
             >
                 {/* ── Lado Esquerdo: Área Visual e Preview Nítido ── */}
@@ -136,7 +141,10 @@ function CylindricalCard({
                     <img
                         src={project.image}
                         alt={project.title}
+                        width={640}
+                        height={400}
                         loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover object-left-top transform group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100"
                         onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -245,14 +253,17 @@ function CylindricalCard({
                 </div>
             </div>
 
-            {/* Sombra de Profundidade Projetada no Solo */}
-            <motion.div
-                style={{ opacity: shadowOpacity }}
-                className="absolute -bottom-8 left-10 right-10 h-8 bg-black/95 blur-2xl rounded-full pointer-events-none"
-            />
+            {/* Sombra de Profundidade Projetada no Solo - estritamente no card ativo */}
+            {isCurrent && (
+                <motion.div
+                    style={{ opacity: shadowOpacity }}
+                    className="absolute -bottom-6 left-12 right-12 h-6 bg-black/80 blur-xl rounded-full pointer-events-none"
+                />
+            )}
         </motion.div>
     );
-}
+});
+
 
 interface Cylindrical3DShowcaseProps {
     onSelectProject?: (project: any) => void;
@@ -265,6 +276,7 @@ interface Cylindrical3DShowcaseProps {
 export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }: Cylindrical3DShowcaseProps) {
     const [activeIndex, setActiveIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
+    const { containerRef: sectionRef, isInView } = useSectionInView({ rootMargin: '200px 0px' });
 
     // ── Motion Values de Posição com Mola Amortecida & Inércia (Jesper Landberg Physics) ──
     const progress = useMotionValue(0);
@@ -290,8 +302,9 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
 
     const totalSlides = FLAGSHIP_CONFIGS.length;
 
-    // Atualiza o estado visual do índice ativo conforme o progresso da mola
+    // Atualiza o estado visual do índice ativo conforme o progresso da mola (apenas quando visível)
     useEffect(() => {
+        if (!isInView) return;
         const unsubscribe = smoothProgress.on('change', (v: number) => {
             const rounded = Math.round(v);
             if (rounded >= 0 && rounded < totalSlides && rounded !== activeIndex) {
@@ -299,7 +312,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             }
         });
         return () => unsubscribe();
-    }, [smoothProgress, activeIndex, totalSlides]);
+    }, [smoothProgress, activeIndex, totalSlides, isInView]);
 
     const navigateTo = useCallback((targetIndex: number) => {
         const clamped = Math.max(0, Math.min(totalSlides - 1, targetIndex));
@@ -320,8 +333,9 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
         navigateTo(next);
     }, [navigateTo, progress, totalSlides]);
 
-    // ── Gestão de Arraste com Inércia & Momentum ──
+    // ── Gestão de Arraste com Inércia & Momentum (Desativada quando fora do viewport) ──
     const handlePointerDown = (e: React.PointerEvent) => {
+        if (!isInView) return;
         if (e.button !== undefined && e.button !== 0) return;
         isDraggingRef.current = true;
         hasDraggedRef.current = false;
@@ -397,11 +411,18 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
 
     return (
         <section
+            ref={sectionRef}
             id="projetos-destaque"
             tabIndex={0}
             onKeyDown={handleKeyDown}
+            style={{
+                contentVisibility: 'auto',
+                containIntrinsicSize: '0 700px',
+                transform: 'translateZ(0)',
+            }}
             className="py-16 md:py-24 bg-darker relative border-t border-primary/20 overflow-hidden focus:outline-none"
         >
+
             {/* Iluminação de fundo cinemática */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[950px] h-[480px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 

@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 /**
- * ProjectThumbnail Component
+ * ProjectThumbnail Component (Otimizado para Performance e Zero CLS)
  * Suporta dois modos visuais:
  * - 'split': Dual-Pane (40% tela de autenticação / 60% console principal ou telemetria)
  * - 'single': Panorâmico com enquadramento nítido do workbench / dashboard
  */
-export default function ProjectThumbnail({ project, category, hasDetails, t }) {
+const ProjectThumbnail = memo(function ProjectThumbnail({ project, category, hasDetails, t }) {
     const isSplit = project?.thumbnail_mode === 'split' && project?.split_images;
     const coverImage = project?.image_url || '/dashboard_placeholder.png';
 
@@ -20,6 +20,8 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
                         <img
                             src={project.split_images.left}
                             alt={`${project.title} - Login`}
+                            width={240}
+                            height={240}
                             loading="lazy"
                             decoding="async"
                             className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700"
@@ -29,7 +31,7 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
                             }}
                         />
                         {/* Pill discreta de identificação da tela */}
-                        <span className="absolute top-2.5 left-2.5 z-20 px-1.5 py-0.5 rounded text-[8px] font-mono font-medium tracking-wide uppercase bg-black/70 text-white/75 border border-white/10 backdrop-blur-xs">
+                        <span className="absolute top-2.5 left-2.5 z-20 px-1.5 py-0.5 rounded text-[8px] font-mono font-medium tracking-wide uppercase bg-black/85 text-white/75 border border-white/10">
                             Auth
                         </span>
                     </div>
@@ -39,6 +41,8 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
                         <img
                             src={project.split_images.right}
                             alt={`${project.title} - Console`}
+                            width={360}
+                            height={240}
                             loading="lazy"
                             decoding="async"
                             className="w-full h-full object-cover object-left-top transform group-hover:scale-105 transition-transform duration-700"
@@ -48,7 +52,7 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
                             }}
                         />
                         {/* Pill discreta de identificação do console */}
-                        <span className="absolute top-2.5 right-2.5 z-20 px-1.5 py-0.5 rounded text-[8px] font-mono font-medium tracking-wide uppercase bg-black/70 text-accent border border-accent/20 backdrop-blur-xs">
+                        <span className="absolute top-2.5 right-2.5 z-20 px-1.5 py-0.5 rounded text-[8px] font-mono font-medium tracking-wide uppercase bg-black/85 text-accent border border-accent/20">
                             Console
                         </span>
                     </div>
@@ -59,6 +63,8 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
                     <img
                         src={coverImage}
                         alt={project?.title || 'Preview'}
+                        width={600}
+                        height={375}
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover object-top transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
@@ -68,7 +74,7 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
                         }}
                     />
                     {project?.thumbnail_mode === 'single' && (
-                        <span className="absolute top-2.5 right-2.5 z-20 px-1.5 py-0.5 rounded text-[8px] font-mono font-medium tracking-wide uppercase bg-black/70 text-accent border border-accent/20 backdrop-blur-xs">
+                        <span className="absolute top-2.5 right-2.5 z-20 px-1.5 py-0.5 rounded text-[8px] font-mono font-medium tracking-wide uppercase bg-black/85 text-accent border border-accent/20">
                             Workbench
                         </span>
                     )}
@@ -80,7 +86,7 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
 
             {/* ── Badge de Categoria ── */}
             {category && (
-                <span className="absolute top-3 left-3 z-20 bg-darker/90 border border-primary/40 text-primary text-[10px] font-semibold px-2.5 py-0.5 rounded-full backdrop-blur-sm capitalize shadow-md">
+                <span className="absolute top-3 left-3 z-20 bg-darker/95 border border-primary/40 text-primary text-[10px] font-semibold px-2.5 py-0.5 rounded-full capitalize shadow-md">
                     {category}
                 </span>
             )}
@@ -88,7 +94,7 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
             {/* ── Overlay Interativo ao Passar o Mouse (Quick Details Hint) ── */}
             {hasDetails && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <span className="bg-secondary/90 text-darker text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl backdrop-blur-sm transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                    <span className="bg-secondary/95 text-darker text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
                         <i className="fas fa-info-circle text-[11px]" />
                         {t ? t('projects.btnDetails') : 'Detalhes Técnicos'}
                     </span>
@@ -96,4 +102,6 @@ export default function ProjectThumbnail({ project, category, hasDetails, t }) {
             )}
         </div>
     );
-}
+});
+
+export default ProjectThumbnail;

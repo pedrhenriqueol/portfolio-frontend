@@ -21,9 +21,9 @@ function HighlightedText({ text }) {
     );
 }
 
-/** Card de Experiência com Micro-tilt 3D sutil de ±4° interpolado por física de mola */
-function ExperienceCard({ exp, isCurrent, lang }) {
+const ExperienceCard = React.memo(function ExperienceCard({ exp, isCurrent, lang }) {
     const cardRef = useRef(null);
+    const rectRef = useRef(null);
     const xPct = useMotionValue(0);
     const yPct = useMotionValue(0);
 
@@ -34,14 +34,24 @@ function ExperienceCard({ exp, isCurrent, lang }) {
     const rotateX = useTransform(ySpring, [-0.5, 0.5], ['4deg', '-4deg']);
     const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-4deg', '4deg']);
 
+    const handleMouseEnter = () => {
+        if (cardRef.current) {
+            rectRef.current = cardRef.current.getBoundingClientRect();
+        }
+    };
+
     const handleMouseMove = (e) => {
         if (!cardRef.current) return;
-        const rect = cardRef.current.getBoundingClientRect();
+        if (!rectRef.current) {
+            rectRef.current = cardRef.current.getBoundingClientRect();
+        }
+        const rect = rectRef.current;
         xPct.set((e.clientX - rect.left) / rect.width - 0.5);
         yPct.set((e.clientY - rect.top) / rect.height - 0.5);
     };
 
     const handleMouseLeave = () => {
+        rectRef.current = null;
         xPct.set(0);
         yPct.set(0);
     };
@@ -50,6 +60,7 @@ function ExperienceCard({ exp, isCurrent, lang }) {
         <div style={{ perspective: 1000 }} className="w-full">
             <motion.div
                 ref={cardRef}
+                onMouseEnter={handleMouseEnter}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 style={{
@@ -122,7 +133,7 @@ function ExperienceCard({ exp, isCurrent, lang }) {
             </motion.div>
         </div>
     );
-}
+});
 
 export default function ExperienceSection({ experiences }) {
     const { t, lang } = useLanguage();

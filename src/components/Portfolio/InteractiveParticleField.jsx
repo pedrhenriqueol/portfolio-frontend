@@ -76,6 +76,18 @@ export default function InteractiveParticleField() {
         };
 
         let lastMoveTime = performance.now();
+        let isSleeping = false;
+        let idleFrames = 0;
+
+        const wakeUp = () => {
+            if (isSleeping) {
+                isSleeping = false;
+                idleFrames = 0;
+                if (!animationFrameId && isVisible) {
+                    animationFrameId = requestAnimationFrame(render);
+                }
+            }
+        };
 
         const handleMouseMove = (e) => {
             const now = performance.now();
@@ -89,9 +101,11 @@ export default function InteractiveParticleField() {
             mouse.y = e.clientY;
             lastMoveTime = now;
 
-            // Onda de dispersão suave expandindo o raio de força conforme a aceleração do mouse
+            // Onda de dispersao suave expandindo o raio de forca conforme a aceleracao do mouse
             const targetRadius = Math.min(180, mouse.baseRadius + mouse.speed * 30);
             mouse.currentRadius = targetRadius;
+
+            wakeUp();
         };
 
         const handleMouseLeave = () => {
@@ -104,29 +118,40 @@ export default function InteractiveParticleField() {
         const handleVisibilityChange = () => {
             isVisible = !document.hidden;
             if (isVisible) {
-                render();
+                wakeUp();
+                if (!animationFrameId) {
+                    render();
+                }
+            } else if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
             }
         };
 
         const render = () => {
-            if (!isVisible) return;
+            if (!isVisible) {
+                animationFrameId = null;
+                return;
+            }
 
             const width = window.innerWidth;
             const height = window.innerHeight;
 
             ctx.clearRect(0, 0, width, height);
 
-            // Decaimento suave do raio de dispersão do mouse
+            // Decaimento suave do raio de dispersao do mouse
             mouse.currentRadius += (mouse.baseRadius - mouse.currentRadius) * 0.08;
 
             const activeRadius = mouse.currentRadius;
             const displacedNodes = [];
+            let maxDisplacement = 0;
+            let maxVelocity = 0;
 
-            // 1. Atualização da física de cada partícula
+            // 1. Atualizacao da fisica de cada particula
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
 
-                // Repulsão pelo cursor do mouse
+                // Repulsao pelo cursor do mouse
                 const dx = mouse.x - p.x;
                 const dy = mouse.y - p.y;
                 const dist = Math.hypot(dx, dy);
@@ -134,7 +159,7 @@ export default function InteractiveParticleField() {
                 if (dist < activeRadius && dist > 0.1) {
                     const factor = (1 - dist / activeRadius);
                     const angle = Math.atan2(dy, dx);
-                    // Força amplificada com a aceleração do mouse
+                    // Forca amplificada com a aceleracao do mouse
                     const force = factor * (REPULSION_FORCE + mouse.speed * 4);
                     p.vx -= Math.cos(angle) * force;
                     p.vy -= Math.sin(angle) * force;
@@ -150,23 +175,27 @@ export default function InteractiveParticleField() {
                 p.x += p.vx;
                 p.y += p.vy;
 
-                const displacement = Math.hypot(p.x - p.originX, p.y - p.originY);
-                if (displacement > 2) {
+                const disp = Math.hypot(p.x - p.originX, p.y - p.originY);
+                if (disp > maxDisplacement) maxDisplacement = disp;
+                const vel = Math.hypot(p.vx, p.vy);
+                if (vel > maxVelocity) maxVelocity = vel;
+
+                if (disp > 2) {
                     displacedNodes.push(p);
                 }
 
-                // Desenha a partícula
-                const dynamicAlpha = Math.min(p.baseAlpha + displacement * 0.02, 0.45);
+                // Desenha a particula
+                const dynamicAlpha = Math.min(p.baseAlpha + disp * 0.02, 0.45);
 
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius + (displacement > 3 ? 0.4 : 0), 0, Math.PI * 2);
-                ctx.fillStyle = displacement > 4
+                ctx.arc(p.x, p.y, p.radius + (disp > 3 ? 0.4 : 0), 0, Math.PI * 2);
+                ctx.fillStyle = disp > 4
                     ? `rgba(217, 119, 87, ${dynamicAlpha})`
                     : `rgba(255, 255, 255, ${dynamicAlpha})`;
                 ctx.fill();
             }
 
-            // 2. Conexões translúcidas e campo de luz difuso estilo Lusion
+            // 2. Conexoes translucidas e campo de luz difuso estilo Lusion
             if (mouse.x > 0 && mouse.y > 0) {
                 const gradient = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, activeRadius * 0.9);
                 gradient.addColorStop(0, 'rgba(217, 119, 87, 0.045)');
@@ -196,13 +225,29 @@ export default function InteractiveParticleField() {
                 }
             }
 
+            // Deteccao de repouso: se o mouse esta parado e particulas assentadas
+            if (mouse.x < 0 && maxDisplacement < 0.15 && maxVelocity < 0.05) {
+                idleFrames++;
+                if (idleFrames > 30) {
+                    // Particulas em repouso total: parar o loop para zerar consumo de CPU/GPU
+                    isSleeping = true;
+                    animationFrameId = null;
+                    return;
+                }
+            } else {
+                idleFrames = 0;
+            }
+
             animationFrameId = requestAnimationFrame(render);
         };
 
         handleResize();
         render();
 
-        window.addEventListener('resize', handleResize, { passive: true });
+        window.addEventListener('resize', () => {
+            handleResize();
+            wakeUp();
+        }, { passive: true });
         window.addEventListener('mousemove', handleMouseMove, { passive: true });
         window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
         document.addEventListener('visibilitychange', handleVisibilityChange);

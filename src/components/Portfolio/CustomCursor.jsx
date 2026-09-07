@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 // Diâmetro base em repouso (22px)
 const DEFAULT_SIZE = 22;
 
-// Física de mola atenuada e sem oscilação agressiva solicitada
+// Física de mola atenuada e sem oscilação agressiva
 const SPRING_TRANSITION = {
     type: 'spring',
     damping: 28,
@@ -14,17 +14,18 @@ const SPRING_TRANSITION = {
 
 export default function CustomCursor() {
     const [isTouch, setIsTouch] = useState(false);
-    const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
-    const [cursorState, setCursorState] = useState({
-        mode: 'default', // 'default' | 'card' | 'button'
-        x: -100,
-        y: -100,
+    const [cursorMode, setCursorMode] = useState('hidden'); // 'default' | 'card' | 'button' | 'hidden'
+    const [buttonDimensions, setButtonDimensions] = useState({
         width: DEFAULT_SIZE,
         height: DEFAULT_SIZE,
         borderRadius: '50%',
-        isNoMorph: false,
-        isOffscreen: true,
     });
+
+    // Posições desacopladas do estado React (Zero Re-render durante mousemove)
+    const cursorX = useMotionValue(-100);
+    const cursorY = useMotionValue(-100);
+    const smoothX = useSpring(cursorX, SPRING_TRANSITION);
+    const smoothY = useSpring(cursorY, SPRING_TRANSITION);
 
     const posRef = useRef({ x: -100, y: -100 });
     const targetRef = useRef(null);
@@ -55,21 +56,17 @@ export default function CustomCursor() {
         return () => window.removeEventListener('resize', updateZoom);
     }, []);
 
-    // Atualiza estado e dimensões aceleradas por GPU
+    // Atualiza estado e dimensões aceleradas por GPU sem forçar re-render em cada pixel
     const updateCursor = useCallback(() => {
         const zoom = cachedZoomRef.current;
         const currentPos = posRef.current;
         const targetData = targetRef.current;
 
-        setMousePos({ x: currentPos.x, y: currentPos.y });
-
-        if (isNoMorphRef.current || isOffscreenRef.current) {
-            setCursorState(prev => ({
-                ...prev,
-                mode: 'default',
-                isNoMorph: isNoMorphRef.current,
-                isOffscreen: isOffscreenRef.current,
-            }));
+        const isHidden = isNoMorphRef.current || isOffscreenRef.current;
+        if (isHidden) {
+            cursorX.set(currentPos.x - DEFAULT_SIZE / 2);
+            cursorY.set(currentPos.y - DEFAULT_SIZE / 2);
+            setCursorMode(prev => (prev === 'hidden' ? prev : 'hidden'));
             return;
         }
 
@@ -96,44 +93,28 @@ export default function CustomCursor() {
             const pullX = (currentPos.x - centerX) * 0.14;
             const pullY = (currentPos.y - centerY) * 0.14;
 
-            setCursorState({
-                mode: 'button',
-                x: targetLeft + pullX,
-                y: targetTop + pullY,
-                width: targetWidth,
-                height: targetHeight,
-                borderRadius: radius,
-                isNoMorph: false,
-                isOffscreen: false,
+            cursorX.set(targetLeft + pullX);
+            cursorY.set(targetTop + pullY);
+
+            setCursorMode(prev => (prev === 'button' ? prev : 'button'));
+            setButtonDimensions(prev => {
+                if (prev.width === targetWidth && prev.height === targetHeight && prev.borderRadius === radius) {
+                    return prev;
+                }
+                return { width: targetWidth, height: targetHeight, borderRadius: radius };
             });
         } else if (targetData?.type === 'card' || targetData?.type === 'text') {
-            // Cards Grandes & Superfícies de Leitura:
-            // Bolinha circular que segue o ponteiro livremente (sem ancoragem/morph)
-            // e expande suavemente com scale: 1.8 e mix-blend-mode: difference
-            setCursorState({
-                mode: 'card',
-                x: currentPos.x - DEFAULT_SIZE / 2,
-                y: currentPos.y - DEFAULT_SIZE / 2,
-                width: DEFAULT_SIZE,
-                height: DEFAULT_SIZE,
-                borderRadius: '50%',
-                isNoMorph: false,
-                isOffscreen: false,
-            });
+            // Cards Grandes & Superfícies de Leitura: bolinha segue livremente com escala 1.8
+            cursorX.set(currentPos.x - DEFAULT_SIZE / 2);
+            cursorY.set(currentPos.y - DEFAULT_SIZE / 2);
+            setCursorMode(prev => (prev === 'card' ? prev : 'card'));
         } else {
             // Estado livre padrão: bolinha circular de 22px
-            setCursorState({
-                mode: 'default',
-                x: currentPos.x - DEFAULT_SIZE / 2,
-                y: currentPos.y - DEFAULT_SIZE / 2,
-                width: DEFAULT_SIZE,
-                height: DEFAULT_SIZE,
-                borderRadius: '50%',
-                isNoMorph: false,
-                isOffscreen: false,
-            });
+            cursorX.set(currentPos.x - DEFAULT_SIZE / 2);
+            cursorY.set(currentPos.y - DEFAULT_SIZE / 2);
+            setCursorMode(prev => (prev === 'default' ? prev : 'default'));
         }
-    }, []);
+    }, [cursorX, cursorY]);
 
     // Identifica o elemento e categoria sob o ponteiro
     const resolveTarget = (el) => {
@@ -261,16 +242,16 @@ export default function CustomCursor() {
 
     if (isTouch) return null;
 
-    const isHidden = cursorState.isOffscreen || cursorState.isNoMorph;
-
     return (
         <motion.div
             className="pointer-events-none fixed top-0 left-0 z-[999999] will-change-transform transform-gpu"
+            style={{
+                x: smoothX,
+                y: smoothY,
+            }}
             animate={
-                isHidden
+                cursorMode === 'hidden'
                     ? {
-                          x: mousePos.x - DEFAULT_SIZE / 2,
-                          y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',
@@ -283,14 +264,12 @@ export default function CustomCursor() {
                           WebkitBackdropFilter: 'none',
                           mixBlendMode: 'difference',
                       }
-                    : cursorState.mode === 'button'
+                    : cursorMode === 'button'
                     ? {
                           // Sticky morph magnético em botões compactos e micro-alvos clicáveis
-                          x: cursorState.x,
-                          y: cursorState.y,
-                          width: cursorState.width,
-                          height: cursorState.height,
-                          borderRadius: cursorState.borderRadius,
+                          width: buttonDimensions.width,
+                          height: buttonDimensions.height,
+                          borderRadius: buttonDimensions.borderRadius,
                           opacity: 1,
                           scale: 1,
                           backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -300,11 +279,9 @@ export default function CustomCursor() {
                           WebkitBackdropFilter: 'none',
                           mixBlendMode: 'normal',
                       }
-                    : cursorState.mode === 'card'
+                    : cursorMode === 'card'
                     ? {
                           // Cards Grandes & Textos: bolinha circular contínua, segue livremente o mouse com expansão suave
-                          x: mousePos.x - DEFAULT_SIZE / 2,
-                          y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',
@@ -319,8 +296,6 @@ export default function CustomCursor() {
                       }
                     : {
                           // Estado livre padrão: bolinha circular compacta de 22px
-                          x: mousePos.x - DEFAULT_SIZE / 2,
-                          y: mousePos.y - DEFAULT_SIZE / 2,
                           width: DEFAULT_SIZE,
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',

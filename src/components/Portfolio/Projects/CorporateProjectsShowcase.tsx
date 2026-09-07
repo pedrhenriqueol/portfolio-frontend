@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useVelocity, AnimatePresence } from 'framer-motion';
 import { Project, ProjectFilterType, ProjectViewMode } from '../../../types/project';
 import { projectCategory } from '../../../utils/projects';
 import { playTabSwitch, playMechanicalClick } from '../../../lib/sound';
+import useSectionInView from '../../../hooks/useSectionInView';
 
 interface CorporateProjectsShowcaseProps {
     projects: Project[];
@@ -26,7 +27,7 @@ interface CylindricalCorporateCardProps {
  * CylindricalCorporateCard - Card individual na curvatura côncava 3D
  * com calibração precisa de z-index, opacidade, iluminação e isolamento de eventos.
  */
-function CylindricalCorporateCard({
+const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
     project,
     index,
     activeIndex,
@@ -104,10 +105,14 @@ function CylindricalCorporateCard({
         >
             {/* Card Tridimensional com Borda Luminescente e Profundidade Escura */}
             <div
-                className={`w-full h-full rounded-2xl bg-[#0C0F17] border border-white/15 overflow-hidden flex flex-col md:flex-row shadow-[0_30px_90px_rgba(0,0,0,0.95)] relative group transition-all duration-300 ${
+                style={{
+                    transform: 'translateZ(0)',
+                    willChange: 'transform',
+                }}
+                className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-all duration-300 transform-gpu ${
                     isCurrent
-                        ? 'brightness-100 pointer-events-auto'
-                        : 'brightness-[0.38] backdrop-blur-[1px] filter pointer-events-none'
+                        ? 'bg-[#0C0F17]/95 border border-white/20 backdrop-blur-md brightness-100 pointer-events-auto'
+                        : 'bg-[#0d1117]/90 border border-white/5 brightness-[0.38] pointer-events-none'
                 }`}
             >
                 {/* ── Lado Esquerdo: Imagem de Alta Fidelidade com Gradiente de Imersão ── */}
@@ -115,7 +120,10 @@ function CylindricalCorporateCard({
                     <img
                         src={imageUrl}
                         alt={project.title}
+                        width={640}
+                        height={400}
                         loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover object-left-top transform group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
                         onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -251,14 +259,138 @@ function CylindricalCorporateCard({
                 </div>
             </div>
 
-            {/* Sombra de Profundidade Projetada no Solo */}
-            <motion.div
-                style={{ opacity: shadowOpacity }}
-                className="absolute -bottom-8 left-10 right-10 h-8 bg-black/95 blur-2xl rounded-full pointer-events-none"
-            />
+            {/* Sombra de Profundidade Projetada no Solo - estritamente no card ativo */}
+            {isCurrent && (
+                <motion.div
+                    style={{ opacity: shadowOpacity }}
+                    className="absolute -bottom-6 left-12 right-12 h-6 bg-black/80 blur-xl rounded-full pointer-events-none"
+                />
+            )}
         </motion.div>
     );
+});
+
+
+// Metadados para o Modo Tabela Densa
+const getProjectDatabase = (p: Project) => {
+    const tags = p.tags || [];
+    if (tags.includes('SQL Server')) return 'SQL Server';
+    if (tags.includes('MySQL')) return 'MySQL';
+    if (tags.includes('PostgreSQL')) return 'PostgreSQL';
+    return 'Relacional / Embed';
+};
+
+const getProjectArchitecture = (p: Project) => {
+    if (p.architectureDetails?.architectureType) {
+        return p.architectureDetails.architectureType.split(':')[0].trim();
+    }
+    if (p.details?.architecture?.[0]?.tech) {
+        return p.details.architecture[0].tech.split('+')[0].trim();
+    }
+    if ((p.tags || []).includes('Multi-tenant')) return 'Multi-tenant Lógico';
+    if ((p.tags || []).includes('UniGui')) return 'RAD ServerModule Web';
+    if ((p.tags || []).includes('Laravel')) return 'REST API Desacoplada';
+    return 'MVC / Modular';
+};
+
+interface CorporateTableRowProps {
+    project: Project;
+    onSelectProject: (project: Project) => void;
 }
+
+const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectProject }: CorporateTableRowProps) {
+    const cat = projectCategory(project);
+    const img = project.image_url || project.image || '/dashboard_placeholder.png';
+
+    const handleInspect = useCallback(() => {
+        playMechanicalClick();
+        onSelectProject(project);
+    }, [project, onSelectProject]);
+
+    return (
+        <motion.tr
+            layout
+            transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+            className="group hover:bg-white/[0.02] transition-colors"
+        >
+            <td className="py-3.5 px-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-black/60 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                        <img
+                            src={img}
+                            alt={project.title}
+                            width={36}
+                            height={36}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                            onError={(e: any) => {
+                                e.target.onerror = null;
+                                e.target.src = '/dashboard_placeholder.png';
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <div className="font-bold text-white group-hover:text-accent transition-colors">
+                            {project.title}
+                        </div>
+                        <span className="text-[10px] text-primary/60 uppercase">
+                            {cat}
+                        </span>
+                    </div>
+                </div>
+            </td>
+
+            <td className="py-3.5 px-4 text-gray-300">
+                <div className="flex items-center gap-1.5">
+                    <i className="fas fa-sitemap text-accent/80 text-[10px]" />
+                    <span>{getProjectArchitecture(project)}</span>
+                </div>
+            </td>
+
+            <td className="py-3.5 px-4">
+                <div className="flex flex-wrap gap-1 max-w-[240px]">
+                    {(project.tags || []).slice(0, 3).map((tag, tIdx) => (
+                        <span
+                            key={tIdx}
+                            className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-primary/80"
+                        >
+                            {tag}
+                        </span>
+                    ))}
+                    {(project.tags || []).length > 3 && (
+                        <span className="text-[10px] text-primary/40">
+                            +{(project.tags || []).length - 3}
+                        </span>
+                    )}
+                </div>
+            </td>
+
+            <td className="py-3.5 px-4">
+                <span className="px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px]">
+                    {getProjectDatabase(project)}
+                </span>
+            </td>
+
+            <td className="py-3.5 px-4 text-emerald-400 font-semibold text-[11px]">
+                {project.details?.metrics?.[0]
+                    ? (typeof project.details.metrics[0] === 'object' ? project.details.metrics[0].value : project.details.metrics[0])
+                    : (project.details?.subtitle || 'Produção Estável')}
+            </td>
+
+            <td className="py-3.5 px-4 text-right">
+                <button
+                    onClick={handleInspect}
+                    data-cursor-morph="true"
+                    className="px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 text-accent hover:bg-accent hover:text-darker text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                >
+                    <i className="fas fa-microchip text-[10px]" />
+                    <span>Inspecionar</span>
+                </button>
+            </td>
+        </motion.tr>
+    );
+});
 
 /**
  * CorporateProjectsShowcase - Esteira Cilíndrica 3D com Rotação Espacial e Física de Inércia
@@ -273,7 +405,7 @@ export default function CorporateProjectsShowcase({
     const [activeFilter, setActiveFilter] = useState<ProjectFilterType>('all');
     const [viewMode, setViewMode] = useState<ProjectViewMode>('grid');
     const [activeIndex, setActiveIndex] = useState(0);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const { containerRef: sectionRef, isInView } = useSectionInView({ rootMargin: '200px 0px' });
 
     // ── Definição dos Filtros de Categoria com Layout Compartilhado ──
     const FILTERS = useMemo(() => [
@@ -314,8 +446,9 @@ export default function CorporateProjectsShowcase({
     const lastTimeRef = useRef(0);
     const velocityRef = useRef(0);
 
-    // Sincronização do activeIndex com o valor da mola
+    // Sincronização do activeIndex com o valor da mola (apenas quando visível)
     useEffect(() => {
+        if (!isInView) return;
         const unsubscribe = smoothProgress.on('change', (v: number) => {
             const rounded = Math.round(v);
             if (rounded >= 0 && rounded < totalSlides && rounded !== activeIndex) {
@@ -323,7 +456,7 @@ export default function CorporateProjectsShowcase({
             }
         });
         return () => unsubscribe();
-    }, [smoothProgress, activeIndex, totalSlides]);
+    }, [smoothProgress, activeIndex, totalSlides, isInView]);
 
     // Navegação programática para um índice alvo
     const navigateTo = useCallback((targetIndex: number) => {
@@ -356,8 +489,9 @@ export default function CorporateProjectsShowcase({
         navigateTo(next);
     }, [navigateTo, progress, totalSlides]);
 
-    // ── Gestão de Arraste com Inércia & Snap Magnético ──
+    // ── Gestão de Arraste com Inércia & Snap Magnético (apenas quando visível) ──
     const handlePointerDown = (e: React.PointerEvent) => {
+        if (!isInView) return;
         if (totalSlides <= 1) return;
         if (e.button !== undefined && e.button !== 0) return;
         isDraggingRef.current = true;
@@ -372,6 +506,7 @@ export default function CorporateProjectsShowcase({
         window.addEventListener('pointerup', handlePointerUp);
         window.addEventListener('pointercancel', handlePointerUp);
     };
+
 
     const handlePointerMove = (e: PointerEvent) => {
         if (!isDraggingRef.current) return;
@@ -424,33 +559,16 @@ export default function CorporateProjectsShowcase({
         }
     };
 
-    // Metadados para o Modo Tabela Densa
-    const getProjectDatabase = (p: Project) => {
-        const tags = p.tags || [];
-        if (tags.includes('SQL Server')) return 'SQL Server';
-        if (tags.includes('MySQL')) return 'MySQL';
-        if (tags.includes('PostgreSQL')) return 'PostgreSQL';
-        return 'Relacional / Embed';
-    };
-
-    const getProjectArchitecture = (p: Project) => {
-        if (p.architectureDetails?.architectureType) {
-            return p.architectureDetails.architectureType.split(':')[0].trim();
-        }
-        if (p.details?.architecture?.[0]?.tech) {
-            return p.details.architecture[0].tech.split('+')[0].trim();
-        }
-        if ((p.tags || []).includes('Multi-tenant')) return 'Multi-tenant Lógico';
-        if ((p.tags || []).includes('UniGui')) return 'RAD ServerModule Web';
-        if ((p.tags || []).includes('Laravel')) return 'REST API Desacoplada';
-        return 'MVC / Modular';
-    };
-
     return (
         <div
-            ref={containerRef}
+            ref={sectionRef}
             tabIndex={0}
             onKeyDown={handleKeyDown}
+            style={{
+                contentVisibility: 'auto',
+                containIntrinsicSize: '0 650px',
+                transform: 'translateZ(0)',
+            }}
             className="w-full relative outline-hidden space-y-6 select-none"
             aria-label="Esteira Cilíndrica 3D de Projetos Corporativos"
         >
@@ -659,93 +777,13 @@ export default function CorporateProjectsShowcase({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {filteredProjects.map((project) => {
-                                        const cat = projectCategory(project);
-                                        const img = project.image_url || project.image || '/dashboard_placeholder.png';
-                                        return (
-                                            <motion.tr
-                                                key={`row-${project.id}`}
-                                                layout
-                                                transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-                                                className="group hover:bg-white/[0.02] transition-colors"
-                                            >
-                                                <td className="py-3.5 px-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 rounded-lg bg-black/60 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
-                                                            <img
-                                                                src={img}
-                                                                alt={project.title}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e: any) => {
-                                                                    e.target.onerror = null;
-                                                                    e.target.src = '/dashboard_placeholder.png';
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-bold text-white group-hover:text-accent transition-colors">
-                                                                {project.title}
-                                                            </div>
-                                                            <span className="text-[10px] text-primary/60 uppercase">
-                                                                {cat}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="py-3.5 px-4 text-gray-300">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <i className="fas fa-sitemap text-accent/80 text-[10px]" />
-                                                        <span>{getProjectArchitecture(project)}</span>
-                                                    </div>
-                                                </td>
-
-                                                <td className="py-3.5 px-4">
-                                                    <div className="flex flex-wrap gap-1 max-w-[240px]">
-                                                        {(project.tags || []).slice(0, 3).map((tag, tIdx) => (
-                                                            <span
-                                                                key={tIdx}
-                                                                className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-primary/80"
-                                                            >
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                        {(project.tags || []).length > 3 && (
-                                                            <span className="text-[10px] text-primary/40">
-                                                                +{(project.tags || []).length - 3}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-
-                                                <td className="py-3.5 px-4">
-                                                    <span className="px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px]">
-                                                        {getProjectDatabase(project)}
-                                                    </span>
-                                                </td>
-
-                                                <td className="py-3.5 px-4 text-emerald-400 font-semibold text-[11px]">
-                                                    {project.details?.metrics?.[0]
-                                                        ? (typeof project.details.metrics[0] === 'object' ? project.details.metrics[0].value : project.details.metrics[0])
-                                                        : (project.details?.subtitle || 'Produção Estável')}
-                                                </td>
-
-                                                <td className="py-3.5 px-4 text-right">
-                                                    <button
-                                                        onClick={() => {
-                                                            playMechanicalClick();
-                                                            onSelectProject(project);
-                                                        }}
-                                                        data-cursor-morph="true"
-                                                        className="px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 text-accent hover:bg-accent hover:text-darker text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
-                                                    >
-                                                        <i className="fas fa-microchip text-[10px]" />
-                                                        <span>Inspecionar</span>
-                                                    </button>
-                                                </td>
-                                            </motion.tr>
-                                        );
-                                    })}
+                                    {filteredProjects.map((project) => (
+                                        <CorporateTableRow
+                                            key={`row-${project.id}`}
+                                            project={project}
+                                            onSelectProject={onSelectProject}
+                                        />
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
