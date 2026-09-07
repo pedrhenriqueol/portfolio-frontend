@@ -4,12 +4,12 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 // Diâmetro base em repouso (22px)
 const DEFAULT_SIZE = 22;
 
-// Física de resposta instantânea e amortecimento suave (sem delay)
+// Física de mola atenuada e sem oscilação agressiva
 const SPRING_TRANSITION = {
     type: 'spring',
-    damping: 36,
-    stiffness: 750,
-    mass: 0.1,
+    damping: 28,
+    stiffness: 320,
+    mass: 0.4,
 };
 
 export default function CustomCursor() {
@@ -202,18 +202,21 @@ export default function CustomCursor() {
         };
 
         const onScroll = () => {
-            const zoom = cachedZoomRef.current;
-            const mouseX = posRef.current.x * zoom;
-            const mouseY = posRef.current.y * zoom;
-
-            // Se o mouse estiver sobre a página enquanto ela rola, atualiza dinamicamente o alvo
-            if (mouseX >= 0 && mouseY >= 0 && mouseX <= window.innerWidth && mouseY <= window.innerHeight) {
-                const elUnderPointer = document.elementFromPoint(mouseX, mouseY);
-                const hitNoMorph = Boolean(elUnderPointer?.closest?.('[data-no-morph="true"], .no-morph, canvas'));
-                isNoMorphRef.current = hitNoMorph;
-                targetRef.current = hitNoMorph ? null : resolveTarget(elUnderPointer);
+            if (targetRef.current?.type === 'button') {
+                const el = targetRef.current.el;
+                const rect = el.getBoundingClientRect();
+                const zoom = cachedZoomRef.current;
+                const mouseX = posRef.current.x * zoom;
+                const mouseY = posRef.current.y * zoom;
+                if (
+                    mouseX < rect.left - 15 ||
+                    mouseX > rect.right + 15 ||
+                    mouseY < rect.top - 15 ||
+                    mouseY > rect.bottom + 15
+                ) {
+                    targetRef.current = null;
+                }
             }
-
             if (!rafRef.current) {
                 rafRef.current = requestAnimationFrame(() => {
                     rafRef.current = null;
@@ -303,32 +306,32 @@ export default function CustomCursor() {
                       }
                     : cursorMode === 'card'
                     ? {
-                          // Cards Grandes & Superfícies: anel sutil translúcido, sem criar bolinha opaca que confunda com o puck da timeline
+                          // Cards Grandes & Textos: bolinha circular contínua, segue livremente o mouse com expansão suave
                           width: DEFAULT_SIZE,
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',
-                          opacity: 0.35,
-                          scale: 1.15,
-                          backgroundColor: 'transparent',
-                          border: '1px solid rgba(255, 255, 255, 0.4)',
+                          opacity: 1,
+                          scale: 1.8,
+                          backgroundColor: '#ffffff',
+                          border: '0px solid transparent',
                           boxShadow: 'none',
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'normal',
+                          mixBlendMode: 'difference',
                       }
                     : {
-                          // Estado livre padrão: ponto compacto de precisão
-                          width: 10,
-                          height: 10,
+                          // Estado livre padrão: bolinha circular compacta de 22px
+                          width: DEFAULT_SIZE,
+                          height: DEFAULT_SIZE,
                           borderRadius: '50%',
-                          opacity: 0.75,
+                          opacity: 1,
                           scale: 1.0,
-                          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                          backgroundColor: '#ffffff',
                           border: '0px solid transparent',
-                          boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)',
+                          boxShadow: 'none',
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'normal',
+                          mixBlendMode: 'difference',
                       }
             }
             transition={SPRING_TRANSITION}
