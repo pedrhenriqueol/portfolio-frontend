@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MagneticButton } from './InteractiveEffects';
 import { useLanguage } from '../../context/LanguageContext';
+import TechCompanionCritter from './TechCompanionCritter';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
 
@@ -174,6 +175,15 @@ export default function ContactSection() {
                         className="lg:col-span-3"
                     >
                         <div className="relative bg-darker/90 border border-primary/25 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+                            {/* Sentinela 2: Tech Companion espiando na borda do card de contato */}
+                            <div className="absolute -top-5 right-6 z-20">
+                                <TechCompanionCritter
+                                    variant="sentinel-contact"
+                                    captionPosition="left"
+                                    className="transition-transform duration-300 hover:scale-110"
+                                />
+                            </div>
+
                             <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
 
                             <AnimatePresence mode="wait">

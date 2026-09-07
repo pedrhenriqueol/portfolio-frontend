@@ -12,9 +12,9 @@ import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import SystemPreloader from './components/Portfolio/SystemPreloader';
 import { useLanguage } from './context/LanguageContext';
 
-const Cylindrical3DShowcase    = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
-const ExperienceSection        = lazy(() => import('./components/Portfolio/ExperienceSection'));
-const SkillsSection            = lazy(() => import('./components/Portfolio/SkillsSection'));
+const Cylindrical3DShowcase        = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
+const ProfessionalJourneyTimeline = lazy(() => import('./components/Portfolio/ProfessionalJourneyTimeline'));
+const SkillsSection                = lazy(() => import('./components/Portfolio/SkillsSection'));
 const ProjectsSection          = lazy(() => import('./components/Portfolio/ProjectsSection'));
 const ProjectInspectorDrawer   = lazy(() => import('./components/Portfolio/ProjectInspectorDrawer'));
 const ContactSection           = lazy(() => import('./components/Portfolio/ContactSection'));
@@ -143,7 +143,7 @@ export default function App() {
                     </Suspense>
                     
                     <Suspense fallback={<SectionSkeleton />}>
-                        <ExperienceSection experiences={EXPERIENCES} />
+                        <ProfessionalJourneyTimeline experiences={EXPERIENCES} />
                     </Suspense>
 
                     <Suspense fallback={<SectionSkeleton />}>

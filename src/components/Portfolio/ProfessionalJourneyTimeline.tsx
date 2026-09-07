@@ -1,0 +1,629 @@
+import React, { useRef, useState, memo } from 'react';
+import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
+import JourneyPhotoModal, { JourneyMilestoneArchive } from './JourneyPhotoModal';
+import TechCompanionCritter from './TechCompanionCritter';
+
+/** Faz highlight de métricas numéricas e termos técnicos-chave no texto */
+function HighlightedText({ text }: { text: string }) {
+    const pattern = /(\d+[\+\-]?\s*(?:ms|s|%|usuários|bugs|travamentos|Endpoints)?(?:\s*diários)?|<\d+ms|N\+1|100\+|8\+|Multi-tenant|RBAC|ZPE|ePita)/g;
+    const parts = text.split(pattern);
+    return (
+        <>
+            {parts.map((part, i) =>
+                pattern.test(part) ? (
+                    <span key={i} className="text-secondary font-semibold font-mono">
+                        {part}
+                    </span>
+                ) : (
+                    <span key={i}>{part}</span>
+                )
+            )}
+        </>
+    );
+}
+
+/** Card de Experiência com Micro-tilt 3D Suave */
+const TimelineExperienceCard = memo(function TimelineExperienceCard({
+    company,
+    role,
+    period,
+    isCurrent,
+    techBadges,
+    groups,
+    lang,
+}: {
+    company: string;
+    role: string;
+    period: string;
+    isCurrent?: boolean;
+    techBadges?: string[];
+    groups?: { title: string; icon?: string; items: string[] }[];
+    lang: string;
+}) {
+    const cardRef = useRef<HTMLDivElement>(null);
+    const rectRef = useRef<DOMRect | null>(null);
+    const xPct = useMotionValue(0);
+    const yPct = useMotionValue(0);
+
+    const springConfig = { damping: 24, stiffness: 200, mass: 0.4 };
+    const xSpring = useSpring(xPct, springConfig);
+    const ySpring = useSpring(yPct, springConfig);
+
+    const rotateX = useTransform(ySpring, [-0.5, 0.5], ['3deg', '-3deg']);
+    const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-3deg', '3deg']);
+
+    const handleMouseEnter = () => {
+        if (cardRef.current) {
+            rectRef.current = cardRef.current.getBoundingClientRect();
+        }
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!cardRef.current) return;
+        if (!rectRef.current) {
+            rectRef.current = cardRef.current.getBoundingClientRect();
+        }
+        const rect = rectRef.current;
+        xPct.set((e.clientX - rect.left) / rect.width - 0.5);
+        yPct.set((e.clientY - rect.top) / rect.height - 0.5);
+    };
+
+    const handleMouseLeave = () => {
+        rectRef.current = null;
+        xPct.set(0);
+        yPct.set(0);
+    };
+
+    return (
+        <div style={{ perspective: 1000 }} className="w-full">
+            <motion.div
+                ref={cardRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                    rotateX,
+                    rotateY,
+                    transformStyle: 'preserve-3d',
+                }}
+                data-cursor-card="true"
+                className="bg-darker/95 rounded-2xl border border-primary/30 hover:border-accent/50 transition-colors duration-300 shadow-2xl overflow-hidden group will-change-transform backdrop-blur-sm"
+            >
+                {/* Cabeçalho do Card */}
+                <div className="p-6 sm:p-7 border-b border-primary/20 bg-white/[0.015]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
+                                {company}
+                            </h3>
+                            {isCurrent && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-green-500/10 text-green-400 border border-green-500/30">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    {lang === 'en' ? 'Current Role' : lang === 'es' ? 'Puesto Actual' : 'Cargo Atual'}
+                                </span>
+                            )}
+                        </div>
+                        <span className="text-xs font-mono text-primary/70 bg-dark px-3 py-1 rounded-md border border-primary/20 self-start sm:self-auto">
+                            {period}
+                        </span>
+                    </div>
+
+                    <p className="text-secondary font-medium text-sm sm:text-base font-sans mb-4">
+                        {role}
+                    </p>
+
+                    {/* Tech Badges */}
+                    {techBadges && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                            {techBadges.map((badge, bIdx) => (
+                                <span
+                                    key={bIdx}
+                                    className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/5 text-primary/80 border border-white/10 group-hover:border-accent/30 transition-colors"
+                                >
+                                    {badge}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Grupos de Atuação / Responsabilidades */}
+                {groups && groups.length > 0 && (
+                    <div className="p-6 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-6 bg-dark/40">
+                        {groups.map((group, gIdx) => (
+                            <div key={gIdx} className="space-y-2.5">
+                                <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
+                                    <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
+                                    <span>{group.title}</span>
+                                </div>
+                                <ul className="space-y-2">
+                                    {group.items && group.items.map((item, iIdx) => (
+                                        <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
+                                            <span className="text-accent mt-1.5 text-[8px] shrink-0">•</span>
+                                            <span><HighlightedText text={item} /></span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </motion.div>
+        </div>
+    );
+});
+
+interface ProfessionalJourneyTimelineProps {
+    experiences?: any[];
+}
+
+export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [] }) => {
+    const { t, lang } = useLanguage();
+    const sectionRef = useRef<HTMLElement>(null);
+    const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
+
+    // Linha central preenchida suavemente conforme o scroll percorre a seção
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ['start 80%', 'end 30%'],
+    });
+
+    const timelineScaleY = useSpring(scrollYProgress, {
+        stiffness: 220,
+        damping: 28,
+        mass: 0.3,
+    });
+
+    // Métricas executivas da trajetória
+    const summaryStats = [
+        {
+            value: '10+ ' + (lang === 'en' ? 'Months' : 'Meses'),
+            label: lang === 'en' ? 'Production experience' : lang === 'es' ? 'Experiencia en producción' : 'Experiência em produção',
+            icon: 'fas fa-calendar-check',
+        },
+        {
+            value: '100+ ' + (lang === 'en' ? 'Users' : lang === 'es' ? 'Usuarios' : 'Usuários'),
+            label: lang === 'en' ? 'Daily on ERP systems' : lang === 'es' ? 'Diarios en sistemas ERP' : 'Diários em sistemas ERP',
+            icon: 'fas fa-users',
+        },
+        {
+            value: lang === 'en' ? '25% Fewer Bugs' : '25% Menos Bugs',
+            label: lang === 'en' ? 'Via proactive QA' : lang === 'es' ? 'Vía QA preventivo' : 'Via QA preventivo',
+            icon: 'fas fa-shield-alt',
+        },
+        {
+            value: lang === 'en' ? '4× Faster' : lang === 'es' ? '4× Más Rápido' : '4× Mais Rápido',
+            label: lang === 'en' ? 'Optimized queries (<500ms)' : lang === 'es' ? 'Consultas optimizadas (<500ms)' : 'Queries otimizadas (<500ms)',
+            icon: 'fas fa-bolt',
+        },
+    ];
+
+    // Registros fotográficos e operacionais associados a cada marco temporal
+    const ARCHIVES: Record<string, JourneyMilestoneArchive> = {
+        '2026': {
+            id: 'archive-2026',
+            year: '2026',
+            company: 'SETE Tecnologia // ZPE Porto Logistics',
+            role: 'Analista de QA & Testes de Software',
+            archiveTitle: 'ZPE Logística Portuária // ePita QA Core',
+            archiveSubtitle: 'Ambiente de Testes & Validação de Sistemas de Missão Crítica',
+            image: '/projects/portlog-dash.png',
+            badge: 'TESTES HOMOLOGADOS EM PRODUÇÃO',
+            date: 'Jun 2026 — Presente',
+            location: 'Fortaleza, CE // Remoto & Híbrido',
+            description:
+                'Ambiente operacional de garantia de qualidade para sistemas alfandegários e logísticos portuários. Execução de suites completas no Postman, mapeamento estrito de regras de negócio em ZPEs e auditoria de consistência em queries SQL Server de alta criticidade.',
+            telemetry: [
+                { label: 'Redução de Bugs', value: '25% Menos Regressões', highlight: true },
+                { label: 'Endpoints Auditados', value: '100+ Endpoints' },
+                { label: 'Queries Validadas', value: '<50ms Tempo Médio' },
+                { label: 'Metodologia', value: 'Scrum / Kanban' },
+            ],
+            tags: ['#QA-ENGINEERING', '#SQL-SERVER', '#POSTMAN', '#TEST-REGRESSIVO', '#SCRUM-KANBAN'],
+        },
+        '2025': {
+            id: 'archive-2025',
+            year: '2025',
+            company: 'Qualisoft Sistemas // ERP & Fiscal Solutions',
+            role: 'Desenvolvedor Back-End (PHP / Delphi / SQL)',
+            archiveTitle: 'Modernização de Legados // Delphi 11 + UniGui + Laravel',
+            archiveSubtitle: 'Engenharia de Migração Desktop-to-Web e Tuning de Banco',
+            image: '/unigui_migration_mockup.jpg',
+            badge: 'MODERNIZAÇÃO CONCLUÍDA',
+            date: 'Ago 2025 — Jun 2026',
+            location: 'Fortaleza, CE',
+            description:
+                'Bancada de desenvolvimento e modernização de arquitetura monolítica legado Delphi para Web via UniGui e APIs Laravel. Refatoração de relatórios pesados de 2s para <500ms com índices compostos em SQL Server/MySQL e integração de mensageria fiscal ACBr.',
+            telemetry: [
+                { label: 'Otimização Queries', value: '4× Mais Rápido', highlight: true },
+                { label: 'Tempo de Resposta', value: '<500ms (antes 2s)' },
+                { label: 'Usuários Ativos', value: '100+ Diários' },
+                { label: 'Arquitetura', value: 'UniGui + Laravel REST' },
+            ],
+            tags: ['#LEGACY-MODERNIZATION', '#DELPHI-11', '#LARAVEL-PHP', '#REACT-TS', '#SQL-SERVER'],
+        },
+        '2024': {
+            id: 'archive-2024',
+            year: '2024',
+            company: 'Unifanor Wyden // Engenharia de Software',
+            role: 'Bacharelado em Engenharia de Software & Módulos Base',
+            archiveTitle: 'Fundamentos de Engenharia & Arquiteturas de Software',
+            archiveSubtitle: 'Estruturação de Algoritmos, POO e Módulos Corporativos Iniciais',
+            image: '/java_inventory_mockup.png',
+            badge: 'BASE ACADÊMICA & ENGENHARIA',
+            date: 'Abr 2026 — Dez 2030 (Graduação Ativa)',
+            location: 'Fortaleza, CE',
+            description:
+                'Desenvolvimento de competências essenciais em engenharia de software: POO sólida em Java, estruturas de dados clássicas, modelagem de dados relacional com conformidade ACID e construção dos primeiros protótipos corporativos com interfaces ricas e persistência limpa.',
+            telemetry: [
+                { label: 'Fundamentos POO', value: 'Padrões de Projeto', highlight: true },
+                { label: 'Bancos de Dados', value: 'Normalização ACID' },
+                { label: 'Estruturas de Dados', value: 'Complexidade O(n)' },
+                { label: 'Status Acadêmico', value: 'Graduação em Andamento' },
+            ],
+            tags: ['#ENGENHARIA-DE-SOFTWARE', '#ALGORITMOS', '#JAVA-POO', '#BANCOS-RELACIONAIS', '#ARQUITETURA-LIMPA'],
+        },
+    };
+
+    // Dados dinâmicos para cada um dos 3 marcos (2026, 2025, 2024)
+    const seteExp = experiences.find(e => e.id === 2) || {
+        company: 'SETE Tecnologia',
+        role: 'Analista de Qualidade de Software (QA) e Testes — Estágio',
+        period: 'Junho de 2026 - Presente',
+        techBadges: ['QA', 'Testes de Regressão', 'Postman', 'APIs RESTful', 'SQL Server', 'Scrum / Kanban', 'Engenharia de Requisitos'],
+        groups: [
+            {
+                title: 'Garantia de Qualidade & Requisitos',
+                icon: 'fas fa-shield-alt',
+                items: [
+                    'Atuação em sistemas de missão crítica no setor logístico e portuário (ZPEs).',
+                    'Mapeamento de 100% dos requisitos operacionais e regras de negócio com múltiplos setores.',
+                    'Execução de testes funcionais e de regressão ágeis blindando entregas de software.',
+                ],
+            },
+            {
+                title: 'Validação de APIs & SQL',
+                icon: 'fas fa-database',
+                items: [
+                    'Consumo e testes de integração de serviços RESTful com collections estruturadas no Postman.',
+                    'Execução de queries diagnósticas e validação de transações no core ePita com SQL Server.',
+                ],
+            },
+        ],
+    };
+
+    const qualiExp = experiences.find(e => e.id === 1) || {
+        company: 'Qualisoft Sistemas',
+        role: 'Desenvolvedor Back-End (PHP / Delphi / SQL) — Estágio',
+        period: 'Agosto de 2025 - Junho de 2026',
+        techBadges: ['PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
+        groups: [
+            {
+                title: 'Otimização de Banco & Performance',
+                icon: 'fas fa-tachometer-alt',
+                items: [
+                    'Refatoração de consultas SQL Server/MySQL reduzindo tempo de relatórios de 2s para <500ms.',
+                    'Criação de procedures e views analíticas para ERP com centenas de operações diárias.',
+                ],
+            },
+            {
+                title: 'Back-End & Modernização Web',
+                icon: 'fas fa-sync-alt',
+                items: [
+                    'Engenharia de migração de monolito Delphi VCL para arquitetura Web moderna com Delphi 11 + UniGui.',
+                    'Construção de APIs RESTful em Laravel e integração fiscal ACBr para NF-e/NFC-e.',
+                ],
+            },
+        ],
+    };
+
+    const acadExp = {
+        company: 'Unifanor Wyden',
+        role: 'Bacharelado em Engenharia de Software',
+        period: 'Abril de 2026 - Dezembro de 2030 (Em andamento)',
+        techBadges: ['Engenharia de Software', 'Java / Swing', 'POO', 'Estruturas de Dados', 'Modelagem ACID', 'Arquitetura de Software', 'Git'],
+        groups: [
+            {
+                title: 'Engenharia de Software & POO',
+                icon: 'fas fa-graduation-cap',
+                items: [
+                    'Base sólida em engenharia de software com ênfase em arquitetura limpa, coesão e baixo acoplamento.',
+                    'Modelagem de sistemas corporativos baseados em princípios SOLID e padrões de projeto essenciais.',
+                ],
+            },
+            {
+                title: 'Bancos Relacionais & Algoritmos',
+                icon: 'fas fa-code-branch',
+                items: [
+                    'Modelagem relacional estrita (1FN a 3FN), integridade referencial e índices compostos.',
+                    'Implementação prática de estruturas de dados e análise de complexidade algorítmica.',
+                ],
+            },
+        ],
+    };
+
+    return (
+        <section
+            id="experiencia"
+            ref={sectionRef}
+            className="grid-bg py-20 md:py-28 bg-dark relative border-t border-primary/30 overflow-hidden"
+        >
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+
+                {/* ── Section Header com Easter Egg Sentinela 1 ── */}
+                <div className="relative text-center mb-14">
+                    {/* Sentinela 1: Tech Companion pousado de guarda acima do divisor de seção */}
+                    <div className="flex justify-center mb-4">
+                        <TechCompanionCritter
+                            variant="sentinel-timeline"
+                            captionPosition="top"
+                            className="transition-transform duration-300 hover:scale-105"
+                        />
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 25 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '-80px' }}
+                        transition={{ duration: 0.65 }}
+                    >
+                        <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
+                            {t('experience.tag') || 'TRAJETÓRIA // MY JOURNEY'}
+                        </span>
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
+                            {t('experience.title') || 'Trajetória Profissional'}
+                        </h2>
+                        <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                            {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
+                        </p>
+                    </motion.div>
+                </div>
+
+                {/* ── Career Summary Stats Strip ── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16"
+                >
+                    {summaryStats.map((stat, idx) => (
+                        <div
+                            key={idx}
+                            data-cursor-card="true"
+                            className="bg-darker/90 border border-primary/25 rounded-xl p-4 flex items-center gap-3.5 hover:border-accent/40 transition-all duration-200 shadow-lg"
+                        >
+                            <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                                <i className={`${stat.icon} text-accent text-sm`} />
+                            </div>
+                            <div>
+                                <div className="text-sm sm:text-base font-bold text-white font-mono">{stat.value}</div>
+                                <div className="text-[11px] text-gray-400 leading-tight font-sans">{stat.label}</div>
+                            </div>
+                        </div>
+                    ))}
+                </motion.div>
+
+                {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
+                <div className="relative">
+                    {/* Linha vertical central estática (Desktop) */}
+                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-[2px] bg-white/10 pointer-events-none rounded-full overflow-hidden">
+                        {/* Linha preenchida dinamicamente via scroll */}
+                        <motion.div
+                            style={{ scaleY: timelineScaleY, originY: 0 }}
+                            className="w-full h-full bg-gradient-to-b from-accent via-secondary to-accent shadow-[0_0_12px_rgba(209,199,189,0.7)]"
+                        />
+                    </div>
+
+                    <div className="space-y-16 md:space-y-24">
+
+                        {/* ══════════════════════════════════════════════════════════
+                            MARCO 2026: SETE TECNOLOGIA (Analista de QA & Testes)
+                            Desktop: Esquerda = Ano 2026 + Pasta | Direita = Card QA
+                            ══════════════════════════════════════════════════════════ */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-60px' }}
+                            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
+                        >
+                            {/* Nó Central na Espinha (Desktop) */}
+                            <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_16px_rgba(140,106,74,0.6)] z-20">
+                                <div className="w-3 h-3 rounded-full bg-green-400 animate-ping" />
+                                <div className="absolute w-2 h-2 rounded-full bg-green-400" />
+                            </div>
+
+                            {/* Lado Esquerdo: Ano Escultural Monumental + Botão de Pasta Técnica */}
+                            <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    <span>ATUALMENTE // EM PRODUÇÃO</span>
+                                </div>
+
+                                {/* Ano Monumental em Outline */}
+                                <span
+                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block"
+                                    style={{
+                                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
+                                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                                    }}
+                                >
+                                    2026
+                                </span>
+
+                                <p className="text-xs font-mono text-gray-400 max-w-xs">
+                                    Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.
+                                </p>
+
+                                {/* Botão de Pasta Interativo: Registro Operacional */}
+                                <button
+                                    onClick={() => setSelectedArchive(ARCHIVES['2026'])}
+                                    data-cursor-morph="true"
+                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
+                                    <span className="font-semibold tracking-wide">Registro Operacional</span>
+                                    <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
+                                </button>
+                            </div>
+
+                            {/* Lado Direito: Card Detalhado de QA */}
+                            <div>
+                                <TimelineExperienceCard
+                                    company={seteExp.company}
+                                    role={seteExp.role}
+                                    period={seteExp.period}
+                                    isCurrent={true}
+                                    techBadges={seteExp.techBadges}
+                                    groups={seteExp.groups}
+                                    lang={lang}
+                                />
+                            </div>
+                        </motion.div>
+
+                        {/* ══════════════════════════════════════════════════════════
+                            MARCO 2025: QUALISOFT SISTEMAS (Back-End / Fullstack)
+                            Desktop: Esquerda = Card Qualisoft | Direita = Ano 2025 + Pasta
+                            ══════════════════════════════════════════════════════════ */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-60px' }}
+                            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
+                        >
+                            {/* Nó Central na Espinha (Desktop) */}
+                            <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_16px_rgba(140,106,74,0.6)] z-20">
+                                <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+                            </div>
+
+                            {/* Lado Esquerdo (Desktop): Card Detalhado Qualisoft */}
+                            <div className="order-2 md:order-1">
+                                <TimelineExperienceCard
+                                    company={qualiExp.company}
+                                    role={qualiExp.role}
+                                    period={qualiExp.period}
+                                    isCurrent={false}
+                                    techBadges={qualiExp.techBadges}
+                                    groups={qualiExp.groups}
+                                    lang={lang}
+                                />
+                            </div>
+
+                            {/* Lado Direito (Desktop): Ano 2025 Monumental + Botão de Pasta Técnica */}
+                            <div className="order-1 md:order-2 flex flex-col items-center md:items-start text-center md:text-left space-y-3">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-accent/10 text-secondary border border-accent/30">
+                                    <i className="fas fa-check text-[10px]" />
+                                    <span>CONCLUÍDO COM SUCESSO</span>
+                                </div>
+
+                                {/* Ano Monumental em Outline */}
+                                <span
+                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block"
+                                    style={{
+                                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
+                                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                                    }}
+                                >
+                                    2025
+                                </span>
+
+                                <p className="text-xs font-mono text-gray-400 max-w-xs">
+                                    Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para &lt;500ms.
+                                </p>
+
+                                {/* Botão de Pasta Interativo: Arquivo de Desenvolvimento */}
+                                <button
+                                    onClick={() => setSelectedArchive(ARCHIVES['2025'])}
+                                    data-cursor-morph="true"
+                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
+                                    <span className="font-semibold tracking-wide">Arquivo de Desenvolvimento</span>
+                                    <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
+                                </button>
+                            </div>
+                        </motion.div>
+
+                        {/* ══════════════════════════════════════════════════════════
+                            MARCO 2024: UNIFANOR WYDEN (Engenharia de Software & Base)
+                            Desktop: Esquerda = Ano 2024 + Pasta | Direita = Card Acadêmico
+                            ══════════════════════════════════════════════════════════ */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-60px' }}
+                            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
+                        >
+                            {/* Nó Central na Espinha (Desktop) */}
+                            <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 border-accent items-center justify-center shadow-[0_0_16px_rgba(140,106,74,0.6)] z-20">
+                                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                            </div>
+
+                            {/* Lado Esquerdo: Ano 2024 Monumental + Botão de Pasta Acadêmica */}
+                            <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/5 text-primary border border-white/10">
+                                    <i className="fas fa-university text-[10px]" />
+                                    <span>FORMAÇÃO & FUNDAMENTOS</span>
+                                </div>
+
+                                {/* Ano Monumental em Outline */}
+                                <span
+                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block"
+                                    style={{
+                                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
+                                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                                    }}
+                                >
+                                    2024
+                                </span>
+
+                                <p className="text-xs font-mono text-gray-400 max-w-xs">
+                                    Fundamentos de POO com Java, estruturas de dados, modelagem relacional ACID e desenvolvimento dos primeiros módulos corporativos.
+                                </p>
+
+                                {/* Botão de Pasta Interativo: Registro Acadêmico */}
+                                <button
+                                    onClick={() => setSelectedArchive(ARCHIVES['2024'])}
+                                    data-cursor-morph="true"
+                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
+                                    <span className="font-semibold tracking-wide">Registro Acadêmico & Módulos</span>
+                                    <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
+                                </button>
+                            </div>
+
+                            {/* Lado Direito: Card de Fundamentos & Graduação */}
+                            <div>
+                                <TimelineExperienceCard
+                                    company={acadExp.company}
+                                    role={acadExp.role}
+                                    period={acadExp.period}
+                                    isCurrent={false}
+                                    techBadges={acadExp.techBadges}
+                                    groups={acadExp.groups}
+                                    lang={lang}
+                                />
+                            </div>
+                        </motion.div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Modal / Lightbox de Registro Operacional */}
+            <JourneyPhotoModal
+                isOpen={Boolean(selectedArchive)}
+                onClose={() => setSelectedArchive(null)}
+                milestone={selectedArchive}
+            />
+        </section>
+    );
+};
+
+export default ProfessionalJourneyTimeline;
