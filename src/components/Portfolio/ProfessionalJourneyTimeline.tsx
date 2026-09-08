@@ -164,41 +164,41 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const timelineTrackRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // ── CALIBRAÇÃO MATEMÁTICA DO PROGRESSO & FÍSICA DE MOLA ──
-    // Inicia a interpolação com resposta ágil em 100% de zoom e qualquer resolução
+    // ── CALIBRAÇÃO MATEMÁTICA DO PROGRESSO ADIANTADO & FÍSICA DE MOLA ──
+    // Linha de energia e marcador intencionalmente ADIANTADOS para guiar os olhos do usuário
     const { scrollYProgress } = useScroll({
         target: timelineTrackRef,
-        offset: ['start 80%', 'end 45%'],
+        offset: ['start 95%', 'end 75%'],
     });
 
-    // Mola rápida e sem atraso
+    // Mola de alta responsividade instantânea (sem lag mecânico)
     const smoothProgress = useSpring(scrollYProgress, {
-        stiffness: 420,
-        damping: 36,
-        mass: 0.1,
+        stiffness: 500,
+        damping: 30,
+        mass: 0.05,
     });
 
     // Mapeamentos de deslocamento da linha de energia e do puck
     const trackerTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
     const lineHeight = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
 
-    // Micro-escalas reativas nos anos monumentais
-    const year2026Scale = useTransform(smoothProgress, [0, 0.15, 0.3], [1, 1.05, 1]);
-    const year2025Scale = useTransform(smoothProgress, [0.35, 0.5, 0.65], [1, 1.05, 1]);
-    const year2024Scale = useTransform(smoothProgress, [0.75, 0.9, 1], [1, 1.05, 1]);
+    // Micro-escalas reativas nos anos monumentais (antecipadas)
+    const year2026Scale = useTransform(smoothProgress, [0, 0.08, 0.2], [1, 1.05, 1]);
+    const year2025Scale = useTransform(smoothProgress, [0.25, 0.4, 0.55], [1, 1.05, 1]);
+    const year2024Scale = useTransform(smoothProgress, [0.65, 0.8, 0.95], [1, 1.05, 1]);
 
-    // Iluminação e ativação de nós das estações (2026, 2025, 2024)
-    const node2026Bg = useTransform(smoothProgress, [0, 0.18], ['rgba(255,255,255,0.45)', '#ffffff']);
-    const node2026Shadow = useTransform(smoothProgress, [0, 0.18], ['0 0 6px rgba(255,255,255,0.2)', '0 0 16px rgba(255,255,255,1)']);
-    const node2026Border = useTransform(smoothProgress, [0, 0.18], ['rgba(255,255,255,0.5)', '#ffffff']);
+    // Iluminação antecipada de nós das estações (já acendem quando o marco se aproxima)
+    const node2026Bg = useTransform(smoothProgress, [0, 0.08], ['rgba(255,255,255,0.45)', '#ffffff']);
+    const node2026Shadow = useTransform(smoothProgress, [0, 0.08], ['0 0 6px rgba(255,255,255,0.2)', '0 0 16px rgba(255,255,255,1)']);
+    const node2026Border = useTransform(smoothProgress, [0, 0.08], ['rgba(255,255,255,0.5)', '#ffffff']);
 
-    const node2025Bg = useTransform(smoothProgress, [0.32, 0.52], ['rgba(255,255,255,0.45)', '#ffffff']);
-    const node2025Shadow = useTransform(smoothProgress, [0.32, 0.52], ['0 0 6px rgba(255,255,255,0.2)', '0 0 16px rgba(255,255,255,1)']);
-    const node2025Border = useTransform(smoothProgress, [0.32, 0.52], ['rgba(255,255,255,0.5)', '#ffffff']);
+    const node2025Bg = useTransform(smoothProgress, [0.2, 0.38], ['rgba(255,255,255,0.45)', '#ffffff']);
+    const node2025Shadow = useTransform(smoothProgress, [0.2, 0.38], ['0 0 6px rgba(255,255,255,0.2)', '0 0 16px rgba(255,255,255,1)']);
+    const node2025Border = useTransform(smoothProgress, [0.2, 0.38], ['rgba(255,255,255,0.5)', '#ffffff']);
 
-    const node2024Bg = useTransform(smoothProgress, [0.72, 0.92], ['rgba(255,255,255,0.45)', '#ffffff']);
-    const node2024Shadow = useTransform(smoothProgress, [0.72, 0.92], ['0 0 6px rgba(255,255,255,0.2)', '0 0 16px rgba(255,255,255,1)']);
-    const node2024Border = useTransform(smoothProgress, [0.72, 0.92], ['rgba(255,255,255,0.5)', '#ffffff']);
+    const node2024Bg = useTransform(smoothProgress, [0.55, 0.75], ['rgba(255,255,255,0.45)', '#ffffff']);
+    const node2024Shadow = useTransform(smoothProgress, [0.55, 0.75], ['0 0 6px rgba(255,255,255,0.2)', '0 0 16px rgba(255,255,255,1)']);
+    const node2024Border = useTransform(smoothProgress, [0.55, 0.75], ['rgba(255,255,255,0.5)', '#ffffff']);
 
     // Métricas executivas da trajetória
     const summaryStats = [
