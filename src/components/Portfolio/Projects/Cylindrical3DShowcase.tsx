@@ -426,8 +426,8 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
         >
 
             {/* Iluminação de fundo cinemática — disco volumétrico de profundidade */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-white/[0.035] blur-[90px] rounded-full pointer-events-none -z-10" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[1000px] h-[520px] rounded-full pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(140, 106, 74, 0.06) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 70%)' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[480px] rounded-full pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.12) 0%, rgba(217, 119, 87, 0.08) 35%, transparent 70%)' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[1100px] h-[600px] rounded-full pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.08) 0%, rgba(255, 255, 255, 0.03) 45%, transparent 70%)' }} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 

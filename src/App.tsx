@@ -10,6 +10,7 @@ import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
 import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import SystemPreloader from './components/Portfolio/SystemPreloader';
+import AmbientBackdrop from './components/Portfolio/AmbientBackdrop';
 import { useLanguage } from './context/LanguageContext';
 
 const Cylindrical3DShowcase        = lazy(() => import('./components/Portfolio/Projects/Cylindrical3DShowcase'));
@@ -126,6 +127,9 @@ export default function App() {
                 style={{ willChange: isLoaded ? 'auto' : 'transform, opacity' }}
                 className="relative z-10 w-full"
             >
+                {/* ── Iluminação Volumétrica de Dupla Camada (Cones Fixos + Spotlight Reativo ao Scroll) ── */}
+                <AmbientBackdrop />
+
                 {/* ── Container Principal Estático, Estável e Ortogonal (Padrão Rauno Freiberg) ── */}
                 <main className="relative z-10 w-full overflow-x-hidden bg-transparent pb-8 lg:pb-10">
                     <HeroSection />

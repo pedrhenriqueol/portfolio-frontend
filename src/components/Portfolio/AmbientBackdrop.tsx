@@ -64,30 +64,27 @@ export default function AmbientBackdrop() {
                 CAMADA 1: Cones de Luz Especular Fixos (Independentes do Mouse)
                 ══════════════════════════════════════════════════════════ */}
 
-            {/* Cone 1 — Hero / Topo: Azul-ciano difuso */}
+            {/* Cone 1 — Hero / Topo: Azul-ciano difuso com calor âmbar */}
             <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[800px] rounded-full pointer-events-none"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-[1300px] h-[850px] rounded-full pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, rgba(255, 255, 255, 0.03) 30%, transparent 70%)',
-                    filter: 'blur(40px)',
+                    background: 'radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.18) 0%, rgba(217, 119, 87, 0.08) 35%, transparent 70%)',
                 }}
             />
 
-            {/* Cone 2 — Centro / Esteira 3D: Sustentação óptica branca */}
+            {/* Cone 2 — Centro / Meio do Portfólio: Sustentação óptica branca e ciano */}
             <div
-                className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[650px] rounded-full pointer-events-none"
+                className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[750px] rounded-full pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 60%)',
-                    filter: 'blur(60px)',
+                    background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.10) 0%, rgba(56, 189, 248, 0.05) 40%, transparent 70%)',
                 }}
             />
 
-            {/* Cone 3 — Rodapé / Terminal: Aura esmeralda/ciano suave */}
+            {/* Cone 3 — Rodapé / Terminal & Contato: Aura esmeralda/ciano suave */}
             <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full pointer-events-none"
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] rounded-full pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.04) 0%, rgba(56, 189, 248, 0.02) 40%, transparent 70%)',
-                    filter: 'blur(50px)',
+                    background: 'radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.12) 0%, rgba(56, 189, 248, 0.06) 40%, transparent 70%)',
                 }}
             />
 
@@ -96,15 +93,14 @@ export default function AmbientBackdrop() {
                 Atualiza em mousemove E scroll para nunca congelar.
                 ══════════════════════════════════════════════════════════ */}
             <motion.div
-                className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
+                className="absolute w-[650px] h-[650px] rounded-full pointer-events-none"
                 style={{
                     left: springX,
                     top: springY,
                     x: '-50%',
                     y: '-50%',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, rgba(217, 119, 87, 0.03) 35%, transparent 65%)',
-                    filter: 'blur(35px)',
-                    opacity: 0.4,
+                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(217, 119, 87, 0.08) 30%, transparent 65%)',
+                    opacity: 0.9,
                 }}
             />
         </div>
