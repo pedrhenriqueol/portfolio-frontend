@@ -108,23 +108,18 @@ export default function CustomCursor() {
             cursorX.set(targetLeft + pullX);
             cursorY.set(targetTop + pullY);
 
-            setCursorMode(prev => (prev === 'button' ? prev : 'button'));
+            setCursorMode('button');
             setButtonDimensions(prev => {
                 if (prev.width === targetWidth && prev.height === targetHeight && prev.borderRadius === radius) {
                     return prev;
                 }
                 return { width: targetWidth, height: targetHeight, borderRadius: radius };
             });
-        } else if (targetData?.type === 'card' || targetData?.type === 'text') {
-            // Cards Grandes & Superfícies de Leitura: bolinha segue livremente com escala 1.8
-            cursorX.set(currentPos.x - DEFAULT_SIZE / 2);
-            cursorY.set(currentPos.y - DEFAULT_SIZE / 2);
-            setCursorMode(prev => (prev === 'card' ? prev : 'card'));
         } else {
-            // Estado livre padrão: bolinha circular de 22px
+            // Estado livre: bolinha branca removida, mantendo o cursor nativo e o InteractiveParticleField
             cursorX.set(currentPos.x - DEFAULT_SIZE / 2);
             cursorY.set(currentPos.y - DEFAULT_SIZE / 2);
-            setCursorMode(prev => (prev === 'default' ? prev : 'default'));
+            setCursorMode('hidden');
         }
     }, [cursorX, cursorY]);
 
@@ -133,7 +128,7 @@ export default function CustomCursor() {
         if (!el || el === document.body || el === document.documentElement) return null;
         if (el.closest('[data-no-morph="true"], .no-morph, canvas')) return null;
 
-        // 1. Micro-elementos clicáveis compactos (Botões CTA, Badges, Links, Pílulas de filtro, Fechar modal)
+        // Micro-elementos clicáveis compactos (Botões CTA, Badges, Links, Pílulas de filtro, Fechar modal)
         const buttonCandidate = el.closest(
             'button, a, [data-cursor-morph="true"], .cursor-morph, [role="button"], input[type="submit"], input[type="button"]'
         );
@@ -144,32 +139,6 @@ export default function CustomCursor() {
             // Limita a alvos interativos compactos (evita cards inteiros)
             if (w >= 16 && h >= 16 && w <= 380 && h <= 90) {
                 return { type: 'button', el: buttonCandidate };
-            }
-        }
-
-        // 2. Cards Grandes (Sobre Mim, Experiência, Projetos, etc.) e containers de leitura
-        const cardCandidate = el.closest(
-            '[data-cursor-card="true"], [data-cursor-card], .rounded-2xl.border, .rounded-xl.border, [class*="rounded-2xl"][class*="border"], [class*="rounded-xl"][class*="border"], .group.border'
-        );
-        if (
-            cardCandidate &&
-            cardCandidate !== document.body &&
-            cardCandidate !== document.documentElement &&
-            cardCandidate.tagName !== 'SECTION' &&
-            cardCandidate.tagName !== 'MAIN' &&
-            !cardCandidate.closest('[data-no-morph="true"], .no-morph')
-        ) {
-            return { type: 'card', el: cardCandidate };
-        }
-
-        // 3. Superfícies de texto livre fora de cards
-        const textCandidate = el.closest(
-            'h1, h2, h3, h4, h5, h6, p, span, strong, em, b, i, blockquote, li, code, label'
-        );
-        if (textCandidate && !textCandidate.closest('[data-no-morph="true"], .no-morph')) {
-            const text = textCandidate.textContent?.trim?.();
-            if (text && text.length > 0) {
-                return { type: 'text', el: textCandidate };
             }
         }
 
@@ -275,21 +244,7 @@ export default function CustomCursor() {
                 y: smoothY,
             }}
             animate={
-                cursorMode === 'hidden'
-                    ? {
-                          width: DEFAULT_SIZE,
-                          height: DEFAULT_SIZE,
-                          borderRadius: '50%',
-                          opacity: 0,
-                          scale: 0.5,
-                          backgroundColor: '#ffffff',
-                          border: '0px solid transparent',
-                          boxShadow: 'none',
-                          backdropFilter: 'none',
-                          WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'difference',
-                      }
-                    : cursorMode === 'button'
+                cursorMode === 'button'
                     ? {
                           // Sticky morph magnético em botões compactos e micro-alvos clicáveis
                           width: buttonDimensions.width,
@@ -297,41 +252,26 @@ export default function CustomCursor() {
                           borderRadius: buttonDimensions.borderRadius,
                           opacity: 1,
                           scale: 1,
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.08)',
                           border: '1px solid rgba(255, 255, 255, 0.4)',
                           boxShadow: '0 0 20px rgba(255, 255, 255, 0.1)',
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
                           mixBlendMode: 'normal',
                       }
-                    : cursorMode === 'card'
-                    ? {
-                          // Cards Grandes & Textos: bolinha circular contínua, segue livremente o mouse com expansão suave
-                          width: DEFAULT_SIZE,
-                          height: DEFAULT_SIZE,
-                          borderRadius: '50%',
-                          opacity: 1,
-                          scale: 1.8,
-                          backgroundColor: '#ffffff',
-                          border: '0px solid transparent',
-                          boxShadow: 'none',
-                          backdropFilter: 'none',
-                          WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'difference',
-                      }
                     : {
-                          // Estado livre padrão: bolinha circular compacta de 22px
+                          // Oculto em repouso: zero bolinha branca visível
                           width: DEFAULT_SIZE,
                           height: DEFAULT_SIZE,
                           borderRadius: '50%',
-                          opacity: 1,
-                          scale: 1.0,
-                          backgroundColor: '#ffffff',
+                          opacity: 0,
+                          scale: 0.5,
+                          backgroundColor: 'transparent',
                           border: '0px solid transparent',
                           boxShadow: 'none',
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
-                          mixBlendMode: 'difference',
+                          mixBlendMode: 'normal',
                       }
             }
             transition={SPRING_TRANSITION}
