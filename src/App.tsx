@@ -58,15 +58,10 @@ export default function App() {
     // ── Workstation State ──
     const [telemetryOpen, setTelemetryOpen] = useState<boolean>(false);
     const [avgLatency, setAvgLatency] = useState<number | null>(null);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [selectedProject, setSelectedProject] = useState<any>(null);
 
     const toggleTelemetry = useCallback(() => {
         setTelemetryOpen(v => !v);
-    }, []);
-
-    const toggleViewMode = useCallback(() => {
-        setViewMode(v => v === 'grid' ? 'list' : 'grid');
     }, []);
 
     // Listen for open-telemetry events from CommandPalette
@@ -105,8 +100,6 @@ export default function App() {
             <Dock
                 onToggleTelemetry={toggleTelemetry}
                 isTelemetryOpen={telemetryOpen}
-                viewMode={viewMode}
-                onToggleViewMode={toggleViewMode}
             />
             <StatusBar avgLatency={avgLatency} />
             <Suspense fallback={null}>
@@ -158,8 +151,6 @@ export default function App() {
                     <Suspense fallback={<SectionSkeleton />}>
                         <ProjectsSection 
                             projects={PROJECTS} 
-                            viewMode={viewMode}
-                            onViewModeChange={setViewMode}
                         />
                     </Suspense>
 

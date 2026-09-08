@@ -69,9 +69,7 @@ function DockButton({ item, onClick, isActive }) {
 
 export default function Dock({ 
     onToggleTelemetry, 
-    isTelemetryOpen, 
-    viewMode, 
-    onToggleViewMode 
+    isTelemetryOpen 
 }) {
     const { palette, setPalette, palettes } = useTheme();
     const { lang } = useLanguage();
@@ -131,13 +129,6 @@ export default function Dock({
             labelKey: lang === 'en' ? 'Cycle Theme' : lang === 'es' ? 'Cambiar Tema' : 'Alternar Tema' 
         },
         { 
-            id: 'density', 
-            icon: viewMode === 'grid' ? 'fas fa-list' : 'fas fa-th-large', 
-            labelKey: viewMode === 'grid' 
-                ? (lang === 'en' ? 'Switch to List' : lang === 'es' ? 'Ver en Lista' : 'Alternar para Lista') 
-                : (lang === 'en' ? 'Switch to Grid' : lang === 'es' ? 'Ver en Grade' : 'Alternar para Grade') 
-        },
-        { 
             id: 'audio', 
             icon: audioMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up', 
             labelKey: audioMuted 
@@ -164,7 +155,7 @@ export default function Dock({
             labelKey: lang === 'en' ? 'Email' : 'E-mail', 
             href: 'mailto:pedrohc.forza@gmail.com' 
         },
-    ], [lang, viewMode, audioMuted]);
+    ], [lang, audioMuted]);
 
     const handleClick = useCallback((id) => {
         playMechanicalClick();
@@ -178,23 +169,19 @@ export default function Dock({
             case 'theme':
                 cycleTheme();
                 break;
-            case 'density':
-                onToggleViewMode?.();
-                break;
             case 'audio':
                 handleAudioToggle();
                 break;
             default:
                 break;
         }
-    }, [openCommandPalette, onToggleTelemetry, cycleTheme, onToggleViewMode, handleAudioToggle]);
+    }, [openCommandPalette, onToggleTelemetry, cycleTheme, handleAudioToggle]);
 
     const getActiveState = useCallback((id) => {
         if (id === 'telemetry') return isTelemetryOpen;
-        if (id === 'density') return viewMode === 'list';
         if (id === 'audio') return !audioMuted;
         return false;
-    }, [isTelemetryOpen, viewMode, audioMuted]);
+    }, [isTelemetryOpen, audioMuted]);
 
     return (
         <>
