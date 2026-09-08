@@ -40,22 +40,52 @@ export default function InteractiveParticleField() {
         const DAMPING = 0.86; // Velocity friction
         const REPULSION_FORCE = 8.0;
 
+        const getZoom = () => {
+            const styleZoom = parseFloat(getComputedStyle(document.documentElement).zoom);
+            if (!isNaN(styleZoom) && styleZoom > 0) return styleZoom;
+            if (document.documentElement.clientWidth > 0) {
+                const ratio = window.innerWidth / document.documentElement.clientWidth;
+                if (ratio > 0.4 && ratio < 2.0) return ratio;
+            }
+            return 0.8;
+        };
+
+        let currentWidth = Math.ceil(window.innerWidth / 0.8);
+        let currentHeight = Math.ceil(window.innerHeight / 0.8);
+        let cachedRect = null;
+
+        const updateRect = () => {
+            if (canvas) {
+                cachedRect = canvas.getBoundingClientRect();
+            }
+        };
+
         const handleResize = () => {
+            const zoom = getZoom();
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const width = window.innerWidth;
-            const height = window.innerHeight;
 
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
+            // Largura e altura no espaço CSS dentro do documento com zoom
+            currentWidth = Math.ceil(window.innerWidth / zoom);
+            currentHeight = Math.ceil(window.innerHeight / zoom);
 
+            canvas.width = Math.round(currentWidth * dpr);
+            canvas.height = Math.round(currentHeight * dpr);
+            canvas.style.width = `${currentWidth}px`;
+            canvas.style.height = `${currentHeight}px`;
+
+            if (ctx.resetTransform) {
+                ctx.resetTransform();
+            } else {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+            }
             ctx.scale(dpr, dpr);
+
+            updateRect();
 
             // Rebuild particles grid across viewport
             particles = [];
-            const cols = Math.ceil(width / SPACING) + 1;
-            const rows = Math.ceil(height / SPACING) + 1;
+            const cols = Math.ceil(currentWidth / SPACING) + 2;
+            const rows = Math.ceil(currentHeight / SPACING) + 2;
 
             for (let i = 0; i < cols; i++) {
                 for (let j = 0; j < rows; j++) {
@@ -90,15 +120,30 @@ export default function InteractiveParticleField() {
         };
 
         const handleMouseMove = (e) => {
+            if (!cachedRect || cachedRect.width === 0) {
+                updateRect();
+            }
+            const rect = cachedRect;
+            let targetX, targetY;
+
+            if (rect && rect.width > 0 && rect.height > 0) {
+                targetX = ((e.clientX - rect.left) / rect.width) * currentWidth;
+                targetY = ((e.clientY - rect.top) / rect.height) * currentHeight;
+            } else {
+                const zoom = getZoom();
+                targetX = e.clientX / zoom;
+                targetY = e.clientY / zoom;
+            }
+
             const now = performance.now();
             const dt = Math.max(now - lastMoveTime, 1);
-            const dist = Math.hypot(e.clientX - mouse.x, e.clientY - mouse.y);
+            const dist = Math.hypot(targetX - mouse.x, targetY - mouse.y);
             mouse.speed = dist / dt; // px/ms
 
             mouse.lastX = mouse.x;
             mouse.lastY = mouse.y;
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            mouse.x = targetX;
+            mouse.y = targetY;
             lastMoveTime = now;
 
             // Onda de dispersao suave expandindo o raio de forca conforme a aceleracao do mouse
@@ -134,10 +179,7 @@ export default function InteractiveParticleField() {
                 return;
             }
 
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-
-            ctx.clearRect(0, 0, width, height);
+            ctx.clearRect(0, 0, currentWidth, currentHeight);
 
             // Decaimento suave do raio de dispersao do mouse
             mouse.currentRadius += (mouse.baseRadius - mouse.currentRadius) * 0.08;
@@ -248,6 +290,7 @@ export default function InteractiveParticleField() {
             handleResize();
             wakeUp();
         }, { passive: true });
+        window.addEventListener('scroll', updateRect, { passive: true });
         window.addEventListener('mousemove', handleMouseMove, { passive: true });
         window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
         document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -255,6 +298,7 @@ export default function InteractiveParticleField() {
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', updateRect);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseleave', handleMouseLeave);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -265,7 +309,7 @@ export default function InteractiveParticleField() {
         <canvas
             ref={canvasRef}
             aria-hidden="true"
-            className="fixed inset-0 pointer-events-none z-0 will-change-transform"
+            className="fixed top-0 left-0 pointer-events-none z-0 will-change-transform"
         />
     );
 }
