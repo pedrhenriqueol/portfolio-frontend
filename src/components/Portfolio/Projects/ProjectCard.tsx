@@ -94,7 +94,7 @@ const ProjectCard = memo(function ProjectCard({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.28, delay: index * 0.03 }}
-                className={`group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm rounded-xl p-4 sm:p-5 hover:border-accent/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 ${
+                className={`group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 border border-white/[0.08] border-t-white/20 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] backdrop-blur-sm rounded-xl p-4 sm:p-5 hover:border-white/20 hover:from-white/[0.08] hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
                 onClick={hasDetails ? () => onSelect(project) : undefined}
@@ -132,7 +132,7 @@ const ProjectCard = memo(function ProjectCard({
                     {project.tags && (
                         <div className="flex flex-wrap gap-1.5">
                             {project.tags.slice(0, 5).map((tag, idx) => (
-                                <span key={idx} className="text-[10px] text-accent bg-accent/10 border border-accent/25 px-2 py-0.5 rounded-full font-mono">
+                                <span key={idx} className="text-[10px] text-neutral-200 bg-white/[0.06] border border-white/[0.12] px-2 py-0.5 rounded-full font-mono">
                                     {tag}
                                 </span>
                             ))}
@@ -205,7 +205,7 @@ const ProjectCard = memo(function ProjectCard({
                     rotateY,
                     transformStyle: 'preserve-3d',
                 }}
-                className={`bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm rounded-2xl overflow-hidden group hover:border-accent/50 hover:shadow-[0_24px_50px_rgba(0,0,0,0.65)] transition-all duration-300 flex flex-col h-full relative will-change-transform ${
+                className={`bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 border border-white/[0.08] border-t-white/20 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] backdrop-blur-sm rounded-2xl overflow-hidden group hover:border-white/20 hover:from-white/[0.08] hover:shadow-[0_24px_50px_rgba(0,0,0,0.65)] transition-all duration-300 flex flex-col h-full relative will-change-transform ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
                 onClick={hasDetails ? () => onSelect(project) : undefined}
@@ -238,7 +238,7 @@ const ProjectCard = memo(function ProjectCard({
                             {project.tags.map((tag, idx) => (
                                 <span
                                     key={idx}
-                                    className="text-[11px] font-mono font-medium text-accent bg-accent/10 border border-accent/20 px-2.5 py-0.5 rounded-full group-hover:border-accent/40 transition-colors duration-300"
+                                    className="text-[11px] font-mono font-medium text-neutral-200 bg-white/[0.06] border border-white/[0.12] px-2.5 py-0.5 rounded-full group-hover:border-accent/40 transition-colors duration-300"
                                 >
                                     {tag}
                                 </span>

@@ -51,7 +51,7 @@ function SkillCard({ skill, index }) {
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -3, scale: 1.03 }}
             data-no-card-morph="true"
-            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-accent/40 transform-gpu overflow-hidden border border-white/[0.08]"
+            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-gradient-to-b from-white/[0.05] via-darker/90 to-darker/90 border border-white/[0.08] border-t-white/20 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 hover:from-white/[0.08] backdrop-blur-sm transition-all duration-300 transform-gpu overflow-hidden"
         >
             {/* Top row: Icon (Neutro no repouso -> Revela Brand Color no Hover) + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
@@ -88,7 +88,7 @@ function SkillCard({ skill, index }) {
 
             {/* Description context */}
             {skill?.desc && (
-                <p className="text-[11px] text-gray-400 font-sans leading-relaxed line-clamp-2">
+                <p className="text-[11px] text-gray-300 font-sans leading-relaxed line-clamp-2">
                     {skill.desc}
                 </p>
             )}
@@ -139,7 +139,7 @@ export default function SkillsSection({ skills = [] }) {
                         {t('skills.tag')}
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">{t('skills.title')}</h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base mb-8">
+                    <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base mb-8">
                         {t('skills.subtitle')}
                     </p>
 

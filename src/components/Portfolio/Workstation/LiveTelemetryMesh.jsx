@@ -152,7 +152,7 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                     transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     className="fixed bottom-24 left-6 z-[9970] w-84 max-w-[calc(100vw-2rem)] select-none shadow-[0_25px_70px_rgba(0,0,0,0.85)]"
                 >
-                    <div className="bg-[#0D1017]/95 border border-white/15 rounded-2xl backdrop-blur-2xl overflow-hidden">
+                    <div className="bg-gradient-to-b from-white/[0.05] via-[#0D1017]/95 to-[#0D1017]/95 border border-white/[0.08] border-t-white/20 rounded-2xl backdrop-blur-2xl overflow-hidden shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                         {/* ── Barra de Título Estilo OS com Drag Handle & Controles ── */}
                         <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#141824] border-b border-white/10 cursor-grab active:cursor-grabbing">
                             {/* Window Controls (Red/Yellow/Green) */}
@@ -211,7 +211,7 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                             return (
                                                 <div
                                                     key={s.id}
-                                                    className="flex items-center gap-3 px-3 py-2 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors"
+                                                    className="flex items-center gap-3 px-3 py-2 bg-gradient-to-b from-white/[0.04] to-transparent border border-white/[0.06] border-t-white/15 rounded-xl hover:border-white/20 transition-colors shadow-sm"
                                                 >
                                                     <StatusDot status={r.status} />
                                                     <div className="flex-1 min-w-0">
@@ -219,7 +219,7 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                                             <i className={`${s.icon} text-accent/80 text-[10px]`} />
                                                             <span className="text-xs font-semibold text-white truncate">{s.name}</span>
                                                         </div>
-                                                        <span className="text-[10px] font-mono text-primary/50">{s.hint}</span>
+                                                        <span className="text-[10px] font-mono text-primary/70">{s.hint}</span>
                                                     </div>
                                                     <div className="text-right shrink-0">
                                                         <div className={`text-xs font-mono font-semibold ${

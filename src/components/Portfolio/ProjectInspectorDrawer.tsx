@@ -1191,7 +1191,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                             >
                                 {/* Cartão de Contexto de Engenharia (Grid 2x2) */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                    <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-network-wired text-accent" />
                                             <span>Domínio</span>
@@ -1201,7 +1201,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-sitemap text-accent" />
                                             <span>Padrão Arquitetural</span>
@@ -1211,7 +1211,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-database text-accent" />
                                             <span>Persistência / Banco</span>
@@ -1221,7 +1221,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-chart-line text-accent" />
                                             <span>Escala & Volume</span>
@@ -1241,7 +1241,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         </h3>
                                         <div className="space-y-3">
                                             {specs.challenges.map((ch, idx) => (
-                                                <div key={idx} className="bg-darker border border-white/10 rounded-xl p-4 space-y-2">
+                                                <div key={idx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 space-y-2 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                                     <div className="flex items-start justify-between gap-3">
                                                         <p className="text-xs text-gray-300 font-sans leading-relaxed">
                                                             <strong className="text-white">Problema:</strong> {ch.problem}
@@ -1270,7 +1270,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                             {project.tags.map((tag, idx) => (
                                                 <span
                                                     key={idx}
-                                                    className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-gray-200"
+                                                    className="px-3 py-1 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs font-mono text-neutral-200"
                                                 >
                                                     {tag}
                                                 </span>
@@ -1299,7 +1299,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {(specs.layers || project.details?.architecture || []).map((layer, lIdx) => (
-                                                <div key={lIdx} className="bg-darker border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                                                <div key={lIdx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                                     <div className="flex items-center justify-between text-xs font-mono">
                                                         <span className="text-accent font-bold">{layer.layer}</span>
                                                         <span className="text-primary/60 text-[10px] truncate max-w-[150px]">{layer.tech}</span>
@@ -1406,7 +1406,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                 </div>
 
                                 {/* Detalhes do Endpoint Selecionado */}
-                                <div className="bg-darker border border-white/10 rounded-xl p-4 space-y-4">
+                                <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 space-y-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                     <div className="flex items-center justify-between flex-wrap gap-2">
                                         <div className="flex items-center gap-2 font-mono text-xs">
                                             <span className="font-bold text-accent">{activeEndpoint.method}</span>
@@ -1493,7 +1493,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5 transition-all">
+                                        <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                             <div className="flex items-center justify-between text-xs font-mono">
                                                 <span className="text-emerald-400 font-bold">p50</span>
                                                 <span className="text-white font-bold">{currentPercentiles.p50}ms</span>
@@ -1507,7 +1507,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                             <span className="text-[10px] font-mono text-primary/50">Mediana de latência</span>
                                         </div>
 
-                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5 transition-all">
+                                        <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                             <div className="flex items-center justify-between text-xs font-mono">
                                                 <span className="text-sky-400 font-bold">p95</span>
                                                 <span className="text-white font-bold">{currentPercentiles.p95}ms</span>
@@ -1521,7 +1521,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                             <span className="text-[10px] font-mono text-primary/50">95% das requisições</span>
                                         </div>
 
-                                        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-3.5 space-y-1.5 transition-all">
+                                        <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                             <div className="flex items-center justify-between text-xs font-mono">
                                                 <span className="text-amber-400 font-bold">p99</span>
                                                 <span className="text-white font-bold">{currentPercentiles.p99}ms</span>
@@ -1637,7 +1637,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
 
                                         <div className="space-y-2.5">
                                             {specs.engineeringTests.chaosLab.map((ch, idx) => (
-                                                <div key={idx} className="bg-darker border border-white/10 rounded-xl p-3.5 font-sans space-y-1">
+                                                <div key={idx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 font-sans space-y-1 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                                     <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
                                                         <i className="fas fa-bolt text-[10px]" />
                                                         <span>{ch.scenario}</span>

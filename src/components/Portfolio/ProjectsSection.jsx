@@ -47,7 +47,7 @@ export default function ProjectsSection({ projects }) {
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
                         {lang === 'en' ? 'Enterprise Systems & Utilities' : 'Projetos Corporativos & Soluções'}
                     </h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                    <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
                         {lang === 'en'
                             ? 'ERP administration, legacy desktop migration, fiscal compliance, and software engineering tools.'
                             : 'Sistemas de gestão empresarial (ERP/PDV), modernização de legados, módulos fiscais e utilitários.'}

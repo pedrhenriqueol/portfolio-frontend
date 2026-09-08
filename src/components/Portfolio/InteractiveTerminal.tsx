@@ -471,13 +471,13 @@ export const InteractiveTerminal: React.FC = () => {
     return (
         <div
             data-no-morph="true"
-            className={`relative bg-[#0d0f14]/98 border rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.7)] transition-all duration-300 ${
-                focused ? 'border-accent/50 shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(var(--color-accent-rgb),0.08)]' : 'border-white/8'
+            className={`relative bg-gradient-to-b from-white/[0.05] via-[#0d0f14]/98 to-[#0d0f14]/98 border border-white/[0.08] border-t-white/20 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.7)] transition-all duration-300 ${
+                focused ? 'border-accent/50 border-t-accent/70 shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(var(--color-accent-rgb),0.08)]' : 'hover:border-white/20'
             }`}
             onClick={() => inputRef.current?.focus()}
         >
             {/* Title bar com Controles de Janela */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-dark/60 select-none">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.08] bg-dark/60 select-none">
                 <span
                     className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500 transition-colors cursor-pointer"
                     title={lang === 'en' ? 'Reset Shell' : lang === 'es' ? 'Reiniciar Shell' : 'Reiniciar Shell'}
@@ -573,10 +573,10 @@ export const InteractiveTerminal: React.FC = () => {
             </div>
 
             {/* Status bar */}
-            <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 bg-dark/40 text-[10px] font-mono text-gray-500 select-none">
-                <span className="text-accent/60">⬡ QA & Dev Interactive Terminal</span>
-                <span className="hidden sm:inline text-gray-600">|</span>
-                <span className="hidden sm:inline text-gray-400">
+            <div className="flex items-center gap-3 px-4 py-2 border-t border-white/[0.08] bg-dark/40 text-[10px] font-mono text-neutral-400 select-none">
+                <span className="text-accent/80">⬡ QA & Dev Interactive Terminal</span>
+                <span className="hidden sm:inline text-neutral-600">|</span>
+                <span className="hidden sm:inline text-neutral-300">
                     {lang === 'en' ? 'Type "test" or "sql" to run live simulation' : lang === 'es' ? 'Escribe "test" o "sql" para simulación en vivo' : 'Digite "test" ou "sql" para simulação em tempo real'}
                 </span>
                 <span className="ml-auto">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>

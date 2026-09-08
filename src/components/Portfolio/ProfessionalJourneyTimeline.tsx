@@ -88,7 +88,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transformStyle: 'preserve-3d',
                 }}
                 data-cursor-card="true"
-                className="bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 rounded-2xl border border-white/[0.08] border-t-white/20 hover:border-white/20 transition-colors duration-300 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] overflow-hidden group will-change-transform backdrop-blur-sm"
+                className="bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 rounded-2xl border border-white/[0.08] border-t-white/20 hover:border-white/20 hover:from-white/[0.08] transition-all duration-300 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] overflow-hidden group will-change-transform backdrop-blur-sm"
             >
                 {/* Cabeçalho do Card */}
                 <div className="p-6 sm:p-7 border-b border-white/[0.06] bg-white/[0.015]">
@@ -119,7 +119,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                             {techBadges.map((badge, bIdx) => (
                                 <span
                                     key={bIdx}
-                                    className="text-[11px] font-mono text-primary/80 bg-primary/10 px-2.5 py-0.5 rounded border border-primary/20"
+                                    className="text-[11px] font-mono text-neutral-200 bg-white/[0.06] px-2.5 py-0.5 rounded border border-white/[0.12]"
                                 >
                                     {badge}
                                 </span>
@@ -423,14 +423,14 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         <div
                             key={idx}
                             data-cursor-card="true"
-                            className="bg-gradient-to-b from-white/[0.05] via-darker/90 to-darker/90 border border-white/[0.08] border-t-white/15 rounded-xl p-4 flex items-center gap-3.5 hover:border-white/20 transition-all duration-200 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.4)]"
+                            className="bg-gradient-to-b from-white/[0.05] via-darker/90 to-darker/90 border border-white/[0.08] border-t-white/20 rounded-xl p-4 flex items-center gap-3.5 hover:border-white/20 hover:from-white/[0.08] transition-all duration-300 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]"
                         >
                             <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                                 <i className={`${stat.icon} text-accent text-sm`} />
                             </div>
                             <div>
                                 <div className="text-sm sm:text-base font-bold text-white font-mono">{stat.value}</div>
-                                <div className="text-[11px] text-gray-400 leading-tight font-sans">{stat.label}</div>
+                                <div className="text-[11px] text-gray-300 leading-tight font-sans">{stat.label}</div>
                             </div>
                         </div>
                     ))}

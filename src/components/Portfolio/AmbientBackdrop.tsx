@@ -19,8 +19,8 @@ export default function AmbientBackdrop() {
     const cursorPageY = useMotionValue(-500);
 
     // Suavização com física de mola — sem saltos abruptos
-    const springX = useSpring(cursorPageX, { stiffness: 120, damping: 22, mass: 0.4 });
-    const springY = useSpring(cursorPageY, { stiffness: 120, damping: 22, mass: 0.4 });
+    const springX = useSpring(cursorPageX, { stiffness: 150, damping: 20, mass: 0.4 });
+    const springY = useSpring(cursorPageY, { stiffness: 150, damping: 20, mass: 0.4 });
 
     // Armazena a última posição do mouse na viewport para recalcular ao scrollar
     const lastClientX = useRef(-500);
@@ -68,25 +68,25 @@ export default function AmbientBackdrop() {
             <div
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[800px] rounded-full pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 0%, rgba(140, 106, 74, 0.07) 0%, rgba(255, 255, 255, 0.025) 35%, transparent 70%)',
+                    background: 'radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, rgba(255, 255, 255, 0.03) 30%, transparent 70%)',
                     filter: 'blur(40px)',
                 }}
             />
 
             {/* Cone 2 — Centro / Esteira 3D: Sustentação óptica branca */}
             <div
-                className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] rounded-full pointer-events-none"
+                className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[650px] rounded-full pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 40%, transparent 70%)',
+                    background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 60%)',
                     filter: 'blur(60px)',
                 }}
             />
 
-            {/* Cone 3 — Rodapé / Terminal: Aura esmeralda/âmbar suave */}
+            {/* Cone 3 — Rodapé / Terminal: Aura esmeralda/ciano suave */}
             <div
                 className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 100%, rgba(140, 106, 74, 0.035) 0%, rgba(16, 185, 129, 0.02) 40%, transparent 70%)',
+                    background: 'radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.04) 0%, rgba(56, 189, 248, 0.02) 40%, transparent 70%)',
                     filter: 'blur(50px)',
                 }}
             />
@@ -102,9 +102,9 @@ export default function AmbientBackdrop() {
                     top: springY,
                     x: '-50%',
                     y: '-50%',
-                    background: 'radial-gradient(circle, rgba(140, 106, 74, 0.06) 0%, rgba(140, 106, 74, 0.025) 35%, transparent 65%)',
-                    filter: 'blur(30px)',
-                    opacity: 0.5,
+                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, rgba(217, 119, 87, 0.03) 35%, transparent 65%)',
+                    filter: 'blur(35px)',
+                    opacity: 0.4,
                 }}
             />
         </div>

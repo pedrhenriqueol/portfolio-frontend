@@ -73,7 +73,7 @@ export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.96, y: 15 }}
                         transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-                        className="relative z-10 w-full max-w-4xl bg-darker border border-white/15 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden my-auto"
+                        className="relative z-10 w-full max-w-4xl bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 border border-white/[0.08] border-t-white/20 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden my-auto backdrop-blur-sm"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Barra Superior da Janela */}
@@ -158,7 +158,7 @@ export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({
                                 {milestone.telemetry.map((item, idx) => (
                                     <div
                                         key={idx}
-                                        className="p-3 rounded-xl bg-white/[0.02] border border-white/10 hover:border-accent/30 transition-colors"
+                                        className="p-3 rounded-xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/[0.08] border-t-white/15 hover:border-white/20 transition-colors shadow-sm"
                                     >
                                         <div className="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1">
                                             {item.label}
@@ -175,7 +175,7 @@ export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({
                                 {milestone.tags.map((tag, tIdx) => (
                                     <span
                                         key={tIdx}
-                                        className="text-xs font-mono px-3 py-1 rounded-md bg-white/5 text-primary/80 border border-white/10"
+                                        className="text-xs font-mono px-3 py-1 rounded-md bg-white/[0.06] border border-white/[0.12] text-neutral-200"
                                     >
                                         {tag}
                                     </span>
@@ -184,7 +184,7 @@ export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({
                         </div>
 
                         {/* Rodapé com Fechamento Rápido */}
-                        <div className="px-5 sm:px-7 py-4 border-t border-white/10 bg-white/[0.01] flex items-center justify-between text-xs font-mono text-gray-500">
+                        <div className="px-5 sm:px-7 py-4 border-t border-white/10 bg-white/[0.01] flex items-center justify-between text-xs font-mono text-neutral-400">
                             <span>SISTEMA DE ARQUIVOS // REGISTRO TÉCNICO AUTÊNTICO</span>
                             <button
                                 onClick={onClose}
