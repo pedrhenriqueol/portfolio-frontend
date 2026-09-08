@@ -132,7 +132,7 @@ const CylindricalCard = memo(function CylindricalCard({
                 }}
                 className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-all duration-300 transform-gpu ${
                     isCurrent
-                        ? 'bg-[#0C0F17]/95 border border-white/20 backdrop-blur-md brightness-100 pointer-events-auto'
+                        ? 'bg-gradient-to-b from-white/[0.06] via-[#0C0F17]/95 to-[#0C0F17] border border-white/[0.08] border-t-white/20 backdrop-blur-md brightness-100 pointer-events-auto shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]'
                         : 'bg-[#0d1117]/90 border border-white/5 brightness-[0.4] pointer-events-none'
                 }`}
             >
@@ -197,7 +197,7 @@ const CylindricalCard = memo(function CylindricalCard({
                             {project.techs.map((tech) => (
                                 <span
                                     key={tech}
-                                    className="text-[11px] font-mono text-white/90 bg-white/5 border border-white/10 px-2.5 py-1 rounded-md transition-colors hover:border-accent/40"
+                                    className="text-[11px] font-mono text-neutral-200 bg-white/[0.06] border border-white/[0.12] px-2.5 py-1 rounded-md transition-colors hover:border-accent/40"
                                 >
                                     {tech}
                                 </span>
@@ -425,8 +425,9 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             className="py-16 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden focus:outline-none"
         >
 
-            {/* Iluminação de fundo cinemática */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[950px] h-[480px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Iluminação de fundo cinemática — disco volumétrico de profundidade */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-white/[0.035] blur-[90px] rounded-full pointer-events-none -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[1000px] h-[520px] rounded-full pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(140, 106, 74, 0.06) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 70%)' }} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 
@@ -439,7 +440,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                         <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white font-serif">
                             Sistemas & Arquiteturas em Produção
                         </h2>
-                        <p className="text-gray-400 text-sm sm:text-base max-w-2xl mt-2.5 font-sans leading-relaxed">
+                        <p className="text-gray-300 text-sm sm:text-base max-w-2xl mt-2.5 font-sans leading-relaxed">
                             Sistemas corporativos de missão crítica desenvolvidos com foco em concorrência, idempotência contábil e telemetria preditiva.
                         </p>
                     </div>

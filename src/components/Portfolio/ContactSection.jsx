@@ -174,7 +174,7 @@ export default function ContactSection() {
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="lg:col-span-3"
                     >
-                        <div className="relative bg-white/[0.02] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+                        <div className="relative bg-gradient-to-b from-white/[0.05] via-darker/90 to-darker/90 border border-white/[0.08] border-t-white/20 rounded-2xl p-6 sm:p-8 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] backdrop-blur-sm">
                             {/* Sentinela 2: Tech Companion espiando na borda do card de contato */}
                             <div className="absolute -top-5 right-6 z-20">
                                 <TechCompanionCritter

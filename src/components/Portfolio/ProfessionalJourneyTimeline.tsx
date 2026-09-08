@@ -88,7 +88,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transformStyle: 'preserve-3d',
                 }}
                 data-cursor-card="true"
-                className="bg-white/[0.02] border border-white/[0.08] hover:border-accent/50 transition-colors duration-300 shadow-2xl rounded-2xl overflow-hidden group will-change-transform backdrop-blur-sm"
+                className="bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 rounded-2xl border border-white/[0.08] border-t-white/20 hover:border-white/20 transition-colors duration-300 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] overflow-hidden group will-change-transform backdrop-blur-sm"
             >
                 {/* Cabeçalho do Card */}
                 <div className="p-6 sm:p-7 border-b border-white/[0.06] bg-white/[0.015]">
@@ -405,7 +405,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
                             {t('experience.title') || 'Trajetória Profissional'}
                         </h2>
-                        <p className="text-gray-400 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                        <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
                             {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
                         </p>
                     </motion.div>
@@ -423,7 +423,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         <div
                             key={idx}
                             data-cursor-card="true"
-                            className="bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm rounded-xl p-4 flex items-center gap-3.5 hover:border-accent/40 transition-all duration-200 shadow-lg"
+                            className="bg-gradient-to-b from-white/[0.05] via-darker/90 to-darker/90 border border-white/[0.08] border-t-white/15 rounded-xl p-4 flex items-center gap-3.5 hover:border-white/20 transition-all duration-200 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.4)]"
                         >
                             <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                                 <i className={`${stat.icon} text-accent text-sm`} />
