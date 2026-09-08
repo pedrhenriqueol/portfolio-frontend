@@ -18,7 +18,7 @@ export default function ProjectsSection({ projects }) {
     }, [projects]);
 
     return (
-        <section id="projetos" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30">
+        <section id="projetos" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06]">
             {/* Drawer de Detalhes Técnicos com AnimatePresence e Error Boundary */}
             <ModalErrorBoundary onClose={() => setSelected(null)}>
                 <AnimatePresence mode="wait">

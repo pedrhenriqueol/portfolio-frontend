@@ -88,10 +88,10 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transformStyle: 'preserve-3d',
                 }}
                 data-cursor-card="true"
-                className="bg-darker/95 rounded-2xl border border-primary/30 hover:border-accent/50 transition-colors duration-300 shadow-2xl overflow-hidden group will-change-transform backdrop-blur-sm"
+                className="bg-white/[0.02] border border-white/[0.08] hover:border-accent/50 transition-colors duration-300 shadow-2xl rounded-2xl overflow-hidden group will-change-transform backdrop-blur-sm"
             >
                 {/* Cabeçalho do Card */}
-                <div className="p-6 sm:p-7 border-b border-primary/20 bg-white/[0.015]">
+                <div className="p-6 sm:p-7 border-b border-white/[0.06] bg-white/[0.015]">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-3">
                             <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
@@ -104,7 +104,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                                 </span>
                             )}
                         </div>
-                        <span className="text-xs font-mono text-primary/70 bg-dark px-3 py-1 rounded-md border border-primary/20 self-start sm:self-auto">
+                        <span className="text-xs font-mono text-primary/70 bg-white/[0.03] px-3 py-1 rounded-md border border-white/[0.08] self-start sm:self-auto">
                             {period}
                         </span>
                     </div>
@@ -119,7 +119,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                             {techBadges.map((badge, bIdx) => (
                                 <span
                                     key={bIdx}
-                                    className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/5 text-primary/80 border border-white/10 group-hover:border-accent/30 transition-colors"
+                                    className="text-[11px] font-mono text-primary/80 bg-primary/10 px-2.5 py-0.5 rounded border border-primary/20"
                                 >
                                     {badge}
                                 </span>
@@ -130,7 +130,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
 
                 {/* Grupos de Atuação / Responsabilidades */}
                 {groups && groups.length > 0 && (
-                    <div className="p-6 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-6 bg-dark/40">
+                    <div className="p-6 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
                         {groups.map((group, gIdx) => (
                             <div key={gIdx} className="space-y-2.5">
                                 <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
@@ -379,7 +379,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         <section
             id="experiencia"
             ref={sectionRef}
-            className="grid-bg py-20 md:py-28 bg-dark relative border-t border-primary/30 overflow-hidden"
+            className="py-20 md:py-28 bg-transparent relative border-t border-white/[0.06] overflow-hidden"
         >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 
@@ -423,7 +423,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         <div
                             key={idx}
                             data-cursor-card="true"
-                            className="bg-darker/90 border border-primary/25 rounded-xl p-4 flex items-center gap-3.5 hover:border-accent/40 transition-all duration-200 shadow-lg"
+                            className="bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm rounded-xl p-4 flex items-center gap-3.5 hover:border-accent/40 transition-all duration-200 shadow-lg"
                         >
                             <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                                 <i className={`${stat.icon} text-accent text-sm`} />

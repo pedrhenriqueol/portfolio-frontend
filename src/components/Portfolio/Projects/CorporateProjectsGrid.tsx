@@ -184,7 +184,7 @@ export default function CorporateProjectsGrid({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.22 }}
-                        className="rounded-2xl border border-white/10 bg-darker/80 backdrop-blur-xl overflow-hidden shadow-2xl"
+                        className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-md overflow-hidden shadow-2xl"
                     >
                         <div className="overflow-x-auto scrollbar-thin">
                             <table className="w-full text-left text-xs font-mono border-collapse">

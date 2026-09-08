@@ -1087,10 +1087,10 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 280 }}
                 onClick={(e) => e.stopPropagation()}
-                className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#0C0E14] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden will-change-transform"
+                className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#090b10] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden will-change-transform"
             >
                 {/* ── A. Cabeçalho Fixo do Console de Engenharia ── */}
-                <header className="shrink-0 border-b border-white/10 bg-darker/90 backdrop-blur-xl px-6 py-4 flex items-center justify-between gap-4">
+                <header className="shrink-0 border-b border-white/10 bg-[#090b10]/95 backdrop-blur-xl px-6 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                             <i className={`${specs.ecosystemIcon} text-accent text-sm`} />
@@ -1146,7 +1146,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 </header>
 
                 {/* ── B. Navegação de Abas Dinâmica com layoutId ── */}
-                <nav className="shrink-0 border-b border-white/10 bg-darker/60 px-6 py-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
+                <nav className="shrink-0 border-b border-white/10 bg-[#090b10]/80 px-6 py-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
                     {availableTabs.map((tab) => {
                         const isActive = activeTab === tab.id;
                         return (
@@ -1656,7 +1656,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 </div>
 
                 {/* ── D. Rodapé do Console com Atalhos e Informações de Build ── */}
-                <footer className="shrink-0 border-t border-white/10 bg-darker/90 px-6 py-3 flex items-center justify-between text-[11px] font-mono text-primary/60">
+                <footer className="shrink-0 border-t border-white/10 bg-[#090b10]/95 px-6 py-3 flex items-center justify-between text-[11px] font-mono text-primary/60">
                     <div className="flex items-center gap-4">
                         <span>← → alternar abas</span>
                         <span>ESC fechar</span>

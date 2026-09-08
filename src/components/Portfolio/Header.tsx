@@ -145,7 +145,7 @@ export default function Header({ isLoaded = true }: HeaderProps) {
 
             <div
                 className={`transition-all duration-300 ${
-                    scrolled ? 'bg-darker/90' : 'bg-transparent'
+                    scrolled ? 'bg-[#090b10]/90' : 'bg-transparent'
                 }`}
             >
                 <div className={`max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-[4.5rem]'}`}>

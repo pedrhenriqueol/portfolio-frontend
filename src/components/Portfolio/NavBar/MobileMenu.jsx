@@ -12,7 +12,7 @@ export default function MobileMenu({ isOpen, navLinks, active, scrollTo, onClose
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.28, ease: 'easeInOut' }}
-                    className="md:hidden overflow-hidden border-b border-primary/20 bg-darker/98 backdrop-blur-2xl"
+                    className="md:hidden overflow-hidden border-b border-white/[0.06] bg-[#090b10]/98 backdrop-blur-2xl"
                 >
                     <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col">
                         {/* Mobile Language Selector */}

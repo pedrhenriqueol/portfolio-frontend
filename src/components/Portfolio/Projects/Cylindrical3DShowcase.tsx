@@ -422,7 +422,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                 isolation: 'isolate',
                 transformStyle: 'preserve-3d',
             }}
-            className="py-16 md:py-24 bg-darker relative border-t border-primary/20 overflow-hidden focus:outline-none"
+            className="py-16 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden focus:outline-none"
         >
 
             {/* Iluminação de fundo cinemática */}

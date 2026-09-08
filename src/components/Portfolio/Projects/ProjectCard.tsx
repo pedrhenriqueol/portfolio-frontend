@@ -94,7 +94,7 @@ const ProjectCard = memo(function ProjectCard({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.28, delay: index * 0.03 }}
-                className={`group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 bg-darker border border-primary/30 rounded-xl p-4 sm:p-5 hover:border-accent/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 ${
+                className={`group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm rounded-xl p-4 sm:p-5 hover:border-accent/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
                 onClick={hasDetails ? () => onSelect(project) : undefined}
@@ -149,7 +149,7 @@ const ProjectCard = memo(function ProjectCard({
                             whileTap={{ scale: 0.97 }}
                             onClick={handleInspectClick}
                             data-cursor-morph="true"
-                            className="py-1.5 px-3 border border-white/15 bg-darker/80 text-primary text-xs font-semibold rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer flex items-center gap-1.5"
+                            className="py-1.5 px-3 border border-white/10 bg-white/[0.03] backdrop-blur-sm text-primary text-xs font-semibold rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer flex items-center gap-1.5"
                         >
                             <i className="fas fa-microchip text-accent text-[11px]" />
                             <span>Detalhes Técnicos</span>
@@ -163,7 +163,7 @@ const ProjectCard = memo(function ProjectCard({
                             rel="noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="p-2 border border-white/15 bg-darker/80 text-primary hover:text-white hover:border-white/30 text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                            className="p-2 border border-white/10 bg-white/[0.03] backdrop-blur-sm text-primary hover:text-white hover:border-white/30 text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center"
                             title="Código-Fonte no GitHub"
                         >
                             <i className="fab fa-github text-[13px]" />
@@ -205,7 +205,7 @@ const ProjectCard = memo(function ProjectCard({
                     rotateY,
                     transformStyle: 'preserve-3d',
                 }}
-                className={`bg-darker rounded-2xl overflow-hidden border border-primary/30 group hover:border-accent/50 hover:shadow-[0_24px_50px_rgba(0,0,0,0.65)] transition-shadow duration-300 flex flex-col h-full relative will-change-transform ${
+                className={`bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm rounded-2xl overflow-hidden group hover:border-accent/50 hover:shadow-[0_24px_50px_rgba(0,0,0,0.65)] transition-all duration-300 flex flex-col h-full relative will-change-transform ${
                     hasDetails ? 'cursor-pointer' : ''
                 }`}
                 onClick={hasDetails ? () => onSelect(project) : undefined}
@@ -258,7 +258,7 @@ const ProjectCard = memo(function ProjectCard({
                                     whileTap={{ scale: 0.97 }}
                                     onClick={handleInspectClick}
                                     data-cursor-morph="true"
-                                    className="flex-1 py-2 px-2.5 bg-darker/80 border border-white/15 text-primary hover:text-accent hover:border-accent/40 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                                    className="flex-1 py-2 px-2.5 bg-white/[0.03] border border-white/10 backdrop-blur-sm text-primary hover:text-accent hover:border-accent/40 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                                 >
                                     <i className="fas fa-microchip text-accent text-[11px] shrink-0" />
                                     <span className="truncate">Detalhes Técnicos</span>
@@ -272,13 +272,13 @@ const ProjectCard = memo(function ProjectCard({
                                     rel="noreferrer"
                                     onClick={(e) => e.stopPropagation()}
                                     data-cursor-morph="true"
-                                    className="flex-1 py-2 px-2.5 bg-darker/80 border border-white/15 text-primary hover:text-white hover:border-white/30 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                                    className="flex-1 py-2 px-2.5 bg-white/[0.03] border border-white/10 backdrop-blur-sm text-primary hover:text-white hover:border-white/30 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                                 >
                                     <i className="fab fa-github text-[13px] shrink-0" />
                                     <span className="truncate">Código-Fonte</span>
                                 </a>
                             ) : isPrivate ? (
-                                <span className="flex-1 py-2 px-2.5 bg-darker/40 border border-primary/20 text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed" title="Sistema Corporativo Interno Privado">
+                                <span className="flex-1 py-2 px-2.5 bg-white/[0.02] border border-white/[0.06] text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed" title="Sistema Corporativo Interno Privado">
                                     <i className="fas fa-lock text-[10px] shrink-0" />
                                     <span className="truncate">Corporativo</span>
                                 </span>

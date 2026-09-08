@@ -94,7 +94,7 @@ export default function ContactSection() {
     };
 
     return (
-        <section id="contato" className="grid-bg py-20 md:py-24 bg-dark relative border-t border-primary/30 overflow-hidden">
+        <section id="contato" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden">
 
             {/* Background decorative blobs */}
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] pointer-events-none" />
@@ -148,7 +148,7 @@ export default function ContactSection() {
                                 transition={{ duration: 0.4, delay: idx * 0.08 }}
                                 whileHover={{ x: 4 }}
                                 data-cursor-morph="true"
-                                className="group flex items-center gap-3.5 p-3.5 rounded-xl border border-primary/20 bg-darker/60 hover:border-accent/40 hover:bg-accent/5 transition-all duration-200 cursor-pointer"
+                                className="group flex items-center gap-3.5 p-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:border-accent/40 hover:bg-white/[0.04] backdrop-blur-sm transition-all duration-200 cursor-pointer"
                             >
                                 <span
                                     className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 bg-accent/10 border border-accent/20 transition-all duration-200"
@@ -174,7 +174,7 @@ export default function ContactSection() {
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="lg:col-span-3"
                     >
-                        <div className="relative bg-darker/90 border border-primary/25 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+                        <div className="relative bg-white/[0.02] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
                             {/* Sentinela 2: Tech Companion espiando na borda do card de contato */}
                             <div className="absolute -top-5 right-6 z-20">
                                 <TechCompanionCritter
@@ -230,7 +230,7 @@ export default function ContactSection() {
                                                 onBlur={() => handleBlur('name')}
                                                 disabled={processing}
                                                 placeholder={lang === 'en' ? 'John Doe' : 'Seu Nome'}
-                                                className={`w-full bg-dark/70 border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-primary/30 outline-hidden transition-all duration-200 ${
+                                                className={`w-full bg-white/[0.03] border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-primary/30 outline-hidden transition-all duration-200 ${
                                                     touched.name && errors.name
                                                         ? 'border-red-500/60 bg-red-500/5 focus:border-red-400'
                                                         : touched.name && !errors.name
@@ -297,7 +297,7 @@ export default function ContactSection() {
                                             onBlur={() => handleBlur('subject')}
                                             disabled={processing}
                                             placeholder={lang === 'en' ? 'Project inquiry / Opportunity' : 'Oportunidade / Proposta de Projeto'}
-                                            className={`w-full bg-dark/70 border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-primary/30 outline-hidden transition-all duration-200 ${
+                                            className={`w-full bg-white/[0.03] border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-primary/30 outline-hidden transition-all duration-200 ${
                                                 touched.subject && errors.subject
                                                     ? 'border-red-500/60 bg-red-500/5 focus:border-red-400'
                                                     : touched.subject && !errors.subject
@@ -330,7 +330,7 @@ export default function ContactSection() {
                                             onBlur={() => handleBlur('message')}
                                             disabled={processing}
                                             placeholder={lang === 'en' ? 'Describe your project or message here...' : 'Descreva seu projeto, desafio ou mensagem aqui...'}
-                                            className={`w-full bg-dark/70 border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-primary/30 outline-hidden transition-all duration-200 resize-none ${
+                                            className={`w-full bg-white/[0.03] border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-primary/30 outline-hidden transition-all duration-200 resize-none ${
                                                 touched.message && errors.message
                                                     ? 'border-red-500/60 bg-red-500/5 focus:border-red-400'
                                                     : touched.message && !errors.message

@@ -19,11 +19,14 @@ html {
 }
 
 :root {
+  --bg-surface: #090b10;
   --font-sans: 'Outfit', sans-serif;
   --font-serif: 'Newsreader', 'Times New Roman', serif;
 }
 
 body {
+  background-color: #090b10;
+  color: #FFFFFF;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -38,12 +41,9 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   font-family: var(--font-sans);
 }
 
-/* Grid pattern — aplica background-image sem sobrescrever background-color do Tailwind */
+/* Grid pattern — neutro para preservar continuidade sem faixas */
 .grid-bg {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
-  background-size: 64px 64px;
+  background-image: none;
 }
 
 /* ── Scrollbar personalizada ── */
@@ -51,20 +51,20 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0A0A0B;
+  background: #090b10;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2A2A2A;
+  background: #1f242f;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A3A3A;
+  background: #2f3646;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2A2A2A #0A0A0B;
+  scrollbar-color: #1f242f #090b10;
 }
 
 /* ── Mobile: tap feedback (substitui hover) ── */

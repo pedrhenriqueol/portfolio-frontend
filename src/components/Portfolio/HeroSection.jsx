@@ -98,7 +98,7 @@ export default function HeroSection() {
         <section
             id="home"
             ref={sectionRef}
-            className="grid-bg pt-28 pb-16 md:pt-36 md:pb-24 bg-dark flex items-center justify-center min-h-[100vh] relative overflow-hidden contain-paint"
+            className="pt-28 pb-16 md:pt-36 md:pb-24 bg-transparent flex items-center justify-center min-h-[100vh] relative overflow-hidden contain-paint"
         >
             {/* Background blobs — otimizados para GPU */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">

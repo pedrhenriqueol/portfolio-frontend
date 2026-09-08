@@ -414,7 +414,7 @@ export default function CylindricalWebGLShowcase({ onSelectProject, projects = [
                 if (e.key === 'ArrowLeft') handlePrev();
                 if (e.key === 'ArrowRight') handleNext();
             }}
-            className="py-16 md:py-24 bg-darker relative border-t border-primary/20 overflow-hidden focus:outline-none"
+            className="py-16 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden focus:outline-none"
         >
             {/* Iluminação de fundo cinemática */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[400px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />

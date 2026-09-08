@@ -101,7 +101,7 @@ export default function AboutSection() {
     ];
 
     return (
-        <section id="sobre" className="grid-bg py-20 md:py-24 bg-darker relative border-t border-primary/30">
+        <section id="sobre" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* ── Section Header ── */}

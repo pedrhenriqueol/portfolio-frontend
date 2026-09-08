@@ -51,7 +51,7 @@ function SkillCard({ skill, index }) {
             transition={{ duration: 0.35, delay: index * 0.03 }}
             whileHover={{ y: -3, scale: 1.03 }}
             data-no-card-morph="true"
-            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-darker/90 hover:bg-darker transition-all duration-300 shadow-lg hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-accent/40 transform-gpu overflow-hidden border border-white/10"
+            className="relative flex flex-col p-5 rounded-2xl cursor-default group bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-accent/40 transform-gpu overflow-hidden border border-white/[0.08]"
         >
             {/* Top row: Icon (Neutro no repouso -> Revela Brand Color no Hover) + Category Badge */}
             <div className="flex items-center justify-between gap-2 mb-3">
@@ -124,7 +124,7 @@ export default function SkillsSection({ skills = [] }) {
     }, [skills, selectedCategory]);
 
     return (
-        <section id="conhecimentos" className="grid-bg py-20 md:py-24 bg-darker relative border-t border-primary/30">
+        <section id="conhecimentos" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06]">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
@@ -144,7 +144,7 @@ export default function SkillsSection({ skills = [] }) {
                     </p>
 
                     {/* Visualizer Mode Toggle */}
-                    <div className="inline-flex items-center p-1 rounded-full bg-darker border border-primary/25 shadow-lg relative">
+                    <div className="inline-flex items-center p-1 rounded-full bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm shadow-lg relative">
                         <button
                             onClick={() => setViewMode('sphere')}
                             data-cursor-morph="true"
@@ -221,7 +221,7 @@ export default function SkillsSection({ skills = [] }) {
                                                 className={`relative z-10 px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-colors duration-200 cursor-pointer ${
                                                     isSelected
                                                         ? 'text-darker font-bold'
-                                                        : 'bg-darker/60 text-primary border border-primary/25 hover:border-accent/40 hover:text-accent'
+                                                        : 'bg-white/[0.02] text-primary border border-white/[0.08] hover:border-accent/40 hover:text-accent'
                                                 }`}
                                             >
                                                 {isSelected && (

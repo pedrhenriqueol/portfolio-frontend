@@ -20,17 +20,18 @@ const ProjectInspectorDrawer   = lazy(() => import('./components/Portfolio/Proje
 const ContactSection           = lazy(() => import('./components/Portfolio/ContactSection'));
 const CommandPalette           = lazy(() => import('./components/Portfolio/CommandPalette'));
 const LiveTelemetryMesh        = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
+import FixedBackdrop from './components/Portfolio/FixedBackdrop';
 import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
 
 function SectionSkeleton() {
     return (
         <div className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
-            <div className="h-4 w-28 bg-primary/20 rounded mb-4 mx-auto" />
-            <div className="h-10 w-64 bg-primary/15 rounded mb-12 mx-auto" />
+            <div className="h-4 w-28 bg-white/10 rounded mb-4 mx-auto" />
+            <div className="h-10 w-64 bg-white/5 rounded mb-12 mx-auto" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="h-48 bg-darker/60 border border-white/5 rounded-2xl" />
-                <div className="h-48 bg-darker/60 border border-white/5 rounded-2xl" />
-                <div className="h-48 bg-darker/60 border border-white/5 rounded-2xl" />
+                <div className="h-48 bg-white/[0.02] border border-white/[0.06] rounded-2xl" />
+                <div className="h-48 bg-white/[0.02] border border-white/[0.06] rounded-2xl" />
+                <div className="h-48 bg-white/[0.02] border border-white/[0.06] rounded-2xl" />
             </div>
         </div>
     );
@@ -76,7 +77,10 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-darker text-white font-sans selection:bg-accent selection:text-darker relative">
+        <div className="min-h-screen bg-[#090b10] text-white font-sans selection:bg-accent selection:text-[#090b10] relative">
+            {/* ── Substrato Fixo Monolítico (#090b10 com Iluminação Especular Superior) ── */}
+            <FixedBackdrop />
+
             {/* ── Sequência de Inicialização / Preloader Minimalista Jesper Landberg ── */}
             <AnimatePresence mode="wait">
                 {!isLoaded && (
@@ -130,7 +134,7 @@ export default function App() {
                 className="relative z-10 w-full"
             >
                 {/* ── Container Principal Estático, Estável e Ortogonal (Padrão Rauno Freiberg) ── */}
-                <main className="relative z-10 w-full overflow-x-hidden pb-8 lg:pb-10">
+                <main className="relative z-10 w-full overflow-x-hidden bg-transparent pb-8 lg:pb-10">
                     <HeroSection />
                     <AboutSection />
 
@@ -164,7 +168,7 @@ export default function App() {
                     </Suspense>
                 </main>
 
-                <footer className="bg-dark border-t border-primary/20 py-6 text-center text-gray-500 text-sm lg:pb-8">
+                <footer className="bg-transparent border-t border-white/[0.06] py-8 text-center text-gray-500 text-sm lg:pb-10">
                     <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
                 </footer>
             </motion.div>
