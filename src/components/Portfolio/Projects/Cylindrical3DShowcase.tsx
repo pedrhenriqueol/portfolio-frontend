@@ -425,9 +425,9 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             className="py-16 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden focus:outline-none"
         >
 
-            {/* Iluminação de fundo cinemática — disco volumétrico de profundidade */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[480px] rounded-full pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.12) 0%, rgba(217, 119, 87, 0.08) 35%, transparent 70%)' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[1100px] h-[600px] rounded-full pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.08) 0%, rgba(255, 255, 255, 0.03) 45%, transparent 70%)' }} />
+            {/* Iluminação de fundo cinemática — disco volumétrico de profundidade sem cortes */}
+            <div className="absolute inset-0 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 50%, rgba(255, 255, 255, 0.08) 0%, rgba(217, 119, 87, 0.05) 35%, transparent 70%)' }} />
+            <div className="absolute inset-0 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse 85% 65% at 50% 50%, rgba(56, 189, 248, 0.05) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 75%)' }} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 

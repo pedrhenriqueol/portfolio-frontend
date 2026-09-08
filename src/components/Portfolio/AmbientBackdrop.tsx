@@ -14,25 +14,34 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
  *   Posição convertida de coordenadas de viewport para coordenadas de página.
  */
 export default function AmbientBackdrop() {
-    // Coordenadas do cursor em espaço de página (não viewport)
-    const cursorPageX = useMotionValue(-500);
-    const cursorPageY = useMotionValue(-500);
+    // Coordenadas do cursor em espaço de página (calibradas para zoom CSS)
+    const cursorPageX = useMotionValue(-1000);
+    const cursorPageY = useMotionValue(-1000);
 
-    // Suavização com física de mola — sem saltos abruptos
-    const springX = useSpring(cursorPageX, { stiffness: 150, damping: 20, mass: 0.4 });
-    const springY = useSpring(cursorPageY, { stiffness: 150, damping: 20, mass: 0.4 });
+    // Suavização com física de mola calibrada
+    const springX = useSpring(cursorPageX, { stiffness: 180, damping: 24, mass: 0.3 });
+    const springY = useSpring(cursorPageY, { stiffness: 180, damping: 24, mass: 0.3 });
 
-    // Armazena a última posição do mouse na viewport para recalcular ao scrollar
-    const lastClientX = useRef(-500);
-    const lastClientY = useRef(-500);
+    // Armazena a última posição do mouse na viewport
+    const lastClientX = useRef(-1000);
+    const lastClientY = useRef(-1000);
+
+    const getZoom = useCallback(() => {
+        if (typeof window === 'undefined') return 0.8;
+        const styleZoom = parseFloat(getComputedStyle(document.documentElement).zoom);
+        if (!isNaN(styleZoom) && styleZoom > 0) return styleZoom;
+        return 0.8;
+    }, []);
 
     const updatePagePosition = useCallback(() => {
         if (lastClientX.current < 0) return;
-        const pageX = lastClientX.current;
-        const pageY = lastClientY.current + window.scrollY;
+        const zoom = getZoom();
+        // Converte coordenadas da viewport e scroll para o espaço interno com zoom
+        const pageX = lastClientX.current / zoom;
+        const pageY = (lastClientY.current + window.scrollY) / zoom;
         cursorPageX.set(pageX);
         cursorPageY.set(pageY);
-    }, [cursorPageX, cursorPageY]);
+    }, [cursorPageX, cursorPageY, getZoom]);
 
     useEffect(() => {
         const onMouseMove = (e: MouseEvent) => {
@@ -61,46 +70,45 @@ export default function AmbientBackdrop() {
             style={{ zIndex: 0 }}
         >
             {/* ══════════════════════════════════════════════════════════
-                CAMADA 1: Cones de Luz Especular Fixos (Independentes do Mouse)
+                CAMADA 1: Cones de Luz Especular Contínuos (Full-Width, Sem Borda Oval)
                 ══════════════════════════════════════════════════════════ */}
 
-            {/* Cone 1 — Hero / Topo: Azul-ciano difuso com calor âmbar */}
+            {/* Cone 1 — Topo / Hero: Gradiente elíptico contínuo de 100% da largura */}
             <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-[1300px] h-[850px] rounded-full pointer-events-none"
+                className="absolute top-0 inset-x-0 h-[950px] pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.18) 0%, rgba(217, 119, 87, 0.08) 35%, transparent 70%)',
+                    background: 'radial-gradient(ellipse 90% 70% at 50% 0%, rgba(56, 189, 248, 0.14) 0%, rgba(217, 119, 87, 0.06) 35%, transparent 75%)',
                 }}
             />
 
-            {/* Cone 2 — Centro / Meio do Portfólio: Sustentação óptica branca e ciano */}
+            {/* Cone 2 — Centro / Portfólio: Iluminação suave difusa */}
             <div
-                className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[750px] rounded-full pointer-events-none"
+                className="absolute top-[38%] inset-x-0 h-[850px] -translate-y-1/2 pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.10) 0%, rgba(56, 189, 248, 0.05) 40%, transparent 70%)',
+                    background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255, 255, 255, 0.06) 0%, rgba(56, 189, 248, 0.02) 40%, transparent 70%)',
                 }}
             />
 
-            {/* Cone 3 — Rodapé / Terminal & Contato: Aura esmeralda/ciano suave */}
+            {/* Cone 3 — Rodapé / Terminal & Contato: Aura esmeralda/ciano sutil */}
             <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] rounded-full pointer-events-none"
+                className="absolute bottom-0 inset-x-0 h-[750px] pointer-events-none"
                 style={{
-                    background: 'radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.12) 0%, rgba(56, 189, 248, 0.06) 40%, transparent 70%)',
+                    background: 'radial-gradient(ellipse 85% 70% at 50% 100%, rgba(16, 185, 129, 0.08) 0%, rgba(56, 189, 248, 0.03) 40%, transparent 70%)',
                 }}
             />
 
             {/* ══════════════════════════════════════════════════════════
-                CAMADA 2: Spotlight Reativo ao Cursor (Scroll-Aware)
-                Atualiza em mousemove E scroll para nunca congelar.
+                CAMADA 2: Spotlight Reativo ao Cursor (1:1 com Calibração de Zoom)
                 ══════════════════════════════════════════════════════════ */}
             <motion.div
-                className="absolute w-[650px] h-[650px] rounded-full pointer-events-none"
+                className="absolute w-[520px] h-[520px] rounded-full pointer-events-none"
                 style={{
                     left: springX,
                     top: springY,
                     x: '-50%',
                     y: '-50%',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(217, 119, 87, 0.08) 30%, transparent 65%)',
-                    opacity: 0.9,
+                    background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.10) 0%, rgba(217, 119, 87, 0.04) 30%, transparent 70%)',
+                    opacity: 0.5,
                 }}
             />
         </div>
