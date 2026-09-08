@@ -23,6 +23,7 @@ const CommandPalette           = lazy(() => import('./components/Portfolio/Comma
 const LiveTelemetryMesh        = lazy(() => import('./components/Portfolio/Workstation/LiveTelemetryMesh'));
 import FixedBackdrop from './components/Portfolio/FixedBackdrop';
 import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
+import SectionDivider from './components/Portfolio/Common/SectionDivider';
 
 function SectionSkeleton() {
     return (
@@ -135,6 +136,9 @@ export default function App() {
                     <HeroSection />
                     <AboutSection />
 
+                    {/* ── Filamento Óptico Esvaecido: Transição para os Sistemas 3D ── */}
+                    <SectionDivider marker="+" />
+
                     {/* ── Camada 1: Destaque Principal (Showcase Cilíndrico 3D em Escala Monumental) ── */}
                     <Suspense fallback={<SectionSkeleton />}>
                         <Cylindrical3DShowcase
@@ -142,14 +146,23 @@ export default function App() {
                             projects={PROJECTS}
                         />
                     </Suspense>
+
+                    {/* ── Filamento Óptico Esvaecido: Transição para a Trajetória Profissional ── */}
+                    <SectionDivider marker="+" />
                     
                     <Suspense fallback={<SectionSkeleton />}>
                         <ProfessionalJourneyTimeline experiences={EXPERIENCES} />
                     </Suspense>
 
+                    {/* ── Filamento Óptico Esvaecido: Transição para Stack & Habilidades ── */}
+                    <SectionDivider marker="+" />
+
                     <Suspense fallback={<SectionSkeleton />}>
                         <SkillsSection skills={SKILLS} />
                     </Suspense>
+
+                    {/* ── Filamento Óptico Esvaecido: Transição para Repositório Corporativo ── */}
+                    <SectionDivider marker="+" />
 
                     {/* ── Camada 2: Projetos Corporativos & Soluções (Grid com Filtros) ── */}
                     <Suspense fallback={<SectionSkeleton />}>
@@ -158,12 +171,16 @@ export default function App() {
                         />
                     </Suspense>
 
+                    {/* ── Filamento Óptico Esvaecido: Transição para Contato & Terminal ── */}
+                    <SectionDivider marker="+" />
+
                     <Suspense fallback={<SectionSkeleton />}>
                         <ContactSection />
                     </Suspense>
                 </main>
 
-                <footer className="bg-transparent border-t border-white/[0.06] py-8 text-center text-gray-500 text-sm lg:pb-10">
+                <footer className="bg-transparent py-12 text-center text-gray-500 text-sm lg:pb-14">
+                    <SectionDivider className="mb-8" marker="◇" />
                     <p>© {new Date().getFullYear()} {t('contact.rights')}</p>
                 </footer>
             </motion.div>

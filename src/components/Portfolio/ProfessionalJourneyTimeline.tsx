@@ -379,7 +379,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         <section
             id="experiencia"
             ref={sectionRef}
-            className="py-20 md:py-28 bg-transparent relative border-t border-white/[0.06] overflow-hidden"
+            className="py-24 md:py-36 bg-transparent relative overflow-hidden"
         >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 
@@ -399,8 +399,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         viewport={{ once: true, margin: '-80px' }}
                         transition={{ duration: 0.65 }}
                     >
-                        <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                            {t('experience.tag') || 'TRAJETÓRIA // MY JOURNEY'}
+                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                            // 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL
                         </span>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
                             {t('experience.title') || 'Trajetória Profissional'}

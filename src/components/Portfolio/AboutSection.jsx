@@ -101,7 +101,7 @@ export default function AboutSection() {
     ];
 
     return (
-        <section id="sobre" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06]">
+        <section id="sobre" className="py-24 md:py-36 bg-transparent relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* ── Section Header ── */}
@@ -112,8 +112,8 @@ export default function AboutSection() {
                     transition={{ duration: 0.7 }}
                     className="text-center md:text-left mb-14"
                 >
-                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                        {t('about.tag')}
+                    <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                        // 01. BIOGRAFIA & DIRETRIZES
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
                         {t('about.title')}

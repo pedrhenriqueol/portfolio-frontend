@@ -94,7 +94,7 @@ export default function ContactSection() {
     };
 
     return (
-        <section id="contato" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden">
+        <section id="contato" className="py-24 md:py-36 bg-transparent relative overflow-hidden">
 
             {/* Background decorative blobs */}
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] pointer-events-none" />
@@ -110,8 +110,8 @@ export default function ContactSection() {
                     transition={{ duration: 0.7 }}
                     className="text-center mb-12"
                 >
-                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                        {t('contact.tag')}
+                    <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                        // 06. CANAIS DE COMUNICAÇÃO & CONTATO
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
                         {t('contact.title1')} <span className="text-accent italic font-serif">{t('contact.title2')}</span>

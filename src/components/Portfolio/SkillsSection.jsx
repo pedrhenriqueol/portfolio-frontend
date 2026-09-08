@@ -124,7 +124,7 @@ export default function SkillsSection({ skills = [] }) {
     }, [skills, selectedCategory]);
 
     return (
-        <section id="conhecimentos" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06]">
+        <section id="conhecimentos" className="py-24 md:py-36 bg-transparent relative">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
@@ -135,8 +135,8 @@ export default function SkillsSection({ skills = [] }) {
                     transition={{ duration: 0.7 }}
                     className="text-center mb-10"
                 >
-                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                        {t('skills.tag')}
+                    <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                        // 04. STACK TÉCNICA & HABILIDADES
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">{t('skills.title')}</h2>
                     <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base mb-8">

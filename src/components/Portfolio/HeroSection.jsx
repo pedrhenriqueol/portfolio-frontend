@@ -98,7 +98,7 @@ export default function HeroSection() {
         <section
             id="home"
             ref={sectionRef}
-            className="pt-28 pb-16 md:pt-36 md:pb-24 bg-transparent flex items-center justify-center min-h-[100vh] relative overflow-hidden contain-paint"
+            className="pt-32 pb-24 md:pt-40 md:pb-36 bg-transparent flex items-center justify-center min-h-[100vh] relative overflow-hidden contain-paint"
         >
             {/* Background blobs — otimizados para GPU */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -134,8 +134,8 @@ export default function HeroSection() {
                         className="flex-1 text-center md:text-left space-y-6 min-h-[420px] sm:min-h-[460px] flex flex-col justify-center"
                         ref={textRef}
                     >
-                        <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase block font-sans">
-                            {t('hero.ola')}
+                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block">
+                            // 00. ENGENHARIA DE SOFTWARE & QA
                         </span>
 
                         {/* Altura mínima fixada para evitar Layout Shift (CLS) no TypeAnimation */}

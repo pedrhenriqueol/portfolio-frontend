@@ -414,7 +414,7 @@ export default function CylindricalWebGLShowcase({ onSelectProject, projects = [
                 if (e.key === 'ArrowLeft') handlePrev();
                 if (e.key === 'ArrowRight') handleNext();
             }}
-            className="py-16 md:py-24 bg-transparent relative border-t border-white/[0.06] overflow-hidden focus:outline-none"
+            className="py-24 md:py-36 bg-transparent relative overflow-hidden focus:outline-none"
         >
             {/* Iluminação de fundo cinemática */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[400px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -423,8 +423,8 @@ export default function CylindricalWebGLShowcase({ onSelectProject, projects = [
                 {/* ── Header da Seção ── */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                     <div>
-                        <span className="text-accent text-[11px] font-mono font-bold tracking-[0.25em] uppercase block mb-2">
-                            PROJETOS EM DESTAQUE ── ARQUITETURAS EM PRODUÇÃO
+                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block mb-2">
+                            // 02. ARQUITETURA DE SISTEMAS & PROJETOS 3D
                         </span>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white font-bold">
                             Sistemas & Arquiteturas em Produção

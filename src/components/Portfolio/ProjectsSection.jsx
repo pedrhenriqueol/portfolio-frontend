@@ -18,7 +18,7 @@ export default function ProjectsSection({ projects }) {
     }, [projects]);
 
     return (
-        <section id="projetos" className="py-20 md:py-24 bg-transparent relative border-t border-white/[0.06]">
+        <section id="projetos" className="py-24 md:py-36 bg-transparent relative">
             {/* Drawer de Detalhes Técnicos com AnimatePresence e Error Boundary */}
             <ModalErrorBoundary onClose={() => setSelected(null)}>
                 <AnimatePresence mode="wait">
@@ -41,8 +41,8 @@ export default function ProjectsSection({ projects }) {
                     transition={{ duration: 0.7 }}
                     className="text-center mb-10"
                 >
-                    <span className="text-accent text-[11px] font-semibold tracking-[0.25em] uppercase mb-2 block font-sans">
-                        {lang === 'en' ? 'CORPORATE PORTFOLIO & SOLUTIONS' : 'PORTFÓLIO CORPORATIVO & SOLUÇÕES'}
+                    <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                        // 05. REPOSITÓRIO CORPORATIVO & SOLUÇÕES
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
                         {lang === 'en' ? 'Enterprise Systems & Utilities' : 'Projetos Corporativos & Soluções'}
