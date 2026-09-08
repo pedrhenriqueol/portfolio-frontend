@@ -161,38 +161,34 @@ interface ProfessionalJourneyTimelineProps {
 export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [] }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement>(null);
-    const trackRef = useRef<HTMLDivElement>(null);
+    const timelineTrackRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // Escopo matemático exato: monitora estritamente o contêiner dos 3 marcos
+    // ── CALIBRAÇÃO MATEMÁTICA DO PROGRESSO & FÍSICA DE MOLA ──
+    // Inicia a interpolação assim que o topo entra nos 75% da viewport (terço inferior)
     const { scrollYProgress } = useScroll({
-        target: trackRef,
-        offset: ['start center', 'end center'],
+        target: timelineTrackRef,
+        offset: ['start 75%', 'end center'],
     });
 
-    // Mola de resposta imediata sem arrasto elástico excessivo
+    // Mola com resposta imediata e sem arrasto elástico lento
     const smoothProgress = useSpring(scrollYProgress, {
-        stiffness: 400,
-        damping: 35,
-        mass: 0.15,
+        stiffness: 450,
+        damping: 38,
+        mass: 0.1,
     });
 
-    // Mapeamento cravado com clamp nativo entre o primeiro e o último nó
+    // Mapeamentos diretos com clamp nativo entre o nó superior e o inferior
     const trackerTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
     const lineHeight = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
 
-    // Reatividade dos nós dos marcos temporais (transição inativo -> iluminado) e micro-escala no ano
-    const node2026Border = useTransform(smoothProgress, [0, 0.12], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.7)']);
-    const node2026Shadow = useTransform(smoothProgress, [0, 0.12], ['0 0 0px rgba(255,255,255,0)', '0 0 16px rgba(255,255,255,0.35)']);
-    const year2026Scale = useTransform(smoothProgress, [0, 0.1, 0.2], [1, 1.05, 1]);
+    // Garante que o marcador esteja visível desde o frame 0 (nunca escondido no topo)
+    const trackerOpacity = useTransform(scrollYProgress, [-0.1, 0, 1, 1.1], [0, 1, 1, 0]);
 
-    const node2025Border = useTransform(smoothProgress, [0.38, 0.52], ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.7)']);
-    const node2025Shadow = useTransform(smoothProgress, [0.38, 0.52], ['0 0 0px rgba(255,255,255,0)', '0 0 16px rgba(255,255,255,0.35)']);
-    const year2025Scale = useTransform(smoothProgress, [0.44, 0.52, 0.6], [1, 1.05, 1]);
-
-    const node2024Border = useTransform(smoothProgress, [0.78, 0.92], ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.7)']);
-    const node2024Shadow = useTransform(smoothProgress, [0.78, 0.92], ['0 0 0px rgba(255,255,255,0)', '0 0 16px rgba(255,255,255,0.35)']);
-    const year2024Scale = useTransform(smoothProgress, [0.84, 0.92, 1], [1, 1.05, 1]);
+    // Micro-escalas reativas nos anos esculturais monumentais
+    const year2026Scale = useTransform(smoothProgress, [0, 0.12, 0.25], [1, 1.05, 1]);
+    const year2025Scale = useTransform(smoothProgress, [0.4, 0.5, 0.6], [1, 1.05, 1]);
+    const year2024Scale = useTransform(smoothProgress, [0.8, 0.9, 1], [1, 1.05, 1]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -372,7 +368,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
 
                 {/* ── Section Header com Easter Egg Sentinela 1 ── */}
                 <div className="relative text-center mb-14">
-                    {/* Sentinela 1: Tech Companion pousado de guarda acima do divisor de seção */}
                     <div className="flex justify-center mb-4">
                         <TechCompanionCritter
                             variant="sentinel-timeline"
@@ -425,40 +420,71 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 </motion.div>
 
                 {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
-                <div ref={trackRef} className="relative w-full max-w-5xl mx-auto py-12">
-                    {/* TRILHO CENTRAL: Altura restrita entre o primeiro e último nó (Apenas Desktop md+) */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-8 bottom-8 w-[2px] hidden md:block pointer-events-none z-10">
-                        {/* 1. Trilho Base Guia (Cinza translúcido) */}
+                <div ref={timelineTrackRef} className="relative w-full max-w-5xl mx-auto py-12">
+
+                    {/* ══════════════════════════════════════════════════════════
+                        CONTAINER CENTRAL DA LINHA (md+) — HIERARQUIA UNIFICADA
+                        Encapsula Nó de Partida, Trilho Base, Circuito Ativo, Puck e Nó de Chegada
+                        ══════════════════════════════════════════════════════════ */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-12 bottom-12 w-[2px] hidden md:block pointer-events-none z-20">
+                        {/* 1. Nó Físico Superior de Partida (Onde o trilho nasce) */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full border border-white/20 bg-[#090b10] flex items-center justify-center z-10">
+                            <div className="w-2 h-2 rounded-full bg-white/40" />
+                        </div>
+
+                        {/* 2. Trilho Guia Base (Linha cinza escura contínua) */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
 
-                        {/* 2. Linha Iluminada Ativa (Preenchimento gradual) */}
+                        {/* 3. Linha Branca Preenchida Reativa (Circuito Ativo) */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/30 rounded-full origin-top"
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/90 to-white/40 rounded-full origin-top"
                             style={{ height: lineHeight }}
                         />
 
-                        {/* 3. Puck / Bolinha Rastreadora com Glow */}
+                        {/* 4. Puck / Marcador Rastreador com Glow (Sempre ancorado rigorosamente no trilho) */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
-                            style={{ top: trackerTop }}
+                            className="absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2 z-30"
+                            style={{ top: trackerTop, opacity: trackerOpacity }}
                         >
                             <div className="w-1.5 h-1.5 rounded-full bg-[#090b10]" />
                         </motion.div>
+
+                        {/* 5. Nó Físico Inferior de Chegada (Fim da timeline em 2024) */}
+                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full border border-white/20 bg-[#090b10] flex items-center justify-center z-10">
+                            <div className="w-2 h-2 rounded-full bg-white/40" />
+                        </div>
                     </div>
 
-                    {/* TRILHO MOBILE (< md) */}
-                    <div className="absolute left-4 sm:left-6 top-8 bottom-8 w-[2px] md:hidden pointer-events-none z-10">
+                    {/* ══════════════════════════════════════════════════════════
+                        CONTAINER MOBILE DA LINHA (< md) — HIERARQUIA UNIFICADA
+                        ══════════════════════════════════════════════════════════ */}
+                    <div className="absolute left-4 sm:left-6 top-12 bottom-12 w-[2px] md:hidden pointer-events-none z-20">
+                        {/* 1. Nó Superior Mobile */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full border border-white/20 bg-[#090b10] flex items-center justify-center z-10">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                        </div>
+
+                        {/* 2. Trilho Base Mobile */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
+
+                        {/* 3. Linha Preenchida Mobile */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/30 rounded-full origin-top"
+                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/90 to-white/40 rounded-full origin-top"
                             style={{ height: lineHeight }}
                         />
+
+                        {/* 4. Puck Mobile */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2"
-                            style={{ top: trackerTop }}
+                            className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.95)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2 z-30"
+                            style={{ top: trackerTop, opacity: trackerOpacity }}
                         >
                             <div className="w-1 h-1 rounded-full bg-[#090b10]" />
                         </motion.div>
+
+                        {/* 5. Nó Inferior Mobile */}
+                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full border border-white/20 bg-[#090b10] flex items-center justify-center z-10">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                        </div>
                     </div>
 
                     {/* Grid / Itens da Timeline: 2026, 2025, 2024 */}
@@ -475,15 +501,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                             className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                         >
-                            {/* Nó Central na Espinha (Desktop) com iluminação reativa */}
-                            <motion.div
-                                style={{ borderColor: node2026Border, boxShadow: node2026Shadow }}
-                                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 items-center justify-center z-20 transition-colors duration-300"
-                            >
-                                <div className="w-3 h-3 rounded-full bg-green-400 animate-ping" />
-                                <div className="absolute w-2 h-2 rounded-full bg-green-400" />
-                            </motion.div>
-
                             {/* Lado Esquerdo: Ano Escultural Monumental + Botão de Pasta Técnica */}
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
@@ -544,19 +561,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                             className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                         >
-                            {/* Nó Central na Espinha (Desktop) com iluminação reativa */}
-                            <motion.div
-                                style={{ borderColor: node2025Border, boxShadow: node2025Shadow }}
-                                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 items-center justify-center z-20 transition-colors duration-300"
-                            >
-                                <motion.div
-                                    style={{
-                                        backgroundColor: useTransform(smoothProgress, [0.38, 0.52], ['rgba(255,255,255,0.25)', '#ffffff']),
-                                    }}
-                                    className="w-2.5 h-2.5 rounded-full"
-                                />
-                            </motion.div>
-
                             {/* Lado Esquerdo (Desktop): Card Detalhado Qualisoft */}
                             <div className="order-2 md:order-1">
                                 <TimelineExperienceCard
@@ -607,7 +611,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         </motion.div>
 
                         {/* ══════════════════════════════════════════════════════════
-                            MARCO 2024: UNIFANOR WYDEN (Engenharia de Software & Base)
+                            MARCO 2024: EEEP LUIZA DE TEODORO VIEIRA (Formação Técnica)
                             Desktop: Esquerda = Ano 2024 + Pasta | Direita = Card Acadêmico
                             ══════════════════════════════════════════════════════════ */}
                         <motion.div
@@ -617,19 +621,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                             className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                         >
-                            {/* Nó Central na Espinha (Desktop) com iluminação reativa */}
-                            <motion.div
-                                style={{ borderColor: node2024Border, boxShadow: node2024Shadow }}
-                                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-darker border-2 items-center justify-center z-20 transition-colors duration-300"
-                            >
-                                <motion.div
-                                    style={{
-                                        backgroundColor: useTransform(smoothProgress, [0.78, 0.92], ['rgba(255,255,255,0.25)', '#ffffff']),
-                                    }}
-                                    className="w-2.5 h-2.5 rounded-full"
-                                />
-                            </motion.div>
-
                             {/* Lado Esquerdo: Ano 2024 Monumental + Botão de Pasta Técnica */}
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/5 text-primary border border-white/10">
