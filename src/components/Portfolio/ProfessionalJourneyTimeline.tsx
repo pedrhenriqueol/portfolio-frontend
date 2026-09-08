@@ -164,48 +164,47 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const timelineTrackRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // ── RECALIBRAÇÃO MATEMÁTICA: SINCRONIA FOCAL 1:1 COM A VIEWPORT ──
-    // O trajeto inicia quando o nó 2026 atinge o centro da tela e conclui quando o nó 2024 atinge o centro da tela
+    // ── CALIBRAÇÃO DO PROGRESSO ADIANTADO & FÍSICA DE MOLA ──
+    // O trajeto inicia no momento em que a timeline adentra a visão (95%) e conclui com folga (60%), liderando a rolagem
     const { scrollYProgress } = useScroll({
         target: timelineTrackRef,
-        offset: ['start center', 'end center'],
+        offset: ['start 95%', 'end 60%'],
     });
 
-    // Mola cinematográfica com massa real (inércia suave, fluida e contínua estilo Styfen Sagala)
+    // Mola ágil com resposta imediata e peso tátil (elimina o atraso/inércia excessiva)
     const smoothProgress = useSpring(scrollYProgress, {
-        stiffness: 220,
-        damping: 26,
-        mass: 0.35,
+        stiffness: 420,
+        damping: 28,
+        mass: 0.08,
     });
 
-    // Mapeamento proporcional 1:1 (zero aceleração forçada)
-    const trackerTop = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
-    const lineHeight = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
+    // Mapeamento adiantado: o circuito e o puck avançam à frente do olhar do leitor
+    const trackerTop = useTransform(smoothProgress, [0, 0.85], ['0%', '100%'], { clamp: true });
+    const lineHeight = useTransform(smoothProgress, [0, 0.85], ['0%', '100%'], { clamp: true });
 
-    // Micro-escalas reativas nos anos monumentais (sincronia exata com o cruzamento do puck)
-    const year2026Scale = useTransform(smoothProgress, [0, 0.06, 0.15], [1, 1.05, 1]);
-    const year2025Scale = useTransform(smoothProgress, [0.44, 0.50, 0.58], [1, 1.05, 1]);
-    const year2024Scale = useTransform(smoothProgress, [0.92, 0.97, 1], [1, 1.05, 1]);
+    // Micro-escalas reativas nos anos monumentais (sincronia precisa com a passagem antecipada do puck)
+    const year2026Scale = useTransform(smoothProgress, [0, 0.05, 0.12], [1, 1.05, 1]);
+    const year2025Scale = useTransform(smoothProgress, [0.35, 0.42, 0.50], [1, 1.05, 1]);
+    const year2024Scale = useTransform(smoothProgress, [0.75, 0.84, 0.92], [1, 1.05, 1]);
 
-    // Reatividade orgânica dos nós de estação (2026, 2025, 2024):
-    // Inativo: border-white/20, bg-[#090b10], text-white/30
-    // Ativo: border-white/80, bg-[#090b10], text-white, shadow-[0_0_12px_rgba(255,255,255,0.4)], scale-110
+    // Reatividade orgânica dos nós de estação (2026, 2025, 2024) sincronizados com o puck adiantado:
+    // Marco 2026: acende prontamente no início da jornada
     const node2026Border = useTransform(smoothProgress, [0, 0.04], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
     const node2026Bg = useTransform(smoothProgress, [0, 0.04], ['rgba(255,255,255,0.3)', '#ffffff']);
     const node2026Shadow = useTransform(smoothProgress, [0, 0.04], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
     const node2026Scale = useTransform(smoothProgress, [0, 0.04], [1, 1.1]);
 
-    // Marco central de 2025 acende no exato frame em que a bolinha cruza a coordenada vertical (~0.48)
-    const node2025Border = useTransform(smoothProgress, [0.46, 0.51], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2025Bg = useTransform(smoothProgress, [0.46, 0.51], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2025Shadow = useTransform(smoothProgress, [0.46, 0.51], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2025Scale = useTransform(smoothProgress, [0.46, 0.51], [1, 1.1]);
+    // Marco central de 2025 (Qualisoft): acende no exato momento em que o puck cruza sua coordenada vertical
+    const node2025Border = useTransform(smoothProgress, [0.36, 0.43], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2025Bg = useTransform(smoothProgress, [0.36, 0.43], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2025Shadow = useTransform(smoothProgress, [0.36, 0.43], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2025Scale = useTransform(smoothProgress, [0.36, 0.43], [1, 1.1]);
 
-    // Marco final de 2024 acende quando a bolinha atinge o pouso final (~0.95)
-    const node2024Border = useTransform(smoothProgress, [0.93, 0.98], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2024Bg = useTransform(smoothProgress, [0.93, 0.98], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2024Shadow = useTransform(smoothProgress, [0.93, 0.98], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2024Scale = useTransform(smoothProgress, [0.93, 0.98], [1, 1.1]);
+    // Marco final de 2024 (EEEP): acende quando a bolinha atinge o pouso final antecipado
+    const node2024Border = useTransform(smoothProgress, [0.76, 0.83], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2024Bg = useTransform(smoothProgress, [0.76, 0.83], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2024Shadow = useTransform(smoothProgress, [0.76, 0.83], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2024Scale = useTransform(smoothProgress, [0.76, 0.83], [1, 1.1]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
