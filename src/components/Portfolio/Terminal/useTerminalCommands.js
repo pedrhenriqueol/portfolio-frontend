@@ -2,6 +2,8 @@ import { useMemo, useCallback } from 'react';
 import { GAMES_INFO } from './TerminalGames';
 
 export const ALL_CMD_STRINGS = [
+    'test', 'qa', 'test:run', 'postman', 'sql', 'query', 'sql:explain', 'tuning',
+    'pedro --test', 'pedro --qa', 'pedro --sql', 'pedro --query',
     'pedro --help', 'pedro --projects', 'pedro --skills', 'pedro --experience', 'pedro --contact',
     'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
     'pedro --play trivia', 'pedro --play aim-test', 'pedro --sudo matrix',
@@ -11,19 +13,19 @@ export const ALL_CMD_STRINGS = [
 export const getWelcomeLines = (lang) => {
     if (lang === 'en') {
         return [
-            { text: 'Pedro Henrique — Interactive Terminal v2.1 [Arcade Edition 🕹️]', color: 'text-secondary font-bold' },
-            { text: 'Type "pedro --help" to view commands or "pedro --games" to play!', color: 'text-primary/70' },
+            { text: 'Pedro Henrique — Interactive Terminal v2.2 [QA & Engineering Edition ⚡]', color: 'text-secondary font-bold' },
+            { text: 'Type "help" for commands, "test" for QA suite or "pedro --games" to play!', color: 'text-primary/70' },
         ];
     }
     if (lang === 'es') {
         return [
-            { text: 'Pedro Henrique — Terminal Interactivo v2.1 [Arcade Edition 🕹️]', color: 'text-secondary font-bold' },
-            { text: '¡Escribe "pedro --help" para ver comandos o "pedro --games" para jugar!', color: 'text-primary/70' },
+            { text: 'Pedro Henrique — Terminal Interactivo v2.2 [Edición QA & Ingeniería ⚡]', color: 'text-secondary font-bold' },
+            { text: '¡Escribe "help" para comandos, "test" para suite QA o "pedro --games" para jugar!', color: 'text-primary/70' },
         ];
     }
     return [
-        { text: 'Pedro Henrique — Terminal Interativo v2.1 [Arcade Edition 🕹️]', color: 'text-secondary font-bold' },
-        { text: 'Digite "pedro --help" para ver comandos ou "pedro --games" para jogar!', color: 'text-primary/70' },
+        { text: 'Pedro Henrique — Terminal Interativo v2.2 [QA & Engineering Edition ⚡]', color: 'text-secondary font-bold' },
+        { text: 'Digite "help" para comandos, "test" para suite de testes ou "pedro --games" para jogar!', color: 'text-primary/70' },
     ];
 };
 
@@ -34,58 +36,64 @@ export const getCommands = (lang) => [
         output: () => {
             if (lang === 'en') {
                 return [
-                    { text: '── Portfolio Commands ──', color: 'text-secondary font-bold' },
+                    { text: '── SYSTEM & ENGINEERING ──', color: 'text-secondary font-bold' },
+                    { text: '  test, qa, postman      Automated regression test runner & API assertions', color: 'text-emerald-400' },
+                    { text: '  sql, query, tuning     Database query plan analysis & index seek tuning', color: 'text-cyan-400' },
                     { text: '  pedro --projects       Flagship engineering projects & architecture', color: 'text-accent' },
-                    { text: '  pedro --skills         List all technologies and stack', color: 'text-primary' },
-                    { text: '  pedro --experience     Detailed professional career path', color: 'text-primary' },
+                    { text: '  pedro --skills         List all technologies and technical stack', color: 'text-primary' },
+                    { text: '  pedro --experience     Detailed professional career path and achievements', color: 'text-primary' },
                     { text: '  pedro --contact        Direct contact links and channels', color: 'text-primary' },
                     { text: '  pedro --status         Availability status and timezone', color: 'text-primary' },
+                    { text: '  clear                  Clear terminal screen', color: 'text-primary/70' },
                     { text: '', color: '' },
-                    { text: '── Minigames & Easter Eggs 🕹️ ──', color: 'text-accent font-bold' },
+                    { text: '── GAMES & ENTERTAINMENT 🕹️ ──', color: 'text-accent font-bold' },
                     { text: '  pedro --games          Complete menu of all minigames', color: 'text-accent' },
                     { text: '  pedro --play snake     🐍 Classic ASCII Snake Game (Arrow Keys / WASD)', color: 'text-secondary' },
                     { text: '  pedro --play bug-hunter 🐛 QA Bug Hunting without Error 500', color: 'text-secondary' },
                     { text: '  pedro --play trivia    🧠 Tech Quiz on QA, Delphi, SQL & Web', color: 'text-secondary' },
                     { text: '  pedro --play aim-test  🎯 Millisecond Reflex & Speed Test', color: 'text-secondary' },
                     { text: '  pedro --sudo matrix    🕶️ Matrix Code Rain Visual Effect', color: 'text-secondary' },
-                    { text: '  clear                  Clear terminal screen', color: 'text-primary/70' },
                 ];
             }
             if (lang === 'es') {
                 return [
-                    { text: '── Comandos de Portafolio ──', color: 'text-secondary font-bold' },
+                    { text: '── SISTEMA & INGENIERÍA ──', color: 'text-secondary font-bold' },
+                    { text: '  test, qa, postman      Runner de pruebas automatizadas y aserciones HTTP', color: 'text-emerald-400' },
+                    { text: '  sql, query, tuning     Simulador de análisis de plan y tuning de query', color: 'text-cyan-400' },
                     { text: '  pedro --projects       Proyectos de ingeniería destacados y arquitectura', color: 'text-accent' },
                     { text: '  pedro --skills         Lista todas las tecnologías y stack', color: 'text-primary' },
                     { text: '  pedro --experience     Trayectoria profesional detallada', color: 'text-primary' },
                     { text: '  pedro --contact        Enlaces y canales de contacto directo', color: 'text-primary' },
                     { text: '  pedro --status         Estado de disponibilidad y zona horaria', color: 'text-primary' },
+                    { text: '  clear                  Limpia la pantalla de la terminal', color: 'text-primary/70' },
                     { text: '', color: '' },
-                    { text: '── Minijuegos & Easter Eggs 🕹️ ──', color: 'text-accent font-bold' },
+                    { text: '── JUEGOS & ENTRETENIMIENTO 🕹️ ──', color: 'text-accent font-bold' },
                     { text: '  pedro --games          Menú completo de todos los minijuegos', color: 'text-accent' },
                     { text: '  pedro --play snake     🐍 Juego de la Serpiente ASCII (Flechas / WASD)', color: 'text-secondary' },
                     { text: '  pedro --play bug-hunter 🐛 Caza de Bugs de QA sin provocar Error 500', color: 'text-secondary' },
                     { text: '  pedro --play trivia    🧠 Quiz Técnico de QA, Delphi, SQL y Web', color: 'text-secondary' },
                     { text: '  pedro --play aim-test  🎯 Test de Reflejos en Milisegundos', color: 'text-secondary' },
                     { text: '  pedro --sudo matrix    🕶️ Lluvia de Código Matrix en la Terminal', color: 'text-secondary' },
-                    { text: '  clear                  Limpia la pantalla de la terminal', color: 'text-primary/70' },
                 ];
             }
             return [
-                { text: '── Comandos de Portfólio ──', color: 'text-secondary font-bold' },
+                { text: '── SISTEMA & ENGENHARIA ──', color: 'text-secondary font-bold' },
+                { text: '  test, qa, postman      Runner de testes de regressão & asserções HTTP', color: 'text-emerald-400' },
+                { text: '  sql, query, tuning     Simulador de análise de plano & tuning de query', color: 'text-cyan-400' },
                 { text: '  pedro --projects       Projetos de engenharia em destaque e arquitetura', color: 'text-accent' },
                 { text: '  pedro --skills         Lista todas as tecnologias e stacks', color: 'text-primary' },
                 { text: '  pedro --experience     Trajetória profissional detalhada', color: 'text-primary' },
                 { text: '  pedro --contact        Links e canais de contato direto', color: 'text-primary' },
                 { text: '  pedro --status         Status de disponibilidade e fuso', color: 'text-primary' },
+                { text: '  clear                  Limpa a tela do terminal', color: 'text-primary/70' },
                 { text: '', color: '' },
-                { text: '── Minijogos & Easter Eggs 🕹️ ──', color: 'text-accent font-bold' },
+                { text: '── JOGOS & ENTRETENIMENTO 🕹️ ──', color: 'text-accent font-bold' },
                 { text: '  pedro --games          Menu completo de todos os minijogos', color: 'text-accent' },
                 { text: '  pedro --play snake     🐍 Jogo da Cobrinha em ASCII (Setas / WASD)', color: 'text-secondary' },
                 { text: '  pedro --play bug-hunter 🐛 Caça aos Bugs sem estourar Erro 500', color: 'text-secondary' },
                 { text: '  pedro --play trivia    🧠 Quiz Técnico de QA, Delphi, SQL & Web', color: 'text-secondary' },
                 { text: '  pedro --play aim-test  🎯 Teste de Reflexos em Milissegundos', color: 'text-secondary' },
                 { text: '  pedro --sudo matrix    🕶️ Chuva de Código Matrix no Terminal', color: 'text-secondary' },
-                { text: '  clear                  Limpa a tela do terminal', color: 'text-primary/70' },
             ];
         },
     },
@@ -274,7 +282,7 @@ export const getCommands = (lang) => [
 export function useTerminalCommands(lang) {
     const commandsList = useMemo(() => getCommands(lang), [lang]);
 
-    const execute = useCallback((raw, { onLaunchGame, onClear, setLines }) => {
+    const execute = useCallback((raw, { onLaunchGame, onClear, setLines, runSimulation }) => {
         const trimmed = raw.trim();
         if (!trimmed) return;
 
@@ -295,6 +303,27 @@ export function useTerminalCommands(lang) {
         if (lower === 'clear') {
             onClear();
             return;
+        }
+
+        // Comandos de Engenharia (Simulações Assíncronas de QA & SQL Tuning)
+        if (
+            lower === 'test' || lower === 'qa' || lower === 'test:run' || lower === 'postman' ||
+            lower === 'pedro --test' || lower === 'pedro --qa' || lower === 'pedro --test:run' || lower === 'pedro --postman'
+        ) {
+            if (runSimulation) {
+                runSimulation('test', trimmed);
+                return;
+            }
+        }
+
+        if (
+            lower === 'sql' || lower === 'query' || lower === 'sql:explain' || lower === 'tuning' ||
+            lower === 'pedro --sql' || lower === 'pedro --query' || lower === 'pedro --sql:explain' || lower === 'pedro --tuning'
+        ) {
+            if (runSimulation) {
+                runSimulation('sql', trimmed);
+                return;
+            }
         }
 
         // Easter eggs
