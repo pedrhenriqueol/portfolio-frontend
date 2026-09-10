@@ -391,7 +391,10 @@ export function useTerminalCommands(lang) {
         if (lower.startsWith('ai ') || lower.startsWith('ask ') || lower === 'ai' || lower === 'ask') {
             const question = trimmed.replace(/^(ai|ask)\s*/i, '').trim();
             if (options.onFallbackToAI) {
-                options.onFallbackToAI(question || (lang === 'en' ? 'Who is Pedro Henrique and what is his experience?' : 'Quem é o Pedro Henrique e qual é a experiência dele?'));
+                options.onFallbackToAI(
+                    question || (lang === 'en' ? 'Who is Pedro Henrique and what is his experience?' : 'Quem é o Pedro Henrique e qual é a experiência dele?'),
+                    trimmed
+                );
                 return;
             }
         }
@@ -410,7 +413,7 @@ export function useTerminalCommands(lang) {
             ]);
         } else if (options.onFallbackToAI) {
             // Unrecognized command or natural language question -> Delegate to Copilot AI
-            options.onFallbackToAI(trimmed);
+            options.onFallbackToAI(trimmed, trimmed);
         } else {
             const unknown = lang === 'en'
                 ? `Unknown command: "${trimmed}". Type "pedro --help" or "pedro --games".`

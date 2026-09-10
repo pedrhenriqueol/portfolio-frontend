@@ -276,7 +276,53 @@ function getSqlSimulationSteps(lang: string): SimulationStep[] {
     ];
 }
 
-const q5 = 'FINAL EXECUTION TIME: 19ms (Optimization: -99.1%)';
+function getLocalCopilotResponse(question: string, lang: string): string {
+    const q = question.toLowerCase();
+    const isEn = lang === 'en';
+    const isEs = lang === 'es';
+
+    if (q.includes('terminal') || q.includes('funciona') || q.includes('como usar') || q.includes('how it work') || q.includes('how does')) {
+        if (isEn) {
+            return 'This interactive workstation shell features a hybrid architecture: you can run local QA and database simulation commands like `test` and `sql`, play arcade minigames like `snake`, `trivia`, and `bug-hunter`, or query me directly in natural language about Pedro Henrique\'s background. Type `help` to see all available commands!';
+        }
+        if (isEs) {
+            return 'Esta terminal interactiva opera bajo una arquitectura híbrida: puedes ejecutar simulaciones técnicas como `test` (batería de pruebas QA) y `sql` (análisis y tuning de consultas), jugar minijuegos arcade como `snake` y `trivia`, o preguntarme directamente sobre la trayectoria de Pedro Henrique. ¡Escribe `help` para ver la lista!';
+        }
+        return 'Este terminal interativo opera em arquitetura híbrida: você pode executar testes de homologação com `test` (validações QA e contratos HTTP), simular tuning de banco com `sql`, jogar minijogos como `snake`, `bug-hunter` e `trivia`, ou conversar comigo em linguagem natural sobre as experiências e projetos do Pedro Henrique. Digite `help` para listar todos os comandos!';
+    }
+
+    if (q.includes('pedro') || q.includes('quem') || q.includes('experiencia') || q.includes('experiência') || q.includes('trajetoria') || q.includes('trajetória') || q.includes('who is') || q.includes('about')) {
+        if (isEn) {
+            return 'Pedro Henrique is a Software Engineer currently working as a QA / Test Analyst Intern at SETE Tecnologia (focusing on port logistics systems, SQL Server diagnostics, and Postman API automation), with previous experience modernizing legacy ERPs in Delphi and developing REST APIs with Laravel and React. Type `test` or `pedro --projects` to explore!';
+        }
+        return 'Pedro Henrique é graduando em Engenharia de Software e atua como Analista de QA (Estágio) na SETE Tecnologia, validando sistemas portuários (ZPEs) com diagnósticos em Microsoft SQL Server e automação Postman. Também possui bagagem sólida em modernização de ERP com Delphi 11, Laravel e React. Digite `test` para simular os testes ou `pedro --skills`!';
+    }
+
+    if (q.includes('test') || q.includes('qa') || q.includes('postman') || q.includes('qualidade')) {
+        if (isEn) {
+            return 'Pedro models functional and regression test suites, validates boundary conditions, and automates HTTP assertions via Postman. To run a live simulated API test execution, type `test` in the terminal.';
+        }
+        return 'O Pedro atua na modelagem de testes funcionais, regressivos e de borda, além de automação de asserções HTTP com Postman e diagnósticos no SQL Server. Para rodar a suíte simulada de homologação agora, digite `test`.';
+    }
+
+    if (q.includes('sql') || q.includes('banco') || q.includes('query') || q.includes('database')) {
+        if (isEn) {
+            return 'Pedro specializes in query diagnostics, composite indexing, and execution plan tuning in Microsoft SQL Server and PostgreSQL. Type `sql` to run an interactive query optimization demo.';
+        }
+        return 'Pedro trabalha com diagnósticos avançados de queries, criação de índices compostos e tuning de execution plans em Microsoft SQL Server e PostgreSQL. Digite `sql` para ver uma simulação em tempo real.';
+    }
+
+    if (q.includes('jogo') || q.includes('game') || q.includes('arcade') || q.includes('jogar') || q.includes('play')) {
+        return isEn
+            ? 'Available terminal minigames: `snake`, `bug-hunter`, `trivia`, `aim-test` and `matrix`. Type `games` or `pedro --games` to view the arcade menu!'
+            : 'Minijogos disponíveis no terminal: `snake`, `bug-hunter`, `trivia`, `aim-test` e `matrix`. Digite `games` ou `pedro --games` para abrir o menu arcade!';
+    }
+
+    if (isEn) {
+        return 'I am Pedro Henrique\'s Copilot Assistant. Feel free to ask about his engineering skills, QA background, or projects. You can also run interactive commands like `test`, `sql`, and `help`.';
+    }
+    return 'Sou o Copilot Técnico do Pedro Henrique. Você pode me perguntar sobre a experiência dele em QA, Delphi, Laravel ou React, ou digitar comandos interativos do sistema como `test`, `sql` e `help`.';
+}
 
 export const InteractiveTerminal: React.FC = () => {
     const { lang } = useLanguage();
@@ -295,6 +341,7 @@ export const InteractiveTerminal: React.FC = () => {
     const hasFetchedCity = useRef(false);
     const activeTimersRef = useRef<number[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const prevLangRef = useRef(lang);
 
     const { execute } = useTerminalCommands(lang);
 
@@ -315,13 +362,16 @@ export const InteractiveTerminal: React.FC = () => {
         };
     }, [clearAllTimers]);
 
-    // Reseta boas-vindas ao trocar de idioma caso não haja jogo ou stream ativo
+    // Reseta boas-vindas EXCLUSIVAMENTE ao trocar de idioma do portfólio
     useEffect(() => {
-        if (!activeGame && !isStreaming) {
-            clearAllTimers();
-            setLines(getWelcomeLines(lang));
+        if (prevLangRef.current !== lang) {
+            prevLangRef.current = lang;
+            if (!activeGame) {
+                clearAllTimers();
+                setLines(getWelcomeLines(lang));
+            }
         }
-    }, [lang, activeGame, isStreaming, clearAllTimers]);
+    }, [lang, activeGame, clearAllTimers]);
 
     // Localização do visitante via IP-API executado com cache de sessão
     useEffect(() => {
@@ -382,10 +432,11 @@ export const InteractiveTerminal: React.FC = () => {
         });
     }, [lang, clearAllTimers]);
 
-    /** Streaming assíncrono com o Copilot Técnico via rota segura /api/chat */
-    const handleAskCopilot = useCallback(async (question: string) => {
+    /** Streaming assíncrono com o Copilot Técnico via rota segura /api/chat ou fallback inteligente local */
+    const handleAskCopilot = useCallback(async (question: string, rawPrompt?: string) => {
         const cleanQuestion = question.trim();
-        if (!cleanQuestion) return;
+        const displayPrompt = (rawPrompt || question).trim();
+        if (!cleanQuestion && !displayPrompt) return;
 
         // Cancela requisições anteriores ativas
         if (abortControllerRef.current) {
@@ -403,12 +454,12 @@ export const InteractiveTerminal: React.FC = () => {
         setLines(prev => [
             ...prev,
             {
-                text: `pedro@workstation:~$ ${cleanQuestion}`,
+                text: `pedro@workstation:~$ ${displayPrompt}`,
                 color: 'text-cyan-400/90 font-semibold',
                 node: (
                     <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5">
                         <span className="text-cyan-400">pedro@workstation:~$</span>
-                        <span className="text-white">{cleanQuestion}</span>
+                        <span className="text-white">{displayPrompt}</span>
                     </div>
                 ),
             },
@@ -495,13 +546,48 @@ export const InteractiveTerminal: React.FC = () => {
                     { text: '', color: '' },
                 ]);
             } else {
-                // Tratamento de falhas ou ausência de chave (Modo Offline gracioso)
+                // Fallback inteligente: simula streaming token a token da base de conhecimento
+                const fallbackReply = getLocalCopilotResponse(cleanQuestion, lang);
+                const tokens = fallbackReply.split(' ');
+                let currentText = '';
+
+                for (let i = 0; i < tokens.length; i++) {
+                    if (controller.signal.aborted) break;
+                    currentText += (i === 0 ? '' : ' ') + tokens[i];
+                    const snap = currentText;
+
+                    setLines(prev =>
+                        prev.map(l =>
+                            l.id === streamLineId
+                                ? {
+                                      ...l,
+                                      text: snap,
+                                      node: <FormattedCopilotResponse text={snap} isStreaming={i < tokens.length - 1} />,
+                                  }
+                                : l
+                        )
+                    );
+
+                    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    if (contentRef.current) {
+                        contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                    }
+
+                    // Intervalo suave de leitura natural
+                    await new Promise(r => setTimeout(r, 26));
+                }
+
                 setLines(prev => [
-                    ...prev.filter(l => l.id !== streamLineId),
-                    {
-                        text: "[INFO] Modo offline. Digite 'help' para listar os comandos integrados do sistema.",
-                        color: 'text-amber-400/90 font-mono text-xs',
-                    },
+                    ...prev.map(l =>
+                        l.id === streamLineId
+                            ? {
+                                  ...l,
+                                  text: currentText,
+                                  isStreaming: false,
+                                  node: <FormattedCopilotResponse text={currentText} isStreaming={false} />,
+                              }
+                            : l
+                    ),
                     { text: '', color: '' },
                 ]);
             }
@@ -511,7 +597,7 @@ export const InteractiveTerminal: React.FC = () => {
                 abortControllerRef.current = null;
             }
         }
-    }, []);
+    }, [lang]);
 
     /** Manipula a submissão de comandos no prompt */
     const handleRunCommand = useCallback((raw: string) => {
