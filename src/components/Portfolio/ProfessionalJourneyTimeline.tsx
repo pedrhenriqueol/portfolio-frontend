@@ -164,48 +164,49 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const timelineTrackRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // ── CALIBRAÇÃO DO PROGRESSO ADIANTADO & FÍSICA DE MOLA ──
-    // O trajeto inicia imediatamente quando o topo do container alcança a borda inferior da tela (100%)
-    // e conclui antecipadamente (70%), mantendo a bolinha e o feixe sempre bem à frente do olhar
+    // ── CALIBRAÇÃO DO PROGRESSO HIPER-ADIANTADO & FÍSICA DE MOLA ──
+    // O trajeto inicia antecipadamente quando o container ainda está prestes a entrar na tela (110%)
+    // e atinge 100% de percurso bem antes do final (50%), garantindo que o feixe e a bolinha sempre
+    // liderem com folga o olhar do leitor tanto no scroll para baixo quanto no scroll para cima
     const { scrollYProgress } = useScroll({
         target: timelineTrackRef,
-        offset: ['start 100%', 'end 70%'],
+        offset: ['start 110%', 'end 50%'],
     });
 
-    // Mola ultrarrápida com resposta instantânea e peso orgânico
+    // Mola de alta frequência e aceleração imediata
     const smoothProgress = useSpring(scrollYProgress, {
-        stiffness: 450,
-        damping: 26,
-        mass: 0.06,
+        stiffness: 520,
+        damping: 24,
+        mass: 0.04,
     });
 
-    // Mapeamento hiper-adiantado: o puck e o feixe cruzam os marcos à frente do leitor
-    const trackerTop = useTransform(smoothProgress, [0, 0.72], ['0%', '100%'], { clamp: true });
-    const lineHeight = useTransform(smoothProgress, [0, 0.72], ['0%', '100%'], { clamp: true });
+    // Mapeamento hiper-adiantado: o puck e o feixe cruzam os marcos muito à frente do leitor
+    const trackerTop = useTransform(smoothProgress, [0, 0.55], ['0%', '100%'], { clamp: true });
+    const lineHeight = useTransform(smoothProgress, [0, 0.55], ['0%', '100%'], { clamp: true });
 
-    // Micro-escalas reativas nos anos monumentais (sincronizadas com o percurso adiantado)
-    const year2026Scale = useTransform(smoothProgress, [0, 0.04, 0.10], [1, 1.05, 1]);
-    const year2025Scale = useTransform(smoothProgress, [0.26, 0.34, 0.42], [1, 1.05, 1]);
-    const year2024Scale = useTransform(smoothProgress, [0.60, 0.68, 0.76], [1, 1.05, 1]);
+    // Micro-escalas reativas nos anos monumentais (sincronizadas com o percurso super adiantado)
+    const year2026Scale = useTransform(smoothProgress, [0, 0.03, 0.07], [1, 1.08, 1]);
+    const year2025Scale = useTransform(smoothProgress, [0.18, 0.25, 0.32], [1, 1.08, 1]);
+    const year2024Scale = useTransform(smoothProgress, [0.45, 0.52, 0.59], [1, 1.08, 1]);
 
-    // Reatividade orgânica dos nós de estação (2026, 2025, 2024) sincronizados com o puck adiantado:
+    // Reatividade orgânica dos nós de estação (2026, 2025, 2024) sincronizados com o puck super adiantado:
     // Marco 2026: acende prontamente logo no primeiro scroll
-    const node2026Border = useTransform(smoothProgress, [0, 0.04], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2026Bg = useTransform(smoothProgress, [0, 0.04], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2026Shadow = useTransform(smoothProgress, [0, 0.04], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2026Scale = useTransform(smoothProgress, [0, 0.04], [1, 1.1]);
+    const node2026Border = useTransform(smoothProgress, [0, 0.03], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2026Bg = useTransform(smoothProgress, [0, 0.03], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2026Shadow = useTransform(smoothProgress, [0, 0.03], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2026Scale = useTransform(smoothProgress, [0, 0.03], [1, 1.1]);
 
-    // Marco central de 2025 (Qualisoft): acende no exato momento em que o puck passa por ele (~48% da altura do trilho)
-    const node2025Border = useTransform(smoothProgress, [0.28, 0.36], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2025Bg = useTransform(smoothProgress, [0.28, 0.36], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2025Shadow = useTransform(smoothProgress, [0.28, 0.36], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2025Scale = useTransform(smoothProgress, [0.28, 0.36], [1, 1.1]);
+    // Marco central de 2025 (Qualisoft): acende no exato momento em que o puck passa por ele
+    const node2025Border = useTransform(smoothProgress, [0.20, 0.26], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2025Bg = useTransform(smoothProgress, [0.20, 0.26], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2025Shadow = useTransform(smoothProgress, [0.20, 0.26], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2025Scale = useTransform(smoothProgress, [0.20, 0.26], [1, 1.1]);
 
     // Marco final de 2024 (EEEP): acende quando a bolinha atinge o pouso final na base da timeline
-    const node2024Border = useTransform(smoothProgress, [0.62, 0.70], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2024Bg = useTransform(smoothProgress, [0.62, 0.70], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2024Shadow = useTransform(smoothProgress, [0.62, 0.70], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2024Scale = useTransform(smoothProgress, [0.62, 0.70], [1, 1.1]);
+    const node2024Border = useTransform(smoothProgress, [0.46, 0.53], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2024Bg = useTransform(smoothProgress, [0.46, 0.53], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2024Shadow = useTransform(smoothProgress, [0.46, 0.53], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2024Scale = useTransform(smoothProgress, [0.46, 0.53], [1, 1.1]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -240,12 +241,12 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             role: 'Analista de QA & Testes de Software',
             archiveTitle: 'ZPE Logística Portuária // ePita QA Core',
             archiveSubtitle: 'Ambiente de Testes & Validação de Sistemas de Missão Crítica',
-            image: '/projects/portlog-dash.png',
-            badge: 'TESTES HOMOLOGADOS EM PRODUÇÃO',
+            image: '/projects/epta_qa_split_2026.png',
+            badge: 'TESTES HOMOLOGADOS // LOGIN 30% + DASHBOARD 70%',
             date: 'Jun 2026 — Presente',
             location: 'Fortaleza, CE // Remoto & Híbrido',
             description:
-                'Ambiente operacional de garantia de qualidade para sistemas alfandegários e logísticos portuários. Execução de suites completas no Postman, mapeamento estrito de regras de negócio em ZPEs e auditoria de consistência em queries SQL Server de alta criticidade.',
+                'Ambiente operacional de garantia de qualidade para sistemas alfandegários e logísticos portuários (ePita). Execução de suites completas de testes funcionais e regressivos no Postman, mapeamento estrito de regras de negócio em ZPEs e auditoria de consistência em queries SQL Server de alta criticidade.',
             telemetry: [
                 { label: 'Redução de Bugs', value: '25% Menos Regressões', highlight: true },
                 { label: 'Endpoints Auditados', value: '100+ Endpoints' },
@@ -282,19 +283,19 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             role: 'Ensino Médio Integrado ao Técnico em Informática',
             archiveTitle: 'Formação Técnica // EEEP Luiza de Teodoro Vieira',
             archiveSubtitle: 'Ensino Médio Integrado ao Técnico em Informática (2023 — 2025)',
-            image: '/java_inventory_mockup.png',
-            badge: 'FORMAÇÃO TÉCNICA (2023 — 2025)',
+            image: '/projects/eeep_turma_2024.jpg',
+            badge: 'TURMA TÉCNICA // EEEP LUIZA DE TEODORO VIEIRA',
             date: 'Jan 2023 — Dez 2025',
             location: 'Pacatuba, CE',
             description:
-                'Período formativo integral na EEEP Luiza de Teodoro Vieira. Estudos práticos e consolidados em lógica e algoritmos, programação com Python e Java, desenvolvimento web (HTML5, CSS3, JavaScript), fundamentos de UI/UX Design e projetos de robótica e automação.',
+                'Registro fotográfico oficial da turma de Ensino Médio Integrado ao Técnico em Informática da EEEP Luiza de Teodoro Vieira. Período formativo com aprendizado prático e aprofundado em lógica de programação, estruturas de dados, algoritmos, orientação a objetos com Python e Java, desenvolvimento web (HTML5, CSS3, JavaScript), fundamentos de UI/UX Design e projetos integradores de robótica.',
             telemetry: [
-                { label: 'Linguagens Base', value: 'Python & Java', highlight: true },
-                { label: 'Desenvolvimento Web', value: 'HTML, CSS & JS' },
-                { label: 'Design & Hardware', value: 'UI/UX & Robótica' },
+                { label: 'Formação Técnica', value: 'Informática Integral', highlight: true },
+                { label: 'Turma & Laboratório', value: 'EEEP Luiza de Teodoro' },
+                { label: 'Linguagens Base', value: 'Python & Java' },
                 { label: 'Ciclo Formativo', value: '2023 — 2025 (Concluído)' },
             ],
-            tags: ['#EEEP-LUIZA-TEODORO', '#TECNICO-INFORMATICA', '#PYTHON', '#JAVA', '#HTML-CSS-JS', '#ROBOTICA', '#DESIGN'],
+            tags: ['#EEEP-LUIZA-TEODORO', '#TURMA-TECNICA', '#ENSINO-MEDIO', '#PYTHON', '#JAVA', '#HTML-CSS-JS', '#ROBOTICA'],
         },
     };
 
@@ -555,16 +556,32 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.
                                 </p>
 
-                                {/* Botão de Pasta Interativo: Registro Operacional */}
-                                <button
+                                {/* Card de Snapshot Interativo: Registro Operacional (30% Login / 70% Dashboard) */}
+                                <div
                                     onClick={() => setSelectedArchive(ARCHIVES['2026'])}
                                     data-cursor-morph="true"
-                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
+                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
                                 >
-                                    <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
-                                    <span className="font-semibold tracking-wide">Registro Operacional</span>
-                                    <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
-                                </button>
+                                    <img
+                                        src={ARCHIVES['2026'].image}
+                                        alt={ARCHIVES['2026'].archiveTitle}
+                                        className="w-full h-full object-cover object-left-top group-hover:scale-105 transition-transform duration-500"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-cyan-300 border border-cyan-400/40 backdrop-blur-sm">
+                                        LOGIN 30% // DASHBOARD 70%
+                                    </div>
+                                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
+                                        <span className="font-semibold text-white flex items-center gap-1.5">
+                                            <span>🗂️</span>
+                                            <span>Registro Operacional</span>
+                                        </span>
+                                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
+                                            Ver ↗
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Lado Direito: Card Detalhado de QA */}
@@ -662,16 +679,32 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para &lt;500ms.
                                 </p>
 
-                                {/* Botão de Pasta Interativo: Arquivo de Desenvolvimento */}
-                                <button
+                                {/* Card de Snapshot Interativo: Arquivo de Desenvolvimento */}
+                                <div
                                     onClick={() => setSelectedArchive(ARCHIVES['2025'])}
                                     data-cursor-morph="true"
-                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
+                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
                                 >
-                                    <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
-                                    <span className="font-semibold tracking-wide">Arquivo de Desenvolvimento</span>
-                                    <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
-                                </button>
+                                    <img
+                                        src={ARCHIVES['2025'].image}
+                                        alt={ARCHIVES['2025'].archiveTitle}
+                                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40 backdrop-blur-sm">
+                                        DELPHI 11 + UNIGUI + LARAVEL
+                                    </div>
+                                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
+                                        <span className="font-semibold text-white flex items-center gap-1.5">
+                                            <span>🗂️</span>
+                                            <span>Arquivo de Desenvolvimento</span>
+                                        </span>
+                                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
+                                            Ver ↗
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
 
@@ -743,16 +776,32 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.
                                 </p>
 
-                                {/* Botão de Pasta Interativo: Registro Técnico */}
-                                <button
+                                {/* Card de Snapshot Interativo: Foto Oficial da Turma Técnica EEEP */}
+                                <div
                                     onClick={() => setSelectedArchive(ARCHIVES['2024'])}
                                     data-cursor-morph="true"
-                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-accent/15 border border-white/15 hover:border-accent/40 text-xs font-mono text-gray-200 hover:text-white transition-all duration-300 shadow-md group cursor-pointer active:scale-95"
+                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
                                 >
-                                    <span className="text-base group-hover:scale-110 transition-transform">🗂️</span>
-                                    <span className="font-semibold tracking-wide">Registro Técnico // EEEP</span>
-                                    <span className="text-[10px] text-accent group-hover:translate-x-0.5 transition-transform">// Ver Arquivo</span>
-                                </button>
+                                    <img
+                                        src={ARCHIVES['2024'].image}
+                                        alt={ARCHIVES['2024'].archiveTitle}
+                                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40 backdrop-blur-sm">
+                                        TURMA TÉCNICA EEEP // 2024
+                                    </div>
+                                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
+                                        <span className="font-semibold text-white flex items-center gap-1.5">
+                                            <span>🗂️</span>
+                                            <span>Registro Técnico // EEEP</span>
+                                        </span>
+                                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
+                                            Ver ↗
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Lado Direito: Card do Técnico em Informática EEEP */}
