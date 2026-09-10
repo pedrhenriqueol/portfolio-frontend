@@ -58,6 +58,17 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
+        // Endpoint de diagnóstico rápido de modelos disponíveis
+        if (sanitized === 'debug_models') {
+            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+                headers: { 'x-goog-api-key': apiKey },
+            });
+            return new Response(await listRes.text(), {
+                status: listRes.status,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
         // Lista de modelos suportados em ordem de versão e disponibilidade
         const candidateModels = [
             'gemini-2.0-flash',
