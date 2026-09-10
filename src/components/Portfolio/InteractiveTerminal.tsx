@@ -23,12 +23,12 @@ interface SimulationStep {
     line: TerminalLine;
 }
 
-/** Renderizador formatado de respostas de IA estilo terminal com gutter lateral, chips de código, negritos e bullets */
+/** Renderizador formatado de respostas de IA estilo terminal com gutter lateral sutil, chips de código em vidro fosco e negritos */
 function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
     if (!text && isStreaming) {
         return (
-            <div className="border-l-2 border-cyan-500/40 pl-3 py-1.5 my-1.5 bg-gradient-to-r from-cyan-500/[0.04] to-transparent rounded-r font-mono text-[11px] sm:text-[12px] leading-relaxed">
-                <span className="inline-block text-cyan-400 font-bold animate-pulse select-none">▍</span>
+            <div className="border-l border-white/[0.08] pl-3.5 py-1 my-1.5 font-mono text-xs md:text-[13px] leading-relaxed">
+                <span className="inline-block text-emerald-400 font-bold animate-pulse select-none">▍</span>
             </div>
         );
     }
@@ -36,7 +36,7 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
     const rawLines = text.split('\n');
 
     return (
-        <div className="border-l-2 border-cyan-500/40 pl-3 py-1.5 my-1.5 bg-gradient-to-r from-cyan-500/[0.04] to-transparent rounded-r font-mono text-[11px] sm:text-[12px] leading-relaxed whitespace-pre-wrap break-words text-neutral-300">
+        <div className="border-l border-white/[0.08] pl-3.5 py-1 my-1.5 font-mono text-xs md:text-[13px] leading-relaxed tracking-normal whitespace-pre-wrap break-words text-neutral-300">
             {rawLines.map((lineText, lineIdx) => {
                 const trimmed = lineText.trim();
                 const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
@@ -46,9 +46,9 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
                 const tokens = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
 
                 return (
-                    <div key={lineIdx} className={`${isBullet ? 'flex items-start my-0.5' : 'my-0.5'}`}>
+                    <div key={lineIdx} className={`${isBullet ? 'flex items-start my-1' : 'my-0.5'}`}>
                         {isBullet && (
-                            <span className="text-emerald-400 font-bold font-mono mr-1.5 select-none shrink-0">
+                            <span className="text-neutral-500 font-bold font-mono mr-2 select-none shrink-0">
                                 ›
                             </span>
                         )}
@@ -59,7 +59,7 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
                                     return (
                                         <span
                                             key={tIdx}
-                                            className="text-cyan-300 font-semibold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30 mx-0.5 font-mono text-[11px] shadow-sm inline-block"
+                                            className="px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-neutral-200 font-mono text-[11.5px] mx-0.5 inline-block"
                                         >
                                             {code}
                                         </span>
@@ -80,7 +80,7 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
                 );
             })}
             {isStreaming && (
-                <span className="inline-block text-cyan-400 font-bold ml-1 animate-pulse select-none">▍</span>
+                <span className="inline-block text-emerald-400 font-bold ml-1 animate-pulse select-none">▍</span>
             )}
         </div>
     );
@@ -575,13 +575,11 @@ export const InteractiveTerminal: React.FC = () => {
     const [history, setHistory] = useState<string[]>([]);
     const [histIdx, setHistIdx] = useState(-1);
     const [activeGame, setActiveGame] = useState<ActiveTerminalGame>(null);
-    const [visitorCity, setVisitorCity] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
 
     const contentRef = useRef<HTMLDivElement>(null);
     const terminalEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const hasFetchedCity = useRef(false);
     const activeTimersRef = useRef<number[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
     const prevLangRef = useRef(lang);
@@ -616,29 +614,6 @@ export const InteractiveTerminal: React.FC = () => {
         }
     }, [lang, activeGame, clearAllTimers]);
 
-    // Localização do visitante via IP-API executado com cache de sessão
-    useEffect(() => {
-        if (hasFetchedCity.current) return;
-        hasFetchedCity.current = true;
-
-        const cached = sessionStorage.getItem('portfolio_visitor_city');
-        if (cached) {
-            setVisitorCity(cached);
-            return;
-        }
-
-        fetch('https://ipapi.co/json/')
-            .then(r => r.json())
-            .then(data => {
-                if (data.city) {
-                    const cityStr = `${data.city}, ${data.country_code || data.country_name}`;
-                    setVisitorCity(cityStr);
-                    sessionStorage.setItem('portfolio_visitor_city', cityStr);
-                }
-            })
-            .catch(() => {});
-    }, []);
-
     // Auto-scroll interno do terminal ao adicionar linhas (sem rolar a janela do navegador)
     useEffect(() => {
         if (!activeGame && contentRef.current) {
@@ -658,25 +633,20 @@ export const InteractiveTerminal: React.FC = () => {
     const runSimulation = useCallback((type: 'test' | 'sql', commandRaw: string) => {
         clearAllTimers();
 
-        // Eco do comando digitado com estilo Powerline
+        // Eco do comando digitado com estilo minimalista unificado
         setLines(prev => [
             ...prev,
             {
-                text: `pedro@workstation:~/copilot ❯ ${commandRaw}`,
+                text: `pedro in ~ ❯ ${commandRaw}`,
                 node: (
-                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5 my-1">
-                        <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
-                            <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-[11px] font-semibold">
-                                pedro@workstation
-                            </span>
-                            <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-[11px]">
-                                ~/copilot
-                            </span>
-                            <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-[11px] mr-1.5">
-                                ❯
-                            </span>
+                    <div className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1">
+                        <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
+                            <span className="text-neutral-400 font-medium">pedro</span>
+                            <span className="text-neutral-600">in</span>
+                            <span className="text-neutral-300">~</span>
+                            <span className="text-emerald-400 font-bold">❯</span>
                         </div>
-                        <span className="text-white font-mono text-xs sm:text-sm">{commandRaw}</span>
+                        <span className="text-white font-mono text-xs md:text-[13px]">{commandRaw}</span>
                     </div>
                 ),
             },
@@ -717,34 +687,29 @@ export const InteractiveTerminal: React.FC = () => {
         const streamLineId = `copilot-${Date.now()}`;
         const startTime = Date.now();
 
-        // Eco do comando digitado e badge do Copilot com prompt Powerline e linha efêmera de 0ms
+        // Eco do comando digitado e badge do Copilot minimalista
         setLines(prev => [
             ...prev,
             {
-                text: `pedro@workstation:~/copilot ❯ ${displayPrompt}`,
+                text: `pedro in ~ ❯ ${displayPrompt}`,
                 node: (
-                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5 my-1">
-                        <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
-                            <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-[11px] font-semibold">
-                                pedro@workstation
-                            </span>
-                            <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-[11px]">
-                                ~/copilot
-                            </span>
-                            <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-[11px] mr-1.5">
-                                ❯
-                            </span>
+                    <div className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1">
+                        <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
+                            <span className="text-neutral-400 font-medium">pedro</span>
+                            <span className="text-neutral-600">in</span>
+                            <span className="text-neutral-300">~</span>
+                            <span className="text-emerald-400 font-bold">❯</span>
                         </div>
-                        <span className="text-white font-mono text-xs sm:text-sm">{displayPrompt}</span>
+                        <span className="text-white font-mono text-xs md:text-[13px]">{displayPrompt}</span>
                     </div>
                 ),
             },
             {
-                text: '[COPILOT // AGENTE TÉCNICO]',
+                text: 'copilot',
                 node: (
-                    <div className="text-cyan-400 font-mono text-xs font-semibold flex items-center gap-2 mt-1.5 mb-0.5">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse inline-block shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                        <span>[COPILOT // AGENTE TÉCNICO]</span>
+                    <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                        <span>copilot</span>
                     </div>
                 ),
             },
@@ -753,7 +718,7 @@ export const InteractiveTerminal: React.FC = () => {
                 text: '[*] Dispatching query to edge cluster...',
                 node: (
                     <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs my-1 animate-pulse select-none">
-                        <span className="text-cyan-400 font-bold">[*]</span>
+                        <span className="text-neutral-400 font-bold">[*]</span>
                         <span>Dispatching query to edge cluster...</span>
                     </div>
                 ),
@@ -815,19 +780,14 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `⚡ ${fallbackLatency}s • ${fallbackTokens} tokens • model: local-cache • cost: $0.0000`,
+                    text: `${fallbackLatency}s • ${fallbackTokens} tokens • gemini-flash`,
                     node: (
-                        <div className="text-[10px] font-mono text-neutral-400 mt-1 mb-2 flex items-center gap-2 select-none">
-                            <span className="text-amber-400/90 font-medium flex items-center gap-1">
-                                <span>⚡</span>
-                                <span>{fallbackLatency}s</span>
-                            </span>
-                            <span className="text-neutral-600">•</span>
-                            <span className="text-neutral-300">{fallbackTokens} tokens</span>
-                            <span className="text-neutral-600">•</span>
-                            <span className="text-amber-400/80">model: local-cache</span>
-                            <span className="text-neutral-600">•</span>
-                            <span className="text-emerald-400 font-medium">cost: $0.0000</span>
+                        <div className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 opacity-70 select-none">
+                            <span>{fallbackLatency}s</span>
+                            <span>•</span>
+                            <span>{fallbackTokens} tokens</span>
+                            <span>•</span>
+                            <span>gemini-flash</span>
                         </div>
                     ),
                 },
@@ -917,19 +877,14 @@ export const InteractiveTerminal: React.FC = () => {
                 ...prev,
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `⚡ ${latency}s • ${tokenCount} tokens • model: gemini-flash • cost: $0.0000`,
+                    text: `${latency}s • ${tokenCount} tokens • gemini-flash`,
                     node: (
-                        <div className="text-[10px] font-mono text-neutral-400 mt-1 mb-2 flex items-center gap-2 select-none">
-                            <span className="text-cyan-400/90 font-medium flex items-center gap-1">
-                                <span>⚡</span>
-                                <span>{latency}s</span>
-                            </span>
-                            <span className="text-neutral-600">•</span>
-                            <span className="text-neutral-300">{tokenCount} tokens</span>
-                            <span className="text-neutral-600">•</span>
-                            <span className="text-neutral-400">model: gemini-flash</span>
-                            <span className="text-neutral-600">•</span>
-                            <span className="text-emerald-400 font-medium">cost: $0.0000</span>
+                        <div className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 opacity-70 select-none">
+                            <span>{latency}s</span>
+                            <span>•</span>
+                            <span>{tokenCount} tokens</span>
+                            <span>•</span>
+                            <span>gemini-flash</span>
                         </div>
                     ),
                 },
@@ -1024,7 +979,7 @@ export const InteractiveTerminal: React.FC = () => {
             if (input) {
                 setLines(prev => [
                     ...prev,
-                    { text: `pedro@workstation:~$ ${input} ^C`, color: 'text-gray-500 font-mono text-xs' },
+                    { text: `pedro in ~ ❯ ${input} ^C`, color: 'text-neutral-500 font-mono text-xs' },
                     { text: '', color: '' },
                 ]);
                 setInput('');
@@ -1089,14 +1044,14 @@ export const InteractiveTerminal: React.FC = () => {
     return (
         <div
             data-no-morph="true"
-            className={`relative bg-[#080a0f]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden transition-all duration-300 ${
+            className={`relative w-full max-w-xl xl:max-w-2xl h-[500px] md:h-[540px] flex flex-col bg-[#080a0f]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden transition-all duration-300 ${
                 focused ? 'border-cyan-500/40 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.12)]' : 'hover:border-white/15'
             }`}
             onMouseEnter={handlePreWarmEdge}
             onClick={() => inputRef.current?.focus({ preventScroll: true })}
         >
             {/* Topbar de Controle & Abas Técnicas (Ghostty / Warp Style) */}
-            <div className="h-10 border-b border-white/[0.06] bg-white/[0.02] flex items-center justify-between px-4 select-none">
+            <div className="h-10 shrink-0 border-b border-white/[0.06] bg-white/[0.02] flex items-center justify-between px-4 select-none">
                 {/* Esquerda: Controles de tráfego sutis */}
                 <div className="flex items-center gap-2">
                     <span
@@ -1135,10 +1090,10 @@ export const InteractiveTerminal: React.FC = () => {
                 </div>
             </div>
 
-            {/* Área de Saída de Linhas */}
+            {/* Área de Saída de Linhas com Conforto Tipográfico Generoso */}
             <div
                 ref={contentRef}
-                className="p-4 font-mono text-[12px] leading-relaxed min-h-[250px] max-h-[320px] overflow-y-auto relative scroll-smooth"
+                className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6 space-y-4 font-mono text-xs md:text-[13px] leading-relaxed relative scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]"
             >
                 {activeGame === 'snake' && <SnakeGame lang={lang} onExit={handleExitGame} />}
                 {activeGame === 'bug-hunter' && <BugHunterGame lang={lang} onExit={handleExitGame} />}
@@ -1147,26 +1102,21 @@ export const InteractiveTerminal: React.FC = () => {
                 {activeGame === 'matrix' && <MatrixRain lang={lang} onExit={handleExitGame} />}
 
                 {!activeGame && (
-                    <div className="space-y-1">
+                    <div className="space-y-4">
                         {lines.map((line, i) => (
                             <div key={line.id || i} className={`${line.color || 'text-neutral-300'} block whitespace-pre-wrap break-words leading-relaxed`}>
                                 {line.node ? (
                                     line.node
-                                ) : typeof line.text === 'string' && (line.text.startsWith('pedro@workstation:~$') || line.text.startsWith('pedro@workstation:~/copilot ❯')) ? (
-                                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5 my-1">
-                                        <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
-                                            <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-[11px] font-semibold">
-                                                pedro@workstation
-                                            </span>
-                                            <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-[11px]">
-                                                ~/copilot
-                                            </span>
-                                            <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-[11px] mr-1.5">
-                                                ❯
-                                            </span>
+                                ) : typeof line.text === 'string' && (line.text.startsWith('pedro@workstation:') || line.text.startsWith('pedro in ~ ❯')) ? (
+                                    <div className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1">
+                                        <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
+                                            <span className="text-neutral-400 font-medium">pedro</span>
+                                            <span className="text-neutral-600">in</span>
+                                            <span className="text-neutral-300">~</span>
+                                            <span className="text-emerald-400 font-bold">❯</span>
                                         </div>
-                                        <span className="text-white font-mono text-xs sm:text-sm">
-                                            {line.text.replace(/pedro@workstation:(~\$|~\/copilot ❯)\s*/, '')}
+                                        <span className="text-white font-mono text-xs md:text-[13px]">
+                                            {line.text.replace(/pedro(@workstation:(~\$|~\/copilot ❯)| in ~ ❯)\s*/, '')}
                                         </span>
                                     </div>
                                 ) : (
@@ -1180,60 +1130,50 @@ export const InteractiveTerminal: React.FC = () => {
                 )}
             </div>
 
-            {/* Pílulas de Ação Rápida (Quick-Command Pills) */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 px-4 py-2 border-t border-white/[0.06] bg-white/[0.015] select-none">
-                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider mr-0.5">Atalhos:</span>
+            {/* Pílulas de Atalho Integradas */}
+            <div className="flex items-center gap-1.5 px-4 py-2 border-t border-white/[0.04] bg-white/[0.01] overflow-x-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0 select-none">
+                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest mr-1">Sugestões:</span>
                 <button
                     type="button"
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('test')}
-                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 text-neutral-300 hover:text-emerald-300 font-mono text-[11px] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    className="px-2 py-0.5 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                    <span className="text-emerald-400">⚡</span>
-                    <span>$ test</span>
+                    $ test
                 </button>
                 <button
                     type="button"
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('sql')}
-                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/10 text-neutral-300 hover:text-cyan-300 font-mono text-[11px] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    className="px-2 py-0.5 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                    <span>🗄️</span>
-                    <span>$ sql:tune</span>
+                    $ sql
                 </button>
                 <button
                     type="button"
                     disabled={isStreaming}
-                    onClick={() => handleAskCopilot('Qual sua atuação com testes no Postman e SQL Server?', 'ai: "Experiência em QA & APIs?"')}
-                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-amber-500/40 hover:bg-amber-500/10 text-neutral-300 hover:text-amber-300 font-mono text-[11px] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    onClick={() => handleAskCopilot('Como você atua na garantia de qualidade e APIs?', '$ sobre-qa')}
+                    className="px-2 py-0.5 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                    <span>🤖</span>
-                    <span>$ ai: "Experiência em QA & APIs?"</span>
+                    $ sobre-qa
                 </button>
                 <button
                     type="button"
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('clear')}
-                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-rose-500/40 hover:bg-rose-500/10 text-neutral-400 hover:text-rose-300 font-mono text-[11px] transition-all ml-auto flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    className="ml-auto text-[11px] font-mono text-neutral-400 hover:text-neutral-300 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                    <span>✕</span>
-                    <span>clear</span>
+                    clear
                 </button>
             </div>
 
-            {/* Input Line com Prompt Powerline (Starship CLI Style) */}
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-white/[0.06] bg-black/40 relative">
-                {/* Bloco Powerline Segmentado */}
-                <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
-                    <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-xs font-semibold">
-                        pedro@workstation
-                    </span>
-                    <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-xs">
-                        ~/copilot
-                    </span>
-                    <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-xs mr-2">
-                        ❯
-                    </span>
+            {/* Input Line com Prompt Minimalista (Starship / Ghostty Clean Style) */}
+            <div className="flex items-center gap-2.5 px-4 py-3 border-t border-white/[0.06] bg-black/40 relative shrink-0">
+                <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
+                    <span className="text-neutral-400 font-medium">pedro</span>
+                    <span className="text-neutral-600">in</span>
+                    <span className="text-neutral-300">~</span>
+                    <span className="text-emerald-400 font-bold">❯</span>
                 </div>
 
                 <div className="relative flex-1 flex items-center">
@@ -1242,10 +1182,10 @@ export const InteractiveTerminal: React.FC = () => {
                         const match = ALL_CMD_STRINGS.find(c => c.startsWith(input.toLowerCase()) && c !== input.toLowerCase());
                         if (match) {
                             return (
-                                <div className="absolute inset-0 pointer-events-none font-mono text-[12px] flex items-center select-none overflow-hidden">
+                                <div className="absolute inset-0 pointer-events-none font-mono text-xs md:text-[13px] flex items-center select-none overflow-hidden">
                                     <span className="opacity-0 whitespace-pre">{input}</span>
-                                    <span className="text-cyan-400/40 whitespace-pre">{match.slice(input.length)}</span>
-                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400/60 border border-cyan-500/20 tracking-wider">Tab ⇥</span>
+                                    <span className="text-neutral-500 whitespace-pre">{match.slice(input.length)}</span>
+                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-white/[0.05] text-neutral-400 border border-white/10 tracking-wider">Tab ⇥</span>
                                 </div>
                             );
                         }
@@ -1271,7 +1211,7 @@ export const InteractiveTerminal: React.FC = () => {
                                 ? (lang === 'en' ? 'Copilot streaming response... (Ctrl+C to abort)' : 'Copilot respondendo... (Ctrl+C para cancelar)')
                                 : (lang === 'en' ? 'Ask anything to Copilot or type test, sql, help...' : lang === 'es' ? 'Pregunta lo que sea al Copilot o escribe test, sql, help...' : 'Pergunte qualquer coisa ao Copilot ou digite test, sql, help...')
                         }
-                        className="w-full bg-transparent text-white font-mono text-[12px] outline-none placeholder-white/20 relative z-10 disabled:opacity-60"
+                        className="w-full bg-transparent text-white font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-10 disabled:opacity-60"
                         spellCheck={false}
                         autoComplete="off"
                         aria-label="Terminal interativo"
@@ -1284,20 +1224,6 @@ export const InteractiveTerminal: React.FC = () => {
                     transition={{ duration: isStreaming ? 0.35 : 0.9, repeat: Infinity }}
                     className={`inline-block w-2 h-4 ${isStreaming ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]' : 'bg-emerald-400'} rounded-[1px] shrink-0`}
                 />
-            </div>
-
-            {/* Status bar (Footer) */}
-            <div className="flex items-center gap-3 px-4 py-2 border-t border-white/[0.06] bg-black/50 text-[10px] font-mono text-neutral-400 select-none">
-                <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
-                    <span className="text-xs">🤖</span>
-                    <span>Copilot Workstation (Gemini Flash Edge)</span>
-                </span>
-                <span className="hidden sm:inline text-neutral-700">|</span>
-                <span className="hidden sm:inline text-neutral-400">
-                    {lang === 'en' ? 'Type "test", "sql" or ask any question to AI' : lang === 'es' ? 'Escribe "test", "sql" o pregunta lo que sea a la IA' : 'Digite "test", "sql" ou faça perguntas em linguagem natural'}
-                </span>
-                <span className="ml-auto text-neutral-400">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>
-                <span className="text-neutral-500">UTC-3</span>
             </div>
         </div>
     );

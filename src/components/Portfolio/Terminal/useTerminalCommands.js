@@ -411,7 +411,7 @@ export function useTerminalCommands(lang) {
             const out = found.output();
             setLines(prev => [
                 ...prev,
-                { text: `pedro@workstation:~$ ${trimmed}`, color: 'text-cyan-400/90 font-semibold' },
+                { text: `pedro in ~ ❯ ${trimmed}`, color: 'text-neutral-300 font-semibold' },
                 ...out,
                 { text: '', color: '' }
             ]);
@@ -426,7 +426,7 @@ export function useTerminalCommands(lang) {
                 : `Comando desconhecido: "${trimmed}". Digite "pedro --help" ou "pedro --games".`;
             setLines(prev => [
                 ...prev,
-                { text: `pedro@workstation:~$ ${trimmed}`, color: 'text-cyan-400/90 font-semibold' },
+                { text: `pedro in ~ ❯ ${trimmed}`, color: 'text-neutral-300 font-semibold' },
                 { text: unknown, color: 'text-red-400' },
                 { text: '', color: '' }
             ]);
