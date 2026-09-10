@@ -53,7 +53,8 @@ export default async function handler(req: Request): Promise<Response> {
 
     try {
         const body = await req.json();
-        const rawMessage = body?.message;
+        const rawMessage = typeof body?.message === 'string' ? body.message : typeof body?.prompt === 'string' ? body.prompt : '';
+        const rawHistory = body?.history;
 
         if (!rawMessage || typeof rawMessage !== 'string') {
             return new Response(JSON.stringify({ error: 'Invalid message payload' }), {
@@ -62,8 +63,8 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Validação estrita: limita o tamanho máximo em 300 caracteres para proteção de cota
-        const sanitized = rawMessage.trim().slice(0, 300);
+        // Validação estrita de tamanho
+        const sanitized = rawMessage.trim().slice(0, 500);
         if (!sanitized) {
             return new Response(JSON.stringify({ error: 'Message cannot be empty' }), {
                 status: 400,
@@ -90,12 +91,45 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Modelos canônicos reais e ativos com failover na API v1beta do Google Gemini
+        // 1. Higienização e validação estrita do histórico de conversação
+        const cleanHistory: Array<{ role: 'user' | 'model'; parts: [{ text: string }] }> = [];
+
+        if (Array.isArray(rawHistory) && rawHistory.length > 0) {
+            let expectedRole: 'user' | 'model' = 'user';
+
+            for (const msg of rawHistory) {
+                const text = typeof msg?.text === 'string' ? msg.text.trim() : typeof msg?.content === 'string' ? msg.content.trim() : '';
+                if (!text) continue;
+
+                const role: 'user' | 'model' = msg.role === 'model' ? 'model' : 'user';
+
+                // Garante estritamente a alternância de turnos: user -> model -> user
+                if (role === expectedRole) {
+                    cleanHistory.push({
+                        role,
+                        parts: [{ text }],
+                    });
+                    expectedRole = role === 'user' ? 'model' : 'user';
+                }
+            }
+
+            // Se o histórico terminar com 'user', descarta para o próximo prompt ser o fechamento natural
+            if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
+                cleanHistory.pop();
+            }
+        }
+
+        // Montagem final do payload contents
+        const contents = [
+            ...cleanHistory,
+            { role: 'user' as const, parts: [{ text: sanitized }] },
+        ];
+
+        // 2. Modelos canônicos ativos prioritários (expurgo definitivo de modelos descontinuados como gemini-2.5-flash-lite)
         const CANDIDATE_MODELS = [
+            'gemini-flash-latest',
+            'gemini-2.5-flash',
             'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-1.5-flash-latest',
-            'gemini-1.5-flash-lite',
         ];
 
         const safetySettings = [
@@ -113,54 +147,86 @@ export default async function handler(req: Request): Promise<Response> {
             systemInstruction: {
                 parts: [{ text: SYSTEM_INSTRUCTION }],
             },
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: sanitized }],
-                },
-            ],
+            contents,
             safetySettings,
         };
 
         for (const model of CANDIDATE_MODELS) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-            // Timeout de conexão de 7 segundos exclusivo para estabelecimento dos headers
-            const connectAbort = new AbortController();
-            const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
+            // Configurações: primeiro tenta com thinkingBudget: 0 (para suprimir pensamento longo em modelos 2.5);
+            // fallback para configuração padrão se o modelo retornar 400 por não aceitar thinkingConfig
+            const configsToTry = [
+                {
+                    temperature: 0.7,
+                    maxOutputTokens: 1000,
+                    thinkingConfig: { thinkingBudget: 0 },
+                },
+                {
+                    temperature: 0.7,
+                    maxOutputTokens: 1000,
+                },
+            ];
 
-            try {
-                const res = await fetch(geminiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': apiKey,
-                    },
-                    body: JSON.stringify({
-                        ...basePayload,
-                        generationConfig: {
-                            maxOutputTokens: 600,
-                            temperature: 0.65,
+            let shouldTryNextModel = true;
+
+            for (const genConfig of configsToTry) {
+                // Timeout de conexão de 7 segundos exclusivo para handshake dos headers
+                const connectAbort = new AbortController();
+                const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
+
+                try {
+                    const res = await fetch(geminiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-goog-api-key': apiKey,
                         },
-                    }),
-                    signal: connectAbort.signal,
-                });
+                        body: JSON.stringify({
+                            ...basePayload,
+                            generationConfig: genConfig,
+                        }),
+                        signal: connectAbort.signal,
+                    });
 
-                if (res.ok) {
-                    // Limpa imediatamente o timeout para permitir que o streaming dos tokens
-                    // flua até a conclusão natural da frase sem ser cortado prematuramente
+                    if (res.ok) {
+                        // Limpa imediatamente o timer para que o stream de tokens possa fluir livremente
+                        clearTimeout(connectTimeoutId);
+                        geminiRes = res;
+                        break;
+                    }
+
                     clearTimeout(connectTimeoutId);
-                    geminiRes = res;
+                    lastStatus = res.status;
+                    lastErrText = await res.text();
+
+                    // Se for 400 relacionado a thinkingConfig, tenta a próxima config sem thinkingConfig
+                    if (res.status === 400 && 'thinkingConfig' in genConfig) {
+                        continue;
+                    }
+
+                    // Se for 400 de payload inválido geral, não tenta os próximos modelos pois o erro é no formato
+                    if (res.status === 400) {
+                        shouldTryNextModel = false;
+                        break;
+                    }
+
+                    // Para 404, 503, 429 tenta o próximo modelo candidato
+                    break;
+                } catch (fetchErr: any) {
+                    clearTimeout(connectTimeoutId);
+                    lastErrText = fetchErr?.message || String(fetchErr);
+                    lastStatus = 503;
                     break;
                 }
+            }
 
-                clearTimeout(connectTimeoutId);
-                lastStatus = res.status;
-                lastErrText = await res.text();
-            } catch (fetchErr: any) {
-                clearTimeout(connectTimeoutId);
-                lastErrText = fetchErr?.message || String(fetchErr);
-                lastStatus = 503;
+            if (geminiRes && geminiRes.ok) {
+                break;
+            }
+
+            if (!shouldTryNextModel) {
+                break;
             }
         }
 
@@ -196,7 +262,7 @@ export default async function handler(req: Request): Promise<Response> {
                     try {
                         controller.close();
                     } catch {}
-                }, 20000);
+                }, 25000);
 
                 try {
                     while (true) {
