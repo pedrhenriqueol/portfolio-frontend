@@ -46,7 +46,7 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || (process.env as any).GENINI_API_KEY;
         if (!apiKey) {
             return new Response(JSON.stringify({ error: 'MISSING_API_KEY' }), {
                 status: 503,

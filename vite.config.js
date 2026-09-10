@@ -19,7 +19,7 @@ function apiDevServerPlugin(env = {}) {
           try {
             const parsed = JSON.parse(body || '{}');
             const message = (parsed.message || '').trim().slice(0, 300);
-            const apiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+            const apiKey = env.GEMINI_API_KEY || env.GENINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GENINI_API_KEY;
 
             if (!apiKey) {
               res.statusCode = 503;
