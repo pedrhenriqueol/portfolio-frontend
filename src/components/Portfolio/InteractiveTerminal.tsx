@@ -23,24 +23,64 @@ interface SimulationStep {
     line: TerminalLine;
 }
 
-/** Renderizador formatado de respostas de IA estilo terminal com destaque para tokens entre crases */
+/** Renderizador formatado de respostas de IA estilo terminal com gutter lateral, chips de código, negritos e bullets */
 function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
-    const parts = text.split(/(`[^`]+`)/g);
+    if (!text && isStreaming) {
+        return (
+            <div className="border-l-2 border-cyan-500/40 pl-3 py-1.5 my-1.5 bg-gradient-to-r from-cyan-500/[0.04] to-transparent rounded-r font-mono text-[11px] sm:text-[12px] leading-relaxed">
+                <span className="inline-block text-cyan-400 font-bold animate-pulse select-none">▍</span>
+            </div>
+        );
+    }
+
+    const rawLines = text.split('\n');
+
     return (
-        <div className="text-neutral-300 font-mono text-[11px] sm:text-[12px] leading-relaxed whitespace-pre-wrap break-words">
-            {parts.map((part, idx) => {
-                if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
-                    const code = part.slice(1, -1);
-                    return (
-                        <span key={idx} className="text-white font-semibold bg-white/10 px-1 py-0.5 rounded border border-white/15 mx-0.5 font-mono">
-                            {code}
+        <div className="border-l-2 border-cyan-500/40 pl-3 py-1.5 my-1.5 bg-gradient-to-r from-cyan-500/[0.04] to-transparent rounded-r font-mono text-[11px] sm:text-[12px] leading-relaxed whitespace-pre-wrap break-words text-neutral-300">
+            {rawLines.map((lineText, lineIdx) => {
+                const trimmed = lineText.trim();
+                const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
+                const content = isBullet ? trimmed.slice(2) : lineText;
+
+                // Processa crases (`termo`) e negritos (**termo**)
+                const tokens = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+
+                return (
+                    <div key={lineIdx} className={`${isBullet ? 'flex items-start my-0.5' : 'my-0.5'}`}>
+                        {isBullet && (
+                            <span className="text-emerald-400 font-bold font-mono mr-1.5 select-none shrink-0">
+                                ›
+                            </span>
+                        )}
+                        <span className="flex-1">
+                            {tokens.map((token, tIdx) => {
+                                if (token.startsWith('`') && token.endsWith('`') && token.length > 1) {
+                                    const code = token.slice(1, -1);
+                                    return (
+                                        <span
+                                            key={tIdx}
+                                            className="text-cyan-300 font-semibold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30 mx-0.5 font-mono text-[11px] shadow-sm inline-block"
+                                        >
+                                            {code}
+                                        </span>
+                                    );
+                                }
+                                if (token.startsWith('**') && token.endsWith('**') && token.length > 3) {
+                                    const boldText = token.slice(2, -2);
+                                    return (
+                                        <strong key={tIdx} className="text-white font-semibold">
+                                            {boldText}
+                                        </strong>
+                                    );
+                                }
+                                return <span key={tIdx}>{token}</span>;
+                            })}
                         </span>
-                    );
-                }
-                return <span key={idx}>{part}</span>;
+                    </div>
+                );
             })}
             {isStreaming && (
-                <span className="inline-block text-cyan-400 font-bold ml-1 animate-pulse">▍</span>
+                <span className="inline-block text-cyan-400 font-bold ml-1 animate-pulse select-none">▍</span>
             )}
         </div>
     );
@@ -606,14 +646,40 @@ export const InteractiveTerminal: React.FC = () => {
         }
     }, [lines, activeGame]);
 
+    // Pré-aquecimento rápido de conexão TLS com a Vercel Edge (Edge Pre-Warming)
+    const prewarmedRef = useRef(false);
+    const handlePreWarmEdge = useCallback(() => {
+        if (prewarmedRef.current) return;
+        prewarmedRef.current = true;
+        fetch('/api/chat', { method: 'OPTIONS' }).catch(() => {});
+    }, []);
+
     /** Executa a simulação escalonada de testes ou queries sem bloquear a thread principal */
     const runSimulation = useCallback((type: 'test' | 'sql', commandRaw: string) => {
         clearAllTimers();
 
-        // Eco do comando digitado
+        // Eco do comando digitado com estilo Powerline
         setLines(prev => [
             ...prev,
-            { text: `pedro@workstation:~$ ${commandRaw}`, color: 'text-cyan-400/90 font-semibold' },
+            {
+                text: `pedro@workstation:~/copilot ❯ ${commandRaw}`,
+                node: (
+                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5 my-1">
+                        <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
+                            <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-[11px] font-semibold">
+                                pedro@workstation
+                            </span>
+                            <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-[11px]">
+                                ~/copilot
+                            </span>
+                            <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-[11px] mr-1.5">
+                                ❯
+                            </span>
+                        </div>
+                        <span className="text-white font-mono text-xs sm:text-sm">{commandRaw}</span>
+                    </div>
+                ),
+            },
         ]);
 
         const steps = type === 'test' ? getTestSimulationSteps(lang) : getSqlSimulationSteps(lang);
@@ -647,27 +713,48 @@ export const InteractiveTerminal: React.FC = () => {
         abortControllerRef.current = controller;
         setIsStreaming(true);
 
+        const dispatchLineId = `dispatch-${Date.now()}`;
         const streamLineId = `copilot-${Date.now()}`;
+        const startTime = Date.now();
 
-        // Eco do comando digitado e badge do Copilot
+        // Eco do comando digitado e badge do Copilot com prompt Powerline e linha efêmera de 0ms
         setLines(prev => [
             ...prev,
             {
-                text: `pedro@workstation:~$ ${displayPrompt}`,
-                color: 'text-cyan-400/90 font-semibold',
+                text: `pedro@workstation:~/copilot ❯ ${displayPrompt}`,
                 node: (
-                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5">
-                        <span className="text-cyan-400">pedro@workstation:~$</span>
-                        <span className="text-white">{displayPrompt}</span>
+                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5 my-1">
+                        <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
+                            <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-[11px] font-semibold">
+                                pedro@workstation
+                            </span>
+                            <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-[11px]">
+                                ~/copilot
+                            </span>
+                            <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-[11px] mr-1.5">
+                                ❯
+                            </span>
+                        </div>
+                        <span className="text-white font-mono text-xs sm:text-sm">{displayPrompt}</span>
                     </div>
                 ),
             },
             {
                 text: '[COPILOT // AGENTE TÉCNICO]',
                 node: (
-                    <div className="text-cyan-400 font-mono text-xs font-semibold flex items-center gap-2 mt-1 mb-0.5">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse inline-block" />
+                    <div className="text-cyan-400 font-mono text-xs font-semibold flex items-center gap-2 mt-1.5 mb-0.5">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse inline-block shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
                         <span>[COPILOT // AGENTE TÉCNICO]</span>
+                    </div>
+                ),
+            },
+            {
+                id: dispatchLineId,
+                text: '[*] Dispatching query to edge cluster...',
+                node: (
+                    <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs my-1 animate-pulse select-none">
+                        <span className="text-cyan-400 font-bold">[*]</span>
+                        <span>Dispatching query to edge cluster...</span>
                     </div>
                 ),
             },
@@ -684,14 +771,16 @@ export const InteractiveTerminal: React.FC = () => {
             const fallbackReply = getLocalCopilotResponse(cleanQuestion, lang);
             const tokens = fallbackReply.split(' ');
             let currentText = '';
+            const fallbackStart = Date.now();
 
             for (let i = 0; i < tokens.length; i++) {
                 if (abortControllerRef.current === null) break;
                 currentText += (i === 0 ? '' : ' ') + tokens[i];
                 const snap = currentText;
 
-                setLines(prev =>
-                    prev.map(l =>
+                setLines(prev => {
+                    const withoutDispatch = i === 0 ? prev.filter(l => l.id !== dispatchLineId) : prev;
+                    return withoutDispatch.map(l =>
                         l.id === streamLineId
                             ? {
                                   ...l,
@@ -699,8 +788,8 @@ export const InteractiveTerminal: React.FC = () => {
                                   node: <FormattedCopilotResponse text={snap} isStreaming={i < tokens.length - 1} />,
                               }
                             : l
-                    )
-                );
+                    );
+                });
 
                 if (contentRef.current) {
                     contentRef.current.scrollTop = contentRef.current.scrollHeight;
@@ -709,6 +798,9 @@ export const InteractiveTerminal: React.FC = () => {
                 // Cadência fluida e natural de leitura
                 await new Promise(r => setTimeout(r, 20));
             }
+
+            const fallbackLatency = ((Date.now() - fallbackStart) / 1000).toFixed(2);
+            const fallbackTokens = Math.max(12, Math.round(currentText.length / 3.7));
 
             setLines(prev => [
                 ...prev.map(l =>
@@ -721,6 +813,24 @@ export const InteractiveTerminal: React.FC = () => {
                           }
                         : l
                 ),
+                {
+                    id: `telemetry-${Date.now()}`,
+                    text: `⚡ ${fallbackLatency}s • ${fallbackTokens} tokens • model: local-cache • cost: $0.0000`,
+                    node: (
+                        <div className="text-[10px] font-mono text-neutral-400 mt-1 mb-2 flex items-center gap-2 select-none">
+                            <span className="text-amber-400/90 font-medium flex items-center gap-1">
+                                <span>⚡</span>
+                                <span>{fallbackLatency}s</span>
+                            </span>
+                            <span className="text-neutral-600">•</span>
+                            <span className="text-neutral-300">{fallbackTokens} tokens</span>
+                            <span className="text-neutral-600">•</span>
+                            <span className="text-amber-400/80">model: local-cache</span>
+                            <span className="text-neutral-600">•</span>
+                            <span className="text-emerald-400 font-medium">cost: $0.0000</span>
+                        </div>
+                    ),
+                },
                 { text: '', color: '' },
             ]);
         };
@@ -747,6 +857,30 @@ export const InteractiveTerminal: React.FC = () => {
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let accumulatedText = '';
+            let isFirstChunk = true;
+            let rafId: number | null = null;
+
+            const flushUpdate = (final = false) => {
+                setLines(prev => {
+                    const baseList = isFirstChunk ? prev.filter(l => l.id !== dispatchLineId) : prev;
+                    isFirstChunk = false;
+
+                    return baseList.map(l =>
+                        l.id === streamLineId
+                            ? {
+                                  ...l,
+                                  text: accumulatedText,
+                                  isStreaming: !final,
+                                  node: <FormattedCopilotResponse text={accumulatedText} isStreaming={!final} />,
+                              }
+                            : l
+                    );
+                });
+
+                if (contentRef.current) {
+                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                }
+            };
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -755,21 +889,17 @@ export const InteractiveTerminal: React.FC = () => {
                 const textChunk = decoder.decode(value, { stream: true });
                 accumulatedText += textChunk;
 
-                setLines(prev =>
-                    prev.map(l =>
-                        l.id === streamLineId
-                            ? {
-                                  ...l,
-                                  text: accumulatedText,
-                                  node: <FormattedCopilotResponse text={accumulatedText} isStreaming={true} />,
-                              }
-                            : l
-                    )
-                );
-
-                if (contentRef.current) {
-                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                if (rafId === null) {
+                    rafId = requestAnimationFrame(() => {
+                        rafId = null;
+                        flushUpdate(false);
+                    });
                 }
+            }
+
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
             }
 
             // Se o streaming remoto encerrou sem nenhum caractere, garante o fallback inteligente
@@ -777,18 +907,32 @@ export const InteractiveTerminal: React.FC = () => {
                 throw new Error('EMPTY_STREAM_RESPONSE');
             }
 
-            // Finaliza o streaming remoto com sucesso
+            flushUpdate(true);
+
+            const latency = ((Date.now() - startTime) / 1000).toFixed(2);
+            const tokenCount = Math.max(16, Math.round(accumulatedText.length / 3.7));
+
+            // Finaliza o streaming remoto com sucesso e estampa a telemetria
             setLines(prev => [
-                ...prev.map(l =>
-                    l.id === streamLineId
-                        ? {
-                              ...l,
-                              text: accumulatedText,
-                              isStreaming: false,
-                              node: <FormattedCopilotResponse text={accumulatedText} isStreaming={false} />,
-                          }
-                        : l
-                ),
+                ...prev,
+                {
+                    id: `telemetry-${Date.now()}`,
+                    text: `⚡ ${latency}s • ${tokenCount} tokens • model: gemini-flash • cost: $0.0000`,
+                    node: (
+                        <div className="text-[10px] font-mono text-neutral-400 mt-1 mb-2 flex items-center gap-2 select-none">
+                            <span className="text-cyan-400/90 font-medium flex items-center gap-1">
+                                <span>⚡</span>
+                                <span>{latency}s</span>
+                            </span>
+                            <span className="text-neutral-600">•</span>
+                            <span className="text-neutral-300">{tokenCount} tokens</span>
+                            <span className="text-neutral-600">•</span>
+                            <span className="text-neutral-400">model: gemini-flash</span>
+                            <span className="text-neutral-600">•</span>
+                            <span className="text-emerald-400 font-medium">cost: $0.0000</span>
+                        </div>
+                    ),
+                },
                 { text: '', color: '' },
             ]);
         } catch (err: any) {
@@ -796,7 +940,9 @@ export const InteractiveTerminal: React.FC = () => {
             // Se foi cancelamento deliberado do usuário via Ctrl+C (quando abortControllerRef.current já foi zerado)
             if (err.name === 'AbortError' && abortControllerRef.current === null) {
                 setLines(prev => [
-                    ...prev.map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedCopilotResponse text={l.text || ''} isStreaming={false} /> } : l)),
+                    ...prev
+                        .filter(l => l.id !== dispatchLineId)
+                        .map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedCopilotResponse text={l.text || ''} isStreaming={false} /> } : l)),
                     {
                         text: '^C [OPERAÇÃO CANCELADA PELO USUÁRIO]',
                         color: 'text-red-400 font-mono text-xs',
@@ -943,47 +1089,56 @@ export const InteractiveTerminal: React.FC = () => {
     return (
         <div
             data-no-morph="true"
-            className={`relative bg-gradient-to-b from-white/[0.05] via-[#0d0f14]/98 to-[#0d0f14]/98 border border-white/[0.08] border-t-white/20 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.7)] transition-all duration-300 ${
-                focused ? 'border-accent/50 border-t-accent/70 shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(var(--color-accent-rgb),0.08)]' : 'hover:border-white/20'
+            className={`relative bg-[#080a0f]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden transition-all duration-300 ${
+                focused ? 'border-cyan-500/40 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.12)]' : 'hover:border-white/15'
             }`}
+            onMouseEnter={handlePreWarmEdge}
             onClick={() => inputRef.current?.focus({ preventScroll: true })}
         >
-            {/* Title bar com Controles de Janela */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.08] bg-dark/60 select-none">
-                <span
-                    className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500 transition-colors cursor-pointer"
-                    title={lang === 'en' ? 'Reset Shell' : lang === 'es' ? 'Reiniciar Shell' : 'Reiniciar Shell'}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        clearAllTimers();
-                        if (abortControllerRef.current) {
-                            abortControllerRef.current.abort();
-                            abortControllerRef.current = null;
-                        }
-                        setIsStreaming(false);
-                        setActiveGame(null);
-                        setLines(getWelcomeLines(lang));
-                    }}
-                />
-                <span className="w-3 h-3 rounded-full bg-yellow-500/40 hover:bg-yellow-500/70 transition-colors cursor-pointer" title="Minimize" />
-                <span className="w-3 h-3 rounded-full bg-green-500/40 hover:bg-green-500/70 transition-colors cursor-pointer" title="Maximize" />
-                <span className="ml-2 text-xs text-gray-400 font-mono">
-                    pedro@portfolio: ~ {activeGame ? `[GAME: ${activeGame.toUpperCase()}]` : isStreaming ? '[COPILOT STREAMING...]' : '[QA & COPILOT SHELL]'}
-                </span>
-                <motion.span
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: isStreaming ? 0.6 : 2.5, repeat: Infinity }}
-                    className={`ml-auto w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-accent'} inline-block`}
-                />
-                <span className={`text-xs font-mono ml-1 ${isStreaming ? 'text-cyan-400 font-semibold' : 'text-accent/70'}`}>
-                    {activeGame ? 'playing' : isStreaming ? 'copilot active' : 'live'}
-                </span>
+            {/* Topbar de Controle & Abas Técnicas (Ghostty / Warp Style) */}
+            <div className="h-10 border-b border-white/[0.06] bg-white/[0.02] flex items-center justify-between px-4 select-none">
+                {/* Esquerda: Controles de tráfego sutis */}
+                <div className="flex items-center gap-2">
+                    <span
+                        className="w-2.5 h-2.5 rounded-full bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/80 transition-colors cursor-pointer"
+                        title={lang === 'en' ? 'Reset Shell' : lang === 'es' ? 'Reiniciar Shell' : 'Reiniciar Shell'}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            clearAllTimers();
+                            if (abortControllerRef.current) {
+                                abortControllerRef.current.abort();
+                                abortControllerRef.current = null;
+                            }
+                            setIsStreaming(false);
+                            setActiveGame(null);
+                            setLines(getWelcomeLines(lang));
+                        }}
+                    />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/80 transition-colors cursor-pointer" title="Minimize Shell" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/80 transition-colors cursor-pointer" title="Maximize Shell" />
+                </div>
+
+                {/* Centro: Aba ativa chanfrada estilo terminal profissional */}
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-mono text-neutral-200 shadow-sm">
+                    <span className="text-cyan-400 font-bold">❯_</span>
+                    <span>copilot.sh</span>
+                    <span className="text-emerald-400 text-[9px] font-semibold tracking-wider">
+                        {activeGame ? `(${activeGame})` : isStreaming ? '(inferring)' : '(live)'}
+                    </span>
+                </div>
+
+                {/* Direita: Badge de status de rede e modelo ativo */}
+                <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-400">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)] animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+                    <span className="hidden sm:inline tracking-wider">EDGE: GEMINI-FLASH [sa-east-1]</span>
+                    <span className="sm:hidden tracking-wider">GEMINI-FLASH</span>
+                </div>
             </div>
 
             {/* Área de Saída de Linhas */}
             <div
                 ref={contentRef}
-                className="p-4 font-mono text-[12px] leading-relaxed min-h-[250px] max-h-[320px] overflow-y-auto relative"
+                className="p-4 font-mono text-[12px] leading-relaxed min-h-[250px] max-h-[320px] overflow-y-auto relative scroll-smooth"
             >
                 {activeGame === 'snake' && <SnakeGame lang={lang} onExit={handleExitGame} />}
                 {activeGame === 'bug-hunter' && <BugHunterGame lang={lang} onExit={handleExitGame} />}
@@ -994,8 +1149,29 @@ export const InteractiveTerminal: React.FC = () => {
                 {!activeGame && (
                     <div className="space-y-1">
                         {lines.map((line, i) => (
-                            <div key={i} className={`${line.color || 'text-primary/60'} block whitespace-pre-wrap break-all leading-relaxed`}>
-                                {line.node ? line.node : (line.text || '\u00A0')}
+                            <div key={line.id || i} className={`${line.color || 'text-neutral-300'} block whitespace-pre-wrap break-words leading-relaxed`}>
+                                {line.node ? (
+                                    line.node
+                                ) : typeof line.text === 'string' && (line.text.startsWith('pedro@workstation:~$') || line.text.startsWith('pedro@workstation:~/copilot ❯')) ? (
+                                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5 my-1">
+                                        <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
+                                            <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-[11px] font-semibold">
+                                                pedro@workstation
+                                            </span>
+                                            <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-[11px]">
+                                                ~/copilot
+                                            </span>
+                                            <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-[11px] mr-1.5">
+                                                ❯
+                                            </span>
+                                        </div>
+                                        <span className="text-white font-mono text-xs sm:text-sm">
+                                            {line.text.replace(/pedro@workstation:(~\$|~\/copilot ❯)\s*/, '')}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    line.text || '\u00A0'
+                                )}
                             </div>
                         ))}
                         {/* Âncora invisível para auto-scroll automático */}
@@ -1004,11 +1180,61 @@ export const InteractiveTerminal: React.FC = () => {
                 )}
             </div>
 
-            {/* Input Line com Prompt pedro@workstation:~$ */}
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5 bg-dark/30 relative">
-                <span className="text-cyan-400 font-mono text-[11px] sm:text-[12px] font-semibold shrink-0 select-none">
-                    pedro@workstation:~$
-                </span>
+            {/* Pílulas de Ação Rápida (Quick-Command Pills) */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 px-4 py-2 border-t border-white/[0.06] bg-white/[0.015] select-none">
+                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider mr-0.5">Atalhos:</span>
+                <button
+                    type="button"
+                    disabled={isStreaming}
+                    onClick={() => handleRunCommand('test')}
+                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 text-neutral-300 hover:text-emerald-300 font-mono text-[11px] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                    <span className="text-emerald-400">⚡</span>
+                    <span>$ test</span>
+                </button>
+                <button
+                    type="button"
+                    disabled={isStreaming}
+                    onClick={() => handleRunCommand('sql')}
+                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/10 text-neutral-300 hover:text-cyan-300 font-mono text-[11px] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                    <span>🗄️</span>
+                    <span>$ sql:tune</span>
+                </button>
+                <button
+                    type="button"
+                    disabled={isStreaming}
+                    onClick={() => handleAskCopilot('Qual sua atuação com testes no Postman e SQL Server?', 'ai: "Experiência em QA & APIs?"')}
+                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-amber-500/40 hover:bg-amber-500/10 text-neutral-300 hover:text-amber-300 font-mono text-[11px] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                    <span>🤖</span>
+                    <span>$ ai: "Experiência em QA & APIs?"</span>
+                </button>
+                <button
+                    type="button"
+                    disabled={isStreaming}
+                    onClick={() => handleRunCommand('clear')}
+                    className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-rose-500/40 hover:bg-rose-500/10 text-neutral-400 hover:text-rose-300 font-mono text-[11px] transition-all ml-auto flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                    <span>✕</span>
+                    <span>clear</span>
+                </button>
+            </div>
+
+            {/* Input Line com Prompt Powerline (Starship CLI Style) */}
+            <div className="flex items-center gap-2 px-4 py-3 border-t border-white/[0.06] bg-black/40 relative">
+                {/* Bloco Powerline Segmentado */}
+                <div className="flex items-center gap-0 font-mono text-xs select-none shrink-0">
+                    <span className="bg-white/[0.07] text-neutral-300 px-2 py-0.5 rounded-l border-y border-l border-white/10 text-[10px] sm:text-xs font-semibold">
+                        pedro@workstation
+                    </span>
+                    <span className="bg-cyan-950/40 text-cyan-400 px-2 py-0.5 border-y border-cyan-500/20 text-[10px] sm:text-xs">
+                        ~/copilot
+                    </span>
+                    <span className="bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded-r border-y border-r border-emerald-500/20 font-bold text-[10px] sm:text-xs mr-2">
+                        ❯
+                    </span>
+                </div>
 
                 <div className="relative flex-1 flex items-center">
                     {/* Ghost Text com sugestão do Tab */}
@@ -1018,8 +1244,8 @@ export const InteractiveTerminal: React.FC = () => {
                             return (
                                 <div className="absolute inset-0 pointer-events-none font-mono text-[12px] flex items-center select-none overflow-hidden">
                                     <span className="opacity-0 whitespace-pre">{input}</span>
-                                    <span className="text-accent/40 whitespace-pre">{match.slice(input.length)}</span>
-                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-accent/10 text-accent/60 border border-accent/20 tracking-wider">Tab ⇥</span>
+                                    <span className="text-cyan-400/40 whitespace-pre">{match.slice(input.length)}</span>
+                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400/60 border border-cyan-500/20 tracking-wider">Tab ⇥</span>
                                 </div>
                             );
                         }
@@ -1033,7 +1259,10 @@ export const InteractiveTerminal: React.FC = () => {
                         disabled={isStreaming}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={onKeyDown}
-                        onFocus={() => setFocused(true)}
+                        onFocus={() => {
+                            setFocused(true);
+                            handlePreWarmEdge();
+                        }}
                         onBlur={() => setFocused(false)}
                         placeholder={
                             activeGame
@@ -1042,32 +1271,33 @@ export const InteractiveTerminal: React.FC = () => {
                                 ? (lang === 'en' ? 'Copilot streaming response... (Ctrl+C to abort)' : 'Copilot respondendo... (Ctrl+C para cancelar)')
                                 : (lang === 'en' ? 'Ask anything to Copilot or type test, sql, help...' : lang === 'es' ? 'Pregunta lo que sea al Copilot o escribe test, sql, help...' : 'Pergunte qualquer coisa ao Copilot ou digite test, sql, help...')
                         }
-                        className="w-full bg-transparent text-white font-mono text-[12px] outline-none placeholder-primary/25 relative z-10 disabled:opacity-60"
+                        className="w-full bg-transparent text-white font-mono text-[12px] outline-none placeholder-white/20 relative z-10 disabled:opacity-60"
                         spellCheck={false}
                         autoComplete="off"
                         aria-label="Terminal interativo"
                     />
                 </div>
 
+                {/* Custom Blinking Block Cursor */}
                 <motion.span
-                    animate={{ opacity: focused ? [1, 0, 1] : 1 }}
-                    transition={{ duration: isStreaming ? 0.4 : 1, repeat: Infinity }}
-                    className={`inline-block w-[6px] h-[14px] ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-accent/70'} rounded-[2px] shrink-0`}
+                    animate={{ opacity: focused ? [1, 0, 1] : 0.3 }}
+                    transition={{ duration: isStreaming ? 0.35 : 0.9, repeat: Infinity }}
+                    className={`inline-block w-2 h-4 ${isStreaming ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]' : 'bg-emerald-400'} rounded-[1px] shrink-0`}
                 />
             </div>
 
-            {/* Status bar */}
-            <div className="flex items-center gap-3 px-4 py-2 border-t border-white/[0.08] bg-dark/40 text-[10px] font-mono text-neutral-400 select-none">
+            {/* Status bar (Footer) */}
+            <div className="flex items-center gap-3 px-4 py-2 border-t border-white/[0.06] bg-black/50 text-[10px] font-mono text-neutral-400 select-none">
                 <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
                     <span className="text-xs">🤖</span>
-                    <span>Terminal Copilot (Gemini 1.5 Flash)</span>
+                    <span>Copilot Workstation (Gemini Flash Edge)</span>
                 </span>
-                <span className="hidden sm:inline text-neutral-600">|</span>
-                <span className="hidden sm:inline text-neutral-300">
+                <span className="hidden sm:inline text-neutral-700">|</span>
+                <span className="hidden sm:inline text-neutral-400">
                     {lang === 'en' ? 'Type "test", "sql" or ask any question to AI' : lang === 'es' ? 'Escribe "test", "sql" o pregunta lo que sea a la IA' : 'Digite "test", "sql" ou faça perguntas em linguagem natural'}
                 </span>
-                <span className="ml-auto">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>
-                <span>UTC-3</span>
+                <span className="ml-auto text-neutral-400">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>
+                <span className="text-neutral-500">UTC-3</span>
             </div>
         </div>
     );

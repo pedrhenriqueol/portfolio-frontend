@@ -23,6 +23,18 @@ SUAS DIRETRIZES FUNDAMENTAIS:
 7. Responda no mesmo idioma em que o usuário perguntou (Português, Inglês ou Espanhol).`;
 
 export default async function handler(req: Request): Promise<Response> {
+    // Pré-aquecimento rápido de conexão TLS (Edge Pre-Warming)
+    if (req.method === 'OPTIONS') {
+        return new Response(null, {
+            status: 204,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            },
+        });
+    }
+
     if (req.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method not allowed' }), {
             status: 405,
@@ -100,8 +112,8 @@ export default async function handler(req: Request): Promise<Response> {
 
             // Configurações: primeiro tenta com thinkingBudget: 0 (resposta ultra-rápida em ~1s). Se o modelo não aceitar thinkingConfig, tenta normal.
             const configsToTry = [
-                { maxOutputTokens: 800, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
-                { maxOutputTokens: 800, temperature: 0.7 },
+                { maxOutputTokens: 240, temperature: 0.65, thinkingConfig: { thinkingBudget: 0 } },
+                { maxOutputTokens: 240, temperature: 0.65 },
             ];
 
             for (const genConfig of configsToTry) {
