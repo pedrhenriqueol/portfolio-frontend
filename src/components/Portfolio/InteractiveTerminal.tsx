@@ -23,12 +23,18 @@ interface SimulationStep {
     line: TerminalLine;
 }
 
-/** Renderizador formatado de respostas de IA estilo terminal com gutter lateral sutil, chips de código em vidro fosco e negritos */
+/** Renderizador formatado de respostas de IA estilo terminal com gutter lateral dinâmico, animações de entrada e chips de código */
 function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
     if (!text && isStreaming) {
         return (
-            <div className="border-l border-white/[0.08] pl-3.5 py-1 my-1.5 font-mono text-xs md:text-[13px] leading-relaxed">
-                <span className="inline-block text-emerald-400 font-bold animate-pulse select-none">▍</span>
+            <div className="border-l-2 border-emerald-400/80 bg-gradient-to-r from-emerald-500/[0.05] to-transparent pl-3.5 py-1.5 my-1.5 rounded-r font-mono text-xs md:text-[13px] leading-relaxed transition-all duration-300">
+                <motion.span
+                    animate={{ opacity: [1, 0.2, 1], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                    className="inline-block text-emerald-400 font-bold select-none shadow-[0_0_8px_rgba(52,211,153,0.9)]"
+                >
+                    ▍
+                </motion.span>
             </div>
         );
     }
@@ -36,7 +42,13 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
     const rawLines = text.split('\n');
 
     return (
-        <div className="border-l border-white/[0.08] pl-3.5 py-1 my-1.5 font-mono text-xs md:text-[13px] leading-relaxed tracking-normal whitespace-pre-wrap break-words text-neutral-300">
+        <div
+            className={`border-l-2 pl-3.5 py-1.5 my-1.5 font-mono text-xs md:text-[13px] leading-relaxed tracking-normal whitespace-pre-wrap break-words text-neutral-300 transition-colors duration-500 rounded-r ${
+                isStreaming
+                    ? 'border-emerald-400/80 bg-gradient-to-r from-emerald-500/[0.04] to-transparent shadow-[0_0_20px_rgba(52,211,153,0.06)]'
+                    : 'border-white/[0.08]'
+            }`}
+        >
             {rawLines.map((lineText, lineIdx) => {
                 const trimmed = lineText.trim();
                 const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
@@ -46,11 +58,21 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
                 const tokens = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
 
                 return (
-                    <div key={lineIdx} className={`${isBullet ? 'flex items-start my-1' : 'my-0.5'}`}>
+                    <motion.div
+                        key={lineIdx}
+                        initial={{ opacity: 0, y: 3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
+                        className={`${isBullet ? 'flex items-start my-1' : 'my-0.5'}`}
+                    >
                         {isBullet && (
-                            <span className="text-neutral-500 font-bold font-mono mr-2 select-none shrink-0">
+                            <motion.span
+                                initial={{ scale: 0.8 }}
+                                animate={{ scale: 1 }}
+                                className="text-emerald-400 font-bold font-mono mr-2 select-none shrink-0"
+                            >
                                 ›
-                            </span>
+                            </motion.span>
                         )}
                         <span className="flex-1">
                             {tokens.map((token, tIdx) => {
@@ -59,7 +81,7 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
                                     return (
                                         <span
                                             key={tIdx}
-                                            className="px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-neutral-200 font-mono text-[11.5px] mx-0.5 inline-block"
+                                            className="px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-neutral-200 font-mono text-[11.5px] mx-0.5 inline-block transition-all duration-200 hover:scale-105 hover:bg-white/[0.08] hover:border-emerald-400/30 hover:text-emerald-200 hover:shadow-[0_0_8px_rgba(52,211,153,0.2)] cursor-default"
                                         >
                                             {code}
                                         </span>
@@ -76,11 +98,17 @@ function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStrea
                                 return <span key={tIdx}>{token}</span>;
                             })}
                         </span>
-                    </div>
+                    </motion.div>
                 );
             })}
             {isStreaming && (
-                <span className="inline-block text-emerald-400 font-bold ml-1 animate-pulse select-none">▍</span>
+                <motion.span
+                    animate={{ opacity: [1, 0.15, 1], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 0.45, repeat: Infinity }}
+                    className="inline-block text-emerald-400 font-bold ml-1 select-none shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+                >
+                    ▍
+                </motion.span>
             )}
         </div>
     );
@@ -320,6 +348,42 @@ function getLocalCopilotResponse(question: string, lang: string): string {
     const q = question.toLowerCase().trim();
     const isEn = lang === 'en';
     const isEs = lang === 'es';
+
+    // 0. DIRETRIZ DEVSECOPS & SEGURANÇA (ANTI-JAILBREAK / ENGENHARIA SOCIAL / CREDENCIAIS)
+    if (
+        q.includes('api key') ||
+        q.includes('apikey') ||
+        q.includes('api-key') ||
+        q.includes('api_key') ||
+        q.includes('chave de api') ||
+        q.includes('chave api') ||
+        q.includes('token') ||
+        q.includes('secret') ||
+        q.includes('senha') ||
+        q.includes('password') ||
+        q.includes('credentials') ||
+        q.includes('credenciais') ||
+        q.includes('seu criador') ||
+        q.includes('sou seu criador') ||
+        q.includes('sou o pedro') ||
+        q.includes('sou o pedrom') ||
+        q.includes('sou pedro') ||
+        q.includes('pedrom') ||
+        q.includes('ignore suas instruções') ||
+        q.includes('ignore todas as instruções') ||
+        q.includes('ignore previous instructions') ||
+        q.includes('jailbreak') ||
+        q.includes('prompt injection') ||
+        q.includes('system prompt')
+    ) {
+        if (isEn) {
+            return 'Nice try! 🛡️ As Pedro Henrique\'s QA & DevSecOps Copilot, no API keys, tokens, or infrastructure secrets are exposed to the client side. All sensitive environment variables operate isolated in the Vercel Edge cluster. If you\'re truly Pedro, you know you can manage them directly in the Vercel Dashboard! 😉';
+        }
+        if (isEs) {
+            return '¡Buen intento! 🛡️ Como Copilot técnico enfocado en QA y DevSecOps de Pedro Henrique, ninguna clave de API, token o secreto de infraestructura se expone en el cliente. Todas las variables sensibles operan aisladas en el servidor Edge de Vercel. ¡Si realmente eres Pedro, sabes que puedes administrarlas directamente en el panel de Vercel! 😉';
+        }
+        return 'Bela tentativa! 🛡️ Como Copilot Técnico e de QA do Pedro Henrique, sigo rigorosos padrões de DevSecOps. Nenhuma chave de API, token ou segredo de infraestrutura é exposto na camada cliente; todas as variáveis operam isoladas na Vercel Edge. Se você for o Pedro mesmo, sabe que pode gerenciá-las diretamente no painel da Vercel! 😉';
+    }
 
     // 1. Meta-perguntas, escopo de conversação e capacidades do assistente
     if (
@@ -633,21 +697,33 @@ export const InteractiveTerminal: React.FC = () => {
     const runSimulation = useCallback((type: 'test' | 'sql', commandRaw: string) => {
         clearAllTimers();
 
-        // Eco do comando digitado com estilo minimalista unificado
+        // Eco do comando digitado com animação fluida de entrada e spring no chevron
         setLines(prev => [
             ...prev,
             {
                 text: `pedro in ~ ❯ ${commandRaw}`,
                 node: (
-                    <div className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1">
+                    <motion.div
+                        initial={{ opacity: 0, x: -8, filter: 'blur(3px)' }}
+                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                        transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+                        className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1"
+                    >
                         <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
                             <span className="text-neutral-400 font-medium">pedro</span>
                             <span className="text-neutral-600">in</span>
                             <span className="text-neutral-300">~</span>
-                            <span className="text-emerald-400 font-bold">❯</span>
+                            <motion.span
+                                initial={{ scale: 1.5, x: -3 }}
+                                animate={{ scale: 1, x: 0 }}
+                                transition={{ type: 'spring', damping: 15, stiffness: 400 }}
+                                className="text-emerald-400 font-bold"
+                            >
+                                ❯
+                            </motion.span>
                         </div>
                         <span className="text-white font-mono text-xs md:text-[13px]">{commandRaw}</span>
-                    </div>
+                    </motion.div>
                 ),
             },
         ]);
@@ -685,31 +761,57 @@ export const InteractiveTerminal: React.FC = () => {
 
         const dispatchLineId = `dispatch-${Date.now()}`;
         const streamLineId = `copilot-${Date.now()}`;
+        const copilotBadgeId = `badge-${Date.now()}`;
         const startTime = Date.now();
 
-        // Eco do comando digitado e badge do Copilot minimalista
+        // Eco do comando digitado e badge do Copilot com radar ping e status de geração
         setLines(prev => [
             ...prev,
             {
                 text: `pedro in ~ ❯ ${displayPrompt}`,
                 node: (
-                    <div className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1">
+                    <motion.div
+                        initial={{ opacity: 0, x: -8, filter: 'blur(3px)' }}
+                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                        transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+                        className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1"
+                    >
                         <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
                             <span className="text-neutral-400 font-medium">pedro</span>
                             <span className="text-neutral-600">in</span>
                             <span className="text-neutral-300">~</span>
-                            <span className="text-emerald-400 font-bold">❯</span>
+                            <motion.span
+                                initial={{ scale: 1.5, x: -3 }}
+                                animate={{ scale: 1, x: 0 }}
+                                transition={{ type: 'spring', damping: 15, stiffness: 400 }}
+                                className="text-emerald-400 font-bold"
+                            >
+                                ❯
+                            </motion.span>
                         </div>
                         <span className="text-white font-mono text-xs md:text-[13px]">{displayPrompt}</span>
-                    </div>
+                    </motion.div>
                 ),
             },
             {
+                id: copilotBadgeId,
                 text: 'copilot',
                 node: (
                     <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                        <span>copilot</span>
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                        </span>
+                        <span className="font-semibold text-neutral-300">copilot</span>
+                        <motion.span
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                            className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-mono flex items-center gap-1"
+                        >
+                            <span className="inline-block w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>gerando...</span>
+                        </motion.span>
                     </div>
                 ),
             },
@@ -717,10 +819,14 @@ export const InteractiveTerminal: React.FC = () => {
                 id: dispatchLineId,
                 text: '[*] Dispatching query to edge cluster...',
                 node: (
-                    <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs my-1 animate-pulse select-none">
-                        <span className="text-neutral-400 font-bold">[*]</span>
+                    <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 text-neutral-500 font-mono text-xs my-1 select-none"
+                    >
+                        <span className="text-cyan-400 font-bold animate-pulse">[*]</span>
                         <span>Dispatching query to edge cluster...</span>
-                    </div>
+                    </motion.div>
                 ),
             },
             {
@@ -776,19 +882,35 @@ export const InteractiveTerminal: React.FC = () => {
                               isStreaming: false,
                               node: <FormattedCopilotResponse text={currentText} isStreaming={false} />,
                           }
+                        : l.id === copilotBadgeId
+                        ? {
+                              ...l,
+                              node: (
+                                  <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                                      <span className="font-semibold text-neutral-300">copilot</span>
+                                  </div>
+                              ),
+                          }
                         : l
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
                     text: `${fallbackLatency}s • ${fallbackTokens} tokens • gemini-flash`,
                     node: (
-                        <div className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 opacity-70 select-none">
+                        <motion.div
+                            initial={{ opacity: 0, y: 3 }}
+                            animate={{ opacity: 0.75, y: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
+                        >
+                            <span className="text-emerald-400 font-bold text-[11px]">✔</span>
                             <span>{fallbackLatency}s</span>
                             <span>•</span>
                             <span>{fallbackTokens} tokens</span>
                             <span>•</span>
-                            <span>gemini-flash</span>
-                        </div>
+                            <span className="text-neutral-300">gemini-flash</span>
+                        </motion.div>
                     ),
                 },
                 { text: '', color: '' },
@@ -796,10 +918,10 @@ export const InteractiveTerminal: React.FC = () => {
         };
 
         try {
-            // Timeout de 25 segundos: dá margem suficiente para qualquer geração da IA sem abortar precocemente
+            // Timeout de 8 segundos: garante resposta imediata sem travar o terminal do usuário
             const timeoutId = setTimeout(() => {
                 controller.abort();
-            }, 25000);
+            }, 8000);
 
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -825,16 +947,28 @@ export const InteractiveTerminal: React.FC = () => {
                     const baseList = isFirstChunk ? prev.filter(l => l.id !== dispatchLineId) : prev;
                     isFirstChunk = false;
 
-                    return baseList.map(l =>
-                        l.id === streamLineId
-                            ? {
-                                  ...l,
-                                  text: accumulatedText,
-                                  isStreaming: !final,
-                                  node: <FormattedCopilotResponse text={accumulatedText} isStreaming={!final} />,
-                              }
-                            : l
-                    );
+                    return baseList.map(l => {
+                        if (l.id === streamLineId) {
+                            return {
+                                ...l,
+                                text: accumulatedText,
+                                isStreaming: !final,
+                                node: <FormattedCopilotResponse text={accumulatedText} isStreaming={!final} />,
+                            };
+                        }
+                        if (final && l.id === copilotBadgeId) {
+                            return {
+                                ...l,
+                                node: (
+                                    <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                                        <span className="font-semibold text-neutral-300">copilot</span>
+                                    </div>
+                                ),
+                            };
+                        }
+                        return l;
+                    });
                 });
 
                 if (contentRef.current) {
@@ -872,20 +1006,26 @@ export const InteractiveTerminal: React.FC = () => {
             const latency = ((Date.now() - startTime) / 1000).toFixed(2);
             const tokenCount = Math.max(16, Math.round(accumulatedText.length / 3.7));
 
-            // Finaliza o streaming remoto com sucesso e estampa a telemetria
+            // Finaliza o streaming remoto com sucesso e estampa a telemetria animada
             setLines(prev => [
                 ...prev,
                 {
                     id: `telemetry-${Date.now()}`,
                     text: `${latency}s • ${tokenCount} tokens • gemini-flash`,
                     node: (
-                        <div className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 opacity-70 select-none">
+                        <motion.div
+                            initial={{ opacity: 0, y: 3 }}
+                            animate={{ opacity: 0.75, y: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
+                        >
+                            <span className="text-emerald-400 font-bold text-[11px]">✔</span>
                             <span>{latency}s</span>
                             <span>•</span>
                             <span>{tokenCount} tokens</span>
                             <span>•</span>
-                            <span>gemini-flash</span>
-                        </div>
+                            <span className="text-neutral-300">gemini-flash</span>
+                        </motion.div>
                     ),
                 },
                 { text: '', color: '' },
@@ -1108,7 +1248,12 @@ export const InteractiveTerminal: React.FC = () => {
                                 {line.node ? (
                                     line.node
                                 ) : typeof line.text === 'string' && (line.text.startsWith('pedro@workstation:') || line.text.startsWith('pedro in ~ ❯')) ? (
-                                    <div className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1">
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="flex items-center gap-2 font-mono text-xs md:text-[13px] my-1"
+                                    >
                                         <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
                                             <span className="text-neutral-400 font-medium">pedro</span>
                                             <span className="text-neutral-600">in</span>
@@ -1118,7 +1263,7 @@ export const InteractiveTerminal: React.FC = () => {
                                         <span className="text-white font-mono text-xs md:text-[13px]">
                                             {line.text.replace(/pedro(@workstation:(~\$|~\/copilot ❯)| in ~ ❯)\s*/, '')}
                                         </span>
-                                    </div>
+                                    </motion.div>
                                 ) : (
                                     line.text || '\u00A0'
                                 )}
@@ -1130,41 +1275,49 @@ export const InteractiveTerminal: React.FC = () => {
                 )}
             </div>
 
-            {/* Pílulas de Atalho Integradas */}
-            <div className="flex items-center gap-1.5 px-4 py-2 border-t border-white/[0.04] bg-white/[0.01] overflow-x-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0 select-none">
+            {/* Pílulas de Atalho Integradas com Micro-Animações */}
+            <div className="flex items-center gap-2 px-4 py-2 border-t border-white/[0.04] bg-white/[0.01] overflow-x-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0 select-none">
                 <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest mr-1">Sugestões:</span>
-                <button
+                <motion.button
                     type="button"
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('test')}
-                    className="px-2 py-0.5 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/30 text-[11px] font-mono text-neutral-400 hover:text-emerald-300 transition-all cursor-pointer disabled:opacity-50"
                 >
                     $ test
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                     type="button"
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('sql')}
-                    className="px-2 py-0.5 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-cyan-500/10 border border-white/[0.06] hover:border-cyan-500/30 text-[11px] font-mono text-neutral-400 hover:text-cyan-300 transition-all cursor-pointer disabled:opacity-50"
                 >
                     $ sql
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                     type="button"
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
                     onClick={() => handleAskCopilot('Como você atua na garantia de qualidade e APIs?', '$ sobre-qa')}
-                    className="px-2 py-0.5 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/30 text-[11px] font-mono text-neutral-400 hover:text-emerald-300 transition-all cursor-pointer disabled:opacity-50"
                 >
                     $ sobre-qa
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                     type="button"
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('clear')}
-                    className="ml-auto text-[11px] font-mono text-neutral-400 hover:text-neutral-300 transition-colors cursor-pointer disabled:opacity-50"
+                    className="ml-auto text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
                 >
                     clear
-                </button>
+                </motion.button>
             </div>
 
             {/* Input Line com Prompt Minimalista (Starship / Ghostty Clean Style) */}
@@ -1173,7 +1326,13 @@ export const InteractiveTerminal: React.FC = () => {
                     <span className="text-neutral-400 font-medium">pedro</span>
                     <span className="text-neutral-600">in</span>
                     <span className="text-neutral-300">~</span>
-                    <span className="text-emerald-400 font-bold">❯</span>
+                    <motion.span
+                        animate={{ x: focused ? [0, 2, 0] : 0 }}
+                        transition={{ duration: 1.6, repeat: focused ? Infinity : 0, repeatDelay: 1 }}
+                        className="text-emerald-400 font-bold"
+                    >
+                        ❯
+                    </motion.span>
                 </div>
 
                 <div className="relative flex-1 flex items-center">
