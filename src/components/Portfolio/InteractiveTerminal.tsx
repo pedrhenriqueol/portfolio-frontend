@@ -636,6 +636,7 @@ export const InteractiveTerminal: React.FC = () => {
     const [lines, setLines] = useState<TerminalLine[]>(() => getWelcomeLines(lang));
     const [input, setInput] = useState('');
     const [focused, setFocused] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
     const [history, setHistory] = useState<string[]>([]);
     const [histIdx, setHistIdx] = useState(-1);
     const [activeGame, setActiveGame] = useState<ActiveTerminalGame>(null);
@@ -647,6 +648,7 @@ export const InteractiveTerminal: React.FC = () => {
     const activeTimersRef = useRef<number[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
     const prevLangRef = useRef(lang);
+    const typingTimeoutRef = useRef<number | null>(null);
 
     const { execute } = useTerminalCommands(lang);
 
@@ -654,6 +656,22 @@ export const InteractiveTerminal: React.FC = () => {
     const clearAllTimers = useCallback(() => {
         activeTimersRef.current.forEach(timerId => window.clearTimeout(timerId));
         activeTimersRef.current = [];
+        if (typingTimeoutRef.current) {
+            window.clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+        }
+    }, []);
+
+    /** Gerencia a digitação do usuário com efeitos de resposta e glow */
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+        setIsTyping(true);
+        if (typingTimeoutRef.current) {
+            window.clearTimeout(typingTimeoutRef.current);
+        }
+        typingTimeoutRef.current = window.setTimeout(() => {
+            setIsTyping(false);
+        }, 550);
     }, []);
 
     // Higiene de desmontagem: cancela qualquer timer ativo ou stream em andamento
@@ -1061,6 +1079,12 @@ export const InteractiveTerminal: React.FC = () => {
         const trimmed = raw.trim();
         if (!trimmed) return;
 
+        setIsTyping(false);
+        if (typingTimeoutRef.current) {
+            window.clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+        }
+
         setHistory(h => [trimmed, ...h]);
         setHistIdx(-1);
         setInput('');
@@ -1110,6 +1134,11 @@ export const InteractiveTerminal: React.FC = () => {
         // Abort de streaming ou limpeza de linha com Ctrl+C
         if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
             e.preventDefault();
+            setIsTyping(false);
+            if (typingTimeoutRef.current) {
+                window.clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = null;
+            }
             if (isStreaming) {
                 abortControllerRef.current?.abort();
                 abortControllerRef.current = null;
@@ -1143,6 +1172,11 @@ export const InteractiveTerminal: React.FC = () => {
 
         if (e.key === 'Enter') {
             e.preventDefault();
+            setIsTyping(false);
+            if (typingTimeoutRef.current) {
+                window.clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = null;
+            }
             handleRunCommand(input);
             return;
         }
@@ -1320,49 +1354,90 @@ export const InteractiveTerminal: React.FC = () => {
                 </motion.button>
             </div>
 
-            {/* Input Line com Prompt Minimalista (Starship / Ghostty Clean Style) */}
-            <div className="flex items-center gap-2.5 px-4 py-3 border-t border-white/[0.06] bg-black/40 relative shrink-0">
+            {/* Input Line com Prompt Minimalista & Efeitos Dinâmicos de Digitação (Ghostty / Warp Style) */}
+            <div
+                className={`flex items-center gap-2.5 px-4 py-3 border-t relative shrink-0 transition-all duration-300 ${
+                    isTyping
+                        ? 'border-emerald-500/40 bg-gradient-to-r from-emerald-500/[0.08] via-cyan-500/[0.03] to-black/50 shadow-[0_-1px_24px_rgba(52,211,153,0.14),inset_0_1px_0_rgba(52,211,153,0.2)]'
+                        : focused
+                        ? 'border-white/[0.12] bg-black/50 shadow-[0_-1px_12px_rgba(255,255,255,0.03)]'
+                        : 'border-white/[0.06] bg-black/40'
+                }`}
+            >
                 <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
                     <span className="text-neutral-400 font-medium">pedro</span>
                     <span className="text-neutral-600">in</span>
                     <span className="text-neutral-300">~</span>
                     <motion.span
-                        animate={{ x: focused ? [0, 2, 0] : 0 }}
-                        transition={{ duration: 1.6, repeat: focused ? Infinity : 0, repeatDelay: 1 }}
-                        className="text-emerald-400 font-bold"
+                        animate={
+                            isTyping
+                                ? { scale: [1, 1.35, 1], color: ['#34d399', '#22d3ee', '#34d399'] }
+                                : { x: focused ? [0, 2, 0] : 0, color: focused ? '#34d399' : '#10b981' }
+                        }
+                        transition={
+                            isTyping
+                                ? { duration: 0.25, repeat: Infinity }
+                                : { duration: 1.6, repeat: focused ? Infinity : 0, repeatDelay: 1 }
+                        }
+                        className="text-emerald-400 font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]"
                     >
                         ❯
                     </motion.span>
                 </div>
 
-                <div className="relative flex-1 flex items-center">
-                    {/* Ghost Text com sugestão do Tab */}
-                    {!activeGame && !isStreaming && input && (() => {
-                        const match = ALL_CMD_STRINGS.find(c => c.startsWith(input.toLowerCase()) && c !== input.toLowerCase());
-                        if (match) {
-                            return (
-                                <div className="absolute inset-0 pointer-events-none font-mono text-xs md:text-[13px] flex items-center select-none overflow-hidden">
-                                    <span className="opacity-0 whitespace-pre">{input}</span>
-                                    <span className="text-neutral-500 whitespace-pre">{match.slice(input.length)}</span>
-                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-white/[0.05] text-neutral-400 border border-white/10 tracking-wider">Tab ⇥</span>
-                                </div>
-                            );
-                        }
-                        return null;
-                    })()}
+                <div className="relative flex-1 flex items-center min-h-[22px]">
+                    {/* Camada inline de cursor dinâmico que segue a digitação e sugestão Tab */}
+                    <div className="absolute inset-0 pointer-events-none font-mono text-xs md:text-[13px] flex items-center select-none overflow-hidden">
+                        {/* Espelho do texto digitado para posicionar o cursor com precisão cirúrgica */}
+                        <span className="opacity-0 whitespace-pre">{input}</span>
+
+                        {/* Cursor em bloco esmeralda vivo imediatamente após o último caractere digitado */}
+                        {!activeGame && !isStreaming && (
+                            <motion.span
+                                animate={
+                                    isTyping
+                                        ? { opacity: 1, scale: [1, 1.15, 1], boxShadow: '0 0 12px rgba(52,211,153,0.95)' }
+                                        : { opacity: focused ? [1, 0, 1] : 0.35, scale: 1, boxShadow: '0 0 6px rgba(52,211,153,0.6)' }
+                                }
+                                transition={
+                                    isTyping
+                                        ? { duration: 0.2, repeat: Infinity }
+                                        : { duration: 0.85, repeat: Infinity }
+                                }
+                                className="inline-block w-2 h-4 bg-emerald-400 rounded-[1px] shrink-0 ml-[1px]"
+                            />
+                        )}
+
+                        {/* Ghost Text com sugestão do Tab */}
+                        {!activeGame && !isStreaming && input && (() => {
+                            const match = ALL_CMD_STRINGS.find(c => c.startsWith(input.toLowerCase()) && c !== input.toLowerCase());
+                            if (match) {
+                                return (
+                                    <div className="flex items-center ml-1">
+                                        <span className="text-neutral-500 whitespace-pre">{match.slice(input.length)}</span>
+                                        <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-white/[0.05] text-neutral-400 border border-white/10 tracking-wider">Tab ⇥</span>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+                    </div>
 
                     <input
                         ref={inputRef}
                         type="text"
                         value={input}
                         disabled={isStreaming}
-                        onChange={e => setInput(e.target.value)}
+                        onChange={handleInputChange}
                         onKeyDown={onKeyDown}
                         onFocus={() => {
                             setFocused(true);
                             handlePreWarmEdge();
                         }}
-                        onBlur={() => setFocused(false)}
+                        onBlur={() => {
+                            setFocused(false);
+                            setIsTyping(false);
+                        }}
                         placeholder={
                             activeGame
                                 ? (lang === 'en' ? 'Type "exit" to return to shell...' : lang === 'es' ? 'Escribe "exit" para volver al shell...' : 'Digite "exit" para voltar ao shell...')
@@ -1370,19 +1445,36 @@ export const InteractiveTerminal: React.FC = () => {
                                 ? (lang === 'en' ? 'Copilot streaming response... (Ctrl+C to abort)' : 'Copilot respondendo... (Ctrl+C para cancelar)')
                                 : (lang === 'en' ? 'Ask anything to Copilot or type test, sql, help...' : lang === 'es' ? 'Pregunta lo que sea al Copilot o escribe test, sql, help...' : 'Pergunte qualquer coisa ao Copilot ou digite test, sql, help...')
                         }
-                        className="w-full bg-transparent text-white font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-10 disabled:opacity-60"
+                        className="w-full bg-transparent text-white font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-10 disabled:opacity-60 caret-transparent"
                         spellCheck={false}
                         autoComplete="off"
                         aria-label="Terminal interativo"
                     />
                 </div>
 
-                {/* Custom Blinking Block Cursor */}
-                <motion.span
-                    animate={{ opacity: focused ? [1, 0, 1] : 0.3 }}
-                    transition={{ duration: isStreaming ? 0.35 : 0.9, repeat: Infinity }}
-                    className={`inline-block w-2 h-4 ${isStreaming ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]' : 'bg-emerald-400'} rounded-[1px] shrink-0`}
-                />
+                {/* Indicador de Status à direita: digitando / inferindo */}
+                {isTyping && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 select-none shrink-0"
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span>digitando...</span>
+                    </motion.div>
+                )}
+
+                {isStreaming && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-mono text-cyan-400 select-none shrink-0"
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                        <span>inferindo...</span>
+                    </motion.div>
+                )}
             </div>
         </div>
     );
