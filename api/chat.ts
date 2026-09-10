@@ -90,11 +90,12 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Modelos verificados e ultrarrápidos com failover em menos de 3s
+        // Modelos com suporte universal na API v1beta do Google Gemini
         const candidateModels = [
-            'gemini-2.5-flash',
             'gemini-1.5-flash',
-            'gemini-flash-latest',
+            'gemini-1.5-flash-latest',
+            'gemini-2.0-flash',
+            'gemini-1.5-pro',
         ];
 
         const safetySettings = [
@@ -124,10 +125,9 @@ export default async function handler(req: Request): Promise<Response> {
         for (const model of candidateModels) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-            // Configurações: primeiro tenta com thinkingBudget: 0 (resposta ultra-rápida em ~1s). Se o modelo não aceitar thinkingConfig, tenta normal.
+            // Configuração padrão universalmente compatível com todos os modelos Gemini Flash
             const configsToTry = [
-                { maxOutputTokens: 240, temperature: 0.65, thinkingConfig: { thinkingBudget: 0 } },
-                { maxOutputTokens: 240, temperature: 0.65 },
+                { maxOutputTokens: 250, temperature: 0.65 },
             ];
 
             for (const genConfig of configsToTry) {
