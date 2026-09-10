@@ -914,20 +914,20 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${fallbackLatency}s • ${fallbackTokens} tokens • gemini-flash`,
+                    text: `${fallbackLatency}s • ${fallbackTokens} tokens • offline-engine`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 3 }}
-                            animate={{ opacity: 0.75, y: 0 }}
+                            animate={{ opacity: 0.85, y: 0 }}
                             transition={{ duration: 0.35 }}
                             className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
                         >
-                            <span className="text-emerald-400 font-bold text-[11px]">✔</span>
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
                             <span>{fallbackLatency}s</span>
                             <span>•</span>
                             <span>{fallbackTokens} tokens</span>
                             <span>•</span>
-                            <span className="text-neutral-300">gemini-flash</span>
+                            <span className="text-amber-400/90 font-mono">offline-engine (fallback)</span>
                         </motion.div>
                     ),
                 },
@@ -1033,11 +1033,11 @@ export const InteractiveTerminal: React.FC = () => {
                 ...prev,
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${latency}s • ${tokenCount} tokens • gemini-flash`,
+                    text: `${latency}s • ${tokenCount} tokens • gemini-flash (live)`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 3 }}
-                            animate={{ opacity: 0.75, y: 0 }}
+                            animate={{ opacity: 0.85, y: 0 }}
                             transition={{ duration: 0.35 }}
                             className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
                         >
@@ -1046,7 +1046,7 @@ export const InteractiveTerminal: React.FC = () => {
                             <span>•</span>
                             <span>{tokenCount} tokens</span>
                             <span>•</span>
-                            <span className="text-neutral-300">gemini-flash</span>
+                            <span className="text-emerald-400 font-semibold">gemini-flash (live)</span>
                         </motion.div>
                     ),
                 },
@@ -1372,22 +1372,22 @@ export const InteractiveTerminal: React.FC = () => {
                 </div>
 
                 <div className="relative flex-1 flex items-center min-h-[22px]">
-                    {/* Camada de renderização visual: Cada letra digitada tem animação fluida de entrada (pop-in suave) */}
+                    {/* Camada de renderização visual: Cada letra digitada tem animação fluida (escrita animada estilo phosphor glow) */}
                     <div className="absolute inset-0 pointer-events-none font-mono text-xs md:text-[13px] flex items-center select-none overflow-hidden z-10">
                         {input.split('').map((char, index) => (
                             <motion.span
                                 key={`${index}-${char}`}
-                                initial={{ opacity: 0, y: 3, scale: 0.85 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                                initial={{ opacity: 0, y: 3, filter: 'blur(1px)' }}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                transition={{ duration: 0.12, ease: 'easeOut' }}
                                 className="inline-block text-neutral-100 whitespace-pre"
                             >
                                 {char}
                             </motion.span>
                         ))}
 
-                        {/* Cursor em bloco esmeralda vivo imediatamente após a última letra digitada */}
-                        {!activeGame && !isStreaming && (
+                        {/* Cursor em bloco esmeralda vivo seguindo o texto digitado */}
+                        {!activeGame && !isStreaming && input.length > 0 && (
                             <motion.span
                                 animate={{ opacity: focused ? [1, 0, 1] : 0.35 }}
                                 transition={{ duration: 0.85, repeat: Infinity, ease: 'linear' }}
@@ -1424,7 +1424,6 @@ export const InteractiveTerminal: React.FC = () => {
                         }}
                         onBlur={() => {
                             setFocused(false);
-                            setIsTyping(false);
                         }}
                         placeholder={
                             activeGame

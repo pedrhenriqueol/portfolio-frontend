@@ -90,12 +90,11 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Modelos com suporte universal na API v1beta do Google Gemini
+        // Modelos verificados e ultrarrápidos com failover
         const candidateModels = [
             'gemini-1.5-flash',
-            'gemini-1.5-flash-latest',
             'gemini-2.0-flash',
-            'gemini-1.5-pro',
+            'gemini-1.5-flash-8b',
         ];
 
         const safetySettings = [
@@ -108,6 +107,7 @@ export default async function handler(req: Request): Promise<Response> {
         let geminiRes: Response | null = null;
         let lastErrText = '';
         let lastStatus = 502;
+        let isQuotaExceeded = false;
 
         const basePayload = {
             systemInstruction: {
@@ -125,7 +125,6 @@ export default async function handler(req: Request): Promise<Response> {
         for (const model of candidateModels) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-            // Configuração padrão universalmente compatível com todos os modelos Gemini Flash
             const configsToTry = [
                 { maxOutputTokens: 250, temperature: 0.65 },
             ];
@@ -153,12 +152,17 @@ export default async function handler(req: Request): Promise<Response> {
                     lastStatus = res.status;
                     lastErrText = await res.text();
 
-                    // Se for 400 (Bad Request), pode ser parâmetro thinkingConfig não suportado pelo modelo específico, tenta a próxima config
+                    // Detecta se a cota gratuita do Google Gemini foi excedida (429 / RESOURCE_EXHAUSTED)
+                    if (res.status === 429 || lastErrText.includes('quota') || lastErrText.includes('RESOURCE_EXHAUSTED')) {
+                        isQuotaExceeded = true;
+                        break;
+                    }
+
+                    // Se for 400 (Bad Request), pode ser parâmetro não suportado pelo modelo específico, tenta a próxima config
                     if (res.status === 400 && 'thinkingConfig' in genConfig) {
                         continue;
                     }
 
-                    // Se for 404 (modelo não suportado), 503 (alta demanda) ou 429, sai para o próximo modelo candidato
                     break;
                 } catch (fetchErr: any) {
                     lastErrText = fetchErr?.message || String(fetchErr);
@@ -168,6 +172,24 @@ export default async function handler(req: Request): Promise<Response> {
             if (geminiRes && geminiRes.ok) {
                 break;
             }
+
+            // Se a cota foi atingida no projeto/chave, outros modelos também falharão com 429; interrompe imediatamente
+            if (isQuotaExceeded) {
+                break;
+            }
+        }
+
+        if (isQuotaExceeded) {
+            console.warn('Gemini API Quota Exceeded (429):', lastErrText);
+            return new Response(JSON.stringify({
+                error: 'QUOTA_EXCEEDED',
+                status: 429,
+                message: 'Google Gemini Free Tier daily quota (1500 RPD) exceeded. Please generate a new key in Google AI Studio or wait for quota reset.',
+                details: lastErrText,
+            }), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json' },
+            });
         }
 
         if (!geminiRes || !geminiRes.ok) {
