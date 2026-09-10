@@ -71,57 +71,76 @@ export default async function handler(req: Request): Promise<Response> {
 
         // Modelos verificados e ativos na sua conta Google Gemini
         const candidateModels = [
-            'gemini-2.5-flash',
             'gemini-flash-latest',
+            'gemini-2.5-flash',
             'gemini-2.5-flash-lite',
-            'gemini-3-flash-preview',
+            'gemini-flash-lite-latest',
             'gemini-3.8-flash',
+            'gemini-3.5-flash',
         ];
 
         let geminiRes: Response | null = null;
         let lastErrText = '';
         let lastStatus = 502;
 
+        const basePayload = {
+            systemInstruction: {
+                parts: [{ text: SYSTEM_INSTRUCTION }],
+            },
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: sanitized }],
+                },
+            ],
+        };
+
         for (const model of candidateModels) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
-            try {
-                const res = await fetch(geminiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': apiKey,
-                    },
-                    body: JSON.stringify({
-                        systemInstruction: {
-                            parts: [{ text: SYSTEM_INSTRUCTION }],
-                        },
-                        contents: [
-                            {
-                                role: 'user',
-                                parts: [{ text: sanitized }],
-                            },
-                        ],
-                        generationConfig: {
-                            maxOutputTokens: 350,
-                            temperature: 0.6,
-                        },
-                    }),
-                });
 
-                if (res.ok) {
-                    geminiRes = res;
-                    break;
-                } else {
+            // Configurações: primeiro tenta com thinkingBudget: 0 (resposta ultra-rápida em ~1s). Se o modelo não aceitar thinkingConfig, tenta normal.
+            const configsToTry = [
+                { maxOutputTokens: 800, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
+                { maxOutputTokens: 800, temperature: 0.7 },
+            ];
+
+            for (const genConfig of configsToTry) {
+                try {
+                    const res = await fetch(geminiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-goog-api-key': apiKey,
+                        },
+                        body: JSON.stringify({
+                            ...basePayload,
+                            generationConfig: genConfig,
+                        }),
+                        signal: AbortSignal.timeout(4500),
+                    });
+
+                    if (res.ok) {
+                        geminiRes = res;
+                        break;
+                    }
+
                     lastStatus = res.status;
                     lastErrText = await res.text();
-                    // Se for 404 (modelo não existe) ou 503/429 (alta demanda temporária no modelo), tenta o próximo candidato imediatamente
-                    if (res.status === 404 || res.status === 503 || res.status === 429) {
+
+                    // Se for 400 (Bad Request), pode ser parâmetro thinkingConfig não suportado pelo modelo específico, tenta a próxima config
+                    if (res.status === 400 && 'thinkingConfig' in genConfig) {
                         continue;
                     }
+
+                    // Se for 404 (modelo não suportado), 503 (alta demanda) ou 429, sai para o próximo modelo candidato
                     break;
+                } catch (fetchErr: any) {
+                    lastErrText = fetchErr?.message || String(fetchErr);
                 }
-            } catch (fetchErr: any) {
-                lastErrText = fetchErr?.message || String(fetchErr);
+            }
+
+            if (geminiRes && geminiRes.ok) {
+                break;
             }
         }
 
@@ -164,9 +183,14 @@ export default async function handler(req: Request): Promise<Response> {
                                 if (jsonStr === '[DONE]') continue;
                                 try {
                                     const parsed = JSON.parse(jsonStr);
-                                    const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-                                    if (text) {
-                                        controller.enqueue(encoder.encode(text));
+                                    const parts = parsed?.candidates?.[0]?.content?.parts;
+                                    if (Array.isArray(parts)) {
+                                        for (const part of parts) {
+                                            // Ignora tokens de pensamento interno e emite apenas texto real
+                                            if (!part.thought && typeof part.text === 'string' && part.text) {
+                                                controller.enqueue(encoder.encode(part.text));
+                                            }
+                                        }
                                     }
                                 } catch {
                                     // Fragmento JSON parcial
@@ -178,9 +202,13 @@ export default async function handler(req: Request): Promise<Response> {
                     if (buffer.trim().startsWith('data: ')) {
                         try {
                             const parsed = JSON.parse(buffer.trim().slice(6).trim());
-                            const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (text) {
-                                controller.enqueue(encoder.encode(text));
+                            const parts = parsed?.candidates?.[0]?.content?.parts;
+                            if (Array.isArray(parts)) {
+                                for (const part of parts) {
+                                    if (!part.thought && typeof part.text === 'string' && part.text) {
+                                        controller.enqueue(encoder.encode(part.text));
+                                    }
+                                }
                             }
                         } catch {}
                     }

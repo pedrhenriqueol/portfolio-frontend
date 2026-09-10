@@ -686,7 +686,7 @@ export const InteractiveTerminal: React.FC = () => {
             let currentText = '';
 
             for (let i = 0; i < tokens.length; i++) {
-                if (controller.signal.aborted) break;
+                if (abortControllerRef.current === null) break;
                 currentText += (i === 0 ? '' : ' ') + tokens[i];
                 const snap = currentText;
 
@@ -726,10 +726,10 @@ export const InteractiveTerminal: React.FC = () => {
         };
 
         try {
-            // Timeout de 6 segundos: se a API remota demorar ou travar, aciona o fallback imediatamente
+            // Timeout de 25 segundos: dá margem suficiente para qualquer geração da IA sem abortar precocemente
             const timeoutId = setTimeout(() => {
                 controller.abort();
-            }, 6000);
+            }, 25000);
 
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -740,6 +740,7 @@ export const InteractiveTerminal: React.FC = () => {
 
             const contentType = response.headers.get('content-type') || '';
             if (!response.ok || !contentType.includes('text/plain') || !response.body) {
+                console.warn('[Copilot API Remote Fallback Triggered]', response.status);
                 throw new Error(`API_ERROR_${response.status}`);
             }
 
@@ -791,6 +792,7 @@ export const InteractiveTerminal: React.FC = () => {
                 { text: '', color: '' },
             ]);
         } catch (err: any) {
+            console.warn('[Copilot Remote Error]', err);
             // Se foi cancelamento deliberado do usuário via Ctrl+C (quando abortControllerRef.current já foi zerado)
             if (err.name === 'AbortError' && abortControllerRef.current === null) {
                 setLines(prev => [
