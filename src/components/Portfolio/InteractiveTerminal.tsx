@@ -639,6 +639,7 @@ export const InteractiveTerminal: React.FC = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [history, setHistory] = useState<string[]>([]);
     const [histIdx, setHistIdx] = useState(-1);
+    const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'model'; text: string }>>([]);
     const [activeGame, setActiveGame] = useState<ActiveTerminalGame>(null);
     const [isStreaming, setIsStreaming] = useState(false);
 
@@ -692,6 +693,7 @@ export const InteractiveTerminal: React.FC = () => {
             if (!activeGame) {
                 clearAllTimers();
                 setLines(getWelcomeLines(lang));
+                setChatHistory([]);
             }
         }
     }, [lang, activeGame, clearAllTimers]);
@@ -941,10 +943,21 @@ export const InteractiveTerminal: React.FC = () => {
                 controller.abort();
             }, 8000);
 
+            const payloadHistory = chatHistory
+                .filter(msg => typeof msg.text === 'string' && msg.text.trim().length > 0)
+                .slice(-4)
+                .map(msg => ({
+                    role: msg.role === 'model' ? ('model' as const) : ('user' as const),
+                    text: msg.text.trim(),
+                }));
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: cleanQuestion }),
+                body: JSON.stringify({
+                    message: cleanQuestion,
+                    history: payloadHistory,
+                }),
                 signal: controller.signal,
             }).finally(() => clearTimeout(timeoutId));
 
@@ -1024,6 +1037,16 @@ export const InteractiveTerminal: React.FC = () => {
             }
 
             flushUpdate(true);
+
+            // Salva apenas mensagens válidas no histórico de conversação
+            const validAnswer = accumulatedText.trim();
+            if (validAnswer.length > 0) {
+                setChatHistory(prev => [
+                    ...prev,
+                    { role: 'user', text: cleanQuestion },
+                    { role: 'model', text: validAnswer },
+                ]);
+            }
 
             const latency = ((Date.now() - startTime) / 1000).toFixed(2);
             const tokenCount = Math.max(16, Math.round(accumulatedText.length / 3.7));
@@ -1111,6 +1134,7 @@ export const InteractiveTerminal: React.FC = () => {
                 }
                 setIsStreaming(false);
                 setLines(getWelcomeLines(lang));
+                setChatHistory([]);
             },
             setLines,
             runSimulation,

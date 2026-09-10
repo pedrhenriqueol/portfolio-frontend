@@ -103,7 +103,7 @@ export default async function handler(req: Request): Promise<Response> {
 
                 const role: 'user' | 'model' = msg.role === 'model' ? 'model' : 'user';
 
-                // Garante estritamente a alternância de turnos: user -> model -> user
+                // Garante alternância estrita: user -> model -> user
                 if (role === expectedRole) {
                     cleanHistory.push({
                         role,
@@ -113,23 +113,26 @@ export default async function handler(req: Request): Promise<Response> {
                 }
             }
 
-            // Se o histórico terminar com 'user', descarta para o próximo prompt ser o fechamento natural
+            // Se o histórico terminar com 'user', descarta o último para que o próximo prompt seja o fechamento natural
             if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
                 cleanHistory.pop();
             }
         }
 
-        // Montagem final do payload contents
-        const contents = [
+        // Montagem dos payloads de conteúdos: com histórico e fallback sem histórico
+        const initialContents = [
             ...cleanHistory,
             { role: 'user' as const, parts: [{ text: sanitized }] },
         ];
+        const fallbackContents = [
+            { role: 'user' as const, parts: [{ text: sanitized }] },
+        ];
 
-        // 2. Modelos canônicos ativos prioritários (expurgo definitivo de modelos descontinuados como gemini-2.5-flash-lite)
+        // 2. Modelos canônicos ativos recomendados pela Google
         const CANDIDATE_MODELS = [
+            'gemini-3.6-flash',
             'gemini-flash-latest',
             'gemini-2.5-flash',
-            'gemini-2.0-flash',
         ];
 
         const safetySettings = [
@@ -142,19 +145,19 @@ export default async function handler(req: Request): Promise<Response> {
         let geminiRes: Response | null = null;
         let lastErrText = '';
         let lastStatus = 503;
+        let activeContents = initialContents;
 
         const basePayload = {
             systemInstruction: {
                 parts: [{ text: SYSTEM_INSTRUCTION }],
             },
-            contents,
             safetySettings,
         };
 
         for (const model of CANDIDATE_MODELS) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-            // Configurações: primeiro tenta com thinkingBudget: 0 (para suprimir pensamento longo em modelos 2.5);
+            // Configurações: primeiro tenta com thinkingBudget: 0 (para suprimir pensamento longo em modelos 2.5/3.x);
             // fallback para configuração padrão se o modelo retornar 400 por não aceitar thinkingConfig
             const configsToTry = [
                 {
@@ -176,7 +179,7 @@ export default async function handler(req: Request): Promise<Response> {
                 const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
 
                 try {
-                    const res = await fetch(geminiUrl, {
+                    let res = await fetch(geminiUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -184,10 +187,30 @@ export default async function handler(req: Request): Promise<Response> {
                         },
                         body: JSON.stringify({
                             ...basePayload,
+                            contents: activeContents,
                             generationConfig: genConfig,
                         }),
                         signal: connectAbort.signal,
                     });
+
+                    // Degradação graciosa: se a Google rejeitar com 400 e houver histórico, reenvia imediatamente para o MESMO modelo apenas com o prompt atual
+                    if (res.status === 400 && activeContents.length > 1) {
+                        console.warn('[Copilot Warning] History rejected by upstream schema. Retrying without history.');
+                        activeContents = fallbackContents;
+                        res = await fetch(geminiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-goog-api-key': apiKey,
+                            },
+                            body: JSON.stringify({
+                                ...basePayload,
+                                contents: activeContents,
+                                generationConfig: genConfig,
+                            }),
+                            signal: connectAbort.signal,
+                        });
+                    }
 
                     if (res.ok) {
                         // Limpa imediatamente o timer para que o stream de tokens possa fluir livremente
@@ -205,7 +228,7 @@ export default async function handler(req: Request): Promise<Response> {
                         continue;
                     }
 
-                    // Se for 400 de payload inválido geral, não tenta os próximos modelos pois o erro é no formato
+                    // Se for 400 de payload inválido geral, não tenta os próximos modelos pois o erro é no formato dos dados enviados
                     if (res.status === 400) {
                         shouldTryNextModel = false;
                         break;
