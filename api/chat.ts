@@ -90,11 +90,12 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Modelos verificados e ultrarrápidos com failover
-        const candidateModels = [
-            'gemini-1.5-flash',
+        // Cadeia de modelos canônicos ativos com failover prioritário
+        const CANDIDATE_MODELS = [
+            'gemini-2.5-flash',
+            'gemini-flash-latest',
             'gemini-2.0-flash',
-            'gemini-1.5-flash-8b',
+            'gemini-2.5-flash-lite',
         ];
 
         const safetySettings = [
@@ -106,8 +107,7 @@ export default async function handler(req: Request): Promise<Response> {
 
         let geminiRes: Response | null = null;
         let lastErrText = '';
-        let lastStatus = 502;
-        let isQuotaExceeded = false;
+        let lastStatus = 503;
 
         const basePayload = {
             systemInstruction: {
@@ -122,10 +122,12 @@ export default async function handler(req: Request): Promise<Response> {
             safetySettings,
         };
 
-        for (const model of candidateModels) {
+        for (const model of CANDIDATE_MODELS) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
+            // Configuração com thinkingBudget: 0 para TTFB mínimo (~2.1s) e fallback para config padrão
             const configsToTry = [
+                { maxOutputTokens: 250, temperature: 0.65, thinkingConfig: { thinkingBudget: 0 } },
                 { maxOutputTokens: 250, temperature: 0.65 },
             ];
 
@@ -141,7 +143,7 @@ export default async function handler(req: Request): Promise<Response> {
                             ...basePayload,
                             generationConfig: genConfig,
                         }),
-                        signal: AbortSignal.timeout(2800),
+                        signal: AbortSignal.timeout(3000),
                     });
 
                     if (res.ok) {
@@ -152,50 +154,32 @@ export default async function handler(req: Request): Promise<Response> {
                     lastStatus = res.status;
                     lastErrText = await res.text();
 
-                    // Detecta se a cota gratuita do Google Gemini foi excedida (429 / RESOURCE_EXHAUSTED)
-                    if (res.status === 429 || lastErrText.includes('quota') || lastErrText.includes('RESOURCE_EXHAUSTED')) {
-                        isQuotaExceeded = true;
-                        break;
-                    }
-
-                    // Se for 400 (Bad Request), pode ser parâmetro não suportado pelo modelo específico, tenta a próxima config
+                    // Se for 400 e estiver usando thinkingConfig, tenta a próxima config sem o parâmetro
                     if (res.status === 400 && 'thinkingConfig' in genConfig) {
                         continue;
                     }
 
+                    // Para 404, 429, 503 ou outros códigos de erro, avança para o próximo modelo candidato
                     break;
                 } catch (fetchErr: any) {
                     lastErrText = fetchErr?.message || String(fetchErr);
+                    lastStatus = 503;
                 }
             }
 
             if (geminiRes && geminiRes.ok) {
                 break;
             }
-
-            // Se a cota foi atingida no projeto/chave, outros modelos também falharão com 429; interrompe imediatamente
-            if (isQuotaExceeded) {
-                break;
-            }
-        }
-
-        if (isQuotaExceeded) {
-            console.warn('Gemini API Quota Exceeded (429):', lastErrText);
-            return new Response(JSON.stringify({
-                error: 'QUOTA_EXCEEDED',
-                status: 429,
-                message: 'Google Gemini Free Tier daily quota (1500 RPD) exceeded. Please generate a new key in Google AI Studio or wait for quota reset.',
-                details: lastErrText,
-            }), {
-                status: 429,
-                headers: { 'Content-Type': 'application/json' },
-            });
         }
 
         if (!geminiRes || !geminiRes.ok) {
-            console.error('Gemini API Error:', lastStatus, lastErrText);
-            return new Response(JSON.stringify({ error: 'GEMINI_ERROR', status: lastStatus, details: lastErrText }), {
-                status: 502,
+            console.error('Gemini API Upstream Unavailable:', lastStatus, lastErrText);
+            return new Response(JSON.stringify({
+                error: 'UPSTREAM_UNAVAILABLE',
+                status: 503,
+                details: lastErrText || 'All candidate models failed or returned non-200 status.',
+            }), {
+                status: 503,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
