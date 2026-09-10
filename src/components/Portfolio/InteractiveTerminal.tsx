@@ -281,7 +281,146 @@ function getLocalCopilotResponse(question: string, lang: string): string {
     const isEn = lang === 'en';
     const isEs = lang === 'es';
 
-    // 1. Stack Tecnológico / Linguagens / Tecnologias que mais utiliza
+    // 1. Meta-perguntas, escopo de conversação e capacidades do assistente
+    if (
+        q.includes('alem') ||
+        q.includes('além') ||
+        q.includes('outras coisas') ||
+        q.includes('outros assuntos') ||
+        q.includes('outro assunto') ||
+        q.includes('o que você faz') ||
+        q.includes('o que voce faz') ||
+        q.includes('o que mais') ||
+        q.includes('fala de que') ||
+        q.includes('fala sobre o que') ||
+        q.includes('conversa sobre') ||
+        q.includes('sobre o que você fala') ||
+        q.includes('sobre o que voce fala') ||
+        q.includes('pode responder') ||
+        q.includes('sabe fazer') ||
+        q.includes('capacidades') ||
+        q.includes('other things') ||
+        q.includes('what else') ||
+        q.includes('what can you do') ||
+        q.includes('otras cosas') ||
+        q.includes('de qué hablas') ||
+        q.includes('de que hablas')
+    ) {
+        if (isEn) {
+            return 'Yes, absolutely! In addition to everything about Pedro Henrique\'s career, stack, and projects, I can discuss software engineering in general: system architecture, QA & API testing, SQL tuning, React, Laravel, Delphi, Docker, and general tech topics. What would you like to talk about?';
+        }
+        if (isEs) {
+            return '¡Sí, por supuesto! Además de conocer en detalle la trayectoria y proyectos de Pedro Henrique, puedo conversar sobre ingeniería de software en general: arquitectura de sistemas, pruebas QA, optimización SQL, Laravel, Delphi, React, Docker y más. ¿Sobre qué te gustaría hablar?';
+        }
+        return 'Sim, com certeza! Além de conhecer em profundidade toda a trajetória, projetos e tecnologias do Pedro Henrique, sou treinado para debater engenharia de software em geral: arquitetura de sistemas, QA e testes de API, SQL Server, Laravel, Delphi, React, Docker ou qualquer tópico técnico. Sobre o que você gostaria de conversar?';
+    }
+
+    // 2. Saudações e Conversação Social
+    if (
+        q === 'oi' ||
+        q === 'ola' ||
+        q === 'olá' ||
+        q.startsWith('ola') ||
+        q.startsWith('olá') ||
+        q.startsWith('oi ') ||
+        q.startsWith('e ai') ||
+        q.startsWith('e aí') ||
+        q.startsWith('bom dia') ||
+        q.startsWith('boa tarde') ||
+        q.startsWith('boa noite') ||
+        q.includes('tudo bem') ||
+        q.includes('como vai') ||
+        q.includes('como você está') ||
+        q.includes('como voce esta') ||
+        q === 'hello' ||
+        q === 'hi' ||
+        q === 'hey' ||
+        q.includes('how are you') ||
+        q === 'hola' ||
+        q.includes('cómo estás') ||
+        q.includes('como estas') ||
+        q.includes('qué tal') ||
+        q.includes('que tal')
+    ) {
+        if (isEn) {
+            return 'Hello! I am Pedro Henrique\'s Technical Copilot. I can help you explore his technical stack, QA & software engineering experience, projects, or discuss any tech subject. How can I assist you right now?';
+        }
+        if (isEs) {
+            return '¡Hola! Soy el Copilot Técnico de Pedro Henrique. Puedes consultarme sobre su stack, experiencia en QA y desarrollo, proyectos destacados o debatir sobre tecnología. ¿En qué te puedo ayudar ahora?';
+        }
+        return 'Olá! Sou o Copilot Técnico do Pedro Henrique. Você pode me fazer perguntas sobre a stack dele (Laravel, Delphi, React, SQL Server), experiência em QA e desenvolvimento, projetos de engenharia ou debater sobre qualquer tópico técnico. Como posso te ajudar agora?';
+    }
+
+    // 3. Conceitos Técnicos Específicos (React, TypeScript, Delphi, Laravel, SQL, QA, Docker, Git)
+    if (q.includes('react') && !q.includes('stack') && !q.includes('projeto')) {
+        return isEn
+            ? '`React` is a declarative component-based JavaScript library maintained by Meta for building dynamic user interfaces. In Pedro\'s workstation and projects, React is paired with TypeScript and Tailwind CSS for high-performance responsive web applications.'
+            : isEs
+            ? '`React` es una librería declarativa de JavaScript mantenida por Meta para crear interfaces interactivas. En los proyectos de Pedro, se combina con TypeScript y Tailwind CSS para lograr aplicaciones web rápidas y modernas.'
+            : 'O `React` é uma biblioteca JavaScript declarativa desenvolvida pela Meta para construção de interfaces reativas baseadas em componentes. No ecossistema de projetos do Pedro, ele é utilizado com TypeScript e Tailwind CSS para interfaces velozes e de alta densidade informativa.';
+    }
+
+    if (q.includes('typescript') || q === 'ts') {
+        return isEn
+            ? '`TypeScript` is a typed superset of JavaScript developed by Microsoft. It enforces static typing and compile-time error detection, essential for scalable distributed systems and resilient web applications.'
+            : isEs
+            ? '`TypeScript` es un superconjunto tipado de JavaScript desarrollado por Microsoft que añade tipado estático y seguridad en tiempo de compilación para arquitecturas robustas.'
+            : 'O `TypeScript` é um superset tipado do JavaScript mantido pela Microsoft. Ele adiciona tipagem estática e interfaces robustas, reduzindo drasticamente falhas em tempo de execução em back-ends e front-ends corporativos.';
+    }
+
+    if (q.includes('delphi') || q.includes('unigui') || q.includes('vcl')) {
+        return isEn
+            ? '`Delphi` (Object Pascal) is a high-performance RAD development environment for native desktop and client-server systems. Pedro has hands-on experience modernizing monolithic legacy ERPs in Delphi 11 (VCL/UniGui) into modern web APIs with Laravel (PHP) and React. Type `pedro --experience`!'
+            : isEs
+            ? '`Delphi` (Object Pascal) es un entorno de alto rendimiento para sistemas de escritorio y cliente-servidor. Pedro cuenta con experiencia práctica modernizando ERPs legados monolíticos en Delphi 11 (VCL/UniGui) hacia la web con Laravel y React. ¡Escribe `pedro --experience`!'
+            : 'Na Qualisoft Sistemas, o Pedro atuou na sustentação e modernização de ERP monolítico em `Delphi 11` (VCL/UniGui), construindo APIs RESTful em PHP/Laravel e interfaces reativas em React para migração web. Também realizou otimizações críticas em queries SQL Server e MySQL, reduzindo tempos de resposta de mais de 2s para menos de 500ms. Digite `pedro --experience` para ver a trajetória!';
+    }
+
+    if (q.includes('laravel') || q.includes('php')) {
+        return isEn
+            ? '`Laravel` is a premier PHP framework renowned for expressive syntax, robust ORM (Eloquent), and built-in security. Pedro leverages Laravel to build high-concurrency RESTful APIs, asynchronous job queues, and modern web services.'
+            : isEs
+            ? '`Laravel` es un framework de PHP reconocido por su sintaxis elegante, ORM Eloquent y robustez. Pedro utiliza Laravel para construir APIs RESTful y modernizar arquitecturas de software.'
+            : 'O `Laravel` é o principal framework PHP contemporâneo, consagrado pela elegância arquitetural, segurança nativa e ecossistema robusto. O Pedro o utiliza na construção de microsserviços, modernização de legados e APIs RESTful escaláveis.';
+    }
+
+    if ((q.includes('sql') || q.includes('query') || q.includes('queries') || q.includes('banco') || q.includes('database') || q.includes('tuning') || q.includes('indice') || q.includes('índice')) && !q.includes('stack')) {
+        if (isEn) {
+            return 'Pedro possesses deep expertise in `Microsoft SQL Server` and PostgreSQL, auditing execution plans, diagnosing Table/Index Scans, and designing composite indexes for high-throughput transactional databases. Type `sql` to simulate an interactive execution plan tuning demo!';
+        }
+        if (isEs) {
+            return 'Pedro cuenta con amplia experiencia en `Microsoft SQL Server` y PostgreSQL, auditando planes de ejecución, diagnosticando Table/Index Scans y creando índices compuestos para alta transaccionalidad. ¡Escribe `sql` para simular un tuning interactivo!';
+        }
+        return 'O Pedro possui sólida vivência em `Microsoft SQL Server` e PostgreSQL, especializado em diagnósticos de Execution Plans, resolução de gargalos de Table Scans, criação de índices compostos e tuning de queries de alta frequência. Digite `sql` para rodar uma simulação de otimização de banco em tempo real!';
+    }
+
+    if (q.includes('qa') || q.includes('postman') || q.includes('test') || q.includes('qualidade') || q.includes('calidad') || q.includes('asserções') || q.includes('asserc') || q.includes('regressao') || q.includes('regressão')) {
+        if (isEn) {
+            return 'Pedro acts as a QA Analyst at SETE Tecnologia, modeling functional and regression test suites for port logistics platforms (ZPEs). He automates API assertions in Postman, validates business boundary conditions, and audits query performance in SQL Server (-25% bug rate in production). Type `test` to run an automated regression runner!';
+        }
+        if (isEs) {
+            return 'Pedro se desempeña como Analista de QA en SETE Tecnologia, modelando suites de pruebas funcionales y de regresión para sistemas logísticos portuarios (ZPEs). Automatiza aserciones en Postman y audita consultas en SQL Server (-25% de tasa de errores). ¡Escribe `test` para ejecutar el runner de pruebas!';
+        }
+        return 'O Pedro atua como Analista de QA na SETE Tecnologia, sendo responsável pela modelagem de suítes de testes funcionais e regressivos em sistemas críticos de logística portuária e zonas aduaneiras (ZPEs / plataforma ePita). Ele automatiza asserções de APIs via Postman e audita planos de execução no SQL Server, reduzindo a incidência de bugs em produção em mais de 25%. Digite `test` para rodar a simulação de testes agora!';
+    }
+
+    if (q.includes('docker') || q.includes('conteiner') || q.includes('contêiner')) {
+        return isEn
+            ? '`Docker` is an open platform for containerizing applications, isolating microservices and guaranteeing identical runtime environments from local dev to production orchestration.'
+            : isEs
+            ? '`Docker` permite aislar aplicaciones y dependencias en contenedores ligeros, asegurando paridad total entre desarrollo y producción.'
+            : 'O `Docker` permite encapsular aplicações e todas as suas dependências em contêineres leves e reproduzíveis, simplificando pipelines de CI/CD e garantindo paridade total entre ambientes de desenvolvimento e produção.';
+    }
+
+    if (q.includes('git') || q.includes('github')) {
+        return isEn
+            ? '`Git` is the global standard distributed version control system. Pedro uses Git and GitHub for branch management, code review workflows, and automated continuous deployment.'
+            : isEs
+            ? '`Git` es el estándar global para control de versiones distribuido. Pedro utiliza Git y GitHub para control atómico de código y flujos de CI/CD.'
+            : 'O `Git` é o padrão global para versionamento distribuído de código, fornecendo histórico atômico de commits, branches para isolamento de features e integração com esteiras de CI/CD.';
+    }
+
+    // 4. Stack Tecnológico / Linguagens / Tecnologias do Pedro
     if (
         q.includes('stack') ||
         q.includes('tecnologia') ||
@@ -294,7 +433,7 @@ function getLocalCopilotResponse(question: string, lang: string): string {
         q.includes('usa') ||
         q.includes('programa') ||
         q.includes('framework') ||
-        q.includes('tecnologias')
+        q.includes('skills')
     ) {
         if (isEn) {
             return 'Pedro Henrique specializes in Full Stack Engineering and QA Test Automation. His primary stack includes:\n• `Back-End:` PHP (Laravel), Delphi 11 (VCL/UniGui), Java and RESTful APIs\n• `Front-End:` React, TypeScript, Tailwind CSS and JavaScript\n• `Databases:` Microsoft SQL Server (query diagnostics, composite indexing, execution plans) and MySQL/PostgreSQL\n• `QA & Testing:` Postman (automated regression suites, HTTP assertions) and manual validation\n• `DevOps & Tools:` Docker, Git/GitHub and Linux.\nType `pedro --skills` or `pedro --projects` to explore!';
@@ -305,30 +444,8 @@ function getLocalCopilotResponse(question: string, lang: string): string {
         return 'O Pedro Henrique é especialista em Engenharia Full Stack e Garantia de Qualidade (QA). O stack que ele mais utiliza no dia a dia compreende:\n• `Back-End:` PHP (Laravel), Delphi 11 (VCL/UniGui), Java e APIs RESTful estruturadas\n• `Front-End:` React, TypeScript, Tailwind CSS e JavaScript moderno\n• `Bancos de Dados:` Microsoft SQL Server (diagnósticos avançados de query plans, índices compostos e tuning de latência) e MySQL/PostgreSQL\n• `QA & Testes:` Postman (automação de asserções HTTP, regressão contínua) e homologação funcional\n• `DevOps & Ferramentas:` Docker, Git/GitHub e Linux.\nDigite `pedro --skills` para ver a lista completa ou `test` para simular uma bateria de testes!';
     }
 
-    // 2. QA, Qualidade, Postman e Testes Automatizados
-    if (q.includes('test') || q.includes('qa') || q.includes('postman') || q.includes('qualidade') || q.includes('calidad') || q.includes('assercoes') || q.includes('asserções') || q.includes('regressao') || q.includes('regressão')) {
-        if (isEn) {
-            return 'Pedro acts as a QA Analyst at SETE Tecnologia, modeling functional and regression test suites for port logistics platforms (ZPEs). He automates API assertions in Postman, validates business boundary conditions, and audits query performance in SQL Server (-25% bug rate in production). Type `test` to run a simulated automated API regression runner!';
-        }
-        if (isEs) {
-            return 'Pedro se desempeña como Analista de QA en SETE Tecnologia, modelando suites de pruebas funcionales y de regresión para sistemas logísticos portuarios (ZPEs). Automatiza aserciones en Postman y audita consultas en SQL Server (-25% de tasa de errores). ¡Escribe `test` para ejecutar el runner de pruebas!';
-        }
-        return 'O Pedro atua como Analista de QA na SETE Tecnologia, sendo responsável pela modelagem de suítes de testes funcionais e regressivos em sistemas críticos de logística portuária e zonas aduaneiras (ZPEs / plataforma ePita). Ele automatiza asserções de APIs via Postman e audita planos de execução no SQL Server, reduzindo a incidência de bugs em produção em mais de 25%. Digite `test` para rodar a simulação de testes agora!';
-    }
-
-    // 3. Delphi, Legado, Laravel e Migração ERP
-    if (q.includes('delphi') || q.includes('unigui') || q.includes('vcl') || q.includes('laravel') || q.includes('php') || q.includes('erp') || q.includes('legado') || q.includes('qualisoft')) {
-        if (isEn) {
-            return 'At Qualisoft Sistemas, Pedro worked on modernizing monolithic legacy ERPs built in Delphi 11 (VCL/UniGui), integrating them into modern web ecosystems with Laravel (PHP) and React. He also tuned complex SQL Server queries, dropping execution times from 2s to <500ms. Type `pedro --experience` for full details!';
-        }
-        if (isEs) {
-            return 'En Qualisoft Sistemas, Pedro trabajó en la modernización de ERPs legados monolíticos en Delphi 11 (VCL/UniGui), migrándolos hacia arquitecturas web modernas con Laravel (PHP) y React, además de optimizar consultas SQL Server de 2s a <500ms. ¡Escribe `pedro --experience`!';
-        }
-        return 'Na Qualisoft Sistemas, o Pedro atuou na sustentação e modernização de ERP monolítico em Delphi 11 (VCL/UniGui), construindo APIs RESTful em PHP/Laravel e interfaces reativas em React para migração web. Também realizou otimizações críticas em queries SQL Server e MySQL, reduzindo tempos de resposta de mais de 2s para menos de 500ms. Digite `pedro --experience` para ver a trajetória!';
-    }
-
-    // 4. Projetos em Destaque (PayStream, PortLog, SPECTR)
-    if (q.includes('projeto') || q.includes('project') || q.includes('paystream') || q.includes('portlog') || q.includes('spectr') || q.includes('portfolio') || q.includes('portfólio')) {
+    // 5. Projetos em Destaque (PayStream, PortLog, SPECTR)
+    if (q.includes('paystream') || q.includes('portlog') || q.includes('spectr') || q.includes('projeto') || q.includes('project') || q.includes('portfolio') || q.includes('portfólio')) {
         if (isEn) {
             return 'Pedro has architected three flagship engineering projects:\n1. `PayStream Gateway:` Fintech payment processor with idempotent webhooks, cent splits & HMAC-SHA256 (Fastify, TypeScript, Prisma, PostgreSQL)\n2. `PortLog OS:` Port logistics terminal operating system with IoT telemetry, FSM for STS/RTG cranes & RBAC\n3. `SPECTR TestOps:` API testing platform with latency percentiles (p50/p90/p95/p99) and chaos injection.\nType `pedro --projects` to inspect their code and architecture!';
         }
@@ -336,17 +453,6 @@ function getLocalCopilotResponse(question: string, lang: string): string {
             return 'Pedro ha diseñado tres proyectos destacados de ingeniería:\n1. `PayStream Gateway:` Pasarela fintech con webhooks idempotentes, división en centavos y HMAC-SHA256 (Fastify, TypeScript, Prisma)\n2. `PortLog OS:` Sistema para terminales portuarias con telemetría IoT, máquinas de estado FSM para grúas y RBAC\n3. `SPECTR TestOps:` Plataforma de pruebas API con percentiles de latencia y simulación de caos.\n¡Escribe `pedro --projects`!';
         }
         return 'O Pedro arquitetou 3 projetos emblemáticos de engenharia:\n1. `PayStream Gateway:` Gateway de pagamentos fintech com webhooks idempotentes, split em centavos e assinaturas HMAC-SHA256 (Fastify, TypeScript, Prisma e PostgreSQL)\n2. `PortLog OS:` Sistema operacional para logística portuária com telemetria IoT, máquina de estados finitos (FSM) para guindastes STS/RTG e controle RBAC\n3. `SPECTR TestOps:` Plataforma de testes de API nível Postman com métricas de percentis (p50/p90/p95/p99) e laboratório de injeção de caos.\nDigite `pedro --projects` para ver detalhes e links de repositório!';
-    }
-
-    // 5. Bancos de Dados, SQL Server e Otimização de Queries
-    if (q.includes('sql') || q.includes('banco') || q.includes('database') || q.includes('query') || q.includes('queries') || q.includes('tuning') || q.includes('indice') || q.includes('índice')) {
-        if (isEn) {
-            return 'Pedro possesses deep expertise in Microsoft SQL Server and PostgreSQL, auditing execution plans, diagnosing Table/Index Scans, and designing composite indexes for high-throughput transactional databases. Type `sql` to simulate an interactive execution plan tuning demo!';
-        }
-        if (isEs) {
-            return 'Pedro cuenta con amplia experiencia en Microsoft SQL Server y PostgreSQL, auditando planes de ejecución, diagnosticando Table/Index Scans y creando índices compuestos para alta transaccionalidad. ¡Escribe `sql` para simular un tuning interactivo!';
-        }
-        return 'O Pedro possui sólida vivência em Microsoft SQL Server e PostgreSQL, especializado em diagnósticos de Execution Plans, resolução de gargalos de Table Scans, criação de índices compostos e tuning de queries de alta frequência. Digite `sql` para rodar uma simulação de otimização de banco em tempo real!';
     }
 
     // 6. Formação Acadêmica e Estudos
@@ -361,7 +467,7 @@ function getLocalCopilotResponse(question: string, lang: string): string {
     }
 
     // 7. Contato, Links e Contratação
-    if (q.includes('contato') || q.includes('contact') || q.includes('email') || q.includes('e-mail') || q.includes('linkedin') || q.includes('github') || q.includes('telefone') || q.includes('phone') || q.includes('whatsapp') || q.includes('contratar') || q.includes('vaga') || q.includes('trabalho') || q.includes('job') || q.includes('falar')) {
+    if (q.includes('contato') || q.includes('contact') || q.includes('email') || q.includes('e-mail') || q.includes('linkedin') || q.includes('telefone') || q.includes('phone') || q.includes('whatsapp') || q.includes('contratar') || q.includes('vaga') || q.includes('trabalho') || q.includes('job')) {
         if (isEn) {
             return 'You can contact Pedro Henrique directly through:\n• `Email:` pedrohc.forza@gmail.com\n• `LinkedIn:` linkedin.com/in/pedro-henrique-b0a015391\n• `GitHub:` github.com/pedrhenriqueol\n• `Phone / WhatsApp:` +55 (85) 98868-7214\nType `pedro --contact` for quick copyable links!';
         }
@@ -371,19 +477,22 @@ function getLocalCopilotResponse(question: string, lang: string): string {
         return 'Você pode entrar em contato direto com o Pedro através dos canais:\n• `E-mail:` pedrohc.forza@gmail.com\n• `LinkedIn:` linkedin.com/in/pedro-henrique-b0a015391\n• `GitHub:` github.com/pedrhenriqueol\n• `Telefone / WhatsApp:` +55 (85) 98868-7214\nEle responde com rapidez para oportunidades e parcerias. Digite `pedro --contact` para ver mais!';
     }
 
-    // 8. Saudações e Conversação Geral (Oi, Olá, Bom dia, etc.)
-    if (q === 'oi' || q === 'ola' || q === 'olá' || q.startsWith('ola') || q.startsWith('olá') || q.startsWith('oi ') || q.startsWith('e ai') || q.startsWith('e aí') || q.startsWith('bom dia') || q.startsWith('boa tarde') || q.startsWith('boa noite') || q === 'hello' || q === 'hi' || q === 'hey') {
-        if (isEn) {
-            return 'Hello! I am Pedro Henrique\'s Technical Copilot. You can ask me anything about his technical stack, QA & software engineering experience, projects, or request terminal command recommendations. How can I help you today?';
-        }
-        if (isEs) {
-            return '¡Hola! Soy el Copilot Técnico de Pedro Henrique. Puedes preguntarme sobre su stack, experiencia en QA y desarrollo, proyectos destacados o comandos del terminal. ¿En qué te puedo ayudar hoy?';
-        }
-        return 'Olá! Sou o Copilot Técnico do Pedro Henrique. Você pode me fazer qualquer pergunta em linguagem natural sobre a stack dele (Laravel, Delphi, React, SQL Server), experiência em QA e desenvolvimento, projetos de engenharia ou comandos do terminal. Como posso te ajudar agora?';
-    }
-
-    // 9. Quem é o Pedro / Resumo Profissional / Experiência Geral
-    if (q.includes('pedro') || q.includes('quem') || q.includes('experiencia') || q.includes('experiência') || q.includes('trajetoria') || q.includes('trajetória') || q.includes('who is') || q.includes('about') || q.includes('sobre') || q.includes('perfil') || q.includes('trabalha') || q.includes('onde')) {
+    // 8. Quem é o Pedro / Resumo Profissional / Experiência Geral (Gatilhos Específicos sem 'sobre' solto)
+    if (
+        (q.includes('pedro') && (q.includes('quem') || q.includes('sobre') || q.includes('bio') || q.includes('perfil') || q.includes('trajetoria') || q.includes('trajetória') || q.includes('experiencia') || q.includes('experiência') || q.includes('historia') || q.includes('história'))) ||
+        q.includes('quem é você') ||
+        q.includes('quem e voce') ||
+        q.includes('quem e o pedro') ||
+        q.includes('quem é o pedro') ||
+        q.includes('sobre o pedro') ||
+        q.includes('who is pedro') ||
+        q.includes('who are you') ||
+        q.includes('about pedro') ||
+        q.includes('quien es pedro') ||
+        q.includes('quién es pedro') ||
+        q === 'pedro' ||
+        q === 'bio'
+    ) {
         if (isEn) {
             return 'Pedro Henrique is a Software Engineer currently working as a QA Analyst Intern at SETE Tecnologia (validating port logistics systems and automating API tests via Postman), with prior experience as a Back-End Developer at Qualisoft Sistemas modernizing legacy Delphi ERPs into PHP/Laravel and React. Type `test`, `pedro --skills` or `pedro --projects` to learn more!';
         }
@@ -393,14 +502,14 @@ function getLocalCopilotResponse(question: string, lang: string): string {
         return 'O Pedro Henrique é graduando em Engenharia de Software e atua como Analista de QA na SETE Tecnologia, validando sistemas portuários e aduaneiros (ZPEs) com diagnósticos em Microsoft SQL Server e automação Postman. Possui também sólida bagagem como Desenvolvedor Back-End na Qualisoft Sistemas, modernizando ERP monolítico em Delphi para Laravel e React. Digite `test` para simular testes ou `pedro --skills`!';
     }
 
-    // 10. Jogos e Arcade
+    // 9. Jogos e Arcade
     if (q.includes('jogo') || q.includes('jogar') || q.includes('game') || q.includes('arcade') || q.includes('snake') || q.includes('matrix') || q.includes('trivia') || q.includes('play')) {
         return isEn
             ? 'Available arcade minigames in this workstation:\n• `snake` (Classic Snake)\n• `bug-hunter` (QA Minesweeper Debugger)\n• `trivia` (Engineering & SQL Quiz)\n• `aim-test` (Reaction Speed)\n• `matrix` (Matrix Rain)\nType `pedro --games` or `pedro --play snake` to start!'
             : 'Minijogos arcade disponíveis no terminal:\n• `snake` (Cobrinha clássica)\n• `bug-hunter` (Caça aos bugs sem erro 500)\n• `trivia` (Quiz de QA, Delphi e SQL)\n• `aim-test` (Teste de reflexos)\n• `matrix` (Chuva de código)\nDigite `pedro --games` ou `pedro --play snake` para começar!';
     }
 
-    // 11. Como usar o Terminal / Ajuda
+    // 10. Como usar o Terminal / Ajuda
     if (q.includes('terminal') || q.includes('funciona') || q.includes('como usar') || q.includes('how it work') || q.includes('how does') || q.includes('ajuda') || q.includes('help')) {
         if (isEn) {
             return 'This terminal functions both as a traditional engineering shell and a conversational AI copilot. You can type any question freely in natural language, or execute interactive commands like `test` (API validation runner), `sql` (query tuning simulator), `pedro --projects`, `pedro --skills`, or `clear`.';
@@ -408,14 +517,14 @@ function getLocalCopilotResponse(question: string, lang: string): string {
         return 'Este terminal opera de forma híbrida: você pode fazer qualquer pergunta em linguagem natural (como em um chat do ChatGPT ou Gemini) ou rodar comandos diretos do sistema como `test` (validação de APIs), `sql` (simulador de tuning), `pedro --projects`, `pedro --skills` ou `clear`. Digite `help` para ver a lista de atalhos!';
     }
 
-    // Fallback geral inteligente contextualizado
+    // 11. Fallback geral inteligente conversacional (NUNCA despeja biografia aleatória)
     if (isEn) {
-        return 'Pedro Henrique is a Software Engineer specializing in QA TestOps (Postman, API assertions, SQL Server auditing) and Full Stack modernization (PHP/Laravel, Delphi, React, TypeScript). Feel free to ask more specific questions about his tech stack, projects, or experience, or type `help` for commands!';
+        return 'Got it! As the workstation Copilot, I\'m here to explore software engineering concepts, web architecture, QA automation, or provide details on Pedro Henrique\'s projects and stack. What would you like to discuss? You can also type `help` for system commands or `test` to run a simulation.';
     }
     if (isEs) {
-        return 'Pedro Henrique es Ingeniero de Software especializado en QA TestOps (Postman, validación de APIs, SQL Server) y desarrollo Full Stack (PHP/Laravel, Delphi, React, TypeScript). ¡Pregúntame sobre su stack, proyectos o escribe `help` para ver comandos!';
+        return '¡Entendido! Como Copilot del terminal, estoy disponible para conversar sobre ingeniería de software, arquitectura web, pruebas QA o explicar los proyectos y stack de Pedro Henrique. ¿En qué te gustaría profundizar? También puedes escribir `help` para ver comandos o `test` para simulaciones.';
     }
-    return 'O Pedro Henrique atua com foco em Engenharia Full Stack e QA TestOps (automação Postman, diagnósticos no Microsoft SQL Server e modernização com PHP/Laravel, Delphi e React). Você pode me perguntar sobre os projetos dele (`paystream`, `portlog`, `spectr`), stacks ou digitar `test` e `sql` para simulações!';
+    return 'Entendi sua pergunta! Como Copilot de terminal, estou configurado para discutir conceitos de tecnologia, desenvolvimento de software, automação de testes (QA) e apresentar as realizações técnicas do Pedro Henrique. O que você gostaria de explorar mais a fundo? Você também pode digitar `help` para ver comandos ou `test` para rodar simulações.';
 }
 
 export const InteractiveTerminal: React.FC = () => {
@@ -490,13 +599,10 @@ export const InteractiveTerminal: React.FC = () => {
             .catch(() => {});
     }, []);
 
-    // Auto-scroll suave para o final do terminal ao adicionar linhas
+    // Auto-scroll interno do terminal ao adicionar linhas (sem rolar a janela do navegador)
     useEffect(() => {
-        if (!activeGame) {
-            terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            if (contentRef.current) {
-                contentRef.current.scrollTop = contentRef.current.scrollHeight;
-            }
+        if (!activeGame && contentRef.current) {
+            contentRef.current.scrollTop = contentRef.current.scrollHeight;
         }
     }, [lines, activeGame]);
 
@@ -515,7 +621,6 @@ export const InteractiveTerminal: React.FC = () => {
         steps.forEach(step => {
             const timerId = window.setTimeout(() => {
                 setLines(prev => [...prev, step.line]);
-                terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 if (contentRef.current) {
                     contentRef.current.scrollTop = contentRef.current.scrollHeight;
                 }
@@ -597,7 +702,6 @@ export const InteractiveTerminal: React.FC = () => {
                     )
                 );
 
-                terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 if (contentRef.current) {
                     contentRef.current.scrollTop = contentRef.current.scrollHeight;
                 }
@@ -662,7 +766,6 @@ export const InteractiveTerminal: React.FC = () => {
                     )
                 );
 
-                terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 if (contentRef.current) {
                     contentRef.current.scrollTop = contentRef.current.scrollHeight;
                 }
@@ -750,7 +853,7 @@ export const InteractiveTerminal: React.FC = () => {
             if (e.detail?.command) {
                 handleRunCommand(e.detail.command);
             }
-            inputRef.current?.focus();
+            inputRef.current?.focus({ preventScroll: true });
         };
 
         window.addEventListener('focus-terminal', handleCustomEvent as EventListener);
@@ -841,7 +944,7 @@ export const InteractiveTerminal: React.FC = () => {
             className={`relative bg-gradient-to-b from-white/[0.05] via-[#0d0f14]/98 to-[#0d0f14]/98 border border-white/[0.08] border-t-white/20 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.7)] transition-all duration-300 ${
                 focused ? 'border-accent/50 border-t-accent/70 shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(var(--color-accent-rgb),0.08)]' : 'hover:border-white/20'
             }`}
-            onClick={() => inputRef.current?.focus()}
+            onClick={() => inputRef.current?.focus({ preventScroll: true })}
         >
             {/* Title bar com Controles de Janela */}
             <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.08] bg-dark/60 select-none">
