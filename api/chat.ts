@@ -90,12 +90,12 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Cadeia de modelos canônicos ativos com failover prioritário
+        // Modelos canônicos reais e ativos com failover na API v1beta do Google Gemini
         const CANDIDATE_MODELS = [
-            'gemini-2.5-flash',
-            'gemini-flash-latest',
             'gemini-2.0-flash',
-            'gemini-2.5-flash-lite',
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-latest',
+            'gemini-1.5-flash-lite',
         ];
 
         const safetySettings = [
@@ -125,50 +125,42 @@ export default async function handler(req: Request): Promise<Response> {
         for (const model of CANDIDATE_MODELS) {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-            // Configuração com thinkingBudget: 0 para TTFB mínimo (~2.1s) e fallback para config padrão
-            const configsToTry = [
-                { maxOutputTokens: 250, temperature: 0.65, thinkingConfig: { thinkingBudget: 0 } },
-                { maxOutputTokens: 250, temperature: 0.65 },
-            ];
+            // Timeout de conexão de 7 segundos exclusivo para estabelecimento dos headers
+            const connectAbort = new AbortController();
+            const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
 
-            for (const genConfig of configsToTry) {
-                try {
-                    const res = await fetch(geminiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-goog-api-key': apiKey,
+            try {
+                const res = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': apiKey,
+                    },
+                    body: JSON.stringify({
+                        ...basePayload,
+                        generationConfig: {
+                            maxOutputTokens: 600,
+                            temperature: 0.65,
                         },
-                        body: JSON.stringify({
-                            ...basePayload,
-                            generationConfig: genConfig,
-                        }),
-                        signal: AbortSignal.timeout(3000),
-                    });
+                    }),
+                    signal: connectAbort.signal,
+                });
 
-                    if (res.ok) {
-                        geminiRes = res;
-                        break;
-                    }
-
-                    lastStatus = res.status;
-                    lastErrText = await res.text();
-
-                    // Se for 400 e estiver usando thinkingConfig, tenta a próxima config sem o parâmetro
-                    if (res.status === 400 && 'thinkingConfig' in genConfig) {
-                        continue;
-                    }
-
-                    // Para 404, 429, 503 ou outros códigos de erro, avança para o próximo modelo candidato
+                if (res.ok) {
+                    // Limpa imediatamente o timeout para permitir que o streaming dos tokens
+                    // flua até a conclusão natural da frase sem ser cortado prematuramente
+                    clearTimeout(connectTimeoutId);
+                    geminiRes = res;
                     break;
-                } catch (fetchErr: any) {
-                    lastErrText = fetchErr?.message || String(fetchErr);
-                    lastStatus = 503;
                 }
-            }
 
-            if (geminiRes && geminiRes.ok) {
-                break;
+                clearTimeout(connectTimeoutId);
+                lastStatus = res.status;
+                lastErrText = await res.text();
+            } catch (fetchErr: any) {
+                clearTimeout(connectTimeoutId);
+                lastErrText = fetchErr?.message || String(fetchErr);
+                lastStatus = 503;
             }
         }
 
@@ -200,6 +192,12 @@ export default async function handler(req: Request): Promise<Response> {
         const stream = new ReadableStream({
             async start(controller) {
                 let buffer = '';
+                const streamSafetyTimeout = setTimeout(() => {
+                    try {
+                        controller.close();
+                    } catch {}
+                }, 20000);
+
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
@@ -267,6 +265,7 @@ export default async function handler(req: Request): Promise<Response> {
                 } catch (err) {
                     controller.error(err);
                 } finally {
+                    clearTimeout(streamSafetyTimeout);
                     reader.releaseLock();
                 }
             },
