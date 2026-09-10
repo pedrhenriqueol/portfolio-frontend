@@ -58,36 +58,65 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Chamada à API de streaming do Gemini 1.5 Flash via SSE
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+        // Lista de modelos suportados em ordem de versão e disponibilidade
+        const candidateModels = [
+            'gemini-2.0-flash',
+            'gemini-2.5-flash',
+            'gemini-1.5-flash-latest',
+            'gemini-flash-latest',
+            'gemini-1.5-flash',
+        ];
 
-        const geminiRes = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey,
-            },
-            body: JSON.stringify({
-                systemInstruction: {
-                    parts: [{ text: SYSTEM_INSTRUCTION }],
-                },
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [{ text: sanitized }],
+        let geminiRes: Response | null = null;
+        let lastErrText = '';
+        let lastStatus = 502;
+
+        for (const model of candidateModels) {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+            try {
+                const res = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': apiKey,
                     },
-                ],
-                generationConfig: {
-                    maxOutputTokens: 350,
-                    temperature: 0.6,
-                },
-            }),
-        });
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{ text: SYSTEM_INSTRUCTION }],
+                        },
+                        contents: [
+                            {
+                                role: 'user',
+                                parts: [{ text: sanitized }],
+                            },
+                        ],
+                        generationConfig: {
+                            maxOutputTokens: 350,
+                            temperature: 0.6,
+                        },
+                    }),
+                });
 
-        if (!geminiRes.ok) {
-            const errText = await geminiRes.text();
-            console.error('Gemini API Error:', geminiRes.status, errText);
-            return new Response(JSON.stringify({ error: 'GEMINI_ERROR', status: geminiRes.status, details: errText }), {
+                if (res.ok) {
+                    geminiRes = res;
+                    break;
+                } else {
+                    lastStatus = res.status;
+                    lastErrText = await res.text();
+                    // Se for 404 (modelo descontinuado/não encontrado nessa conta), tenta o próximo modelo da lista
+                    if (res.status === 404) {
+                        continue;
+                    }
+                    break;
+                }
+            } catch (fetchErr: any) {
+                lastErrText = fetchErr?.message || String(fetchErr);
+            }
+        }
+
+        if (!geminiRes || !geminiRes.ok) {
+            console.error('Gemini API Error:', lastStatus, lastErrText);
+            return new Response(JSON.stringify({ error: 'GEMINI_ERROR', status: lastStatus, details: lastErrText }), {
                 status: 502,
                 headers: { 'Content-Type': 'application/json' },
             });
