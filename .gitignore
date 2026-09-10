@@ -28,4 +28,9 @@ _laravel_backend/
 *.mov
 *.webm
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 

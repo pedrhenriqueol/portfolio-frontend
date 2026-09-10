@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-function apiDevServerPlugin() {
+function apiDevServerPlugin(env = {}) {
   return {
     name: 'api-dev-server',
     configureServer(server) {
@@ -19,7 +19,7 @@ function apiDevServerPlugin() {
           try {
             const parsed = JSON.parse(body || '{}');
             const message = (parsed.message || '').trim().slice(0, 300);
-            const apiKey = process.env.GEMINI_API_KEY;
+            const apiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
             if (!apiKey) {
               res.statusCode = 503;
@@ -31,7 +31,10 @@ function apiDevServerPlugin() {
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
             const geminiRes = await fetch(geminiUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey,
+              },
               body: JSON.stringify({
                 systemInstruction: {
                   parts: [{
@@ -109,28 +112,31 @@ SUAS DIRETRIZES FUNDAMENTAIS:
 }
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), apiDevServerPlugin()],
-  build: {
-    cssCodeSplit: true,
-    chunkSizeWarningLimit: 700,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    plugins: [react(), apiDevServerPlugin(env)],
+    build: {
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 700,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'vendor-react';
+              }
+              if (id.includes('framer-motion')) {
+                return 'vendor-motion';
+              }
+              if (id.includes('react-type-animation')) {
+                return 'vendor-typing';
+              }
+              return 'vendor-libs';
             }
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
-            }
-            if (id.includes('react-type-animation')) {
-              return 'vendor-typing';
-            }
-            return 'vendor-libs';
-          }
+          },
         },
       },
     },
-  },
+  };
 });

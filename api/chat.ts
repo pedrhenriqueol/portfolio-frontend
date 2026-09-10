@@ -61,6 +61,7 @@ export default async function handler(req: Request): Promise<Response> {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey,
             },
             body: JSON.stringify({
                 systemInstruction: {
