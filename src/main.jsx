@@ -4,6 +4,7 @@ import App from './App.jsx';
 import './index.css';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { Analytics } from '@vercel/analytics/react';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -67,6 +68,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <LanguageProvider>
         <ThemeProvider>
           <App />
+          <Analytics />
         </ThemeProvider>
       </LanguageProvider>
     </ErrorBoundary>
