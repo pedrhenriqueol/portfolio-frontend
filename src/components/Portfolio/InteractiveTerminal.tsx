@@ -950,8 +950,12 @@ export const InteractiveTerminal: React.FC = () => {
 
             const contentType = response.headers.get('content-type') || '';
             if (!response.ok || !contentType.includes('text/plain') || !response.body) {
-                console.warn('[Copilot API Remote Fallback Triggered]', response.status);
-                throw new Error(`API_ERROR_${response.status}`);
+                let errDetail = '';
+                try {
+                    errDetail = await response.text();
+                } catch {}
+                console.warn('[Copilot API Remote Error Details]:', response.status, errDetail);
+                throw new Error(`API_ERROR_${response.status}_${errDetail}`);
             }
 
             const reader = response.body.getReader();
@@ -1354,57 +1358,40 @@ export const InteractiveTerminal: React.FC = () => {
                 </motion.button>
             </div>
 
-            {/* Input Line com Prompt Minimalista & Efeitos Dinâmicos de Digitação (Ghostty / Warp Style) */}
+            {/* Input Line com Prompt Minimalista & Animação Suave das Letras (Ghostty / Warp Style) */}
             <div
-                className={`flex items-center gap-2.5 px-4 py-3 border-t relative shrink-0 transition-all duration-300 ${
-                    isTyping
-                        ? 'border-emerald-500/40 bg-gradient-to-r from-emerald-500/[0.08] via-cyan-500/[0.03] to-black/50 shadow-[0_-1px_24px_rgba(52,211,153,0.14),inset_0_1px_0_rgba(52,211,153,0.2)]'
-                        : focused
-                        ? 'border-white/[0.12] bg-black/50 shadow-[0_-1px_12px_rgba(255,255,255,0.03)]'
-                        : 'border-white/[0.06] bg-black/40'
+                className={`flex items-center gap-2.5 px-4 py-3 border-t relative shrink-0 transition-colors duration-200 ${
+                    focused ? 'border-white/[0.12] bg-black/50 shadow-[0_-1px_12px_rgba(255,255,255,0.02)]' : 'border-white/[0.06] bg-black/40'
                 }`}
             >
                 <div className="flex items-center gap-2 font-mono text-xs select-none shrink-0">
                     <span className="text-neutral-400 font-medium">pedro</span>
                     <span className="text-neutral-600">in</span>
                     <span className="text-neutral-300">~</span>
-                    <motion.span
-                        animate={
-                            isTyping
-                                ? { scale: [1, 1.35, 1], color: ['#34d399', '#22d3ee', '#34d399'] }
-                                : { x: focused ? [0, 2, 0] : 0, color: focused ? '#34d399' : '#10b981' }
-                        }
-                        transition={
-                            isTyping
-                                ? { duration: 0.25, repeat: Infinity }
-                                : { duration: 1.6, repeat: focused ? Infinity : 0, repeatDelay: 1 }
-                        }
-                        className="text-emerald-400 font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]"
-                    >
-                        ❯
-                    </motion.span>
+                    <span className="text-emerald-400 font-bold">❯</span>
                 </div>
 
                 <div className="relative flex-1 flex items-center min-h-[22px]">
-                    {/* Camada inline de cursor dinâmico que segue a digitação e sugestão Tab */}
-                    <div className="absolute inset-0 pointer-events-none font-mono text-xs md:text-[13px] flex items-center select-none overflow-hidden">
-                        {/* Espelho do texto digitado para posicionar o cursor com precisão cirúrgica */}
-                        <span className="opacity-0 whitespace-pre">{input}</span>
+                    {/* Camada de renderização visual: Cada letra digitada tem animação fluida de entrada (pop-in suave) */}
+                    <div className="absolute inset-0 pointer-events-none font-mono text-xs md:text-[13px] flex items-center select-none overflow-hidden z-10">
+                        {input.split('').map((char, index) => (
+                            <motion.span
+                                key={`${index}-${char}`}
+                                initial={{ opacity: 0, y: 3, scale: 0.85 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                                className="inline-block text-neutral-100 whitespace-pre"
+                            >
+                                {char}
+                            </motion.span>
+                        ))}
 
-                        {/* Cursor em bloco esmeralda vivo imediatamente após o último caractere digitado */}
+                        {/* Cursor em bloco esmeralda vivo imediatamente após a última letra digitada */}
                         {!activeGame && !isStreaming && (
                             <motion.span
-                                animate={
-                                    isTyping
-                                        ? { opacity: 1, scale: [1, 1.15, 1], boxShadow: '0 0 12px rgba(52,211,153,0.95)' }
-                                        : { opacity: focused ? [1, 0, 1] : 0.35, scale: 1, boxShadow: '0 0 6px rgba(52,211,153,0.6)' }
-                                }
-                                transition={
-                                    isTyping
-                                        ? { duration: 0.2, repeat: Infinity }
-                                        : { duration: 0.85, repeat: Infinity }
-                                }
-                                className="inline-block w-2 h-4 bg-emerald-400 rounded-[1px] shrink-0 ml-[1px]"
+                                animate={{ opacity: focused ? [1, 0, 1] : 0.35 }}
+                                transition={{ duration: 0.85, repeat: Infinity, ease: 'linear' }}
+                                className="inline-block w-2 h-4 bg-emerald-400 rounded-[1px] shrink-0 ml-[1px] shadow-[0_0_8px_rgba(52,211,153,0.7)]"
                             />
                         )}
 
@@ -1423,6 +1410,7 @@ export const InteractiveTerminal: React.FC = () => {
                         })()}
                     </div>
 
+                    {/* Input real invisível que recebe a digitação nativa do usuário */}
                     <input
                         ref={inputRef}
                         type="text"
@@ -1445,25 +1433,12 @@ export const InteractiveTerminal: React.FC = () => {
                                 ? (lang === 'en' ? 'Copilot streaming response... (Ctrl+C to abort)' : 'Copilot respondendo... (Ctrl+C para cancelar)')
                                 : (lang === 'en' ? 'Ask anything to Copilot or type test, sql, help...' : lang === 'es' ? 'Pregunta lo que sea al Copilot o escribe test, sql, help...' : 'Pergunte qualquer coisa ao Copilot ou digite test, sql, help...')
                         }
-                        className="w-full bg-transparent text-white font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-10 disabled:opacity-60 caret-transparent"
+                        className="w-full bg-transparent text-transparent font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-20 disabled:opacity-60 caret-transparent"
                         spellCheck={false}
                         autoComplete="off"
                         aria-label="Terminal interativo"
                     />
                 </div>
-
-                {/* Indicador de Status à direita: digitando / inferindo */}
-                {isTyping && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 select-none shrink-0"
-                    >
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        <span>digitando...</span>
-                    </motion.div>
-                )}
 
                 {isStreaming && (
                     <motion.div
