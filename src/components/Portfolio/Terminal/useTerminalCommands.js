@@ -294,7 +294,8 @@ export const getCommands = (lang) => [
 export function useTerminalCommands(lang) {
     const commandsList = useMemo(() => getCommands(lang), [lang]);
 
-    const execute = useCallback((raw, { onLaunchGame, onClear, setLines, runSimulation }) => {
+    const execute = useCallback((raw, options = {}) => {
+        const { onLaunchGame, onClear, setLines, runSimulation, onFallbackToAI } = options;
         const trimmed = raw.trim();
         if (!trimmed) return;
 
@@ -393,8 +394,8 @@ export function useTerminalCommands(lang) {
         // Explicit AI Copilot invocation
         if (lower.startsWith('ai ') || lower.startsWith('ask ') || lower === 'ai' || lower === 'ask') {
             const question = trimmed.replace(/^(ai|ask)\s*/i, '').trim();
-            if (options.onFallbackToAI) {
-                options.onFallbackToAI(
+            if (onFallbackToAI) {
+                onFallbackToAI(
                     question || (lang === 'en' ? 'Who is Pedro Henrique and what is his experience?' : 'Quem é o Pedro Henrique e qual é a experiência dele?'),
                     trimmed
                 );
@@ -414,9 +415,9 @@ export function useTerminalCommands(lang) {
                 ...out,
                 { text: '', color: '' }
             ]);
-        } else if (options.onFallbackToAI) {
+        } else if (onFallbackToAI) {
             // Unrecognized command or natural language question -> Delegate to Copilot AI
-            options.onFallbackToAI(trimmed, trimmed);
+            onFallbackToAI(trimmed, trimmed);
         } else {
             const unknown = lang === 'en'
                 ? `Unknown command: "${trimmed}". Type "pedro --help" or "pedro --games".`
