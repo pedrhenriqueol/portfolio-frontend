@@ -9,9 +9,11 @@ import MatrixRain from './Terminal/effects/MatrixRain';
 import { ALL_CMD_STRINGS, getWelcomeLines, useTerminalCommands } from './Terminal/useTerminalCommands';
 
 export interface TerminalLine {
+    id?: string;
     text: string;
     color?: string;
     node?: React.ReactNode;
+    isStreaming?: boolean;
 }
 
 export type ActiveTerminalGame = 'snake' | 'bug-hunter' | 'trivia' | 'aim-test' | 'matrix' | null;
@@ -19,6 +21,29 @@ export type ActiveTerminalGame = 'snake' | 'bug-hunter' | 'trivia' | 'aim-test' 
 interface SimulationStep {
     delay: number;
     line: TerminalLine;
+}
+
+/** Renderizador formatado de respostas de IA estilo terminal com destaque para tokens entre crases */
+function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
+    const parts = text.split(/(`[^`]+`)/g);
+    return (
+        <div className="text-neutral-300 font-mono text-[11px] sm:text-[12px] leading-relaxed whitespace-pre-wrap break-words">
+            {parts.map((part, idx) => {
+                if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
+                    const code = part.slice(1, -1);
+                    return (
+                        <span key={idx} className="text-white font-semibold bg-white/10 px-1 py-0.5 rounded border border-white/15 mx-0.5 font-mono">
+                            {code}
+                        </span>
+                    );
+                }
+                return <span key={idx}>{part}</span>;
+            })}
+            {isStreaming && (
+                <span className="inline-block text-cyan-400 font-bold ml-1 animate-pulse">▍</span>
+            )}
+        </div>
+    );
 }
 
 /** Gera os passos com simulação de latência para a bateria de testes automatizados (QA) */
@@ -105,12 +130,12 @@ function getTestSimulationSteps(lang: string): SimulationStep[] {
         {
             delay: 320,
             line: {
-                text: '[RUN] GET  /api/v1/relatorios/saldo  -> 200 OK (18ms) [PASS]',
+                text: '[RUN] GET  /api/v1/zpe/portlog/status -> 200 OK (18ms) [PASS]',
                 node: (
                     <div className="flex flex-wrap items-center gap-x-2 font-mono text-[11px] sm:text-[12px]">
                         <span className="text-gray-400 font-semibold">[RUN]</span>
                         <span className="text-cyan-400 font-bold">GET</span>
-                        <span className="text-gray-200">/api/v1/relatorios/saldo</span>
+                        <span className="text-gray-200">/api/v1/zpe/portlog/status</span>
                         <span className="text-gray-500">{'->'}</span>
                         <span className="text-emerald-400 font-semibold">200 OK</span>
                         <span className="text-amber-300 font-mono">(18ms)</span>
@@ -122,45 +147,23 @@ function getTestSimulationSteps(lang: string): SimulationStep[] {
         {
             delay: 400,
             line: {
-                text: '──────────────────────────────────────────────────────────',
-                color: 'text-white/20',
-            },
-        },
-        {
-            delay: 480,
-            line: {
                 text: resultText,
                 node: (
-                    <div className="font-mono text-[11px] sm:text-[12px]">
-                        <span className="text-secondary font-bold">
-                            {isEn ? 'RESULT: ' : isEs ? 'RESULTADO: ' : 'RESULTADO: '}
-                        </span>
-                        <span className="text-emerald-400 font-bold">
-                            {isEn ? '4 PASSED' : isEs ? '4 PASÓ' : '4 PASSOU'}
-                        </span>
-                        <span className="text-gray-400">
-                            {isEn ? ', 0 FAILED' : isEs ? ', 0 FALLÓ' : ', 0 FALHOU'}
-                        </span>
-                        <span className="text-gray-600"> | </span>
-                        <span className="text-cyan-400 font-semibold">
-                            {isEn ? 'COVERAGE: 100%' : isEs ? 'COBERTURA: 100%' : 'COBERTURA: 100%'}
-                        </span>
-                        <span className="text-gray-600"> | </span>
-                        <span className="text-emerald-400 font-bold">
-                            {isEn ? 'STATUS: ZERO REGRESSIONS' : isEs ? 'ESTADO: CERO REGRESIONES' : 'STATUS: ZERO REGRESSÕES'}
-                        </span>
+                    <div className="font-mono text-emerald-400 font-bold flex items-center gap-1.5 mt-1">
+                        <span>✔</span>
+                        <span>{resultText}</span>
                     </div>
                 ),
             },
         },
         {
-            delay: 540,
+            delay: 450,
             line: { text: '', color: '' },
         },
     ];
 }
 
-/** Gera os passos com simulação de análise de execução e tuning de banco de dados (SQL) */
+/** Gera os passos com simulação de latência para a otimização de queries (SQL Tuning) */
 function getSqlSimulationSteps(lang: string): SimulationStep[] {
     const isEn = lang === 'en';
     const isEs = lang === 'es';
@@ -172,7 +175,7 @@ function getSqlSimulationSteps(lang: string): SimulationStep[] {
         : '> ANALISANDO PLANO DE EXECUÇÃO: SELECT * FROM Transacoes WHERE EmpresaId = 10...';
 
     const q2 = isEn
-        ? '[ALERT] Table Scan identified: 2,140ms latency in production.'
+        ? '[ALERT] Table Scan identified: 2.140ms latency in production.'
         : isEs
         ? '[ALERTA] Table Scan identificado: 2.140ms de latencia en producción.'
         : '[ALERTA] Table Scan identificado: 2.140ms de latência em produção.';
@@ -184,16 +187,10 @@ function getSqlSimulationSteps(lang: string): SimulationStep[] {
         : '[AÇÃO] Injetando índice composto: CREATE NONCLUSTERED INDEX idx_empresa_data...';
 
     const q4 = isEn
-        ? '✔ Index Seek activated successfully.'
+        ? '✔ Index Seek applied with success. Query refactored.'
         : isEs
-        ? '✔ Index Seek activado con éxito.'
-        : '✔ Index Seek ativado com sucesso.';
-
-    const q5 = isEn
-        ? 'FINAL EXECUTION TIME: 19ms (Optimization: -99.1%)'
-        : isEs
-        ? 'TIEMPO DE EJECUCIÓN FINAL: 19ms (Optimización: -99.1%)'
-        : 'TEMPO DE EXECUÇÃO FINAL: 19ms (Otimização: -99.1%)';
+        ? '✔ Index Seek aplicado con éxito. Consulta refactorizada.'
+        : '✔ Index Seek aplicado com sucesso. Query refatorada.';
 
     return [
         {
@@ -279,6 +276,8 @@ function getSqlSimulationSteps(lang: string): SimulationStep[] {
     ];
 }
 
+const q5 = 'FINAL EXECUTION TIME: 19ms (Optimization: -99.1%)';
+
 export const InteractiveTerminal: React.FC = () => {
     const { lang } = useLanguage();
     const [lines, setLines] = useState<TerminalLine[]>(() => getWelcomeLines(lang));
@@ -288,12 +287,14 @@ export const InteractiveTerminal: React.FC = () => {
     const [histIdx, setHistIdx] = useState(-1);
     const [activeGame, setActiveGame] = useState<ActiveTerminalGame>(null);
     const [visitorCity, setVisitorCity] = useState('');
+    const [isStreaming, setIsStreaming] = useState(false);
 
     const contentRef = useRef<HTMLDivElement>(null);
     const terminalEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const hasFetchedCity = useRef(false);
     const activeTimersRef = useRef<number[]>([]);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const { execute } = useTerminalCommands(lang);
 
@@ -303,20 +304,24 @@ export const InteractiveTerminal: React.FC = () => {
         activeTimersRef.current = [];
     }, []);
 
-    // Higiene de desmontagem: cancela qualquer timer ativo
+    // Higiene de desmontagem: cancela qualquer timer ativo ou stream em andamento
     useEffect(() => {
         return () => {
             clearAllTimers();
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
         };
     }, [clearAllTimers]);
 
-    // Reseta boas-vindas ao trocar de idioma caso não haja jogo ativo
+    // Reseta boas-vindas ao trocar de idioma caso não haja jogo ou stream ativo
     useEffect(() => {
-        if (!activeGame) {
+        if (!activeGame && !isStreaming) {
             clearAllTimers();
             setLines(getWelcomeLines(lang));
         }
-    }, [lang, activeGame, clearAllTimers]);
+    }, [lang, activeGame, isStreaming, clearAllTimers]);
 
     // Localização do visitante via IP-API executado com cache de sessão
     useEffect(() => {
@@ -358,7 +363,7 @@ export const InteractiveTerminal: React.FC = () => {
         // Eco do comando digitado
         setLines(prev => [
             ...prev,
-            { text: `> ${commandRaw}`, color: 'text-accent/80 font-bold' },
+            { text: `pedro@workstation:~$ ${commandRaw}`, color: 'text-cyan-400/90 font-semibold' },
         ]);
 
         const steps = type === 'test' ? getTestSimulationSteps(lang) : getSqlSimulationSteps(lang);
@@ -377,6 +382,137 @@ export const InteractiveTerminal: React.FC = () => {
         });
     }, [lang, clearAllTimers]);
 
+    /** Streaming assíncrono com o Copilot Técnico via rota segura /api/chat */
+    const handleAskCopilot = useCallback(async (question: string) => {
+        const cleanQuestion = question.trim();
+        if (!cleanQuestion) return;
+
+        // Cancela requisições anteriores ativas
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        setIsStreaming(true);
+
+        const streamLineId = `copilot-${Date.now()}`;
+
+        // Eco do comando digitado e badge do Copilot
+        setLines(prev => [
+            ...prev,
+            {
+                text: `pedro@workstation:~$ ${cleanQuestion}`,
+                color: 'text-cyan-400/90 font-semibold',
+                node: (
+                    <div className="font-mono text-xs sm:text-sm font-semibold flex items-center gap-1.5">
+                        <span className="text-cyan-400">pedro@workstation:~$</span>
+                        <span className="text-white">{cleanQuestion}</span>
+                    </div>
+                ),
+            },
+            {
+                text: '[COPILOT // AGENTE TÉCNICO]',
+                node: (
+                    <div className="text-cyan-400 font-mono text-xs font-semibold flex items-center gap-2 mt-1 mb-0.5">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse inline-block" />
+                        <span>[COPILOT // AGENTE TÉCNICO]</span>
+                    </div>
+                ),
+            },
+            {
+                id: streamLineId,
+                text: '',
+                isStreaming: true,
+                node: <FormattedCopilotResponse text="" isStreaming={true} />,
+            },
+        ]);
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: cleanQuestion }),
+                signal: controller.signal,
+            });
+
+            if (!response.ok || !response.body) {
+                throw new Error(`API_ERROR_${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedText = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const textChunk = decoder.decode(value, { stream: true });
+                accumulatedText += textChunk;
+
+                setLines(prev =>
+                    prev.map(l =>
+                        l.id === streamLineId
+                            ? {
+                                  ...l,
+                                  text: accumulatedText,
+                                  node: <FormattedCopilotResponse text={accumulatedText} isStreaming={true} />,
+                              }
+                            : l
+                    )
+                );
+
+                terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                if (contentRef.current) {
+                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                }
+            }
+
+            // Finaliza o streaming removendo o cursor pulsante
+            setLines(prev => [
+                ...prev.map(l =>
+                    l.id === streamLineId
+                        ? {
+                              ...l,
+                              text: accumulatedText,
+                              isStreaming: false,
+                              node: <FormattedCopilotResponse text={accumulatedText} isStreaming={false} />,
+                          }
+                        : l
+                ),
+                { text: '', color: '' },
+            ]);
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                setLines(prev => [
+                    ...prev.map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedCopilotResponse text={l.text} isStreaming={false} /> } : l)),
+                    {
+                        text: '^C [OPERAÇÃO CANCELADA PELO USUÁRIO]',
+                        color: 'text-red-400 font-mono text-xs',
+                    },
+                    { text: '', color: '' },
+                ]);
+            } else {
+                // Tratamento de falhas ou ausência de chave (Modo Offline gracioso)
+                setLines(prev => [
+                    ...prev.filter(l => l.id !== streamLineId),
+                    {
+                        text: "[INFO] Modo offline. Digite 'help' para listar os comandos integrados do sistema.",
+                        color: 'text-amber-400/90 font-mono text-xs',
+                    },
+                    { text: '', color: '' },
+                ]);
+            }
+        } finally {
+            setIsStreaming(false);
+            if (abortControllerRef.current === controller) {
+                abortControllerRef.current = null;
+            }
+        }
+    }, []);
+
     /** Manipula a submissão de comandos no prompt */
     const handleRunCommand = useCallback((raw: string) => {
         const trimmed = raw.trim();
@@ -389,16 +525,27 @@ export const InteractiveTerminal: React.FC = () => {
         execute(trimmed, {
             onLaunchGame: (game: ActiveTerminalGame) => {
                 clearAllTimers();
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                    abortControllerRef.current = null;
+                }
+                setIsStreaming(false);
                 setActiveGame(game);
             },
             onClear: () => {
                 clearAllTimers();
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                    abortControllerRef.current = null;
+                }
+                setIsStreaming(false);
                 setLines(getWelcomeLines(lang));
             },
             setLines,
             runSimulation,
+            onFallbackToAI: handleAskCopilot,
         });
-    }, [execute, lang, clearAllTimers, runSimulation]);
+    }, [execute, lang, clearAllTimers, runSimulation, handleAskCopilot]);
 
     // Listener de eventos customizados para foco global do terminal
     useEffect(() => {
@@ -413,9 +560,32 @@ export const InteractiveTerminal: React.FC = () => {
         return () => window.removeEventListener('focus-terminal', handleCustomEvent as EventListener);
     }, [handleRunCommand]);
 
-    // Teclas globais de navegação do prompt (Tab, Enter, Up, Down)
+    // Teclas globais de navegação do prompt (Tab, Enter, Up, Down, Ctrl+C)
     const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (activeGame) return;
+
+        // Abort de streaming ou limpeza de linha com Ctrl+C
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+            e.preventDefault();
+            if (isStreaming) {
+                abortControllerRef.current?.abort();
+                abortControllerRef.current = null;
+                setIsStreaming(false);
+                return;
+            }
+            if (input) {
+                setLines(prev => [
+                    ...prev,
+                    { text: `pedro@workstation:~$ ${input} ^C`, color: 'text-gray-500 font-mono text-xs' },
+                    { text: '', color: '' },
+                ]);
+                setInput('');
+            }
+            return;
+        }
+
+        // Bloqueia novos inputs enquanto streaming estiver em andamento
+        if (isStreaming) return;
 
         if (e.key === 'Tab') {
             e.preventDefault();
@@ -484,6 +654,11 @@ export const InteractiveTerminal: React.FC = () => {
                     onClick={(e) => {
                         e.stopPropagation();
                         clearAllTimers();
+                        if (abortControllerRef.current) {
+                            abortControllerRef.current.abort();
+                            abortControllerRef.current = null;
+                        }
+                        setIsStreaming(false);
                         setActiveGame(null);
                         setLines(getWelcomeLines(lang));
                     }}
@@ -491,14 +666,16 @@ export const InteractiveTerminal: React.FC = () => {
                 <span className="w-3 h-3 rounded-full bg-yellow-500/40 hover:bg-yellow-500/70 transition-colors cursor-pointer" title="Minimize" />
                 <span className="w-3 h-3 rounded-full bg-green-500/40 hover:bg-green-500/70 transition-colors cursor-pointer" title="Maximize" />
                 <span className="ml-2 text-xs text-gray-400 font-mono">
-                    pedro@portfolio: ~ {activeGame ? `[GAME: ${activeGame.toUpperCase()}]` : '[QA & DEV SHELL]'}
+                    pedro@portfolio: ~ {activeGame ? `[GAME: ${activeGame.toUpperCase()}]` : isStreaming ? '[COPILOT STREAMING...]' : '[QA & COPILOT SHELL]'}
                 </span>
                 <motion.span
                     animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                    className="ml-auto w-1.5 h-1.5 rounded-full bg-accent inline-block"
+                    transition={{ duration: isStreaming ? 0.6 : 2.5, repeat: Infinity }}
+                    className={`ml-auto w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-accent'} inline-block`}
                 />
-                <span className="text-accent/70 text-xs font-mono ml-1">{activeGame ? 'playing' : 'live'}</span>
+                <span className={`text-xs font-mono ml-1 ${isStreaming ? 'text-cyan-400 font-semibold' : 'text-accent/70'}`}>
+                    {activeGame ? 'playing' : isStreaming ? 'copilot active' : 'live'}
+                </span>
             </div>
 
             {/* Área de Saída de Linhas */}
@@ -525,13 +702,15 @@ export const InteractiveTerminal: React.FC = () => {
                 )}
             </div>
 
-            {/* Input Line com Autocomplete Ghost Text */}
+            {/* Input Line com Prompt pedro@workstation:~$ */}
             <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5 bg-dark/30 relative">
-                <span className="text-accent/70 font-mono text-[12px] shrink-0">{'>'}</span>
+                <span className="text-cyan-400 font-mono text-[11px] sm:text-[12px] font-semibold shrink-0 select-none">
+                    pedro@workstation:~$
+                </span>
 
                 <div className="relative flex-1 flex items-center">
                     {/* Ghost Text com sugestão do Tab */}
-                    {!activeGame && input && (() => {
+                    {!activeGame && !isStreaming && input && (() => {
                         const match = ALL_CMD_STRINGS.find(c => c.startsWith(input.toLowerCase()) && c !== input.toLowerCase());
                         if (match) {
                             return (
@@ -549,6 +728,7 @@ export const InteractiveTerminal: React.FC = () => {
                         ref={inputRef}
                         type="text"
                         value={input}
+                        disabled={isStreaming}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={onKeyDown}
                         onFocus={() => setFocused(true)}
@@ -556,9 +736,11 @@ export const InteractiveTerminal: React.FC = () => {
                         placeholder={
                             activeGame
                                 ? (lang === 'en' ? 'Type "exit" to return to shell...' : lang === 'es' ? 'Escribe "exit" para volver al shell...' : 'Digite "exit" para voltar ao shell...')
-                                : 'test, sql, pedro --help...'
+                                : isStreaming
+                                ? (lang === 'en' ? 'Copilot streaming response... (Ctrl+C to abort)' : 'Copilot respondendo... (Ctrl+C para cancelar)')
+                                : 'test, sql, ai "sua pergunta", help...'
                         }
-                        className="w-full bg-transparent text-white font-mono text-[12px] outline-none placeholder-primary/25 relative z-10"
+                        className="w-full bg-transparent text-white font-mono text-[12px] outline-none placeholder-primary/25 relative z-10 disabled:opacity-60"
                         spellCheck={false}
                         autoComplete="off"
                         aria-label="Terminal interativo"
@@ -567,17 +749,20 @@ export const InteractiveTerminal: React.FC = () => {
 
                 <motion.span
                     animate={{ opacity: focused ? [1, 0, 1] : 1 }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="inline-block w-[6px] h-[14px] bg-accent/70 rounded-[2px] shrink-0"
+                    transition={{ duration: isStreaming ? 0.4 : 1, repeat: Infinity }}
+                    className={`inline-block w-[6px] h-[14px] ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-accent/70'} rounded-[2px] shrink-0`}
                 />
             </div>
 
             {/* Status bar */}
             <div className="flex items-center gap-3 px-4 py-2 border-t border-white/[0.08] bg-dark/40 text-[10px] font-mono text-neutral-400 select-none">
-                <span className="text-accent/80">⬡ QA & Dev Interactive Terminal</span>
+                <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
+                    <span className="text-xs">🤖</span>
+                    <span>Terminal Copilot (Gemini 1.5 Flash)</span>
+                </span>
                 <span className="hidden sm:inline text-neutral-600">|</span>
                 <span className="hidden sm:inline text-neutral-300">
-                    {lang === 'en' ? 'Type "test" or "sql" to run live simulation' : lang === 'es' ? 'Escribe "test" o "sql" para simulación en vivo' : 'Digite "test" ou "sql" para simulação em tempo real'}
+                    {lang === 'en' ? 'Type "test", "sql" or ask any question to AI' : lang === 'es' ? 'Escribe "test", "sql" o pregunta lo que sea a la IA' : 'Digite "test", "sql" ou faça perguntas em linguagem natural'}
                 </span>
                 <span className="ml-auto">{visitorCity ? `${visitorCity} → ` : ''}Fortaleza, BR</span>
                 <span>UTC-3</span>
