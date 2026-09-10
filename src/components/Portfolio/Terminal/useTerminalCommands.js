@@ -37,7 +37,8 @@ export const getCommands = (lang) => [
             if (lang === 'en') {
                 return [
                     { text: '── AI COPILOT & ASSISTANT 🤖 ──', color: 'text-cyan-400 font-bold' },
-                    { text: '  ai, ask <question>     Ask Pedro\'s Technical Copilot (or type directly)', color: 'text-cyan-300 font-semibold' },
+                    { text: '  <any question>         Ask anything directly to Copilot in natural language', color: 'text-cyan-300 font-semibold' },
+                    { text: '  ai, ask <question>     Optional prefix for questions (e.g. "what is Pedro\'s stack?")', color: 'text-cyan-300/70' },
                     { text: '', color: '' },
                     { text: '── SYSTEM & ENGINEERING ──', color: 'text-secondary font-bold' },
                     { text: '  test, qa, postman      Automated regression test runner & API assertions', color: 'text-emerald-400' },
@@ -61,7 +62,8 @@ export const getCommands = (lang) => [
             if (lang === 'es') {
                 return [
                     { text: '── COPILOT IA & ASISTENTE 🤖 ──', color: 'text-cyan-400 font-bold' },
-                    { text: '  ai, ask <pregunta>     Pregunta al Copilot Técnico (o escribe directo)', color: 'text-cyan-300 font-semibold' },
+                    { text: '  <cualquier pregunta>   Pregunta lo que sea directamente en lenguaje natural', color: 'text-cyan-300 font-semibold' },
+                    { text: '  ai, ask <pregunta>     Prefijo opcional para consultas', color: 'text-cyan-300/70' },
                     { text: '', color: '' },
                     { text: '── SISTEMA & INGENIERÍA ──', color: 'text-secondary font-bold' },
                     { text: '  test, qa, postman      Runner de pruebas automatizadas y aserciones HTTP', color: 'text-emerald-400' },
@@ -84,7 +86,8 @@ export const getCommands = (lang) => [
             }
             return [
                 { text: '── COPILOT DE IA & ASSISTENTE 🤖 ──', color: 'text-cyan-400 font-bold' },
-                { text: '  ai, ask <pergunta>     Pergunte ao Copilot Técnico (ou digite direto)', color: 'text-cyan-300 font-semibold' },
+                { text: '  <qualquer pergunta>    Converse diretamente com o Copilot em linguagem natural', color: 'text-cyan-300 font-semibold' },
+                { text: '  ai, ask <pergunta>     Prefixo opcional para perguntas (ex: "qual a stack do pedro?")', color: 'text-cyan-300/70' },
                 { text: '', color: '' },
                 { text: '── SISTEMA & ENGENHARIA ──', color: 'text-secondary font-bold' },
                 { text: '  test, qa, postman      Runner de testes de regressão & asserções HTTP', color: 'text-emerald-400' },
