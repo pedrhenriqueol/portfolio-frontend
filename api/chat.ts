@@ -103,8 +103,8 @@ export default async function handler(req: Request): Promise<Response> {
                 } else {
                     lastStatus = res.status;
                     lastErrText = await res.text();
-                    // Se for 404 (modelo descontinuado/não encontrado nessa conta), tenta o próximo modelo da lista
-                    if (res.status === 404) {
+                    // Se for 404 (modelo não existe) ou 503/429 (alta demanda temporária no modelo), tenta o próximo candidato imediatamente
+                    if (res.status === 404 || res.status === 503 || res.status === 429) {
                         continue;
                     }
                     break;
