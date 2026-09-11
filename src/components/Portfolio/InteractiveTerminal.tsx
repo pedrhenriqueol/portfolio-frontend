@@ -650,6 +650,7 @@ export const InteractiveTerminal: React.FC = () => {
     const abortControllerRef = useRef<AbortController | null>(null);
     const prevLangRef = useRef(lang);
     const typingTimeoutRef = useRef<number | null>(null);
+    const rateLimitCooldownUntilRef = useRef<number>(0);
 
     const { execute } = useTerminalCommands(lang);
 
@@ -857,6 +858,13 @@ export const InteractiveTerminal: React.FC = () => {
             },
         ]);
 
+        // Supressão de retentativas desordenadas: se dentro da janela de 45s de 429, serve direto via contingência local
+        if (Date.now() < rateLimitCooldownUntilRef.current) {
+            console.warn('[Copilot] Inside 45s rate-limit cooldown window. Serving directly via local engine.');
+            await runLocalStreamingFallback();
+            return;
+        }
+
         // Função de streaming do fallback inteligente local
         const runLocalStreamingFallback = async () => {
             const fallbackReply = getLocalCopilotResponse(cleanQuestion, lang);
@@ -916,7 +924,7 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${fallbackLatency}s • ${fallbackTokens} tokens • offline-engine`,
+                    text: `${fallbackLatency}s • ${fallbackTokens} tokens • engine: local-copilot (contingência)`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 3 }}
@@ -929,7 +937,7 @@ export const InteractiveTerminal: React.FC = () => {
                             <span>•</span>
                             <span>{fallbackTokens} tokens</span>
                             <span>•</span>
-                            <span className="text-amber-400/90 font-mono">offline-engine (fallback)</span>
+                            <span className="text-amber-400/90 font-mono">engine: local-copilot (contingência)</span>
                         </motion.div>
                     ),
                 },
@@ -962,83 +970,14 @@ export const InteractiveTerminal: React.FC = () => {
             }).finally(() => clearTimeout(timeoutId));
 
             const contentType = response.headers.get('content-type') || '';
-            if (!response.ok || !contentType.includes('text/plain') || !response.body) {
-                let errDetail = '';
-                try {
-                    errDetail = await response.text();
-                } catch {}
-                console.error('[Copilot API Remote Error Details]:', response.status, errDetail);
-
-                let parsedMsg = '';
-                try {
-                    const parsedJson = JSON.parse(errDetail);
-                    const innerDetails = parsedJson?.details;
-                    try {
-                        const parsedInner = typeof innerDetails === 'string' ? JSON.parse(innerDetails) : innerDetails;
-                        parsedMsg = parsedInner?.error?.message || parsedInner?.message || '';
-                    } catch {
-                        parsedMsg = typeof innerDetails === 'string' ? innerDetails : '';
-                    }
-                    if (!parsedMsg) {
-                        parsedMsg = parsedJson?.error || errDetail;
-                    }
-                } catch {
-                    parsedMsg = errDetail;
+            if (response.status === 429 || response.status === 503 || !response.ok || !contentType.includes('text/plain') || !response.body) {
+                if (response.status === 429) {
+                    // Registra pausa de 45 segundos para poupar cota
+                    rateLimitCooldownUntilRef.current = Date.now() + 45000;
                 }
 
-                const displayError = parsedMsg || `HTTP ${response.status}`;
-
-                setLines(prev => [
-                    ...prev
-                        .filter(l => l.id !== dispatchLineId)
-                        .map(l =>
-                            l.id === streamLineId
-                                ? {
-                                      ...l,
-                                      text: `[Erro ${response.status} Upstream]: ${displayError}`,
-                                      isStreaming: false,
-                                      node: (
-                                          <div className="space-y-1.5 font-mono text-xs my-1">
-                                              <div className="text-red-400 font-bold flex items-center gap-1.5">
-                                                  <span>✖</span>
-                                                  <span>[Erro {response.status} Gemini Upstream]</span>
-                                              </div>
-                                              <div className="text-red-300/90 bg-red-950/20 border border-red-500/20 rounded p-2 text-[11px] whitespace-pre-wrap break-all">
-                                                  {displayError}
-                                              </div>
-                                              <div className="text-neutral-500 text-[10px]">
-                                                  Dica: Acesse <a href="/api/models" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline hover:text-cyan-300">/api/models</a> para listar os modelos permitidos na sua chave.
-                                              </div>
-                                          </div>
-                                      ),
-                                  }
-                                : l.id === copilotBadgeId
-                                ? {
-                                      ...l,
-                                      node: (
-                                          <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
-                                              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                                              <span className="font-semibold text-neutral-300">copilot (erro upstream)</span>
-                                          </div>
-                                      ),
-                                  }
-                                : l
-                        ),
-                    {
-                        id: `telemetry-${Date.now()}`,
-                        text: `erro ${response.status} • upstream-failed`,
-                        node: (
-                            <div className="text-[10px] font-mono text-red-400/80 mt-1 flex items-center gap-2 select-none">
-                                <span>✖</span>
-                                <span>HTTP {response.status}</span>
-                                <span>•</span>
-                                <span>gemini-2.5-flash upstream error</span>
-                            </div>
-                        ),
-                    },
-                    { text: '', color: '' },
-                ]);
-
+                console.warn(`[Copilot] Upstream status ${response.status}. Falling back smoothly to local engine.`);
+                await runLocalStreamingFallback();
                 return;
             }
 
