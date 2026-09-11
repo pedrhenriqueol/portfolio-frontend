@@ -74,8 +74,8 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#090b10] text-white font-sans selection:bg-accent selection:text-[#090b10] relative">
-            {/* ── Substrato Fixo Monolítico (#090b10 com Iluminação Especular Superior) ── */}
+        <div className="min-h-screen bg-[#05070a] text-white font-sans selection:bg-white selection:text-black relative">
+            {/* ── Substrato Fixo Monolítico (#05070a com Iluminação Especular Superior) ── */}
             <FixedBackdrop />
 
             {/* ── Sequência de Inicialização / Preloader Minimalista Jesper Landberg ── */}

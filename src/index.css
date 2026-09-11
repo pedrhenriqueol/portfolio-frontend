@@ -19,13 +19,13 @@ html {
 }
 
 :root {
-  --bg-surface: #090b10;
+  --bg-surface: #05070a;
   --font-sans: 'Outfit', sans-serif;
   --font-serif: 'Newsreader', 'Times New Roman', serif;
 }
 
 body {
-  background-color: #090b10;
+  background-color: #05070a;
   color: #FFFFFF;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -51,20 +51,20 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090b10;
+  background: #05070a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f242f;
+  background: #181d26;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2f3646;
+  background: #252c3a;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1f242f #090b10;
+  scrollbar-color: #181d26 #05070a;
 }
 
 /* ── Mobile: tap feedback (substitui hover) ── */

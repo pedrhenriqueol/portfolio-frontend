@@ -132,7 +132,7 @@ export default function Header({ isLoaded = true }: HeaderProps) {
                 mass: 0.5,
             }}
             style={{ willChange: 'transform, opacity' }}
-            className="fixed top-0 left-0 right-0 w-full z-50 transform-gpu bg-[#090b10]/80 backdrop-blur-md border-b border-white/5"
+            className="fixed top-0 left-0 right-0 w-full z-50 transform-gpu bg-[#05070a]/80 backdrop-blur-md border-b border-white/5"
         >
             {/* Scroll progress bar */}
             <div className="absolute top-0 left-0 right-0 h-[1.5px] z-10 bg-white/5">
@@ -145,7 +145,7 @@ export default function Header({ isLoaded = true }: HeaderProps) {
 
             <div
                 className={`transition-all duration-300 ${
-                    scrolled ? 'bg-[#090b10]/90' : 'bg-transparent'
+                    scrolled ? 'bg-[#05070a]/90' : 'bg-transparent'
                 }`}
             >
                 <div className={`max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-[4.5rem]'}`}>

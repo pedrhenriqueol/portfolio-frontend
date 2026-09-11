@@ -23,7 +23,7 @@ export const SectionDivider: React.FC<SectionDividerProps> = memo(function Secti
         >
             <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
             {marker && (
-                <span className="absolute font-mono text-[9px] text-white/20 px-3 bg-[#090b10] select-none tracking-widest">
+                <span className="absolute font-mono text-[9px] text-white/20 px-3 bg-[#05070a] select-none tracking-widest">
                     {marker}
                 </span>
             )}
