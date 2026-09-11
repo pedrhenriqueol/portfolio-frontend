@@ -946,10 +946,10 @@ export const InteractiveTerminal: React.FC = () => {
         };
 
         try {
-            // Timeout de 8 segundos: garante resposta imediata sem travar o terminal do usuário
+            // Timeout de 15 segundos: margem de resiliência para horários de tráfego intenso na nuvem sem abort prematuro
             const timeoutId = setTimeout(() => {
                 controller.abort();
-            }, 8000);
+            }, 15000);
 
             const payloadHistory = chatHistory
                 .filter(msg => typeof msg.text === 'string' && msg.text.trim().length > 0)
