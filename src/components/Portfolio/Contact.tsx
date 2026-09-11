@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -58,6 +58,48 @@ export default function Contact() {
     const [submitError, setSubmitError] = useState('');
     const [copiedEmail, setCopiedEmail] = useState(false);
 
+    // Easter Egg A: Modo Contratação / Oferta de Alta Prioridade
+    const isSpecialMode = Boolean(
+        data.subject &&
+        (
+            data.subject.toLowerCase().includes('sudo hire') ||
+            data.subject.toLowerCase().includes('proposta') ||
+            data.subject.toLowerCase().includes('vaga')
+        )
+    );
+
+    // Easter Egg B: Decodificação de Telemetria TLS (Triplo Clique)
+    const tlsClicksRef = useRef(0);
+    const tlsTimerRef = useRef<number | null>(null);
+    const [tlsDecoded, setTlsDecoded] = useState(false);
+
+    const handleTlsClick = useCallback(() => {
+        tlsClicksRef.current += 1;
+        if (tlsTimerRef.current) window.clearTimeout(tlsTimerRef.current);
+
+        if (tlsClicksRef.current >= 3) {
+            tlsClicksRef.current = 0;
+            setTlsDecoded(true);
+            playMechanicalKey(1050, 0.06);
+            setTimeout(() => {
+                setTlsDecoded(false);
+            }, 4000);
+            return;
+        }
+
+        tlsTimerRef.current = window.setTimeout(() => {
+            tlsClicksRef.current = 0;
+        }, 1000);
+    }, []);
+
+    // Easter Egg C: Latência Gamer / Telemetria de Rede
+    const [showGamerStats, setShowGamerStats] = useState(false);
+
+    const handleStatusClick = useCallback(() => {
+        playMechanicalKey(750, 0.04);
+        setShowGamerStats(prev => !prev);
+    }, []);
+
     // Validação em tempo real
     const errors = {
         name: data.name.trim().length < 2 ? (lang === 'en' ? 'Name must have at least 2 characters.' : lang === 'es' ? 'El nombre debe tener al menos 2 caracteres.' : 'Nome deve ter no mínimo 2 caracteres.') : null,
@@ -85,7 +127,6 @@ export default function Contact() {
             setCopiedEmail(true);
             setTimeout(() => setCopiedEmail(false), 2200);
         } catch (e) {
-            // Fallback manual se clipboard API for restrita
             const textarea = document.createElement('textarea');
             textarea.value = EMAIL_ADDRESS;
             document.body.appendChild(textarea);
@@ -164,8 +205,8 @@ export default function Contact() {
                     </p>
                 </motion.div>
 
-                {/* ── Layout de Duas Colunas Alinhadas ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                {/* ── Layout de Duas Colunas Alinhadas (grid-cols-1 lg:grid-cols-12 gap-5) ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
                     {/* ── Coluna Esquerda: Canais Diretos (5 Colunas) ── */}
                     <motion.div
@@ -173,9 +214,9 @@ export default function Contact() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
-                        className="lg:col-span-5"
+                        className="lg:col-span-5 flex flex-col h-full"
                     >
-                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between space-y-6">
+                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-7 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between">
                             
                             <div>
                                 {/* Barra técnica superior */}
@@ -189,7 +230,7 @@ export default function Contact() {
                                     </span>
                                 </div>
 
-                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed font-sans mt-4 mb-6">
+                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed font-sans mt-4 mb-5">
                                     {t('contact.directMessage')}
                                 </p>
 
@@ -262,10 +303,22 @@ export default function Contact() {
                                 </div>
                             </div>
 
-                            {/* Rodapé técnico da coluna esquerda */}
-                            <div className="pt-4 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-mono text-neutral-500">
+                            {/* Rodapé técnico sincronizado com o card da direita */}
+                            <div className="pt-4 mt-6 border-t border-white/[0.05] flex items-center justify-between font-mono text-[11px] text-neutral-400">
                                 <span>TIMEZONE: UTC-3 (Fortaleza)</span>
-                                <span className="text-emerald-400/80 font-medium">STATUS: ONLINE</span>
+                                <span
+                                    onClick={handleStatusClick}
+                                    className="cursor-pointer hover:text-emerald-300 transition-colors select-none text-emerald-400/90 flex items-center gap-1.5"
+                                    title="Clique para alternar telemetria de rede"
+                                >
+                                    {showGamerStats ? (
+                                        <span className="text-emerald-300 font-semibold animate-pulse">
+                                            RTT: 12ms • TICK: 128Hz • LOSS: 0% [BR-NE]
+                                        </span>
+                                    ) : (
+                                        <span>● STATUS: ONLINE</span>
+                                    )}
+                                </span>
                             </div>
 
                         </div>
@@ -277,18 +330,34 @@ export default function Contact() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, delay: 0.1 }}
-                        className="lg:col-span-7"
+                        className="lg:col-span-7 flex flex-col h-full"
                     >
-                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between">
+                        <div
+                            className={`bg-[#0c0e14]/70 backdrop-blur-xl border rounded-2xl p-6 md:p-7 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between transition-all duration-300 ${
+                                isSpecialMode
+                                    ? 'border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.08)]'
+                                    : 'border-white/[0.07]'
+                            }`}
+                        >
                             
                             {/* Barra técnica de cabeçalho interno */}
                             <div>
                                 <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/[0.05] text-[11px] font-mono text-neutral-400">
                                     <span className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                        DISPATCH_MESSAGE_SERVICE
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isSpecialMode ? 'bg-emerald-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+                                        {isSpecialMode ? 'DISPATCH_SERVICE // HIGH_PRIORITY_OFFER' : 'DISPATCH_MESSAGE_SERVICE'}
                                     </span>
-                                    <span className="text-[10px] text-neutral-500">ENCRYPTED: TLS</span>
+                                    <span
+                                        onClick={handleTlsClick}
+                                        className={`cursor-pointer transition-all select-none ${
+                                            tlsDecoded
+                                                ? 'text-emerald-400 font-bold animate-pulse'
+                                                : 'text-neutral-500 hover:text-neutral-300'
+                                        }`}
+                                        title="Clique 3x para descriptografar telemetria TLS"
+                                    >
+                                        {tlsDecoded ? 'CIPHER: AES-GCM-256 // CLEARANCE: LEVEL_4 // PING: 0.5ms' : 'ENCRYPTED: TLS'}
+                                    </span>
                                 </div>
 
                                 {/* Alertas de Feedback */}
@@ -320,12 +389,12 @@ export default function Contact() {
                                     )}
                                 </AnimatePresence>
 
-                                {/* Formulário com suporte a Ctrl+Enter */}
+                                {/* Formulário com suporte a Ctrl+Enter e Zero Layout Shift */}
                                 <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4" noValidate>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         
                                         {/* Nome */}
-                                        <div className="space-y-1.5">
+                                        <div className="space-y-1">
                                             <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
                                                 {t('contact.labelName') || t('contact.formName') || 'Nome'}
                                             </label>
@@ -339,19 +408,21 @@ export default function Contact() {
                                                 placeholder={lang === 'en' ? 'John Doe' : 'Seu Nome'}
                                                 className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all focus:outline-none ${
                                                     touched.name && errors.name
-                                                        ? 'border-rose-500/50 bg-rose-500/[0.02] focus:border-rose-400'
+                                                        ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
                                                         : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
                                                 }`}
                                             />
-                                            {touched.name && errors.name && (
-                                                <span className="text-[11px] text-rose-400 font-mono mt-1 block">
-                                                    {errors.name}
-                                                </span>
-                                            )}
+                                            <div className="min-h-[16px]">
+                                                {touched.name && errors.name && (
+                                                    <span className="text-[11px] text-rose-400 font-mono block">
+                                                        {errors.name}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* E-mail */}
-                                        <div className="space-y-1.5">
+                                        <div className="space-y-1">
                                             <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
                                                 {t('contact.labelEmail') || t('contact.formEmail') || 'E-mail'}
                                             </label>
@@ -365,24 +436,33 @@ export default function Contact() {
                                                 placeholder={lang === 'en' ? 'john@example.com' : 'seu@email.com'}
                                                 className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all focus:outline-none ${
                                                     touched.email && errors.email
-                                                        ? 'border-rose-500/50 bg-rose-500/[0.02] focus:border-rose-400'
+                                                        ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
                                                         : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
                                                 }`}
                                             />
-                                            {touched.email && errors.email && (
-                                                <span className="text-[11px] text-rose-400 font-mono mt-1 block">
-                                                    {errors.email}
-                                                </span>
-                                            )}
+                                            <div className="min-h-[16px]">
+                                                {touched.email && errors.email && (
+                                                    <span className="text-[11px] text-rose-400 font-mono block">
+                                                        {errors.email}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                     </div>
 
                                     {/* Assunto */}
-                                    <div className="space-y-1.5">
-                                        <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                                            {t('contact.labelSubject') || t('contact.formSubject') || 'Assunto'}
-                                        </label>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                                                {t('contact.labelSubject') || t('contact.formSubject') || 'Assunto'}
+                                            </label>
+                                            {isSpecialMode && (
+                                                <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 animate-pulse">
+                                                    <span>⚡</span> modo contratação ativo
+                                                </span>
+                                            )}
+                                        </div>
                                         <input
                                             type="text"
                                             name="subject"
@@ -390,70 +470,71 @@ export default function Contact() {
                                             onChange={handleChange}
                                             onBlur={() => handleBlur('subject')}
                                             disabled={processing}
-                                            placeholder={lang === 'en' ? 'Project inquiry / Opportunity' : 'Oportunidade / Proposta de Projeto'}
+                                            placeholder={lang === 'en' ? 'Project inquiry / Opportunity (try: sudo hire)' : 'Oportunidade / Proposta (tente: sudo hire)'}
                                             className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all focus:outline-none ${
                                                 touched.subject && errors.subject
-                                                    ? 'border-rose-500/50 bg-rose-500/[0.02] focus:border-rose-400'
+                                                    ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
+                                                    : isSpecialMode
+                                                    ? 'border-emerald-500/50 bg-emerald-500/[0.02] focus:border-emerald-400'
                                                     : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
                                             }`}
                                         />
-                                        {touched.subject && errors.subject && (
-                                            <span className="text-[11px] text-rose-400 font-mono mt-1 block">
-                                                {errors.subject}
-                                            </span>
-                                        )}
+                                        <div className="min-h-[16px]">
+                                            {touched.subject && errors.subject && (
+                                                <span className="text-[11px] text-rose-400 font-mono block">
+                                                    {errors.subject}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Mensagem */}
-                                    <div className="space-y-1.5">
+                                    <div className="space-y-1">
                                         <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
                                             {t('contact.labelMessage') || t('contact.formMessage') || 'Mensagem'}
                                         </label>
                                         <textarea
                                             name="message"
                                             rows={4}
+                                            maxLength={800}
                                             value={data.message}
                                             onChange={handleChange}
                                             onBlur={() => handleBlur('message')}
                                             disabled={processing}
-                                            placeholder={lang === 'en' ? 'Describe your project or message here...' : 'Descreva seu projeto, desafio ou mensagem aqui...'}
+                                            placeholder={lang === 'en' ? 'Describe your project or challenge here...' : 'Descreva seu projeto, desafio ou proposta aqui...'}
                                             className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all resize-none focus:outline-none ${
                                                 touched.message && errors.message
-                                                    ? 'border-rose-500/50 bg-rose-500/[0.02] focus:border-rose-400'
+                                                    ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
                                                     : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
                                             }`}
                                         />
-                                        {touched.message && errors.message && (
-                                            <span className="text-[11px] text-rose-400 font-mono mt-1 block">
-                                                {errors.message}
-                                            </span>
-                                        )}
                                     </div>
 
-                                    {/* Botão de Envio Tátil com Atalho de Teclado */}
-                                    <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                    {/* Rodapé técnico sincronizado com barra de buffer e botão de ação */}
+                                    <div className="pt-4 mt-6 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-[11px] text-neutral-400">
                                         <button
                                             type="submit"
                                             disabled={processing}
-                                            className="w-full md:w-auto inline-flex items-center justify-center gap-3 px-5 py-2.5 rounded-xl bg-white text-black hover:bg-neutral-200 font-mono text-xs font-semibold tracking-tight transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                                            className="inline-flex items-center justify-center gap-2.5 px-4 py-2 rounded-xl bg-neutral-100 hover:bg-white text-neutral-950 font-mono text-xs font-semibold tracking-tight transition-all active:scale-[0.98] shadow-sm disabled:opacity-40 cursor-pointer select-none"
                                         >
                                             {processing ? (
                                                 <>
                                                     <i className="fas fa-circle-notch fa-spin text-xs" />
-                                                    <span>{t('contact.sending') || t('contact.btnSending') || 'Enviando...'}</span>
+                                                    <span>{t('contact.sending') || 'Enviando...'}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>{lang === 'en' ? 'Transmit Message' : lang === 'es' ? 'Transmitir Mensaje' : 'Transmitir Mensagem'}</span>
-                                                    <kbd className="hidden md:inline-block px-1.5 py-0.5 rounded bg-black/10 text-[10px] text-neutral-600 font-mono">
-                                                        Ctrl + ↵
+                                                    <span>{isSpecialMode ? 'Executar Contratação ⚡' : 'Transmitir Mensagem'}</span>
+                                                    <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-black/10 text-[10px] text-neutral-600 font-mono">
+                                                        Ctrl+↵
                                                     </kbd>
                                                 </>
                                             )}
                                         </button>
 
-                                        <span className="text-[10px] font-mono text-neutral-500 hidden sm:inline">
-                                            POST /api/dispatch • 200 OK
+                                        {/* Status de Validação / Buffer sem layout shift */}
+                                        <span className={touched.message && errors.message ? 'text-rose-400 font-mono text-[11px]' : 'text-neutral-500 font-mono text-[11px]'}>
+                                            {(touched.message && errors.message) || `BUFFER: ${data.message.length}/800 B`}
                                         </span>
                                     </div>
                                 </form>
