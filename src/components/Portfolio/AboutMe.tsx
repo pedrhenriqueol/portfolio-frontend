@@ -779,7 +779,7 @@ export default function AboutMe() {
                                         type="button"
                                         onClick={() => handleTechChipClick(tag)}
                                         className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none cursor-pointer flex items-center gap-1 active:scale-95"
-                                        title={`Perguntar ao Copilot sobre ${tag}`}
+                                        title={`Consultar no Terminal sobre ${tag}`}
                                     >
                                         <span>{tag}</span>
                                     </button>

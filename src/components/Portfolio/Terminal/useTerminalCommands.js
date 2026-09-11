@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { GAMES_INFO } from './TerminalGames';
 
 export const ALL_CMD_STRINGS = [
-    'ai', 'ask', 'test', 'qa', 'test:run', 'postman', 'sql', 'query', 'sql:explain', 'tuning',
+    'ask', 'test', 'qa', 'test:run', 'postman', 'sql', 'query', 'sql:explain', 'tuning',
     'pedro --test', 'pedro --qa', 'pedro --sql', 'pedro --query',
     'pedro --help', 'pedro --projects', 'pedro --skills', 'pedro --experience', 'pedro --contact',
     'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
@@ -13,19 +13,19 @@ export const ALL_CMD_STRINGS = [
 export const getWelcomeLines = (lang) => {
     if (lang === 'en') {
         return [
-            { text: 'Pedro Henrique — Interactive Terminal v2.5 [QA & Terminal Copilot 🤖⚡]', color: 'text-secondary font-bold' },
-            { text: 'Type "help" for commands, "test" for QA suite, or ask anything to Terminal Copilot!', color: 'text-primary/70' },
+            { text: 'Engineering Interactive Terminal — Pedro Henrique [Workstation Core]', color: 'text-secondary font-bold' },
+            { text: 'Type a command like "test", "sql", or ask freely about career, projects (PayStream, PortLog), Delphi modernization, Laravel, QA, or architecture.', color: 'text-primary/70' },
         ];
     }
     if (lang === 'es') {
         return [
-            { text: 'Pedro Henrique — Terminal Interactivo v2.5 [Edición QA & Copilot IA 🤖⚡]', color: 'text-secondary font-bold' },
-            { text: '¡Escribe "help" para comandos, "test" para suite QA, o pregunta lo que sea al Copilot!', color: 'text-primary/70' },
+            { text: 'Terminal Interactivo de Ingeniería — Pedro Henrique [Workstation Core]', color: 'text-secondary font-bold' },
+            { text: 'Escribe un comando como "test", "sql", o consulta libremente sobre trayectoria, proyectos (PayStream, PortLog), modernización en Delphi, Laravel, QA o arquitectura.', color: 'text-primary/70' },
         ];
     }
     return [
-        { text: 'Pedro Henrique — Terminal Interativo v2.5 [QA & Terminal Copilot 🤖⚡]', color: 'text-secondary font-bold' },
-        { text: 'Digite "help" para comandos, "test" para testes ou faça qualquer pergunta ao Copilot de IA!', color: 'text-primary/70' },
+        { text: 'Terminal Interativo de Engenharia — Pedro Henrique [Workstation Core]', color: 'text-secondary font-bold' },
+        { text: 'Digite um comando como "test", "sql" ou pergunte livremente sobre a trajetória, projetos (PayStream, PortLog), modernização em Delphi, Laravel, QA ou arquitetura.', color: 'text-primary/70' },
     ];
 };
 
@@ -36,9 +36,9 @@ export const getCommands = (lang) => [
         output: () => {
             if (lang === 'en') {
                 return [
-                    { text: '── AI COPILOT & ASSISTANT 🤖 ──', color: 'text-cyan-400 font-bold' },
-                    { text: '  <any question>         Ask anything directly to Copilot in natural language', color: 'text-cyan-300 font-semibold' },
-                    { text: '  ai, ask <question>     Optional prefix for questions (e.g. "what is Pedro\'s stack?")', color: 'text-cyan-300/70' },
+                    { text: '── DIRECT TECHNICAL QUERY ──', color: 'text-cyan-400 font-bold' },
+                    { text: '  <any question>         Ask freely about projects, stack, and architecture', color: 'text-cyan-300 font-semibold' },
+                    { text: '  ask <question>         Optional prefix for technical queries (e.g. "what is Pedro\'s stack?")', color: 'text-cyan-300/70' },
                     { text: '', color: '' },
                     { text: '── SYSTEM & ENGINEERING ──', color: 'text-secondary font-bold' },
                     { text: '  test, qa, postman      Automated regression test runner & API assertions', color: 'text-emerald-400' },
@@ -61,9 +61,9 @@ export const getCommands = (lang) => [
             }
             if (lang === 'es') {
                 return [
-                    { text: '── COPILOT IA & ASISTENTE 🤖 ──', color: 'text-cyan-400 font-bold' },
-                    { text: '  <cualquier pregunta>   Pregunta lo que sea directamente en lenguaje natural', color: 'text-cyan-300 font-semibold' },
-                    { text: '  ai, ask <pregunta>     Prefijo opcional para consultas', color: 'text-cyan-300/70' },
+                    { text: '── CONSULTA TÉCNICA DIRECTA ──', color: 'text-cyan-400 font-bold' },
+                    { text: '  <cualquier pregunta>   Consulta libremente sobre proyectos, stack y trayectoria', color: 'text-cyan-300 font-semibold' },
+                    { text: '  ask <pregunta>         Prefijo opcional para consultas técnicas', color: 'text-cyan-300/70' },
                     { text: '', color: '' },
                     { text: '── SISTEMA & INGENIERÍA ──', color: 'text-secondary font-bold' },
                     { text: '  test, qa, postman      Runner de pruebas automatizadas y aserciones HTTP', color: 'text-emerald-400' },
@@ -85,9 +85,9 @@ export const getCommands = (lang) => [
                 ];
             }
             return [
-                { text: '── COPILOT DE IA & ASSISTENTE 🤖 ──', color: 'text-cyan-400 font-bold' },
-                { text: '  <qualquer pergunta>    Converse diretamente com o Copilot em linguagem natural', color: 'text-cyan-300 font-semibold' },
-                { text: '  ai, ask <pergunta>     Prefixo opcional para perguntas (ex: "qual a stack do pedro?")', color: 'text-cyan-300/70' },
+                { text: '── CONSULTA TÉCNICA DIRETA ──', color: 'text-cyan-400 font-bold' },
+                { text: '  <qualquer pergunta>    Pergunte livremente sobre trajetória, projetos e tecnologias', color: 'text-cyan-300 font-semibold' },
+                { text: '  ask <pergunta>         Prefixo opcional para consultas técnicas (ex: "qual a stack do pedro?")', color: 'text-cyan-300/70' },
                 { text: '', color: '' },
                 { text: '── SISTEMA & ENGENHARIA ──', color: 'text-secondary font-bold' },
                 { text: '  test, qa, postman      Runner de testes de regressão & asserções HTTP', color: 'text-emerald-400' },
@@ -295,7 +295,8 @@ export function useTerminalCommands(lang) {
     const commandsList = useMemo(() => getCommands(lang), [lang]);
 
     const execute = useCallback((raw, options = {}) => {
-        const { onLaunchGame, onClear, setLines, runSimulation, onFallbackToAI } = options;
+        const { onLaunchGame, onClear, setLines, runSimulation, onFallbackToAI, onDirectQuery } = options;
+        const handleDirectQuery = onDirectQuery || onFallbackToAI;
         const trimmed = raw.trim();
         if (!trimmed) return;
 
@@ -391,11 +392,11 @@ export function useTerminalCommands(lang) {
             return;
         }
 
-        // Explicit AI Copilot invocation
-        if (lower.startsWith('ai ') || lower.startsWith('ask ') || lower === 'ai' || lower === 'ask') {
-            const question = trimmed.replace(/^(ai|ask)\s*/i, '').trim();
-            if (onFallbackToAI) {
-                onFallbackToAI(
+        // Invocação de consulta técnica direta
+        if (lower.startsWith('ask ') || lower.startsWith('query ') || lower === 'ask' || lower === 'query') {
+            const question = trimmed.replace(/^(ask|query)\s*/i, '').trim();
+            if (handleDirectQuery) {
+                handleDirectQuery(
                     question || (lang === 'en' ? 'Who is Pedro Henrique and what is his experience?' : 'Quem é o Pedro Henrique e qual é a experiência dele?'),
                     trimmed
                 );
@@ -415,9 +416,9 @@ export function useTerminalCommands(lang) {
                 ...out,
                 { text: '', color: '' }
             ]);
-        } else if (onFallbackToAI) {
-            // Unrecognized command or natural language question -> Delegate to Copilot AI
-            onFallbackToAI(trimmed, trimmed);
+        } else if (handleDirectQuery) {
+            // Comando não reconhecido ou pergunta em linguagem natural -> Encaminha para motor do terminal
+            handleDirectQuery(trimmed, trimmed);
         } else {
             const unknown = lang === 'en'
                 ? `Unknown command: "${trimmed}". Type "pedro --help" or "pedro --games".`

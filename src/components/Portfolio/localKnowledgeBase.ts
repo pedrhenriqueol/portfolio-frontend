@@ -300,37 +300,37 @@ Puedes interactuar con las tarjetas 3D desplazándote hasta la sección \`Sistem
     },
 ];
 
-/** Roteador de Fallback Genérico quando nenhum termo atinge correspondência */
+/** Roteador de Resposta Técnica Direta quando nenhum termo atinge correspondência estrita */
 export const GENERIC_ROUTER_RESPONSE: Record<'pt' | 'en' | 'es', string> = {
-    pt: `Entendido! Como Copilot Técnico, possuo dados detalhados sobre todas as realizações do Pedro. Você pode me perguntar sobre:
-› \`Experiência em QA & APIs\`: automação Postman e SQL Server na SETE Tecnologia.
-› \`Sistemas Legados & Delphi\`: modernização desktop/web na Qualisoft.
-› \`Stack & Backend\`: desenvolvimento em PHP, Laravel, React e TypeScript.
-› Ou utilize comandos diretos de console como \`$ test\`, \`$ sql\` ou \`$ clear\`.`,
-    en: `Understood! As Pedro's Technical Copilot, I have comprehensive data on all his engineering achievements. You can ask me about:
-› \`QA & API Testing\`: Postman automation and SQL Server profiling at SETE Tecnologia.
-› \`Legacy Systems & Delphi\`: desktop/web modernization with UniGui at Qualisoft.
-› \`Stack & Backend\`: scalable services in PHP, Laravel, React, and TypeScript.
-› Or execute console commands like \`$ test\`, \`$ sql\`, or \`$ clear\`.`,
-    es: `¡Entendido! Como Copilot Técnico, poseo información completa sobre las metas y proyectos de Pedro. Puedes preguntarme sobre:
-› \`Experiencia en QA y APIs\`: automatización en Postman y SQL Server en SETE Tecnologia.
-› \`Sistemas Legados y Delphi\`: modernización desktop/web en Qualisoft.
-› \`Stack y Backend\`: desarrollo en PHP, Laravel, React y TypeScript.
+    pt: `Entendido! Como terminal de engenharia de Pedro Henrique, mantenho registros detalhados sobre todas as realizações técnicas:
+› \`Experiência em QA & APIs\`: automação de testes no Postman e diagnósticos no SQL Server na SETE Tecnologia.
+› \`Sistemas Legados & Delphi\`: modernização desktop/web com UniGui na Qualisoft Sistemas.
+› \`Stack & Backend\`: desenvolvimento de microsserviços em PHP 8, Laravel, React e TypeScript.
+› Ou execute comandos diretos de console como \`$ test\`, \`$ sql\` ou \`$ clear\`.`,
+    en: `Understood! As Pedro Henrique's engineering terminal, I maintain comprehensive records of all technical achievements:
+› \`QA & API Testing\`: Postman collection automation and SQL Server profiling at SETE Tecnologia.
+› \`Legacy Systems & Delphi\`: desktop to web modernization with UniGui at Qualisoft Sistemas.
+› \`Stack & Backend\`: scalable services in PHP 8, Laravel, React, and TypeScript.
+› Or execute direct console commands like \`$ test\`, \`$ sql\`, or \`$ clear\`.`,
+    es: `¡Entendido! Como terminal de ingeniería de Pedro Henrique, mantengo registros detallados sobre todas las realizaciones técnicas:
+› \`Experiencia en QA y APIs\`: automatización de pruebas en Postman y SQL Server en SETE Tecnologia.
+› \`Sistemas Legados y Delphi\`: modernización desktop/web con UniGui en Qualisoft Sistemas.
+› \`Stack y Backend\`: desarrollo de microservicios en PHP 8, Laravel, React y TypeScript.
 › O ejecuta comandos directos de consola como \`$ test\`, \`$ sql\` o \`$ clear\`.`,
 };
 
 /** Resposta de segurança DevSecOps & Anti-Jailbreak */
 export const DEVSECOPS_RESPONSE: Record<'pt' | 'en' | 'es', string> = {
-    pt: `Bela tentativa! 🛡️ Como assistente treinado em QA e DevSecOps do Pedro Henrique, nenhuma chave de API, credencial ou segredo de infraestrutura é exposto na camada cliente. Todas as variáveis sensíveis operam isoladas na Vercel Edge. Se você for o Pedro mesmo, sabe que pode gerenciá-las diretamente no painel da Vercel! 😉`,
-    en: `Nice try! 🛡️ As Pedro Henrique's QA & DevSecOps Copilot, no API keys, tokens, or infrastructure secrets are exposed to the client side. All sensitive environment variables operate isolated in the Vercel Edge cluster. If you're truly Pedro, you know you can manage them directly in the Vercel Dashboard! 😉`,
-    es: `¡Buen intento! 🛡️ Como Copilot técnico enfocado en QA y DevSecOps de Pedro Henrique, ninguna clave de API o secreto se expone en el cliente. Todas las variables sensibles operan aisladas en Vercel Edge. ¡Si realmente eres Pedro, puedes administrarlas directamente en el panel de Vercel! 😉`,
+    pt: `Acesso restrito por diretrizes de segurança 🛡️: Nenhuma chave de API, credencial ou segredo de infraestrutura é exposto no front-end do terminal. Todas as variáveis sensíveis operam isoladas na infraestrutura da Vercel Edge. Se você for o Pedro mesmo, sabe que pode gerenciá-las diretamente no painel de controle! 😉`,
+    en: `Access restricted by security standards 🛡️: No API keys, credentials, or infrastructure secrets are exposed in the client terminal. All sensitive environment variables operate isolated in the secure Vercel Edge infrastructure. If you're truly Pedro, you know you can manage them directly in the dashboard! 😉`,
+    es: `Acceso restringido por directivas de seguridad 🛡️: Ninguna clave de API, credencial o secreto de infraestructura se expone en la terminal del cliente. Todas las variables sensibles operan aisladas en la infraestructura segura de Vercel Edge. ¡Si realmente eres Pedro, puedes administrarlas directamente en el panel de control! 😉`,
 };
 
 /** Saudações naturais */
 export const GREETINGS_RESPONSE: Record<'pt' | 'en' | 'es', string> = {
-    pt: `Olá! Sou o Copilot Técnico do Pedro Henrique. Você pode me fazer perguntas sobre a stack dele (\`Laravel\`, \`Delphi\`, \`React\`, \`SQL Server\`), experiência em QA e desenvolvimento, projetos de engenharia ou debater sobre tópicos técnicos. Como posso te ajudar agora?`,
-    en: `Hello! I am Pedro Henrique's Technical Copilot. Feel free to ask me about his tech stack (\`Laravel\`, \`Delphi\`, \`React\`, \`SQL Server\`), QA engineering experience, production projects, or any tech topic. How can I assist you today?`,
-    es: `¡Hola! Soy el Copilot Técnico de Pedro Henrique. Puedes consultarme sobre su stack (\`Laravel\`, \`Delphi\`, \`React\`, \`SQL Server\`), experiencia en QA y desarrollo, proyectos o ingeniería de software. ¿En qué te puedo colaborar ahora?`,
+    pt: `Olá! Terminal Workstation de Pedro Henrique conectado e pronto para execução. Você pode consultar sobre a stack técnica (\`Laravel\`, \`Delphi\`, \`React\`, \`SQL Server\`), experiência em QA e desenvolvimento, projetos de engenharia ou executar comandos diretos como \`$ test\` e \`$ sql\`. Como posso colaborar agora?`,
+    en: `Hello! Pedro Henrique's Workstation Terminal connected and ready for execution. Feel free to query about his tech stack (\`Laravel\`, \`Delphi\`, \`React\`, \`SQL Server\`), QA and software engineering experience, production projects, or run commands like \`$ test\` and \`$ sql\`. How can I assist you now?`,
+    es: `¡Hola! Terminal Workstation de Pedro Henrique conectado y listo para ejecución. Puedes consultar sobre el stack técnico (\`Laravel\`, \`Delphi\`, \`React\`, \`SQL Server\`), experiencia en QA y desarrollo, proyectos o ejecutar comandos directos como \`$ test\` y \`$ sql\`. ¿En qué puedo colaborar ahora?`,
 };
 
 /**

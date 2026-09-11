@@ -23,8 +23,8 @@ interface SimulationStep {
     line: TerminalLine;
 }
 
-/** Renderizador formatado de respostas de IA estilo terminal com gutter lateral dinâmico, animações de entrada e chips de código */
-function FormattedCopilotResponse({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
+/** Renderizador formatado de respostas estilo terminal com gutter lateral dinâmico, animações de entrada e chips de código */
+function FormattedWorkstationResponse({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
     if (!text && isStreaming) {
         return (
             <div className="border-l-2 border-emerald-400/80 bg-gradient-to-r from-emerald-500/[0.05] to-transparent pl-3.5 py-1.5 my-1.5 rounded-r font-mono text-xs md:text-[13px] leading-relaxed transition-all duration-300">
@@ -371,7 +371,6 @@ export const InteractiveTerminal: React.FC = () => {
     const isManualAbortRef = useRef<boolean>(false);
     const prevLangRef = useRef(lang);
     const typingTimeoutRef = useRef<number | null>(null);
-    const rateLimitCooldownUntilRef = useRef<number>(0);
 
     const { execute } = useTerminalCommands(lang);
 
@@ -427,14 +426,6 @@ export const InteractiveTerminal: React.FC = () => {
         }
     }, [lines, activeGame]);
 
-    // Pré-aquecimento rápido de conexão TLS com a Vercel Edge (Edge Pre-Warming)
-    const prewarmedRef = useRef(false);
-    const handlePreWarmEdge = useCallback(() => {
-        if (prewarmedRef.current) return;
-        prewarmedRef.current = true;
-        fetch('/api/chat', { method: 'OPTIONS' }).catch(() => {});
-    }, []);
-
     /** Executa a simulação escalonada de testes ou queries sem bloquear a thread principal */
     const runSimulation = useCallback((type: 'test' | 'sql', commandRaw: string) => {
         clearAllTimers();
@@ -485,8 +476,8 @@ export const InteractiveTerminal: React.FC = () => {
         });
     }, [lang, clearAllTimers]);
 
-    /** Streaming assíncrono com o Copilot Técnico via rota segura /api/chat ou fallback inteligente local */
-    const handleAskCopilot = useCallback(async (question: string, rawPrompt?: string) => {
+    /** Execução direta via Core Engine com streaming imediato token a token (Upstream remoto em stand-by) */
+    const streamTerminalResponse = useCallback(async (question: string, rawPrompt?: string) => {
         const cleanQuestion = question.trim();
         const displayPrompt = (rawPrompt || question).trim();
         if (!cleanQuestion && !displayPrompt) return;
@@ -502,89 +493,11 @@ export const InteractiveTerminal: React.FC = () => {
         abortControllerRef.current = controller;
         setIsStreaming(true);
 
-        const dispatchLineId = `dispatch-${Date.now()}`;
-        const streamLineId = `copilot-${Date.now()}`;
-        const copilotBadgeId = `badge-${Date.now()}`;
+        const streamLineId = `response-${Date.now()}`;
+        const badgeLineId = `badge-${Date.now()}`;
         const startTime = Date.now();
 
-        // 1. Função de streaming local hoisted no topo do handler (elimina qualquer risco de TDZ)
-        async function runLocalStreamingFallback(promptText: string) {
-            const fallbackReply = matchLocalKnowledge(promptText, (lang as 'pt' | 'en' | 'es') || 'pt');
-            const tokens = fallbackReply.split(' ');
-            let currentText = '';
-            const fallbackStart = Date.now();
-
-            for (let i = 0; i < tokens.length; i++) {
-                if (abortControllerRef.current === null) break;
-                currentText += (i === 0 ? '' : ' ') + tokens[i];
-                const snap = currentText;
-
-                setLines(prev => {
-                    const withoutDispatch = i === 0 ? prev.filter(l => l.id !== dispatchLineId) : prev;
-                    return withoutDispatch.map(l =>
-                        l.id === streamLineId
-                            ? {
-                                  ...l,
-                                  text: snap,
-                                  node: <FormattedCopilotResponse text={snap} isStreaming={i < tokens.length - 1} />,
-                              }
-                            : l
-                    );
-                });
-
-                if (contentRef.current) {
-                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
-                }
-
-                // Cadência fluida e natural de leitura
-                await new Promise(r => setTimeout(r, 20));
-            }
-
-            const fallbackLatency = ((Date.now() - fallbackStart) / 1000).toFixed(1);
-
-            setLines(prev => [
-                ...prev.map(l =>
-                    l.id === streamLineId
-                        ? {
-                              ...l,
-                              text: currentText,
-                              isStreaming: false,
-                              node: <FormattedCopilotResponse text={currentText} isStreaming={false} />,
-                          }
-                        : l.id === copilotBadgeId
-                        ? {
-                              ...l,
-                              node: (
-                                  <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                                      <span className="font-semibold text-neutral-300">copilot</span>
-                                  </div>
-                              ),
-                          }
-                        : l
-                ),
-                {
-                    id: `telemetry-${Date.now()}`,
-                    text: `${fallbackLatency}s • local-copilot engine`,
-                    node: (
-                        <motion.div
-                            initial={{ opacity: 0, y: 3 }}
-                            animate={{ opacity: 0.85, y: 0 }}
-                            transition={{ duration: 0.35 }}
-                            className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
-                        >
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
-                            <span>{fallbackLatency}s</span>
-                            <span>•</span>
-                            <span className="text-amber-400/90 font-mono">local-copilot engine</span>
-                        </motion.div>
-                    ),
-                },
-                { text: '', color: '' },
-            ]);
-        }
-
-        // Eco do comando digitado e badge do Copilot com radar ping e status de geração
+        // Eco do comando e cabeçalho de resposta no terminal
         setLines(prev => [
             ...prev,
             {
@@ -614,182 +527,72 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
             },
             {
-                id: copilotBadgeId,
-                text: 'copilot',
+                id: badgeLineId,
+                text: 'workstation',
                 node: (
                     <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                        </span>
-                        <span className="font-semibold text-neutral-300">copilot</span>
-                        <motion.span
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: [0.5, 1, 0.5] }}
-                            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-                            className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-mono flex items-center gap-1"
-                        >
-                            <span className="inline-block w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>gerando...</span>
-                        </motion.span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                        <span className="font-semibold text-neutral-300">workstation</span>
                     </div>
-                ),
-            },
-            {
-                id: dispatchLineId,
-                text: '[*] Dispatching query to edge cluster...',
-                node: (
-                    <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 text-neutral-500 font-mono text-xs my-1 select-none"
-                    >
-                        <span className="text-cyan-400 font-bold animate-pulse">[*]</span>
-                        <span>Dispatching query to edge cluster...</span>
-                    </motion.div>
                 ),
             },
             {
                 id: streamLineId,
                 text: '',
                 isStreaming: true,
-                node: <FormattedCopilotResponse text="" isStreaming={true} />,
+                node: <FormattedWorkstationResponse text="" isStreaming={true} />,
             },
         ]);
 
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-        // 2. Blindagem global com bloco try...catch...finally (fim definitivo do loading infinito)
         try {
-            // Verificação de Cooldown (429): se ativo, atende direto via contingência local
-            if (Date.now() < rateLimitCooldownUntilRef.current) {
-                console.warn('[Copilot] Inside 45s rate-limit cooldown window. Serving directly via local engine.');
-                await runLocalStreamingFallback(cleanQuestion);
-                return;
-            }
+            // Latência simulada tátil orgânica (50ms a 75ms) para feedback imediato sem retenção
+            await new Promise(r => setTimeout(r, 65));
 
-            // Timeout de segurança calibrado para 25 segundos (25000ms): margem para picos de fila na Google
-            timeoutId = setTimeout(() => {
-                controller.abort();
-            }, 25000);
-
-            const payloadHistory = chatHistory
-                .filter(msg => typeof msg.text === 'string' && msg.text.trim().length > 0)
-                .slice(-4)
-                .map(msg => ({
-                    role: msg.role === 'model' ? ('model' as const) : ('user' as const),
-                    text: msg.text.trim(),
-                }));
-
+            // Upstream remoto colocado em stand-by. Execução direta via Core Engine:
+            /*
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: cleanQuestion,
-                    history: payloadHistory,
-                }),
+                body: JSON.stringify({ message: cleanQuestion }),
                 signal: controller.signal,
             });
+            */
 
-            const contentType = response.headers.get('content-type') || '';
-            const isStreamType = contentType.includes('text/event-stream') || contentType.includes('text/plain');
+            if (abortControllerRef.current === null) return;
 
-            if (!response.ok || response.status === 429 || response.status === 503 || !isStreamType || !response.body) {
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
+            const fullResponse = matchLocalKnowledge(cleanQuestion, (lang as 'pt' | 'en' | 'es') || 'pt');
+            const tokens = fullResponse.split(' ');
+            let currentText = '';
 
-                if (response.status === 429) {
-                    // Registra pausa de 45 segundos para poupar cota
-                    rateLimitCooldownUntilRef.current = Date.now() + 45000;
-                }
+            for (let i = 0; i < tokens.length; i++) {
+                if (abortControllerRef.current === null) break;
+                currentText += (i === 0 ? '' : ' ') + tokens[i];
+                const snap = currentText;
 
-                console.warn(`[Copilot] Upstream code ${response.status}. Falling back to local engine.`);
-                await runLocalStreamingFallback(cleanQuestion);
-                return;
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let accumulatedText = '';
-            let isFirstChunk = true;
-            let rafId: number | null = null;
-
-            const flushUpdate = (final = false) => {
-                setLines(prev => {
-                    const baseList = isFirstChunk ? prev.filter(l => l.id !== dispatchLineId) : prev;
-                    isFirstChunk = false;
-
-                    return baseList.map(l => {
-                        if (l.id === streamLineId) {
-                            return {
-                                ...l,
-                                text: accumulatedText,
-                                isStreaming: !final,
-                                node: <FormattedCopilotResponse text={accumulatedText} isStreaming={!final} />,
-                            };
-                        }
-                        if (final && l.id === copilotBadgeId) {
-                            return {
-                                ...l,
-                                node: (
-                                    <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                                        <span className="font-semibold text-neutral-300">copilot</span>
-                                    </div>
-                                ),
-                            };
-                        }
-                        return l;
-                    });
-                });
+                setLines(prev =>
+                    prev.map(l =>
+                        l.id === streamLineId
+                            ? {
+                                  ...l,
+                                  text: snap,
+                                  node: <FormattedWorkstationResponse text={snap} isStreaming={i < tokens.length - 1} />,
+                              }
+                            : l
+                    )
+                );
 
                 if (contentRef.current) {
                     contentRef.current.scrollTop = contentRef.current.scrollHeight;
                 }
-            };
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                // Limpa obrigatoriamente o timer com clearTimeout(timeoutId) assim que o primeiro chunk de stream chegar
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
-
-                const textChunk = decoder.decode(value, { stream: true });
-                accumulatedText += textChunk;
-
-                if (rafId === null) {
-                    rafId = requestAnimationFrame(() => {
-                        rafId = null;
-                        flushUpdate(false);
-                    });
-                }
+                // Cadência fluida de streaming de terminal de alto desempenho (18ms)
+                await new Promise(r => setTimeout(r, 18));
             }
 
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
+            if (abortControllerRef.current === null) return;
 
-            if (rafId !== null) {
-                cancelAnimationFrame(rafId);
-                rafId = null;
-            }
-
-            // Se o streaming remoto encerrou sem nenhum caractere, garante o fallback inteligente
-            if (!accumulatedText.trim()) {
-                throw new Error('EMPTY_STREAM_RESPONSE');
-            }
-
-            flushUpdate(true);
-
-            // Salva apenas mensagens válidas no histórico de conversação
-            const validAnswer = accumulatedText.trim();
+            // Salva no histórico de conversação
+            const validAnswer = currentText.trim();
             if (validAnswer.length > 0) {
                 setChatHistory(prev => [
                     ...prev,
@@ -798,20 +601,29 @@ export const InteractiveTerminal: React.FC = () => {
                 ]);
             }
 
-            const latency = ((Date.now() - startTime) / 1000).toFixed(2);
-            const tokenCount = Math.max(16, Math.round(accumulatedText.length / 3.7));
+            const latency = ((Date.now() - startTime) / 1000).toFixed(1);
+            const tokenCount = Math.max(18, Math.round(currentText.length / 3.7));
 
-            // Finaliza o streaming remoto com sucesso e estampa a telemetria animada
+            // Telemetria neutra e padronizada em workstation-core
             setLines(prev => [
-                ...prev,
+                ...prev.map(l =>
+                    l.id === streamLineId
+                        ? {
+                              ...l,
+                              text: currentText,
+                              isStreaming: false,
+                              node: <FormattedWorkstationResponse text={currentText} isStreaming={false} />,
+                          }
+                        : l
+                ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${latency}s • ${tokenCount} tokens • gemini-3.6-flash (live)`,
+                    text: `${latency}s • ${tokenCount} tokens • workstation-core`,
                     node: (
                         <motion.div
-                            initial={{ opacity: 0, y: 3 }}
+                            initial={{ opacity: 0, y: 2 }}
                             animate={{ opacity: 0.85, y: 0 }}
-                            transition={{ duration: 0.35 }}
+                            transition={{ duration: 0.25 }}
                             className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
                         >
                             <span className="text-emerald-400 font-bold text-[11px]">✔</span>
@@ -819,46 +631,31 @@ export const InteractiveTerminal: React.FC = () => {
                             <span>•</span>
                             <span>{tokenCount} tokens</span>
                             <span>•</span>
-                            <span className="text-emerald-400 font-semibold">gemini-3.6-flash (live)</span>
+                            <span className="text-neutral-400 font-mono">workstation-core</span>
                         </motion.div>
                     ),
                 },
                 { text: '', color: '' },
             ]);
         } catch (err: any) {
-            console.warn('[Copilot Remote Error]', err);
-            // Reservado EXCLUSIVAMENTE para cancelamentos manuais voluntários via teclado (Ctrl + C explícito)
+            // Reservado EXCLUSIVAMENTE para cancelamento manual voluntário via teclado (Ctrl + C explícito)
             if (isManualAbortRef.current) {
                 setLines(prev => [
-                    ...prev
-                        .filter(l => l.id !== dispatchLineId)
-                        .map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedCopilotResponse text={l.text || ''} isStreaming={false} /> } : l)),
+                    ...prev.map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedWorkstationResponse text={l.text || ''} isStreaming={false} /> } : l)),
                     {
                         text: '[sistema] Interrompido',
                         color: 'text-neutral-500 font-mono text-xs',
                     },
                     { text: '', color: '' },
                 ]);
-            } else {
-                // Se o cancelamento ocorrer por timeout interno ou erro upstream, o terminal NÃO deve imprimir mensagem de interrupção; deve comutar silenciosamente para runLocalStreamingFallback(prompt)
-                try {
-                    await runLocalStreamingFallback(cleanQuestion);
-                } catch (fallbackErr) {
-                    console.error('[Fallback Fatal Error]', fallbackErr);
-                }
             }
         } finally {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
-            // GARANTIA ABSOLUTA: Destrava o terminal mesmo se houver erro em qualquer ponto
             setIsStreaming(false);
             if (abortControllerRef.current === controller) {
                 abortControllerRef.current = null;
             }
         }
-    }, [lang, chatHistory]);
+    }, [lang]);
 
     /** Manipula a submissão de comandos no prompt */
     const handleRunCommand = useCallback((raw: string) => {
@@ -897,9 +694,9 @@ export const InteractiveTerminal: React.FC = () => {
             },
             setLines,
             runSimulation,
-            onFallbackToAI: handleAskCopilot,
+            onDirectQuery: streamTerminalResponse,
         });
-    }, [execute, lang, clearAllTimers, runSimulation, handleAskCopilot]);
+    }, [execute, lang, clearAllTimers, runSimulation, streamTerminalResponse]);
 
     // Listener de eventos customizados para foco global do terminal
     useEffect(() => {
@@ -1021,7 +818,6 @@ export const InteractiveTerminal: React.FC = () => {
             className={`relative w-full max-w-xl xl:max-w-2xl h-[500px] md:h-[540px] flex flex-col bg-[#080a0f]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden transition-all duration-300 ${
                 focused ? 'border-cyan-500/40 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.12)]' : 'hover:border-white/15'
             }`}
-            onMouseEnter={handlePreWarmEdge}
             onClick={() => inputRef.current?.focus({ preventScroll: true })}
         >
             {/* Topbar de Controle & Abas Técnicas (Ghostty / Warp Style) */}
@@ -1049,18 +845,18 @@ export const InteractiveTerminal: React.FC = () => {
 
                 {/* Centro: Aba ativa chanfrada estilo terminal profissional */}
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-mono text-neutral-200 shadow-sm">
-                    <span className="text-cyan-400 font-bold">❯_</span>
-                    <span>copilot.sh</span>
+                    <span className="text-emerald-400 font-bold">❯_</span>
+                    <span>terminal.sh</span>
                     <span className="text-emerald-400 text-[9px] font-semibold tracking-wider">
-                        {activeGame ? `(${activeGame})` : isStreaming ? '(inferring)' : '(live)'}
+                        {activeGame ? `(${activeGame})` : isStreaming ? '[a processar...]' : '[ativo]'}
                     </span>
                 </div>
 
-                {/* Direita: Badge de status de rede e modelo ativo */}
+                {/* Direita: Identidade de engenharia sóbria e discreta */}
                 <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-400">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)] animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-                    <span className="hidden sm:inline tracking-wider">EDGE: GEMINI 3.6 FLASH [live]</span>
-                    <span className="sm:hidden tracking-wider">GEMINI 3.6 FLASH</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+                    <span className="hidden sm:inline tracking-wider">CORE: WORKSTATION v2.4 [online]</span>
+                    <span className="sm:hidden tracking-wider">WORKSTATION v2.4</span>
                 </div>
             </div>
 
@@ -1095,7 +891,7 @@ export const InteractiveTerminal: React.FC = () => {
                                             <span className="text-emerald-400 font-bold">❯</span>
                                         </div>
                                         <span className="text-white font-mono text-xs md:text-[13px]">
-                                            {line.text.replace(/pedro(@workstation:(~\$|~\/copilot ❯)| in ~ ❯)\s*/, '')}
+                                            {line.text.replace(/pedro(@workstation:(~\$|~\/(terminal|copilot) ❯)| in ~ ❯)\s*/, '')}
                                         </span>
                                     </motion.div>
                                 ) : (
@@ -1137,7 +933,7 @@ export const InteractiveTerminal: React.FC = () => {
                     whileHover={{ scale: 1.05, y: -1 }}
                     whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
-                    onClick={() => handleAskCopilot('Como você atua na garantia de qualidade e APIs?', '$ sobre-qa')}
+                    onClick={() => streamTerminalResponse('Como você atua na garantia de qualidade e APIs?', '$ sobre-qa')}
                     className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/30 text-[11px] font-mono text-neutral-400 hover:text-emerald-300 transition-all cursor-pointer disabled:opacity-50"
                 >
                     $ sobre-qa
@@ -1216,7 +1012,6 @@ export const InteractiveTerminal: React.FC = () => {
                         onKeyDown={onKeyDown}
                         onFocus={() => {
                             setFocused(true);
-                            handlePreWarmEdge();
                         }}
                         onBlur={() => {
                             setFocused(false);
@@ -1225,8 +1020,8 @@ export const InteractiveTerminal: React.FC = () => {
                             activeGame
                                 ? (lang === 'en' ? 'Type "exit" to return to shell...' : lang === 'es' ? 'Escribe "exit" para volver al shell...' : 'Digite "exit" para voltar ao shell...')
                                 : isStreaming
-                                ? (lang === 'en' ? 'Copilot streaming response... (Ctrl+C to abort)' : 'Copilot respondendo... (Ctrl+C para cancelar)')
-                                : (lang === 'en' ? 'Ask anything to Copilot or type test, sql, help...' : lang === 'es' ? 'Pregunta lo que sea al Copilot o escribe test, sql, help...' : 'Pergunte qualquer coisa ao Copilot ou digite test, sql, help...')
+                                ? (lang === 'en' ? 'Processing command... (Ctrl+C to abort)' : 'A processar comando... (Ctrl+C para cancelar)')
+                                : (lang === 'en' ? 'Ask anything about stack or type test, sql, help...' : lang === 'es' ? 'Pregunta sobre proyectos o escribe test, sql, help...' : 'Pergunte sobre trajetória ou digite test, sql, help...')
                         }
                         className="w-full bg-transparent text-transparent font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-20 disabled:opacity-60 caret-transparent"
                         spellCheck={false}
@@ -1239,10 +1034,10 @@ export const InteractiveTerminal: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-mono text-cyan-400 select-none shrink-0"
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 select-none shrink-0"
                     >
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                        <span>inferindo...</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span>• terminal [a processar...]</span>
                     </motion.div>
                 )}
             </div>
