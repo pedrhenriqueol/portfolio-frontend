@@ -88,18 +88,18 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transformStyle: 'preserve-3d',
                 }}
                 data-cursor-card="true"
-                className="bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 rounded-2xl border border-white/[0.08] border-t-white/20 hover:border-white/20 hover:from-white/[0.08] transition-all duration-300 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] overflow-hidden group will-change-transform backdrop-blur-sm"
+                className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/85 overflow-hidden group will-change-transform"
             >
                 {/* Cabeçalho do Card */}
-                <div className="p-6 sm:p-7 border-b border-white/[0.06] bg-white/[0.015]">
+                <div className="p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015]">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-3">
                             <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
                                 {company}
                             </h3>
                             {isCurrent && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-green-500/10 text-green-400 border border-green-500/30">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 font-mono text-[11px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                     {lang === 'en' ? 'Current Role' : lang === 'es' ? 'Puesto Actual' : 'Cargo Atual'}
                                 </span>
                             )}
@@ -119,7 +119,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                             {techBadges.map((badge, bIdx) => (
                                 <span
                                     key={bIdx}
-                                    className="text-[11px] font-mono text-neutral-200 bg-white/[0.06] px-2.5 py-0.5 rounded border border-white/[0.12]"
+                                    className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none"
                                 >
                                     {badge}
                                 </span>
@@ -130,7 +130,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
 
                 {/* Grupos de Atuação / Responsabilidades */}
                 {groups && groups.length > 0 && (
-                    <div className="p-6 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
+                    <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
                         {groups.map((group, gIdx) => (
                             <div key={gIdx} className="space-y-2.5">
                                 <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
@@ -424,14 +424,20 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         <div
                             key={idx}
                             data-cursor-card="true"
-                            className="bg-gradient-to-b from-white/[0.05] via-darker/90 to-darker/90 border border-white/[0.08] border-t-white/20 rounded-xl p-4 flex items-center gap-3.5 hover:border-white/20 hover:from-white/[0.08] transition-all duration-300 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]"
+                            className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
                         >
-                            <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-                                <i className={`${stat.icon} text-accent text-sm`} />
+                            {/* Box do Ícone */}
+                            <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
+                                <i className={`${stat.icon} text-sm`} />
                             </div>
-                            <div>
-                                <div className="text-sm sm:text-base font-bold text-white font-mono">{stat.value}</div>
-                                <div className="text-[11px] text-gray-300 leading-tight font-sans">{stat.label}</div>
+                            {/* Texto da Métrica */}
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
+                                    {stat.value}
+                                </span>
+                                <span className="text-[11px] text-neutral-400 font-sans truncate" title={stat.label}>
+                                    {stat.label}
+                                </span>
                             </div>
                         </div>
                     ))}
