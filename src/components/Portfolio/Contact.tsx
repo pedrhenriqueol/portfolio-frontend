@@ -1,132 +1,58 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguage } from '../../context/LanguageContext';
-
-/* ── Som de tecla mecânica via Web Audio API ── */
-function playMechanicalKey(freq = 700, duration = 0.04) {
-    try {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + duration);
-        gain.gain.setValueAtTime(0.035, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-    } catch (e) {}
-}
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
+const EMAIL_ADDRESS = 'pedrohc.forza@gmail.com';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const SOCIAL_CHANNELS = [
+const SOCIAL_LINKS = [
     {
         icon: 'fab fa-linkedin',
         label: 'LinkedIn',
-        value: '/in/pedro-henrique-b0a015391',
+        subtitle: 'Perfil profissional',
         href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
     },
     {
         icon: 'fab fa-github',
         label: 'GitHub',
-        value: 'github.com/pedrhenriqueol',
+        subtitle: 'Repositórios e projetos',
         href: 'https://github.com/pedrhenriqueol',
     },
     {
         icon: 'fab fa-instagram',
         label: 'Instagram',
-        value: '@pedrherg',
+        subtitle: 'Rede pessoal',
         href: 'https://www.instagram.com/pedrherg',
     },
 ];
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMAIL_ADDRESS = 'pedrohc.forza@gmail.com';
-
 export default function Contact() {
-    const { t, lang } = useLanguage();
 
     const [data, setData] = useState({ name: '', email: '', subject: '', message: '' });
-    const [touched, setTouched] = useState({ name: false, email: false, subject: false, message: false });
     const [processing, setProcessing] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [submitError, setSubmitError] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const [copiedEmail, setCopiedEmail] = useState(false);
 
-    // Easter Egg A: Modo Contratação / Oferta de Alta Prioridade
-    const isSpecialMode = Boolean(
+    // Easter Egg sutil: detecta termos de contratação no assunto
+    const isProposalMode = Boolean(
         data.subject &&
-        (
-            data.subject.toLowerCase().includes('sudo hire') ||
-            data.subject.toLowerCase().includes('proposta') ||
-            data.subject.toLowerCase().includes('vaga')
-        )
+        /\b(vaga|proposta|entrevista|contratar|oportunidade|hiring|job|interview)\b/i.test(data.subject)
     );
-
-    // Easter Egg B: Decodificação de Telemetria TLS (Triplo Clique)
-    const tlsClicksRef = useRef(0);
-    const tlsTimerRef = useRef<number | null>(null);
-    const [tlsDecoded, setTlsDecoded] = useState(false);
-
-    const handleTlsClick = useCallback(() => {
-        tlsClicksRef.current += 1;
-        if (tlsTimerRef.current) window.clearTimeout(tlsTimerRef.current);
-
-        if (tlsClicksRef.current >= 3) {
-            tlsClicksRef.current = 0;
-            setTlsDecoded(true);
-            playMechanicalKey(1050, 0.06);
-            setTimeout(() => {
-                setTlsDecoded(false);
-            }, 4000);
-            return;
-        }
-
-        tlsTimerRef.current = window.setTimeout(() => {
-            tlsClicksRef.current = 0;
-        }, 1000);
-    }, []);
-
-    // Easter Egg C: Latência Gamer / Telemetria de Rede
-    const [showGamerStats, setShowGamerStats] = useState(false);
-
-    const handleStatusClick = useCallback(() => {
-        playMechanicalKey(750, 0.04);
-        setShowGamerStats(prev => !prev);
-    }, []);
-
-    // Validação em tempo real
-    const errors = {
-        name: data.name.trim().length < 2 ? (lang === 'en' ? 'Name must have at least 2 characters.' : lang === 'es' ? 'El nombre debe tener al menos 2 caracteres.' : 'Nome deve ter no mínimo 2 caracteres.') : null,
-        email: !EMAIL_REGEX.test(data.email.trim()) ? (lang === 'en' ? 'Please enter a valid email address.' : lang === 'es' ? 'Ingresa un correo electrónico válido.' : 'Insira um e-mail válido.') : null,
-        subject: data.subject.trim().length < 3 ? (lang === 'en' ? 'Subject must have at least 3 characters.' : lang === 'es' ? 'El asunto debe tener al menos 3 caracteres.' : 'Assunto deve ter no mínimo 3 caracteres.') : null,
-        message: data.message.trim().length < 10 ? (lang === 'en' ? 'Message must have at least 10 characters.' : lang === 'es' ? 'El mensaje debe tener al menos 10 caracteres.' : 'Mensagem deve ter no mínimo 10 caracteres.') : null,
-    };
-
-    const isFormValid = !errors.name && !errors.email && !errors.subject && !errors.message;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setData(prev => ({ ...prev, [name]: value }));
+        if (errorMessage) setErrorMessage('');
     };
 
-    const handleBlur = (field: string) => {
-        setTouched(prev => ({ ...prev, [field]: true }));
-    };
-
-    // Copiar e-mail com 1 clique
+    // Copiar e-mail com 1 clique de forma silenciosa
     const handleCopyEmail = useCallback(async () => {
-        playMechanicalKey(850, 0.04);
         try {
             await navigator.clipboard.writeText(EMAIL_ADDRESS);
             setCopiedEmail(true);
-            setTimeout(() => setCopiedEmail(false), 2200);
-        } catch (e) {
+            setTimeout(() => setCopiedEmail(false), 2000);
+        } catch {
             const textarea = document.createElement('textarea');
             textarea.value = EMAIL_ADDRESS;
             document.body.appendChild(textarea);
@@ -134,19 +60,38 @@ export default function Contact() {
             document.execCommand('copy');
             document.body.removeChild(textarea);
             setCopiedEmail(true);
-            setTimeout(() => setCopiedEmail(false), 2200);
+            setTimeout(() => setCopiedEmail(false), 2000);
         }
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         if (e && e.preventDefault) e.preventDefault();
-        setTouched({ name: true, email: true, subject: true, message: true });
 
-        if (!isFormValid || processing) return;
+        // Validação suave ao enviar
+        const trimmedName = data.name.trim();
+        const trimmedEmail = data.email.trim();
+        const trimmedSubject = data.subject.trim();
+        const trimmedMessage = data.message.trim();
 
-        playMechanicalKey(950, 0.05);
+        if (!trimmedName) {
+            setErrorMessage('Por favor, informe seu nome.');
+            return;
+        }
+        if (!EMAIL_REGEX.test(trimmedEmail)) {
+            setErrorMessage('Por favor, informe um e-mail válido.');
+            return;
+        }
+        if (!trimmedSubject) {
+            setErrorMessage('Por favor, preencha o assunto.');
+            return;
+        }
+        if (trimmedMessage.length < 10) {
+            setErrorMessage('Por favor, escreva uma mensagem com pelo menos 10 caracteres.');
+            return;
+        }
+
         setProcessing(true);
-        setSubmitError('');
+        setErrorMessage('');
         setSuccess(false);
 
         try {
@@ -159,19 +104,17 @@ export default function Contact() {
             if (res.ok) {
                 setSuccess(true);
                 setData({ name: '', email: '', subject: '', message: '' });
-                setTouched({ name: false, email: false, subject: false, message: false });
-                playMechanicalKey(1200, 0.08);
             } else {
-                setSubmitError(t('contact.errorMsg') || 'Erro ao enviar. Tente novamente ou use o e-mail diretamente.');
+                setErrorMessage('Não foi possível enviar a mensagem no momento. Tente pelo e-mail ou LinkedIn.');
             }
         } catch {
-            setSubmitError(t('contact.errorConn') || 'Erro de conexão. Verifique sua rede.');
+            setErrorMessage('Erro de conexão. Verifique sua rede e tente novamente.');
         } finally {
             setProcessing(false);
         }
     };
 
-    // Submissão rápida via teclado (Ctrl + Enter ou Cmd + Enter)
+    // Suporte discreto a Ctrl+Enter sem elementos visuais pesados
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -180,74 +123,61 @@ export default function Contact() {
     };
 
     return (
-        <section id="contato" className="py-24 md:py-36 bg-transparent relative overflow-hidden select-text">
+        <section id="contato" className="py-24 md:py-32 bg-transparent relative select-text">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-                {/* ── Section Header com estética industrial ── */}
+                {/* ── Cabeçalho Limpo da Seção ── */}
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-80px' }}
-                    transition={{ duration: 0.7 }}
+                    transition={{ duration: 0.6 }}
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-pulse" />
-                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase">
-                            // 06. CANAIS DE COMUNICAÇÃO &amp; CONTATO
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
+                            Contato
                         </span>
                     </div>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
-                        {t('contact.title1')} <span className="text-white italic font-serif">{t('contact.title2')}</span>
+                        Vamos <span className="italic font-serif">conversar?</span>
                     </h2>
                     <p className="text-neutral-400 max-w-xl mx-auto font-sans text-sm sm:text-base leading-relaxed">
-                        {t('contact.subtitle')}
+                        Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.
                     </p>
                 </motion.div>
 
-                {/* ── Layout de Duas Colunas Alinhadas (grid-cols-1 lg:grid-cols-12 gap-5) ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                {/* ── Grid Principal de Dois Cartões (Alinhados e Limpos) ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
                     {/* ── Coluna Esquerda: Canais Diretos (5 Colunas) ── */}
                     <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        whileInView={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
+                        transition={{ duration: 0.5 }}
                         className="lg:col-span-5 flex flex-col h-full"
                     >
-                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-7 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between">
-                            
+                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between space-y-6">
                             <div>
-                                {/* Barra técnica superior */}
-                                <div className="flex items-center justify-between pb-4 border-b border-white/[0.05] text-[11px] font-mono text-neutral-400">
-                                    <span className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                        DIRECT_CHANNELS
-                                    </span>
-                                    <span className="text-[10px] font-mono text-emerald-400">
-                                        ● Resposta habitual: &lt; 24h
-                                    </span>
-                                </div>
-
-                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed font-sans mt-4 mb-5">
-                                    {t('contact.directMessage')}
+                                <h3 className="text-lg font-semibold text-white font-sans">
+                                    Canais diretos
+                                </h3>
+                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mt-1.5 mb-6">
+                                    Sinta-se à vontade para me mandar uma mensagem por aqui ou pelos canais abaixo.
                                 </p>
 
-                                {/* Lista de canais de comunicação */}
                                 <div className="space-y-3">
-
-                                    {/* Cartão de E-mail com Botão Copiar Integrado */}
+                                    {/* Cartão de E-mail com Botão Copiar */}
                                     <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] flex items-center justify-between gap-3 transition-all">
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
                                                 <i className="fas fa-envelope text-sm" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">
-                                                    E-mail Direto
-                                                </p>
-                                                <p className="text-xs font-mono text-neutral-200 truncate" title={EMAIL_ADDRESS}>
+                                                <p className="text-xs font-medium text-white">E-mail</p>
+                                                <p className="text-[12px] text-neutral-400 truncate" title={EMAIL_ADDRESS}>
                                                     {EMAIL_ADDRESS}
                                                 </p>
                                             </div>
@@ -256,7 +186,7 @@ export default function Contact() {
                                         <button
                                             type="button"
                                             onClick={handleCopyEmail}
-                                            className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.16] text-[11px] font-mono text-neutral-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+                                            className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.16] text-[11px] font-sans text-neutral-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
                                             title="Copiar endereço de e-mail"
                                         >
                                             {copiedEmail ? (
@@ -273,14 +203,13 @@ export default function Contact() {
                                         </button>
                                     </div>
 
-                                    {/* Redes Sociais no mesmo acabamento dos chips */}
-                                    {SOCIAL_CHANNELS.map(({ icon, label, value, href }) => (
+                                    {/* Redes Sociais */}
+                                    {SOCIAL_LINKS.map(({ icon, label, subtitle, href }) => (
                                         <a
                                             key={label}
                                             href={href}
                                             target="_blank"
                                             rel="noreferrer"
-                                            onClick={() => playMechanicalKey(700, 0.03)}
                                             className="p-3.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] hover:border-white/[0.12] flex items-center justify-between transition-all group cursor-pointer select-none"
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
@@ -288,254 +217,165 @@ export default function Contact() {
                                                     <i className={`${icon} text-sm`} />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">
+                                                    <p className="text-xs font-medium text-white group-hover:text-white transition-colors">
                                                         {label}
                                                     </p>
-                                                    <p className="text-xs font-mono text-neutral-300 group-hover:text-white truncate transition-colors">
-                                                        {value}
+                                                    <p className="text-[12px] text-neutral-400 truncate">
+                                                        {subtitle}
                                                     </p>
                                                 </div>
                                             </div>
                                             <i className="fas fa-arrow-right text-neutral-600 group-hover:text-neutral-300 text-xs transition-all duration-200 group-hover:translate-x-1" />
                                         </a>
                                     ))}
-
                                 </div>
                             </div>
 
-                            {/* Rodapé técnico sincronizado com o card da direita */}
-                            <div className="pt-4 mt-6 border-t border-white/[0.05] flex items-center justify-between font-mono text-[11px] text-neutral-400">
-                                <span>TIMEZONE: UTC-3 (Fortaleza)</span>
-                                <span
-                                    onClick={handleStatusClick}
-                                    className="cursor-pointer hover:text-emerald-300 transition-colors select-none text-emerald-400/90 flex items-center gap-1.5"
-                                    title="Clique para alternar telemetria de rede"
-                                >
-                                    {showGamerStats ? (
-                                        <span className="text-emerald-300 font-semibold animate-pulse">
-                                            RTT: 12ms • TICK: 128Hz • LOSS: 0% [BR-NE]
-                                        </span>
-                                    ) : (
-                                        <span>● STATUS: ONLINE</span>
-                                    )}
+                            {/* Rodapé humano da coluna esquerda */}
+                            <div className="pt-4 border-t border-white/[0.05]">
+                                <span className="text-[12px] text-neutral-400">
+                                    Normalmente respondo em menos de 24 horas.
                                 </span>
                             </div>
-
                         </div>
                     </motion.div>
 
-                    {/* ── Coluna Direita: Formulário de Transmissão (7 Colunas) ── */}
+                    {/* ── Coluna Direita: Formulário Limpo em Português (7 Colunas) ── */}
                     <motion.div
-                        initial={{ opacity: 0, x: 30 }}
-                        whileInView={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
                         className="lg:col-span-7 flex flex-col h-full"
                     >
-                        <div
-                            className={`bg-[#0c0e14]/70 backdrop-blur-xl border rounded-2xl p-6 md:p-7 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between transition-all duration-300 ${
-                                isSpecialMode
-                                    ? 'border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.08)]'
-                                    : 'border-white/[0.07]'
-                            }`}
-                        >
+                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between">
                             
-                            {/* Barra técnica de cabeçalho interno */}
                             <div>
-                                <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/[0.05] text-[11px] font-mono text-neutral-400">
-                                    <span className="flex items-center gap-2">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${isSpecialMode ? 'bg-emerald-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-                                        {isSpecialMode ? 'DISPATCH_SERVICE // HIGH_PRIORITY_OFFER' : 'DISPATCH_MESSAGE_SERVICE'}
-                                    </span>
-                                    <span
-                                        onClick={handleTlsClick}
-                                        className={`cursor-pointer transition-all select-none ${
-                                            tlsDecoded
-                                                ? 'text-emerald-400 font-bold animate-pulse'
-                                                : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                        title="Clique 3x para descriptografar telemetria TLS"
-                                    >
-                                        {tlsDecoded ? 'CIPHER: AES-GCM-256 // CLEARANCE: LEVEL_4 // PING: 0.5ms' : 'ENCRYPTED: TLS'}
-                                    </span>
-                                </div>
+                                <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
+                                    Mande uma mensagem
+                                </h3>
+                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mb-6">
+                                    Preencha os campos abaixo e entrarei em contato o mais rápido possível.
+                                </p>
 
-                                {/* Alertas de Feedback */}
+                                {/* Mensagem de Sucesso */}
                                 <AnimatePresence mode="wait">
                                     {success && (
                                         <motion.div
-                                            key="contact-success-alert"
-                                            initial={{ opacity: 0, y: -10 }}
+                                            initial={{ opacity: 0, y: -6 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            className="mb-5 bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 px-4 py-3 rounded-xl flex items-center gap-3 font-mono text-xs"
+                                            exit={{ opacity: 0, y: -6 }}
+                                            className="mb-5 bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 px-4 py-3 rounded-xl flex items-center gap-2.5 text-xs sm:text-sm"
                                         >
                                             <i className="fas fa-check-circle text-emerald-400 text-sm shrink-0" />
-                                            <span>{t('contact.successMsg') || 'Mensagem transmitida com sucesso! Responderei em breve.'}</span>
-                                        </motion.div>
-                                    )}
-
-                                    {submitError && (
-                                        <motion.div
-                                            key="contact-error-alert"
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            className="mb-5 bg-rose-500/[0.08] border border-rose-500/20 text-rose-300 px-4 py-3 rounded-xl flex items-center gap-3 font-mono text-xs"
-                                        >
-                                            <i className="fas fa-exclamation-circle text-rose-400 text-sm shrink-0" />
-                                            <span>{submitError}</span>
+                                            <span>Mensagem enviada com sucesso! Entrarei em contato em breve.</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
 
-                                {/* Formulário com suporte a Ctrl+Enter e Zero Layout Shift */}
+                                {/* Formulário */}
                                 <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4" noValidate>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         
                                         {/* Nome */}
-                                        <div className="space-y-1">
-                                            <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                                                {t('contact.labelName') || t('contact.formName') || 'Nome'}
+                                        <div className="space-y-1.5">
+                                            <label className="block text-xs font-medium text-neutral-300">
+                                                Nome
                                             </label>
                                             <input
                                                 type="text"
                                                 name="name"
                                                 value={data.name}
                                                 onChange={handleChange}
-                                                onBlur={() => handleBlur('name')}
                                                 disabled={processing}
-                                                placeholder={lang === 'en' ? 'John Doe' : 'Seu Nome'}
-                                                className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all focus:outline-none ${
-                                                    touched.name && errors.name
-                                                        ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
-                                                        : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
-                                                }`}
+                                                placeholder="Como posso te chamar?"
+                                                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
                                             />
-                                            <div className="min-h-[16px]">
-                                                {touched.name && errors.name && (
-                                                    <span className="text-[11px] text-rose-400 font-mono block">
-                                                        {errors.name}
-                                                    </span>
-                                                )}
-                                            </div>
                                         </div>
 
                                         {/* E-mail */}
-                                        <div className="space-y-1">
-                                            <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                                                {t('contact.labelEmail') || t('contact.formEmail') || 'E-mail'}
+                                        <div className="space-y-1.5">
+                                            <label className="block text-xs font-medium text-neutral-300">
+                                                E-mail
                                             </label>
                                             <input
                                                 type="email"
                                                 name="email"
                                                 value={data.email}
                                                 onChange={handleChange}
-                                                onBlur={() => handleBlur('email')}
                                                 disabled={processing}
-                                                placeholder={lang === 'en' ? 'john@example.com' : 'seu@email.com'}
-                                                className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all focus:outline-none ${
-                                                    touched.email && errors.email
-                                                        ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
-                                                        : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
-                                                }`}
+                                                placeholder="seu.email@exemplo.com"
+                                                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
                                             />
-                                            <div className="min-h-[16px]">
-                                                {touched.email && errors.email && (
-                                                    <span className="text-[11px] text-rose-400 font-mono block">
-                                                        {errors.email}
-                                                    </span>
-                                                )}
-                                            </div>
                                         </div>
 
                                     </div>
 
                                     {/* Assunto */}
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between">
-                                            <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                                                {t('contact.labelSubject') || t('contact.formSubject') || 'Assunto'}
-                                            </label>
-                                            {isSpecialMode && (
-                                                <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 animate-pulse">
-                                                    <span>⚡</span> modo contratação ativo
-                                                </span>
-                                            )}
-                                        </div>
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-medium text-neutral-300">
+                                            Assunto
+                                        </label>
                                         <input
                                             type="text"
                                             name="subject"
                                             value={data.subject}
                                             onChange={handleChange}
-                                            onBlur={() => handleBlur('subject')}
                                             disabled={processing}
-                                            placeholder={lang === 'en' ? 'Project inquiry / Opportunity (try: sudo hire)' : 'Oportunidade / Proposta (tente: sudo hire)'}
-                                            className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all focus:outline-none ${
-                                                touched.subject && errors.subject
-                                                    ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
-                                                    : isSpecialMode
-                                                    ? 'border-emerald-500/50 bg-emerald-500/[0.02] focus:border-emerald-400'
-                                                    : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
-                                            }`}
+                                            placeholder="Sobre uma oportunidade, projeto ou conversa"
+                                            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
                                         />
-                                        <div className="min-h-[16px]">
-                                            {touched.subject && errors.subject && (
-                                                <span className="text-[11px] text-rose-400 font-mono block">
-                                                    {errors.subject}
-                                                </span>
-                                            )}
-                                        </div>
                                     </div>
 
                                     {/* Mensagem */}
-                                    <div className="space-y-1">
-                                        <label className="block text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                                            {t('contact.labelMessage') || t('contact.formMessage') || 'Mensagem'}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-medium text-neutral-300">
+                                            Mensagem
                                         </label>
                                         <textarea
                                             name="message"
                                             rows={4}
-                                            maxLength={800}
                                             value={data.message}
                                             onChange={handleChange}
-                                            onBlur={() => handleBlur('message')}
                                             disabled={processing}
-                                            placeholder={lang === 'en' ? 'Describe your project or challenge here...' : 'Descreva seu projeto, desafio ou proposta aqui...'}
-                                            className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border text-neutral-200 placeholder:text-neutral-600 font-sans text-xs md:text-sm transition-all resize-none focus:outline-none ${
-                                                touched.message && errors.message
-                                                    ? 'border-rose-500/40 bg-rose-500/[0.02] focus:border-rose-500/70'
-                                                    : 'border-white/[0.08] focus:border-emerald-500/50 focus:bg-white/[0.04]'
-                                            }`}
+                                            placeholder="Escreva sua mensagem aqui..."
+                                            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all resize-none"
                                         />
                                     </div>
 
-                                    {/* Rodapé técnico sincronizado com barra de buffer e botão de ação */}
-                                    <div className="pt-4 mt-6 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-[11px] text-neutral-400">
-                                        <button
-                                            type="submit"
-                                            disabled={processing}
-                                            className="inline-flex items-center justify-center gap-2.5 px-4 py-2 rounded-xl bg-neutral-100 hover:bg-white text-neutral-950 font-mono text-xs font-semibold tracking-tight transition-all active:scale-[0.98] shadow-sm disabled:opacity-40 cursor-pointer select-none"
-                                        >
-                                            {processing ? (
-                                                <>
-                                                    <i className="fas fa-circle-notch fa-spin text-xs" />
-                                                    <span>{t('contact.sending') || 'Enviando...'}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span>{isSpecialMode ? 'Executar Contratação ⚡' : 'Transmitir Mensagem'}</span>
-                                                    <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-black/10 text-[10px] text-neutral-600 font-mono">
-                                                        Ctrl+↵
-                                                    </kbd>
-                                                </>
-                                            )}
-                                        </button>
+                                    {/* Rodapé do Formulário: Botão + Aviso Suave */}
+                                    <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="submit"
+                                                disabled={processing}
+                                                className="inline-flex items-center justify-center gap-2 bg-white text-neutral-900 hover:bg-neutral-200 font-medium text-xs px-5 py-2.5 rounded-xl transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <i className="fas fa-circle-notch fa-spin text-xs" />
+                                                        <span>Enviando...</span>
+                                                    </>
+                                                ) : (
+                                                    <span>{isProposalMode ? 'Enviar proposta ✦' : 'Enviar mensagem'}</span>
+                                                )}
+                                            </button>
 
-                                        {/* Status de Validação / Buffer sem layout shift */}
-                                        <span className={touched.message && errors.message ? 'text-rose-400 font-mono text-[11px]' : 'text-neutral-500 font-mono text-[11px]'}>
-                                            {(touched.message && errors.message) || `BUFFER: ${data.message.length}/800 B`}
-                                        </span>
+                                            {/* Micro-badge de alta prioridade sutil */}
+                                            {isProposalMode && (
+                                                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                    Prioridade alta
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Mensagem de Erro Discreta (apenas se houver erro ao submeter) */}
+                                        {errorMessage && (
+                                            <p className="text-xs text-rose-400/90 font-sans">
+                                                {errorMessage}
+                                            </p>
+                                        )}
                                     </div>
                                 </form>
                             </div>
