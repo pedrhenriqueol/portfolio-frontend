@@ -128,12 +128,18 @@ export default async function handler(req: Request): Promise<Response> {
             { role: 'user' as const, parts: [{ text: sanitized }] },
         ];
 
-        // 2. Modelos canônicos ativos recomendados pela Google
+        // 2. Lista canônica estrita do Gemini 1.5 exigida oficialmente pela Google
         const CANDIDATE_MODELS = [
-            'gemini-3.6-flash',
-            'gemini-flash-latest',
-            'gemini-2.5-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
         ];
+
+        // 3. Parâmetros limpos sem thinkingConfig (incompatível com Gemini 1.5)
+        const generationConfig = {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+            topP: 0.95,
+        };
 
         const safetySettings = [
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
@@ -155,101 +161,65 @@ export default async function handler(req: Request): Promise<Response> {
         };
 
         for (const model of CANDIDATE_MODELS) {
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
-            // Configurações: primeiro tenta com thinkingBudget: 0 (para suprimir pensamento longo em modelos 2.5/3.x);
-            // fallback para configuração padrão se o modelo retornar 400 por não aceitar thinkingConfig
-            const configsToTry = [
-                {
-                    temperature: 0.7,
-                    maxOutputTokens: 1000,
-                    thinkingConfig: { thinkingBudget: 0 },
-                },
-                {
-                    temperature: 0.7,
-                    maxOutputTokens: 1000,
-                },
-            ];
+            // Timeout de conexão de 7 segundos exclusivo para handshake dos headers
+            const connectAbort = new AbortController();
+            const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
 
-            let shouldTryNextModel = true;
+            try {
+                let res = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...basePayload,
+                        contents: activeContents,
+                        generationConfig,
+                    }),
+                    signal: connectAbort.signal,
+                });
 
-            for (const genConfig of configsToTry) {
-                // Timeout de conexão de 7 segundos exclusivo para handshake dos headers
-                const connectAbort = new AbortController();
-                const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
-
-                try {
-                    let res = await fetch(geminiUrl, {
+                // Degradação graciosa: se a Google rejeitar com 400 e houver histórico, reenvia imediatamente para o MESMO modelo apenas com o prompt atual
+                if (res.status === 400 && activeContents.length > 1) {
+                    console.warn('[Copilot Warning] History rejected by upstream schema. Retrying without history.');
+                    activeContents = fallbackContents;
+                    res = await fetch(geminiUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-goog-api-key': apiKey,
                         },
                         body: JSON.stringify({
                             ...basePayload,
                             contents: activeContents,
-                            generationConfig: genConfig,
+                            generationConfig,
                         }),
                         signal: connectAbort.signal,
                     });
+                }
 
-                    // Degradação graciosa: se a Google rejeitar com 400 e houver histórico, reenvia imediatamente para o MESMO modelo apenas com o prompt atual
-                    if (res.status === 400 && activeContents.length > 1) {
-                        console.warn('[Copilot Warning] History rejected by upstream schema. Retrying without history.');
-                        activeContents = fallbackContents;
-                        res = await fetch(geminiUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-goog-api-key': apiKey,
-                            },
-                            body: JSON.stringify({
-                                ...basePayload,
-                                contents: activeContents,
-                                generationConfig: genConfig,
-                            }),
-                            signal: connectAbort.signal,
-                        });
-                    }
-
-                    if (res.ok) {
-                        // Limpa imediatamente o timer para que o stream de tokens possa fluir livremente
-                        clearTimeout(connectTimeoutId);
-                        geminiRes = res;
-                        break;
-                    }
-
+                if (res.ok) {
+                    // Limpa imediatamente o timer para que o stream de tokens possa fluir livremente
                     clearTimeout(connectTimeoutId);
-                    lastStatus = res.status;
-                    lastErrText = await res.text();
-
-                    // Se for 400 relacionado a thinkingConfig, tenta a próxima config sem thinkingConfig
-                    if (res.status === 400 && 'thinkingConfig' in genConfig) {
-                        continue;
-                    }
-
-                    // Se for 400 de payload inválido geral, não tenta os próximos modelos pois o erro é no formato dos dados enviados
-                    if (res.status === 400) {
-                        shouldTryNextModel = false;
-                        break;
-                    }
-
-                    // Para 404, 503, 429 tenta o próximo modelo candidato
-                    break;
-                } catch (fetchErr: any) {
-                    clearTimeout(connectTimeoutId);
-                    lastErrText = fetchErr?.message || String(fetchErr);
-                    lastStatus = 503;
+                    geminiRes = res;
                     break;
                 }
-            }
 
-            if (geminiRes && geminiRes.ok) {
-                break;
-            }
+                clearTimeout(connectTimeoutId);
+                lastStatus = res.status;
+                lastErrText = await res.text();
+                console.error('[Upstream Error]', lastErrText);
 
-            if (!shouldTryNextModel) {
-                break;
+                // Se for 400 de payload inválido geral mesmo sem histórico, não tenta os próximos modelos pois o erro é no formato
+                if (res.status === 400) {
+                    break;
+                }
+            } catch (fetchErr: any) {
+                clearTimeout(connectTimeoutId);
+                lastErrText = fetchErr?.message || String(fetchErr);
+                lastStatus = 503;
+                console.error('[Upstream Error]', lastErrText);
             }
         }
 

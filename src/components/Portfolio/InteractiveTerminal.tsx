@@ -1056,7 +1056,7 @@ export const InteractiveTerminal: React.FC = () => {
                 ...prev,
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${latency}s • ${tokenCount} tokens • gemini-flash (live)`,
+                    text: `${latency}s • ${tokenCount} tokens • gemini-1.5-flash (live)`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 3 }}
@@ -1069,7 +1069,7 @@ export const InteractiveTerminal: React.FC = () => {
                             <span>•</span>
                             <span>{tokenCount} tokens</span>
                             <span>•</span>
-                            <span className="text-emerald-400 font-semibold">gemini-flash (live)</span>
+                            <span className="text-emerald-400 font-semibold">gemini-1.5-flash (live)</span>
                         </motion.div>
                     ),
                 },
@@ -1287,8 +1287,8 @@ export const InteractiveTerminal: React.FC = () => {
                 {/* Direita: Badge de status de rede e modelo ativo */}
                 <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-400">
                     <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)] animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-                    <span className="hidden sm:inline tracking-wider">EDGE: GEMINI-FLASH [sa-east-1]</span>
-                    <span className="sm:hidden tracking-wider">GEMINI-FLASH</span>
+                    <span className="hidden sm:inline tracking-wider">EDGE: GEMINI-1.5-FLASH [sa-east-1]</span>
+                    <span className="sm:hidden tracking-wider">GEMINI-1.5-FLASH</span>
                 </div>
             </div>
 
