@@ -7,7 +7,7 @@ interface TechnicalCard {
     title: string;
     badge: string;
     icon: string;
-    colSpan?: string;
+    colSpan: string;
     items: {
         name: string;
         desc: string;
@@ -20,6 +20,7 @@ const BENTO_CARDS: TechnicalCard[] = [
         title: 'Garantia da Qualidade (QA)',
         badge: 'Ambientes Críticos',
         icon: 'fas fa-shield-halved',
+        colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
         items: [
             {
                 name: 'Postman',
@@ -40,6 +41,7 @@ const BENTO_CARDS: TechnicalCard[] = [
         title: 'Modernização & Legados',
         badge: 'Sustentação ERP',
         icon: 'fas fa-terminal',
+        colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
         items: [
             {
                 name: 'Delphi 6 & 11',
@@ -57,9 +59,10 @@ const BENTO_CARDS: TechnicalCard[] = [
     },
     {
         id: 'backend-architecture',
-        title: 'Backend & Serviços',
+        title: 'Backend & Serviços REST',
         badge: 'Arquitetura REST',
         icon: 'fas fa-server',
+        colSpan: 'md:col-span-2 lg:col-span-4 flex flex-col justify-between',
         items: [
             {
                 name: 'PHP 8.x & Laravel',
@@ -77,10 +80,10 @@ const BENTO_CARDS: TechnicalCard[] = [
     },
     {
         id: 'database-tuning',
-        title: 'Bancos de Dados & Tuning',
+        title: 'Bancos de Dados & SQL',
         badge: 'Transacional',
         icon: 'fas fa-database',
-        colSpan: 'md:col-span-1 lg:col-span-1',
+        colSpan: 'md:col-span-1 lg:col-span-5 flex flex-col justify-between',
         items: [
             {
                 name: 'Microsoft SQL Server',
@@ -97,7 +100,7 @@ const BENTO_CARDS: TechnicalCard[] = [
         title: 'Frontend & Interatividade',
         badge: 'Alta Densidade',
         icon: 'fas fa-layer-group',
-        colSpan: 'md:col-span-1 lg:col-span-2',
+        colSpan: 'md:col-span-1 lg:col-span-7 flex flex-col justify-between',
         items: [
             {
                 name: 'React & TypeScript',
@@ -144,10 +147,10 @@ export default function Skills({ skills = [] }: SkillsProps) {
                         Especialização <span className="italic font-serif">técnica.</span>
                     </h2>
                     <p className="text-neutral-400 max-w-2xl mx-auto font-sans text-sm sm:text-base leading-relaxed mb-6">
-                        Competências comprovadas em engenharia reversa de sistemas legados, garantia de qualidade em fluxos críticos, arquitetura de APIs e interfaces industriais de alta densidade.
+                        Competências comprovadas em engenharia reversa de sistemas legados, garantia da qualidade em fluxos críticos, arquitetura de APIs e interfaces industriais de alta densidade.
                     </p>
 
-                    {/* ── Seletor Minimalista de Modos (Bento vs 3D) ── */}
+                    {/* ── Seletor Minimalista de Modos (Grade Técnica vs 3D) ── */}
                     <div className="inline-flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-md">
                         <button
                             type="button"
@@ -158,7 +161,7 @@ export default function Skills({ skills = [] }: SkillsProps) {
                                     : 'text-neutral-400 hover:text-white'
                             }`}
                         >
-                            Grade Técnica (Bento)
+                            Grade Técnica
                         </button>
                         <button
                             type="button"
@@ -186,9 +189,9 @@ export default function Skills({ skills = [] }: SkillsProps) {
                                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                                 className="w-full"
                             >
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
                                     {BENTO_CARDS.map((card, cardIndex) => {
-                                        const isSpanned = card.colSpan?.includes('lg:col-span-2');
+                                        const isSpanned = card.id === 'frontend-modern';
 
                                         return (
                                             <motion.div
@@ -197,18 +200,18 @@ export default function Skills({ skills = [] }: SkillsProps) {
                                                 whileInView={{ opacity: 1, y: 0 }}
                                                 viewport={{ once: true }}
                                                 transition={{ duration: 0.4, delay: cardIndex * 0.05 }}
-                                                className={`bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-5 md:p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] flex flex-col justify-between transition-all duration-200 hover:border-white/[0.12] ${
-                                                    card.colSpan || ''
+                                                className={`bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-5 md:p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] ${
+                                                    card.colSpan
                                                 }`}
                                             >
                                                 <div>
-                                                    {/* Cabeçalho do Card */}
+                                                    {/* Cabeçalho do Card (Sem Truncate) */}
                                                     <div className="flex items-center justify-between gap-3 mb-5 pb-3.5 border-b border-white/[0.05]">
-                                                        <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="flex items-center gap-2.5 min-w-0">
                                                             <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
                                                                 <i className={`${card.icon} text-xs`} />
                                                             </div>
-                                                            <h3 className="font-sans text-sm md:text-[15px] font-semibold text-white truncate">
+                                                            <h3 className="font-sans text-sm md:text-[15px] font-semibold text-white whitespace-normal">
                                                                 {card.title}
                                                             </h3>
                                                         </div>
@@ -225,7 +228,7 @@ export default function Skills({ skills = [] }: SkillsProps) {
                                                                     key={item.name}
                                                                     className={`border-b sm:border-b-0 ${
                                                                         idx < card.items.length - 1
-                                                                            ? 'sm:border-r border-white/[0.04] sm:pr-4'
+                                                                            ? 'sm:border-r border-white/[0.05] sm:pr-4'
                                                                             : ''
                                                                     } pb-3 sm:pb-0 last:border-0 last:pb-0`}
                                                                 >

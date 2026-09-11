@@ -19,18 +19,18 @@ export interface TechItem {
 const CATEGORY_THEME: Record<string, { color: string; label: string }> = {
     'Front-end':     { color: '#60A5FA', label: 'Frontend' },
     'Frontend':      { color: '#60A5FA', label: 'Frontend' },
-    'Back-end':      { color: '#F87171', label: 'Backend & ERP' },
-    'Backend & ERP': { color: '#F87171', label: 'Backend & ERP' },
-    'Database':      { color: '#34D399', label: 'Banco de Dados' },
-    'DevOps & QA':   { color: '#FBBF24', label: 'DevOps & QA' },
+    'Back-end':      { color: '#F87171', label: 'Backend' },
+    'Backend & ERP': { color: '#F87171', label: 'Backend' },
+    'Database':      { color: '#34D399', label: 'Bancos' },
+    'DevOps & QA':   { color: '#FBBF24', label: 'QA' },
 };
 
 const CATEGORIES = [
     { id: 'all',          label: 'Todas' },
     { id: 'Front-end',    label: 'Frontend' },
-    { id: 'Back-end',     label: 'Backend & ERP' },
-    { id: 'Database',     label: 'Banco de Dados' },
-    { id: 'DevOps & QA',  label: 'DevOps & QA' },
+    { id: 'Back-end',     label: 'Backend' },
+    { id: 'Database',     label: 'Bancos' },
+    { id: 'DevOps & QA',  label: 'QA' },
 ];
 
 const DEFAULT_SKILLS: TechItem[] = [
@@ -106,8 +106,8 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
     }, [selectedCategory]);
 
     const angleRef = useRef({ x: 0.2, y: 0.1 });
-    const speedRef = useRef({ rx: 0.0008, ry: 0.0016 });
-    const targetSpeed = useRef({ rx: 0.0008, ry: 0.0016 });
+    const speedRef = useRef({ rx: 0.0007, ry: 0.0014 });
+    const targetSpeed = useRef({ rx: 0.0007, ry: 0.0014 });
     const isDraggingRef = useRef(false);
     const dragDistanceRef = useRef(0);
     const lastPointerRef = useRef({ x: 0, y: 0 });
@@ -182,9 +182,10 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
     const runFrame = useCallback(() => {
         if (!isVisibleRef.current) return;
 
+        // Amortecimento suave na rotação manual por arrasto (damping factor 0.95)
         if (!isDraggingRef.current) {
-            speedRef.current.rx += (targetSpeed.current.rx - speedRef.current.rx) * 0.04;
-            speedRef.current.ry += (targetSpeed.current.ry - speedRef.current.ry) * 0.04;
+            speedRef.current.rx = speedRef.current.rx * 0.95 + targetSpeed.current.rx * 0.05;
+            speedRef.current.ry = speedRef.current.ry * 0.95 + targetSpeed.current.ry * 0.05;
         }
 
         angleRef.current.x += speedRef.current.rx;
@@ -195,8 +196,9 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
         const cosX = Math.cos(ax), sinX = Math.sin(ax);
         const cosY = Math.cos(ay), sinY = Math.sin(ay);
 
-        const SPHERE_RADIUS = 200;
-        const FOV = 440;
+        // Raio esférico ampliado em 35% para eliminar colisões de nós de texto
+        const SPHERE_RADIUS = 265;
+        const FOV = 520;
 
         const currentCat = selectedCategoryRef.current;
         const hovId = hoveredTechIdRef.current;
@@ -223,25 +225,49 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
             const scale = FOV / (FOV - zDist);
             const px = x1 * SPHERE_RADIUS * scale;
             const py = y1 * SPHERE_RADIUS * scale;
-            const clampedScale = Math.min(1.35, Math.max(0.7, scale));
-            const depthAlpha = Math.max(0.2, (z2 + 1.2) / 2.2);
+
+            // Profundidade óptica realista:
+            // z2 < 0 (fundo): opacidade progressiva até 0.25, escala até 0.75x, blur sutil
+            // z2 >= 0 (primeiro plano): opacidade 1.0, escala 1.05x, nitidez absoluta
+            const isBack = z2 < 0;
+            const backFactor = isBack ? Math.min(1, -z2) : 0;
+            const frontFactor = !isBack ? Math.min(1, z2) : 0;
+
+            const depthAlpha = isBack
+                ? Math.max(0.25, 1.0 - backFactor * 0.75)
+                : 1.0;
+
+            const depthScale = isBack
+                ? Math.max(0.75, 1.0 - backFactor * 0.25)
+                : Math.min(1.05, 1.0 + frontFactor * 0.05);
+
+            const depthBlur = isBack && backFactor > 0.2 ? 'blur(1px)' : 'none';
 
             if (coords[i]) {
                 coords[i].px = px;
                 coords[i].py = py;
                 coords[i].z2 = z2;
-                coords[i].scale = clampedScale;
+                coords[i].scale = depthScale;
             }
 
             if (el) {
                 const isFiltered = currentCat !== 'all' && node.category !== currentCat;
                 const isFocused = (hovId === node.id) || (actId === node.id);
-                const finalAlpha = isFiltered ? 0.12 : isFocused ? 1 : depthAlpha;
-                const finalZIndex = isFocused ? 999 : Math.round((z2 + 2) * 100);
 
-                el.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${clampedScale})`;
+                const finalAlpha = isFiltered
+                    ? 0.12
+                    : isFocused
+                    ? 1.0
+                    : depthAlpha;
+
+                const finalScale = isFocused ? 1.15 : depthScale;
+                const finalZIndex = isFocused ? 999 : Math.round((z2 + 2) * 100);
+                const finalBlur = isFocused ? 'none' : isFiltered ? 'blur(1.5px)' : depthBlur;
+
+                el.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${finalScale})`;
                 el.style.opacity = String(finalAlpha);
                 el.style.zIndex = String(finalZIndex);
+                el.style.filter = finalBlur;
             }
         }
 
@@ -261,10 +287,10 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
                     if (!p1 || !p2) continue;
 
                     const avgZ = (p1.z2 + p2.z2) / 2;
-                    const lineAlpha = Math.max(0, (avgZ + 0.8) * 0.18);
+                    const lineAlpha = Math.max(0, (avgZ + 0.8) * 0.14);
 
                     if (lineAlpha > 0.01) {
-                        ctx.strokeStyle = `rgba(214, 210, 196, ${lineAlpha})`;
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`;
                         ctx.beginPath();
                         ctx.moveTo(cx + p1.px, cy + p1.py);
                         ctx.lineTo(cx + p2.px, cy + p2.py);
@@ -339,8 +365,9 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
         const dy = e.clientY - lastPointerRef.current.y;
 
         dragDistanceRef.current += Math.abs(dx) + Math.abs(dy);
-        speedRef.current.ry = dx * 0.0032;
-        speedRef.current.rx = -dy * 0.0032;
+        // Sensibilidade calibrada para arrasto tátil com damping suave
+        speedRef.current.ry = dx * 0.0022;
+        speedRef.current.rx = -dy * 0.0022;
 
         lastPointerRef.current = { x: e.clientX, y: e.clientY };
     }, []);
@@ -362,17 +389,17 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
 
     return (
         <div className="relative w-full py-2 select-none flex flex-col items-center">
-            {/* Categorias Filtro */}
+            {/* Pacificação dos Filtros de Categoria (Paleta Translúcida) */}
             <div className="flex flex-wrap justify-center gap-2 mb-6 z-20">
                 {CATEGORIES.map((cat) => (
                     <button
                         key={cat.id}
                         type="button"
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border ${
                             selectedCategory === cat.id
-                                ? 'bg-white text-neutral-950 font-semibold shadow-sm'
-                                : 'bg-white/[0.03] border border-white/[0.07] text-neutral-400 hover:text-white'
+                                ? 'bg-white/[0.06] border-white/[0.15] text-white font-medium shadow-sm'
+                                : 'bg-white/[0.02] border-white/[0.06] text-neutral-400 hover:text-neutral-200 hover:border-white/[0.1]'
                         }`}
                     >
                         {cat.label}
@@ -380,7 +407,7 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
                 ))}
             </div>
 
-            {/* Container da Esfera / Constelação Orbital */}
+            {/* Container da Esfera / Constelação Orbital com Ancoragem Espacial */}
             <div
                 ref={containerRef}
                 onPointerDown={onPointerDown}
@@ -389,9 +416,44 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
                     setHoveredTech(null);
                     updateNodeVisuals(null, activeTechIdRef.current);
                 }}
-                className="relative w-full max-w-[580px] h-[460px] flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl"
+                className="relative w-full max-w-[700px] h-[520px] md:h-[560px] flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl"
                 style={{ touchAction: 'none' }}
             >
+                {/* Anéis Orbitais Concêntricos em SVG Translúcido (Giroscópio de Dados) */}
+                <svg
+                    className="absolute inset-0 w-full h-full pointer-events-none select-none"
+                    viewBox="0 0 700 560"
+                    fill="none"
+                    preserveAspectRatio="xMidYMid meet"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    {/* Anel Orbital 1 (Inclinado -15°) */}
+                    <ellipse
+                        cx="350"
+                        cy="280"
+                        rx="300"
+                        ry="155"
+                        className="stroke-white/[0.04]"
+                        strokeWidth="1.2"
+                        strokeDasharray="4 6"
+                        transform="rotate(-15 350 280)"
+                    />
+                    {/* Anel Orbital 2 (Inclinado +22°) */}
+                    <ellipse
+                        cx="350"
+                        cy="280"
+                        rx="275"
+                        ry="215"
+                        className="stroke-white/[0.04]"
+                        strokeWidth="1"
+                        strokeDasharray="4 6"
+                        transform="rotate(22 350 280)"
+                    />
+                    {/* Marcadores de centro e eixos */}
+                    <circle cx="350" cy="280" r="3.5" className="fill-white/[0.06]" />
+                    <circle cx="350" cy="280" r="1.5" className="fill-white/20" />
+                </svg>
+
                 <canvas
                     ref={canvasRef}
                     className="absolute inset-0 pointer-events-none w-full h-full z-0"
@@ -406,15 +468,15 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
                         style={{
                             position: 'absolute',
                             transform: 'translate3d(0px, 0px, 0) scale(1)',
-                            willChange: 'transform, opacity',
+                            willChange: 'transform, opacity, filter',
                         }}
-                        className="cursor-pointer flex flex-col items-center justify-center pointer-events-none"
+                        className="cursor-pointer flex flex-col items-center justify-center pointer-events-none transition-[filter] duration-200"
                     >
                         <div
                             ref={(el) => { iconWrappersRef.current[idx] = el; }}
                             className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg border border-white/10 pointer-events-auto cursor-pointer will-change-transform"
                             style={{
-                                backgroundColor: 'rgba(18, 20, 26, 0.95)',
+                                backgroundColor: 'rgba(18, 20, 26, 0.85)',
                                 borderColor: 'rgba(255, 255, 255, 0.12)',
                                 transform: 'scale(1)',
                                 transformOrigin: 'center center',
