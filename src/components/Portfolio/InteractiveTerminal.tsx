@@ -924,7 +924,7 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${fallbackLatency}s • ${fallbackTokens} tokens • engine: local-copilot (contingência)`,
+                    text: `${fallbackLatency}s • engine: local-copilot`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 3 }}
@@ -935,9 +935,7 @@ export const InteractiveTerminal: React.FC = () => {
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
                             <span>{fallbackLatency}s</span>
                             <span>•</span>
-                            <span>{fallbackTokens} tokens</span>
-                            <span>•</span>
-                            <span className="text-amber-400/90 font-mono">engine: local-copilot (contingência)</span>
+                            <span className="text-amber-400/90 font-mono">engine: local-copilot</span>
                         </motion.div>
                     ),
                 },
@@ -970,13 +968,13 @@ export const InteractiveTerminal: React.FC = () => {
             }).finally(() => clearTimeout(timeoutId));
 
             const contentType = response.headers.get('content-type') || '';
-            if (response.status === 429 || response.status === 503 || !response.ok || !contentType.includes('text/plain') || !response.body) {
+            if (!response.ok || response.status === 429 || response.status === 503 || !contentType.includes('text/plain') || !response.body) {
                 if (response.status === 429) {
                     // Registra pausa de 45 segundos para poupar cota
                     rateLimitCooldownUntilRef.current = Date.now() + 45000;
                 }
 
-                console.warn(`[Copilot] Upstream status ${response.status}. Falling back smoothly to local engine.`);
+                console.warn(`[Copilot] Upstream code ${response.status}. Falling back to local engine.`);
                 await runLocalStreamingFallback();
                 return;
             }

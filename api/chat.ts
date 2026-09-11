@@ -31,12 +31,7 @@ SUAS DIRETRIZES FUNDAMENTAIS:
 - Formatação terminal: destaque comandos e termos técnicos com crases (\`Postman\`, \`SQL Server\`, etc.).
 - Responda no mesmo idioma do usuário (Português, Inglês ou Espanhol).`;
 
-const MODELS = ['gemini-3.6-flash', 'gemini-flash-latest'];
-
-function getEndpoint(model: string, apiKey: string): string {
-    const cleanName = model.replace(/^models\//, '');
-    return `https://generativelanguage.googleapis.com/v1beta/models/${cleanName}:streamGenerateContent?key=${apiKey}&alt=sse`;
-}
+const MODEL_NAME = 'gemini-3.6-flash';
 
 export default async function handler(req: Request): Promise<Response> {
     // Pré-aquecimento rápido de conexão TLS (Edge Pre-Warming)
@@ -137,93 +132,77 @@ export default async function handler(req: Request): Promise<Response> {
             generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 1200,
-                topP: 0.95,
             },
             safetySettings,
         };
 
-        let res: Response | null = null;
-        let activeModel = MODELS[0];
-        let lastErrorText = '';
-        let lastStatus = 503;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
-        // Failover resiliente de alta disponibilidade para 503 (high demand) ou timeout
-        for (const model of MODELS) {
-            activeModel = model;
-            const modelAbort = new AbortController();
-            const modelTimeoutId = setTimeout(() => modelAbort.abort(), 6000);
+        // Timeout seguro de 15 segundos para dar tempo à Google em horários de pico
+        const connectAbort = new AbortController();
+        const connectTimeoutId = setTimeout(() => connectAbort.abort(), 15000);
 
-            try {
-                let currentRes = await fetch(getEndpoint(model, apiKey), {
+        let res: Response;
+
+        try {
+            res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...basePayload,
+                    contents: initialContents,
+                }),
+                signal: connectAbort.signal,
+            });
+
+            // Recuperação automática se o histórico for rejeitado com HTTP 400
+            if (res.status === 400 && initialContents.length > 1) {
+                console.warn(`[Copilot Warning] History rejected with 400 by ${MODEL_NAME}. Retrying solo prompt.`);
+                res = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         ...basePayload,
-                        contents: initialContents,
+                        contents: soloContents,
                     }),
-                    signal: modelAbort.signal,
+                    signal: connectAbort.signal,
                 });
-
-                // Se houver rejeição de histórico com HTTP 400, reenvia solo prompt no mesmo modelo
-                if (currentRes.status === 400 && initialContents.length > 1) {
-                    console.warn(`[Copilot Warning] History rejected with 400 by ${model}. Retrying solo prompt.`);
-                    currentRes = await fetch(getEndpoint(model, apiKey), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            ...basePayload,
-                            contents: soloContents,
-                        }),
-                        signal: modelAbort.signal,
-                    });
-                }
-
-                clearTimeout(modelTimeoutId);
-
-                if (currentRes.ok) {
-                    res = currentRes;
-                    break;
-                }
-
-                lastStatus = currentRes.status;
-                lastErrorText = await currentRes.text();
-                console.warn(`[Gemini Upstream Warning - ${model}] Status ${currentRes.status}:`, lastErrorText);
-
-                // Se for sobrecarga temporária (503), não encontrado (404) ou erro transitório (500), tenta imediatamente o próximo candidato
-                if (currentRes.status === 503 || currentRes.status === 404 || currentRes.status === 500) {
-                    continue;
-                }
-
-                // Se for outro erro como 429 ou 400 sem histórico, interrompe para não queimar cota
-                res = currentRes;
-                break;
-            } catch (fetchErr: any) {
-                clearTimeout(modelTimeoutId);
-                const errMsg = fetchErr?.message || String(fetchErr);
-                console.warn(`[Gemini Network/Timeout Error - ${model}]:`, errMsg);
-                lastErrorText = errMsg;
-                lastStatus = 503;
-                // Continua para o próximo candidato
-                continue;
             }
-        }
-
-        if (!res || !res.ok) {
-            console.error(`[Gemini All Upstream Candidates Failed] Last status: ${lastStatus}`, lastErrorText);
+        } catch (fetchErr: any) {
+            clearTimeout(connectTimeoutId);
+            const errMsg = fetchErr?.message || String(fetchErr);
+            console.error(`[Gemini Network/Timeout Error - ${MODEL_NAME}]`, errMsg);
             return new Response(JSON.stringify({
-                error: 'GEMINI_UPSTREAM_ERROR',
-                model: activeModel,
-                upstreamStatus: lastStatus,
-                details: lastErrorText,
+                error: 'UPSTREAM_NETWORK_ERROR',
+                model: MODEL_NAME,
+                details: errMsg,
             }), {
-                status: lastStatus,
+                status: 503,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
+
+        if (!res.ok) {
+            clearTimeout(connectTimeoutId);
+            const errBody = await res.text();
+            console.error(`[Gemini Upstream Error - ${MODEL_NAME}]`, res.status, errBody);
+
+            return new Response(JSON.stringify({
+                error: 'GEMINI_UPSTREAM_ERROR',
+                model: MODEL_NAME,
+                upstreamStatus: res.status,
+                details: errBody,
+            }), {
+                status: res.status,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        clearTimeout(connectTimeoutId);
 
         const reader = res.body?.getReader();
         if (!reader) {
