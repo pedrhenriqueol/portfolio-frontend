@@ -112,13 +112,16 @@ export default async function handler(req: Request): Promise<Response> {
             ...cleanHistory,
             { role: 'user' as const, parts: [{ text: sanitized }] },
         ];
-        const fallbackContents = [
+        const soloContents = [
             { role: 'user' as const, parts: [{ text: sanitized }] },
         ];
 
-        // 2. Modelo canônico oficial fixo sem loop ou mascaramento
-        const MODEL = 'gemini-1.5-flash';
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${apiKey}&alt=sse`;
+        // 2. Modelo canônico oficial fixo e contingência de modelo
+        const MODEL_NAME = 'gemini-2.5-flash';
+        const FALLBACK_MODEL = 'gemini-flash-latest';
+
+        const getEndpointUrl = (model: string) =>
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
         const safetySettings = [
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
@@ -133,7 +136,8 @@ export default async function handler(req: Request): Promise<Response> {
             },
             generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 800,
+                maxOutputTokens: 1200, // Margem ampla para resposta completa sem corte prematuro
+                thinkingConfig: { thinkingBudget: 0 }, // Solicita supressão de deliberação longa
             },
             safetySettings,
         };
@@ -142,9 +146,11 @@ export default async function handler(req: Request): Promise<Response> {
         const connectAbort = new AbortController();
         const connectTimeoutId = setTimeout(() => connectAbort.abort(), 8000);
 
+        let activeModel = MODEL_NAME;
         let res: Response;
+
         try {
-            res = await fetch(geminiUrl, {
+            res = await fetch(getEndpointUrl(activeModel), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -156,27 +162,60 @@ export default async function handler(req: Request): Promise<Response> {
                 signal: connectAbort.signal,
             });
 
-            // Se a Google retornar 400 e houver histórico, reenvia imediatamente apenas com o turno atual
+            // 3. Recuperação automática de histórico (HTTP 400 -> reenvia solo no mesmo modelo)
             if (res.status === 400 && initialContents.length > 1) {
-                console.warn('[Copilot Warning] History rejected by upstream schema. Retrying without history.');
-                res = await fetch(geminiUrl, {
+                console.warn(`[Copilot Warning] History rejected with 400 by ${activeModel}. Retrying solo prompt.`);
+                res = await fetch(getEndpointUrl(activeModel), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         ...basePayload,
-                        contents: fallbackContents,
+                        contents: soloContents,
                     }),
                     signal: connectAbort.signal,
                 });
             }
+
+            // Fallback único caso 2.5 não esteja liberado na conta (HTTP 404)
+            if (res.status === 404 && activeModel === MODEL_NAME) {
+                console.warn(`[Copilot Warning] Model ${MODEL_NAME} returned 404. Falling back to ${FALLBACK_MODEL}.`);
+                activeModel = FALLBACK_MODEL;
+                res = await fetch(getEndpointUrl(activeModel), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...basePayload,
+                        contents: initialContents,
+                    }),
+                    signal: connectAbort.signal,
+                });
+
+                if (res.status === 400 && initialContents.length > 1) {
+                    console.warn(`[Copilot Warning] History rejected with 400 by ${activeModel}. Retrying solo prompt.`);
+                    res = await fetch(getEndpointUrl(activeModel), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...basePayload,
+                            contents: soloContents,
+                        }),
+                        signal: connectAbort.signal,
+                    });
+                }
+            }
         } catch (fetchErr: any) {
             clearTimeout(connectTimeoutId);
             const errMsg = fetchErr?.message || String(fetchErr);
-            console.error('[Gemini 1.5 Flash Network Error]', errMsg);
+            console.error(`[Gemini Network Error - ${activeModel}]`, errMsg);
             return new Response(JSON.stringify({
                 error: 'UPSTREAM_NETWORK_ERROR',
+                model: activeModel,
                 details: errMsg,
             }), {
                 status: 503,
@@ -187,10 +226,11 @@ export default async function handler(req: Request): Promise<Response> {
         if (!res.ok) {
             clearTimeout(connectTimeoutId);
             const errBody = await res.text();
-            console.error('[Gemini 1.5 Flash Upstream Error]', res.status, errBody);
+            console.error(`[Gemini Upstream Error - ${activeModel}]`, res.status, errBody);
 
             return new Response(JSON.stringify({
                 error: 'GEMINI_UPSTREAM_ERROR',
+                model: activeModel,
                 upstreamStatus: res.status,
                 details: errBody,
             }), {
@@ -243,6 +283,7 @@ export default async function handler(req: Request): Promise<Response> {
                                     const parts = candidate?.content?.parts;
                                     if (Array.isArray(parts)) {
                                         for (const part of parts) {
+                                            // Descarta qualquer chunk de raciocínio interno (thought: true)
                                             if (!part.thought && typeof part.text === 'string' && part.text) {
                                                 hasEmittedText = true;
                                                 controller.enqueue(encoder.encode(part.text));
