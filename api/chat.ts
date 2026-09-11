@@ -138,9 +138,9 @@ export default async function handler(req: Request): Promise<Response> {
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
-        // Timeout seguro de 15 segundos para dar tempo à Google em horários de pico
+        // Timeout seguro de 25 segundos para dar tempo à Google em horários de pico
         const connectAbort = new AbortController();
-        const connectTimeoutId = setTimeout(() => connectAbort.abort(), 15000);
+        const connectTimeoutId = setTimeout(() => connectAbort.abort(), 25000);
 
         let res: Response;
 
@@ -224,7 +224,7 @@ export default async function handler(req: Request): Promise<Response> {
                     try {
                         controller.close();
                     } catch {}
-                }, 25000);
+                }, 35000);
 
                 try {
                     while (true) {
@@ -298,10 +298,12 @@ export default async function handler(req: Request): Promise<Response> {
         });
 
         return new Response(stream, {
+            status: 200,
             headers: {
-                'Content-Type': 'text/plain; charset=utf-8',
+                'Content-Type': 'text/event-stream; charset=utf-8',
                 'Cache-Control': 'no-cache, no-transform',
-                'X-Content-Type-Options': 'nosniff',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no',
             },
         });
     } catch (err: any) {

@@ -368,6 +368,7 @@ export const InteractiveTerminal: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const activeTimersRef = useRef<number[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const isManualAbortRef = useRef<boolean>(false);
     const prevLangRef = useRef(lang);
     const typingTimeoutRef = useRef<number | null>(null);
     const rateLimitCooldownUntilRef = useRef<number>(0);
@@ -496,6 +497,7 @@ export const InteractiveTerminal: React.FC = () => {
             abortControllerRef.current = null;
         }
 
+        isManualAbortRef.current = false;
         const controller = new AbortController();
         abortControllerRef.current = controller;
         setIsStreaming(true);
@@ -655,6 +657,8 @@ export const InteractiveTerminal: React.FC = () => {
             },
         ]);
 
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
         // 2. Blindagem global com bloco try...catch...finally (fim definitivo do loading infinito)
         try {
             // Verificação de Cooldown (429): se ativo, atende direto via contingência local
@@ -664,10 +668,10 @@ export const InteractiveTerminal: React.FC = () => {
                 return;
             }
 
-            // Timeout de 15 segundos: margem de resiliência para horários de tráfego intenso na nuvem sem abort prematuro
-            const timeoutId = setTimeout(() => {
+            // Timeout de segurança calibrado para 25 segundos (25000ms): margem para picos de fila na Google
+            timeoutId = setTimeout(() => {
                 controller.abort();
-            }, 15000);
+            }, 25000);
 
             const payloadHistory = chatHistory
                 .filter(msg => typeof msg.text === 'string' && msg.text.trim().length > 0)
@@ -685,10 +689,17 @@ export const InteractiveTerminal: React.FC = () => {
                     history: payloadHistory,
                 }),
                 signal: controller.signal,
-            }).finally(() => clearTimeout(timeoutId));
+            });
 
             const contentType = response.headers.get('content-type') || '';
-            if (!response.ok || response.status === 429 || response.status === 503 || !contentType.includes('text/plain') || !response.body) {
+            const isStreamType = contentType.includes('text/event-stream') || contentType.includes('text/plain');
+
+            if (!response.ok || response.status === 429 || response.status === 503 || !isStreamType || !response.body) {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
                 if (response.status === 429) {
                     // Registra pausa de 45 segundos para poupar cota
                     rateLimitCooldownUntilRef.current = Date.now() + 45000;
@@ -743,6 +754,12 @@ export const InteractiveTerminal: React.FC = () => {
                 const { done, value } = await reader.read();
                 if (done) break;
 
+                // Limpa obrigatoriamente o timer com clearTimeout(timeoutId) assim que o primeiro chunk de stream chegar
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
                 const textChunk = decoder.decode(value, { stream: true });
                 accumulatedText += textChunk;
 
@@ -752,6 +769,11 @@ export const InteractiveTerminal: React.FC = () => {
                         flushUpdate(false);
                     });
                 }
+            }
+
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
             }
 
             if (rafId !== null) {
@@ -805,20 +827,20 @@ export const InteractiveTerminal: React.FC = () => {
             ]);
         } catch (err: any) {
             console.warn('[Copilot Remote Error]', err);
-            // Se foi cancelamento deliberado do usuário via Ctrl+C (quando abortControllerRef.current já foi zerado)
-            if (err.name === 'AbortError' && abortControllerRef.current === null) {
+            // Reservado EXCLUSIVAMENTE para cancelamentos manuais voluntários via teclado (Ctrl + C explícito)
+            if (isManualAbortRef.current) {
                 setLines(prev => [
                     ...prev
                         .filter(l => l.id !== dispatchLineId)
                         .map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedCopilotResponse text={l.text || ''} isStreaming={false} /> } : l)),
                     {
-                        text: '^C [OPERAÇÃO CANCELADA PELO USUÁRIO]',
-                        color: 'text-red-400 font-mono text-xs',
+                        text: '[sistema] Interrompido',
+                        color: 'text-neutral-500 font-mono text-xs',
                     },
                     { text: '', color: '' },
                 ]);
             } else {
-                // Fallback inteligente: simula streaming token a token da base de conhecimento
+                // Se o cancelamento ocorrer por timeout interno ou erro upstream, o terminal NÃO deve imprimir mensagem de interrupção; deve comutar silenciosamente para runLocalStreamingFallback(prompt)
                 try {
                     await runLocalStreamingFallback(cleanQuestion);
                 } catch (fallbackErr) {
@@ -826,6 +848,10 @@ export const InteractiveTerminal: React.FC = () => {
                 }
             }
         } finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
             // GARANTIA ABSOLUTA: Destrava o terminal mesmo se houver erro em qualquer ponto
             setIsStreaming(false);
             if (abortControllerRef.current === controller) {
@@ -901,9 +927,22 @@ export const InteractiveTerminal: React.FC = () => {
                 typingTimeoutRef.current = null;
             }
             if (isStreaming) {
-                abortControllerRef.current?.abort();
+                isManualAbortRef.current = true;
+                const activeController = abortControllerRef.current;
                 abortControllerRef.current = null;
                 setIsStreaming(false);
+                if (activeController) {
+                    activeController.abort();
+                } else {
+                    setLines(prev => [
+                        ...prev,
+                        {
+                            text: '[sistema] Interrompido',
+                            color: 'text-neutral-500 font-mono text-xs',
+                        },
+                        { text: '', color: '' },
+                    ]);
+                }
                 return;
             }
             if (input) {
