@@ -967,8 +967,79 @@ export const InteractiveTerminal: React.FC = () => {
                 try {
                     errDetail = await response.text();
                 } catch {}
-                console.warn('[Copilot API Remote Error Details]:', response.status, errDetail);
-                throw new Error(`API_ERROR_${response.status}_${errDetail}`);
+                console.error('[Copilot API Remote Error Details]:', response.status, errDetail);
+
+                let parsedMsg = '';
+                try {
+                    const parsedJson = JSON.parse(errDetail);
+                    const innerDetails = parsedJson?.details;
+                    try {
+                        const parsedInner = typeof innerDetails === 'string' ? JSON.parse(innerDetails) : innerDetails;
+                        parsedMsg = parsedInner?.error?.message || parsedInner?.message || '';
+                    } catch {
+                        parsedMsg = typeof innerDetails === 'string' ? innerDetails : '';
+                    }
+                    if (!parsedMsg) {
+                        parsedMsg = parsedJson?.error || errDetail;
+                    }
+                } catch {
+                    parsedMsg = errDetail;
+                }
+
+                const displayError = parsedMsg || `HTTP ${response.status}`;
+
+                setLines(prev => [
+                    ...prev
+                        .filter(l => l.id !== dispatchLineId)
+                        .map(l =>
+                            l.id === streamLineId
+                                ? {
+                                      ...l,
+                                      text: `[Erro ${response.status} Upstream]: ${displayError}`,
+                                      isStreaming: false,
+                                      node: (
+                                          <div className="space-y-1.5 font-mono text-xs my-1">
+                                              <div className="text-red-400 font-bold flex items-center gap-1.5">
+                                                  <span>✖</span>
+                                                  <span>[Erro {response.status} Gemini Upstream]</span>
+                                              </div>
+                                              <div className="text-red-300/90 bg-red-950/20 border border-red-500/20 rounded p-2 text-[11px] whitespace-pre-wrap break-all">
+                                                  {displayError}
+                                              </div>
+                                              <div className="text-neutral-500 text-[10px]">
+                                                  Dica: Acesse <a href="/api/models" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline hover:text-cyan-300">/api/models</a> para listar os modelos permitidos na sua chave.
+                                              </div>
+                                          </div>
+                                      ),
+                                  }
+                                : l.id === copilotBadgeId
+                                ? {
+                                      ...l,
+                                      node: (
+                                          <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
+                                              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                                              <span className="font-semibold text-neutral-300">copilot (erro upstream)</span>
+                                          </div>
+                                      ),
+                                  }
+                                : l
+                        ),
+                    {
+                        id: `telemetry-${Date.now()}`,
+                        text: `erro ${response.status} • upstream-failed`,
+                        node: (
+                            <div className="text-[10px] font-mono text-red-400/80 mt-1 flex items-center gap-2 select-none">
+                                <span>✖</span>
+                                <span>HTTP {response.status}</span>
+                                <span>•</span>
+                                <span>gemini-1.5-flash upstream error</span>
+                            </div>
+                        ),
+                    },
+                    { text: '', color: '' },
+                ]);
+
+                return;
             }
 
             const reader = response.body.getReader();

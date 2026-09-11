@@ -80,17 +80,6 @@ export default async function handler(req: Request): Promise<Response> {
             });
         }
 
-        // Endpoint de diagnóstico rápido de modelos disponíveis
-        if (sanitized === 'debug_models') {
-            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
-                headers: { 'x-goog-api-key': apiKey },
-            });
-            return new Response(await listRes.text(), {
-                status: listRes.status,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-
         // 1. Higienização e validação estrita do histórico de conversação
         const cleanHistory: Array<{ role: 'user' | 'model'; parts: [{ text: string }] }> = [];
 
@@ -113,13 +102,12 @@ export default async function handler(req: Request): Promise<Response> {
                 }
             }
 
-            // Se o histórico terminar com 'user', descarta o último para que o próximo prompt seja o fechamento natural
+            // Se o histórico terminar com 'user', descarta para o próximo prompt ser o fechamento natural
             if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === 'user') {
                 cleanHistory.pop();
             }
         }
 
-        // Montagem dos payloads de conteúdos: com histórico e fallback sem histórico
         const initialContents = [
             ...cleanHistory,
             { role: 'user' as const, parts: [{ text: sanitized }] },
@@ -128,18 +116,9 @@ export default async function handler(req: Request): Promise<Response> {
             { role: 'user' as const, parts: [{ text: sanitized }] },
         ];
 
-        // 2. Lista canônica estrita do Gemini 1.5 exigida oficialmente pela Google
-        const CANDIDATE_MODELS = [
-            'gemini-1.5-flash',
-            'gemini-1.5-pro',
-        ];
-
-        // 3. Parâmetros limpos sem thinkingConfig (incompatível com Gemini 1.5)
-        const generationConfig = {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-            topP: 0.95,
-        };
+        // 2. Modelo canônico oficial fixo sem loop ou mascaramento
+        const MODEL = 'gemini-1.5-flash';
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
         const safetySettings = [
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
@@ -148,94 +127,81 @@ export default async function handler(req: Request): Promise<Response> {
             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
         ];
 
-        let geminiRes: Response | null = null;
-        let lastErrText = '';
-        let lastStatus = 503;
-        let activeContents = initialContents;
-
         const basePayload = {
             systemInstruction: {
                 parts: [{ text: SYSTEM_INSTRUCTION }],
             },
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 800,
+            },
             safetySettings,
         };
 
-        for (const model of CANDIDATE_MODELS) {
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+        // Timeout de conexão de 8 segundos para recepção dos headers
+        const connectAbort = new AbortController();
+        const connectTimeoutId = setTimeout(() => connectAbort.abort(), 8000);
 
-            // Timeout de conexão de 7 segundos exclusivo para handshake dos headers
-            const connectAbort = new AbortController();
-            const connectTimeoutId = setTimeout(() => connectAbort.abort(), 7000);
+        let res: Response;
+        try {
+            res = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...basePayload,
+                    contents: initialContents,
+                }),
+                signal: connectAbort.signal,
+            });
 
-            try {
-                let res = await fetch(geminiUrl, {
+            // Se a Google retornar 400 e houver histórico, reenvia imediatamente apenas com o turno atual
+            if (res.status === 400 && initialContents.length > 1) {
+                console.warn('[Copilot Warning] History rejected by upstream schema. Retrying without history.');
+                res = await fetch(geminiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         ...basePayload,
-                        contents: activeContents,
-                        generationConfig,
+                        contents: fallbackContents,
                     }),
                     signal: connectAbort.signal,
                 });
-
-                // Degradação graciosa: se a Google rejeitar com 400 e houver histórico, reenvia imediatamente para o MESMO modelo apenas com o prompt atual
-                if (res.status === 400 && activeContents.length > 1) {
-                    console.warn('[Copilot Warning] History rejected by upstream schema. Retrying without history.');
-                    activeContents = fallbackContents;
-                    res = await fetch(geminiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            ...basePayload,
-                            contents: activeContents,
-                            generationConfig,
-                        }),
-                        signal: connectAbort.signal,
-                    });
-                }
-
-                if (res.ok) {
-                    // Limpa imediatamente o timer para que o stream de tokens possa fluir livremente
-                    clearTimeout(connectTimeoutId);
-                    geminiRes = res;
-                    break;
-                }
-
-                clearTimeout(connectTimeoutId);
-                lastStatus = res.status;
-                lastErrText = await res.text();
-                console.error('[Upstream Error]', lastErrText);
-
-                // Se for 400 de payload inválido geral mesmo sem histórico, não tenta os próximos modelos pois o erro é no formato
-                if (res.status === 400) {
-                    break;
-                }
-            } catch (fetchErr: any) {
-                clearTimeout(connectTimeoutId);
-                lastErrText = fetchErr?.message || String(fetchErr);
-                lastStatus = 503;
-                console.error('[Upstream Error]', lastErrText);
             }
-        }
-
-        if (!geminiRes || !geminiRes.ok) {
-            console.error('Gemini API Upstream Unavailable:', lastStatus, lastErrText);
+        } catch (fetchErr: any) {
+            clearTimeout(connectTimeoutId);
+            const errMsg = fetchErr?.message || String(fetchErr);
+            console.error('[Gemini 1.5 Flash Network Error]', errMsg);
             return new Response(JSON.stringify({
-                error: 'UPSTREAM_UNAVAILABLE',
-                status: 503,
-                details: lastErrText || 'All candidate models failed or returned non-200 status.',
+                error: 'UPSTREAM_NETWORK_ERROR',
+                details: errMsg,
             }), {
                 status: 503,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
 
-        const reader = geminiRes.body?.getReader();
+        if (!res.ok) {
+            clearTimeout(connectTimeoutId);
+            const errBody = await res.text();
+            console.error('[Gemini 1.5 Flash Upstream Error]', res.status, errBody);
+
+            return new Response(JSON.stringify({
+                error: 'GEMINI_UPSTREAM_ERROR',
+                upstreamStatus: res.status,
+                details: errBody,
+            }), {
+                status: res.status,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        clearTimeout(connectTimeoutId);
+
+        const reader = res.body?.getReader();
         if (!reader) {
             return new Response(JSON.stringify({ error: 'NO_STREAM_BODY' }), {
                 status: 500,
@@ -277,7 +243,6 @@ export default async function handler(req: Request): Promise<Response> {
                                     const parts = candidate?.content?.parts;
                                     if (Array.isArray(parts)) {
                                         for (const part of parts) {
-                                            // Ignora tokens de pensamento interno e emite apenas texto real
                                             if (!part.thought && typeof part.text === 'string' && part.text) {
                                                 hasEmittedText = true;
                                                 controller.enqueue(encoder.encode(part.text));
@@ -285,7 +250,6 @@ export default async function handler(req: Request): Promise<Response> {
                                         }
                                     }
 
-                                    // Se a resposta foi interrompida por filtro de segurança do Google
                                     if (candidate?.finishReason === 'SAFETY' || parsed?.promptFeedback?.blockReason) {
                                         const secMsg = "Acesso restrito por diretrizes de segurança 🛡️: Como assistente técnico e de QA do Pedro, sigo rigorosas práticas de DevSecOps. Chaves de API, senhas ou variáveis de ambiente operam exclusivamente isoladas no servidor Edge da Vercel e não são expostas.";
                                         hasEmittedText = true;
@@ -314,7 +278,6 @@ export default async function handler(req: Request): Promise<Response> {
                         } catch {}
                     }
 
-                    // Se a API concluiu sem emitir nenhum caractere (ex: recusa silenciosa), emite defesa imediata
                     if (!hasEmittedText) {
                         const fallbackMsg = "Como Copilot Técnico do Pedro Henrique, sigo protocolos estritos de DevSecOps 🛡️. Chaves de API, senhas e variáveis de ambiente nunca são reveladas na camada cliente. Posso te ajudar com arquitetura, testes de QA ou desenvolvimento?";
                         controller.enqueue(encoder.encode(fallbackMsg));
