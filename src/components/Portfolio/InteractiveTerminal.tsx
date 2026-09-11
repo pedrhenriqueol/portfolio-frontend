@@ -505,6 +505,83 @@ export const InteractiveTerminal: React.FC = () => {
         const copilotBadgeId = `badge-${Date.now()}`;
         const startTime = Date.now();
 
+        // 1. Função de streaming local hoisted no topo do handler (elimina qualquer risco de TDZ)
+        async function runLocalStreamingFallback(promptText: string) {
+            const fallbackReply = matchLocalKnowledge(promptText, (lang as 'pt' | 'en' | 'es') || 'pt');
+            const tokens = fallbackReply.split(' ');
+            let currentText = '';
+            const fallbackStart = Date.now();
+
+            for (let i = 0; i < tokens.length; i++) {
+                if (abortControllerRef.current === null) break;
+                currentText += (i === 0 ? '' : ' ') + tokens[i];
+                const snap = currentText;
+
+                setLines(prev => {
+                    const withoutDispatch = i === 0 ? prev.filter(l => l.id !== dispatchLineId) : prev;
+                    return withoutDispatch.map(l =>
+                        l.id === streamLineId
+                            ? {
+                                  ...l,
+                                  text: snap,
+                                  node: <FormattedCopilotResponse text={snap} isStreaming={i < tokens.length - 1} />,
+                              }
+                            : l
+                    );
+                });
+
+                if (contentRef.current) {
+                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                }
+
+                // Cadência fluida e natural de leitura
+                await new Promise(r => setTimeout(r, 20));
+            }
+
+            const fallbackLatency = ((Date.now() - fallbackStart) / 1000).toFixed(1);
+
+            setLines(prev => [
+                ...prev.map(l =>
+                    l.id === streamLineId
+                        ? {
+                              ...l,
+                              text: currentText,
+                              isStreaming: false,
+                              node: <FormattedCopilotResponse text={currentText} isStreaming={false} />,
+                          }
+                        : l.id === copilotBadgeId
+                        ? {
+                              ...l,
+                              node: (
+                                  <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                                      <span className="font-semibold text-neutral-300">copilot</span>
+                                  </div>
+                              ),
+                          }
+                        : l
+                ),
+                {
+                    id: `telemetry-${Date.now()}`,
+                    text: `${fallbackLatency}s • local-copilot engine`,
+                    node: (
+                        <motion.div
+                            initial={{ opacity: 0, y: 3 }}
+                            animate={{ opacity: 0.85, y: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
+                        >
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+                            <span>{fallbackLatency}s</span>
+                            <span>•</span>
+                            <span className="text-amber-400/90 font-mono">local-copilot engine</span>
+                        </motion.div>
+                    ),
+                },
+                { text: '', color: '' },
+            ]);
+        }
+
         // Eco do comando digitado e badge do Copilot com radar ping e status de geração
         setLines(prev => [
             ...prev,
@@ -578,91 +655,15 @@ export const InteractiveTerminal: React.FC = () => {
             },
         ]);
 
-        // Supressão de retentativas desordenadas: se dentro da janela de 45s de 429, serve direto via contingência local
-        if (Date.now() < rateLimitCooldownUntilRef.current) {
-            console.warn('[Copilot] Inside 45s rate-limit cooldown window. Serving directly via local engine.');
-            await runLocalStreamingFallback();
-            return;
-        }
-
-        // Função de streaming do fallback inteligente local com base de conhecimento expandida
-        const runLocalStreamingFallback = async () => {
-            const fallbackReply = matchLocalKnowledge(cleanQuestion, (lang as 'pt' | 'en' | 'es') || 'pt');
-            const tokens = fallbackReply.split(' ');
-            let currentText = '';
-            const fallbackStart = Date.now();
-
-            for (let i = 0; i < tokens.length; i++) {
-                if (abortControllerRef.current === null) break;
-                currentText += (i === 0 ? '' : ' ') + tokens[i];
-                const snap = currentText;
-
-                setLines(prev => {
-                    const withoutDispatch = i === 0 ? prev.filter(l => l.id !== dispatchLineId) : prev;
-                    return withoutDispatch.map(l =>
-                        l.id === streamLineId
-                            ? {
-                                  ...l,
-                                  text: snap,
-                                  node: <FormattedCopilotResponse text={snap} isStreaming={i < tokens.length - 1} />,
-                              }
-                            : l
-                    );
-                });
-
-                if (contentRef.current) {
-                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
-                }
-
-                // Cadência fluida e natural de leitura
-                await new Promise(r => setTimeout(r, 20));
+        // 2. Blindagem global com bloco try...catch...finally (fim definitivo do loading infinito)
+        try {
+            // Verificação de Cooldown (429): se ativo, atende direto via contingência local
+            if (Date.now() < rateLimitCooldownUntilRef.current) {
+                console.warn('[Copilot] Inside 45s rate-limit cooldown window. Serving directly via local engine.');
+                await runLocalStreamingFallback(cleanQuestion);
+                return;
             }
 
-            const fallbackLatency = ((Date.now() - fallbackStart) / 1000).toFixed(1);
-
-            setLines(prev => [
-                ...prev.map(l =>
-                    l.id === streamLineId
-                        ? {
-                              ...l,
-                              text: currentText,
-                              isStreaming: false,
-                              node: <FormattedCopilotResponse text={currentText} isStreaming={false} />,
-                          }
-                        : l.id === copilotBadgeId
-                        ? {
-                              ...l,
-                              node: (
-                                  <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 mb-1 select-none">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                                      <span className="font-semibold text-neutral-300">copilot</span>
-                                  </div>
-                              ),
-                          }
-                        : l
-                ),
-                {
-                    id: `telemetry-${Date.now()}`,
-                    text: `${fallbackLatency}s • local-copilot engine`,
-                    node: (
-                        <motion.div
-                            initial={{ opacity: 0, y: 3 }}
-                            animate={{ opacity: 0.85, y: 0 }}
-                            transition={{ duration: 0.35 }}
-                            className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
-                        >
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
-                            <span>{fallbackLatency}s</span>
-                            <span>•</span>
-                            <span className="text-amber-400/90 font-mono">local-copilot engine</span>
-                        </motion.div>
-                    ),
-                },
-                { text: '', color: '' },
-            ]);
-        };
-
-        try {
             // Timeout de 15 segundos: margem de resiliência para horários de tráfego intenso na nuvem sem abort prematuro
             const timeoutId = setTimeout(() => {
                 controller.abort();
@@ -694,7 +695,7 @@ export const InteractiveTerminal: React.FC = () => {
                 }
 
                 console.warn(`[Copilot] Upstream code ${response.status}. Falling back to local engine.`);
-                await runLocalStreamingFallback();
+                await runLocalStreamingFallback(cleanQuestion);
                 return;
             }
 
@@ -818,15 +819,20 @@ export const InteractiveTerminal: React.FC = () => {
                 ]);
             } else {
                 // Fallback inteligente: simula streaming token a token da base de conhecimento
-                await runLocalStreamingFallback();
+                try {
+                    await runLocalStreamingFallback(cleanQuestion);
+                } catch (fallbackErr) {
+                    console.error('[Fallback Fatal Error]', fallbackErr);
+                }
             }
         } finally {
+            // GARANTIA ABSOLUTA: Destrava o terminal mesmo se houver erro em qualquer ponto
             setIsStreaming(false);
             if (abortControllerRef.current === controller) {
                 abortControllerRef.current = null;
             }
         }
-    }, [lang]);
+    }, [lang, chatHistory]);
 
     /** Manipula a submissão de comandos no prompt */
     const handleRunCommand = useCallback((raw: string) => {
