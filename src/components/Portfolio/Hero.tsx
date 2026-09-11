@@ -240,7 +240,7 @@ export const Hero: React.FC = () => {
                         className="lg:col-span-7 flex justify-center lg:justify-end w-full"
                         ref={termRef}
                     >
-                        <div className="relative w-full max-w-xl xl:max-w-2xl">
+                        <div id="terminal" className="relative w-full max-w-xl xl:max-w-2xl">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-secondary/8 blur-[100px] rounded-full pointer-events-none" />
                             <Suspense fallback={
                                 <div className="w-full h-[500px] md:h-[540px] rounded-2xl bg-[#080a0f]/90 border border-white/10 p-6 flex flex-col justify-between animate-pulse">
