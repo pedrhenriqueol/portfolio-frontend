@@ -4,20 +4,33 @@
  * Padrão: Desativado por padrão (muted: true) para cortesia de UX.
  */
 
-let audioCtx = null;
+let globalAudioCtx = null;
 
-function getAudioContext() {
+export function getAudioContext() {
     if (typeof window === 'undefined') return null;
-    if (!audioCtx) {
+    if (!globalAudioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) {
-            audioCtx = new AudioContextClass();
+            globalAudioCtx = new AudioContextClass();
         }
     }
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
+    if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+        globalAudioCtx.resume().catch(() => {});
     }
-    return audioCtx;
+    return globalAudioCtx;
+}
+
+// Desbloqueio seguro de AudioContext no primeiro gesto do usuário
+if (typeof window !== 'undefined') {
+    const unlockAudio = () => {
+        if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+            globalAudioCtx.resume().catch(() => {});
+        }
+        window.removeEventListener('pointerdown', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+    };
+    window.addEventListener('pointerdown', unlockAudio, { passive: true, once: true });
+    window.addEventListener('keydown', unlockAudio, { passive: true, once: true });
 }
 
 // ── Gerenciamento de Estado Global de Áudio ──

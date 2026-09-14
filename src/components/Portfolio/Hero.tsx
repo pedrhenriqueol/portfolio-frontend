@@ -66,17 +66,30 @@ export const Hero: React.FC = () => {
             startLoop();
         };
 
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                if (rafRef.current) {
+                    cancelAnimationFrame(rafRef.current);
+                    rafRef.current = null;
+                }
+                isRunningRef.current = false;
+            } else if (isVisibleRef.current) {
+                startLoop();
+            }
+        };
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 isVisibleRef.current = entry.isIntersecting;
-                if (entry.isIntersecting) {
+                if (entry.isIntersecting && !document.hidden) {
                     startLoop();
                 } else if (rafRef.current) {
                     cancelAnimationFrame(rafRef.current);
+                    rafRef.current = null;
                     isRunningRef.current = false;
                 }
             },
-            { threshold: 0.05 }
+            { threshold: 0 }
         );
 
         if (sectionRef.current) {
@@ -84,12 +97,18 @@ export const Hero: React.FC = () => {
         }
 
         window.addEventListener('mousemove', onMove, { passive: true });
+        document.addEventListener('visibilitychange', onVisibilityChange);
         startLoop();
 
         return () => {
             window.removeEventListener('mousemove', onMove);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
             observer.disconnect();
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
+            }
+            isRunningRef.current = false;
         };
     }, []);
 
@@ -282,4 +301,4 @@ export const Hero: React.FC = () => {
     );
 };
 
-export default Hero;
+export default React.memo(Hero);

@@ -103,6 +103,12 @@ button, [role="button"] {
   perspective: 1000px;
 }
 
+.gpu-stable {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
 .contain-paint {
   contain: paint;
 }

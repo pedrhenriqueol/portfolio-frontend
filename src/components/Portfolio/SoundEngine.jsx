@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import { getAudioContext, isMuted } from '../../lib/sound';
 
 /* ── Sound Engine: Web Audio API com limpeza de nós ── */
 const SOUNDS = {
@@ -58,24 +59,11 @@ const SOUNDS = {
     },
 };
 
-let _ctx = null;
-let _muted = false;
-
-function getCtx() {
-    if (!_ctx) {
-        try {
-            _ctx = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {}
-    }
-    return _ctx;
-}
-
 /** Public API para tocar sons de UI */
 export function playSound(type) {
-    if (_muted) return;
-    const ctx = getCtx();
+    if (isMuted()) return;
+    const ctx = getAudioContext();
     if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
     const fn = SOUNDS[type];
     if (fn) fn(ctx);
 }

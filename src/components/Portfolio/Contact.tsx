@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
@@ -33,6 +33,13 @@ export default function Contact() {
     const [success, setSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [copiedEmail, setCopiedEmail] = useState(false);
+
+    // Spotlight direto via DOM Custom Properties (Zero Re-renders de Estado)
+    const handleCardMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    }, []);
 
     // Easter Egg sutil: detecta termos de contratação no assunto
     const isProposalMode = Boolean(
@@ -159,8 +166,19 @@ export default function Contact() {
                         transition={{ duration: 0.5 }}
                         className="lg:col-span-5 flex flex-col h-full"
                     >
-                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between space-y-6">
-                            <div>
+                        <div
+                            onMouseMove={handleCardMouseMove}
+                            style={{ transform: 'translateZ(0)' }}
+                            className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between space-y-6 relative overflow-hidden group will-change-transform transition-all duration-200 hover:border-white/[0.12]"
+                        >
+                            {/* Spotlight monocromático suave */}
+                            <div
+                                className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
+                                style={{
+                                    background: 'radial-gradient(600px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 255, 255, 0.035), transparent 60%)',
+                                }}
+                            />
+                            <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans">
                                     Canais diretos
                                 </h3>
@@ -248,9 +266,19 @@ export default function Contact() {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="lg:col-span-7 flex flex-col h-full"
                     >
-                        <div className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between">
-                            
-                            <div>
+                        <div
+                            onMouseMove={handleCardMouseMove}
+                            style={{ transform: 'translateZ(0)' }}
+                            className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between relative overflow-hidden group will-change-transform transition-all duration-200 hover:border-white/[0.12]"
+                        >
+                            {/* Spotlight monocromático suave */}
+                            <div
+                                className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
+                                style={{
+                                    background: 'radial-gradient(600px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 255, 255, 0.035), transparent 60%)',
+                                }}
+                            />
+                            <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
                                     Mande uma mensagem
                                 </h3>
@@ -389,3 +417,5 @@ export default function Contact() {
         </section>
     );
 }
+
+export default memo(Contact);

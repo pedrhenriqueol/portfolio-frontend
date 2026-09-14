@@ -396,7 +396,7 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
  * CorporateProjectsShowcase - Esteira Cilíndrica 3D com Rotação Espacial e Física de Inércia
  * para a Seção "Projetos Corporativos & Soluções".
  */
-export default function CorporateProjectsShowcase({
+const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
     projects = [],
     onSelectProject,
     t,
@@ -796,4 +796,6 @@ export default function CorporateProjectsShowcase({
             </AnimatePresence>
         </div>
     );
-}
+});
+
+export default CorporateProjectsShowcase;

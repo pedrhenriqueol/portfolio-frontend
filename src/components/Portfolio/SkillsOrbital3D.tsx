@@ -81,11 +81,12 @@ function createSphereNodes(items: TechItem[]) {
     return { nodes, edges };
 }
 
-interface SkillsOrbital3DProps {
+export interface SkillsOrbital3DProps {
     skills?: TechItem[];
+    active?: boolean;
 }
 
-export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
+export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOrbital3DProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const nodeElementsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -180,7 +181,13 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
     }, [baseNodes]);
 
     const runFrame = useCallback(() => {
-        if (!isVisibleRef.current) return;
+        if (!active || !isVisibleRef.current || document.hidden) {
+            if (rafIdRef.current) {
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = null;
+            }
+            return;
+        }
 
         // Amortecimento suave na rotação manual por arrasto (damping factor 0.95)
         if (!isDraggingRef.current) {
@@ -305,14 +312,31 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
 
     useEffect(() => {
         const el = containerRef.current;
-        if (!el) return;
+        if (!el || !active) {
+            if (rafIdRef.current) {
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = null;
+            }
+            return;
+        }
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                if (rafIdRef.current) {
+                    cancelAnimationFrame(rafIdRef.current);
+                    rafIdRef.current = null;
+                }
+            } else if (isVisibleRef.current && active && !rafIdRef.current) {
+                rafIdRef.current = requestAnimationFrame(runFrame);
+            }
+        };
 
         const observer = new IntersectionObserver(
             ([entry]) => {
                 const isNowVisible = entry.isIntersecting;
                 isVisibleRef.current = isNowVisible;
 
-                if (isNowVisible) {
+                if (isNowVisible && active && !document.hidden) {
                     if (!rafIdRef.current) {
                         rafIdRef.current = requestAnimationFrame(runFrame);
                     }
@@ -323,22 +347,25 @@ export default function SkillsOrbital3D({ skills = [] }: SkillsOrbital3DProps) {
                     }
                 }
             },
-            { threshold: 0.1 }
+            { threshold: 0 }
         );
 
         observer.observe(el);
-        if (isVisibleRef.current && !rafIdRef.current) {
+        document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
+
+        if (isVisibleRef.current && active && !document.hidden && !rafIdRef.current) {
             rafIdRef.current = requestAnimationFrame(runFrame);
         }
 
         return () => {
             observer.disconnect();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
             if (rafIdRef.current) {
                 cancelAnimationFrame(rafIdRef.current);
                 rafIdRef.current = null;
             }
         };
-    }, [runFrame]);
+    }, [active, runFrame]);
 
     useEffect(() => {
         const updateCanvasSize = () => {

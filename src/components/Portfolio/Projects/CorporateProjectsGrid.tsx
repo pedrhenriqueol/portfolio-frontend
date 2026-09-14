@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Project, ProjectFilterType, ProjectViewMode } from '../../../types/project';
 import { projectCategory, FILTER_ICONS } from '../../../utils/projects';
@@ -12,7 +12,7 @@ interface CorporateProjectsGridProps {
     lang?: string;
 }
 
-export default function CorporateProjectsGrid({
+function CorporateProjectsGrid({
     projects,
     onSelectProject,
     t,
@@ -296,3 +296,5 @@ export default function CorporateProjectsGrid({
         </div>
     );
 }
+
+export default memo(CorporateProjectsGrid);

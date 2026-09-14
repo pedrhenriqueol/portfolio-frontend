@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import { getAudioContext, isMuted } from '../../lib/sound';
 
-/* ── Som de tecla mecânica via Web Audio API ── */
+/* ── Som de tecla mecânica via Web Audio API Singleton ── */
 function playMechanicalKey(freq = 700, duration = 0.04) {
+    if (isMuted()) return;
     try {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
+        const ctx = getAudioContext();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
@@ -19,12 +20,24 @@ function playMechanicalKey(freq = 700, duration = 0.04) {
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + duration);
+        osc.onended = () => {
+            osc.disconnect();
+            gain.disconnect();
+        };
     } catch (e) {}
 }
 
-/* ── Relógio ao vivo de Fortaleza (UTC-3) ── */
-function LiveClock({ lang }: { lang: string }) {
-    const [time, setTime] = useState('');
+/* ── Relógio ao vivo de Fortaleza (UTC-3) - Componente Folha Isolado (Zero Re-render Leakage) ── */
+export const LocalClock = memo(function LocalClock({ lang }: { lang: string }) {
+    const [time, setTime] = useState(() => {
+        const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
+        return new Date().toLocaleTimeString(locale, {
+            timeZone: 'America/Fortaleza',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        });
+    });
 
     useEffect(() => {
         const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
@@ -79,10 +92,12 @@ function LiveClock({ lang }: { lang: string }) {
             {time || '10:00:00'}
         </span>
     );
-}
+});
 
-/* ── Chassis de Cartão Unificado com Spotlight Monocromático ── */
-function BentoCard({
+export const LiveClock = LocalClock;
+
+/* ── Chassis de Cartão Unificado com Spotlight Monocromático (Zero State Re-renders) ── */
+const BentoCard = memo(function BentoCard({
     children,
     className = '',
     onClick,
@@ -91,23 +106,20 @@ function BentoCard({
     className?: string;
     onClick?: () => void;
 }) {
-    const cardRef = useRef<HTMLDivElement>(null);
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!cardRef.current) return;
-        const rect = cardRef.current.getBoundingClientRect();
-        cardRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-    };
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    }, []);
 
     return (
         <div
-            ref={cardRef}
             onMouseMove={handleMouseMove}
             onClick={onClick}
-            className={`bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] relative overflow-hidden group transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/85 ${className}`}
+            style={{ transform: 'translateZ(0)' }}
+            className={`bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] relative overflow-hidden group transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 will-change-transform ${className}`}
         >
-            {/* Spotlight monocromático ultra-suave */}
+            {/* Spotlight monocromático ultra-suave via CSS Custom Properties */}
             <div
                 className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10"
                 style={{
@@ -119,7 +131,7 @@ function BentoCard({
             </div>
         </div>
     );
-}
+});
 
 /* ── Contador com aceleração suave ativado por viewport ── */
 function AnimatedCounter({
@@ -364,7 +376,7 @@ function SqlBenchmarkModal({
     );
 }
 
-export default function AboutMe() {
+function AboutMe() {
     const { t, lang } = useLanguage();
 
     const [isSectionVisible, setIsSectionVisible] = useState(false);
@@ -800,3 +812,5 @@ export default function AboutMe() {
         </section>
     );
 }
+
+export default memo(AboutMe);

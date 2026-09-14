@@ -86,9 +86,10 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     rotateX,
                     rotateY,
                     transformStyle: 'preserve-3d',
+                    transform: 'translateZ(0)',
                 }}
                 data-cursor-card="true"
-                className="bg-[#0c0e14]/70 backdrop-blur-xl border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/85 overflow-hidden group will-change-transform"
+                className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 overflow-hidden group will-change-transform"
             >
                 {/* Cabeçalho do Card */}
                 <div className="p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015]">
@@ -844,4 +845,4 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     );
 };
 
-export default ProfessionalJourneyTimeline;
+export default memo(ProfessionalJourneyTimeline);
