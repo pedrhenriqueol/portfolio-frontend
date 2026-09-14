@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { GAMES_INFO } from './TerminalGames';
 
 export const ALL_CMD_STRINGS = [
-    'ask', 'test', 'qa', 'test:run', 'postman', 'sql', 'query', 'sql:explain', 'tuning',
+    'ai', 'ask', 'test', 'qa', 'test:run', 'postman', 'sql', 'query', 'sql:explain', 'tuning',
     'pedro --test', 'pedro --qa', 'pedro --sql', 'pedro --query',
     'pedro --help', 'pedro --projects', 'pedro --skills', 'pedro --experience', 'pedro --contact',
     'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
@@ -393,8 +393,8 @@ export function useTerminalCommands(lang) {
         }
 
         // Invocação de consulta técnica direta
-        if (lower.startsWith('ask ') || lower.startsWith('query ') || lower === 'ask' || lower === 'query') {
-            const question = trimmed.replace(/^(ask|query)\s*/i, '').trim();
+        if (lower.startsWith('ask ') || lower.startsWith('query ') || lower.startsWith('ai ') || lower === 'ask' || lower === 'query' || lower === 'ai') {
+            const question = trimmed.replace(/^(ask|query|ai)\s*/i, '').trim();
             if (handleDirectQuery) {
                 handleDirectQuery(
                     question || (lang === 'en' ? 'Who is Pedro Henrique and what is his experience?' : 'Quem é o Pedro Henrique e qual é a experiência dele?'),

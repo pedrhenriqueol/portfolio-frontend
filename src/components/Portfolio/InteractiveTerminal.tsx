@@ -545,48 +545,98 @@ export const InteractiveTerminal: React.FC = () => {
         ]);
 
         try {
-            // Latência simulada tátil orgânica (50ms a 75ms) para feedback imediato sem retenção
-            await new Promise(r => setTimeout(r, 65));
-
-            // Upstream remoto colocado em stand-by. Execução direta via Core Engine:
-            /*
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: cleanQuestion }),
-                signal: controller.signal,
-            });
-            */
-
-            if (abortControllerRef.current === null) return;
-
-            const fullResponse = matchLocalKnowledge(cleanQuestion, (lang as 'pt' | 'en' | 'es') || 'pt');
-            const tokens = fullResponse.split(' ');
+            let streamedFromRemote = false;
             let currentText = '';
+            let engineTag = 'workstation-core';
 
-            for (let i = 0; i < tokens.length; i++) {
-                if (abortControllerRef.current === null) break;
-                currentText += (i === 0 ? '' : ' ') + tokens[i];
-                const snap = currentText;
+            // Tentativa de conexão ao Upstream do Gemini com timeout agressivo de 3.5s
+            try {
+                const apiAbort = new AbortController();
+                const apiTimeout = setTimeout(() => apiAbort.abort(), 3500);
 
-                setLines(prev =>
-                    prev.map(l =>
-                        l.id === streamLineId
-                            ? {
-                                  ...l,
-                                  text: snap,
-                                  node: <FormattedWorkstationResponse text={snap} isStreaming={i < tokens.length - 1} />,
-                              }
-                            : l
-                    )
-                );
+                const onMainAbort = () => apiAbort.abort();
+                controller.signal.addEventListener('abort', onMainAbort, { once: true });
 
-                if (contentRef.current) {
-                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: cleanQuestion, history: chatHistory }),
+                    signal: apiAbort.signal,
+                });
+
+                clearTimeout(apiTimeout);
+
+                if (response.ok && response.body) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    engineTag = 'gemini-core';
+
+                    while (true) {
+                        if (abortControllerRef.current === null) break;
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        if (chunk) {
+                            currentText += chunk;
+                            streamedFromRemote = true;
+                            const snap = currentText;
+
+                            setLines(prev =>
+                                prev.map(l =>
+                                    l.id === streamLineId
+                                        ? {
+                                              ...l,
+                                              text: snap,
+                                              node: <FormattedWorkstationResponse text={snap} isStreaming={true} />,
+                                          }
+                                        : l
+                                )
+                            );
+
+                            if (contentRef.current) {
+                                contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                            }
+                        }
+                    }
                 }
+            } catch {
+                // Em caso de falha de conexão, timeout ou offline: fallback transparente ao motor local
+            }
 
-                // Cadência fluida de streaming de terminal de alto desempenho (18ms)
-                await new Promise(r => setTimeout(r, 18));
+            // Fallback imediato ao Core Engine local caso não tenha havido streaming do upstream
+            if (!streamedFromRemote) {
+                if (abortControllerRef.current === null) return;
+
+                const fullResponse = matchLocalKnowledge(cleanQuestion, (lang as 'pt' | 'en' | 'es') || 'pt');
+                const tokens = fullResponse.split(' ');
+                currentText = '';
+
+                for (let i = 0; i < tokens.length; i++) {
+                    if (abortControllerRef.current === null) break;
+                    currentText += (i === 0 ? '' : ' ') + tokens[i];
+                    const snap = currentText;
+
+                    setLines(prev =>
+                        prev.map(l =>
+                            l.id === streamLineId
+                                ? {
+                                      ...l,
+                                      text: snap,
+                                      node: <FormattedWorkstationResponse text={snap} isStreaming={i < tokens.length - 1} />,
+                                  }
+                                : l
+                        )
+                    );
+
+                    if (contentRef.current) {
+                        contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                    }
+
+                    // Cadência fluida de streaming de terminal de alto desempenho (18ms)
+                    await new Promise(r => setTimeout(r, 18));
+                }
+                engineTag = 'workstation-core';
             }
 
             if (abortControllerRef.current === null) return;
@@ -604,7 +654,7 @@ export const InteractiveTerminal: React.FC = () => {
             const latency = ((Date.now() - startTime) / 1000).toFixed(1);
             const tokenCount = Math.max(18, Math.round(currentText.length / 3.7));
 
-            // Telemetria neutra e padronizada em workstation-core
+            // Telemetria neutra e padronizada em workstation-core / gemini-core
             setLines(prev => [
                 ...prev.map(l =>
                     l.id === streamLineId
@@ -618,7 +668,7 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${latency}s • ${tokenCount} tokens • workstation-core`,
+                    text: `${latency}s • ${tokenCount} tokens • ${engineTag}`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 2 }}
@@ -631,7 +681,7 @@ export const InteractiveTerminal: React.FC = () => {
                             <span>•</span>
                             <span>{tokenCount} tokens</span>
                             <span>•</span>
-                            <span className="text-neutral-400 font-mono">workstation-core</span>
+                            <span className="text-neutral-400 font-mono">{engineTag}</span>
                         </motion.div>
                     ),
                 },
@@ -704,7 +754,13 @@ export const InteractiveTerminal: React.FC = () => {
             if (e.detail?.command) {
                 handleRunCommand(e.detail.command);
             }
-            inputRef.current?.focus({ preventScroll: true });
+            const terminalEl = document.getElementById('terminal');
+            if (terminalEl) {
+                terminalEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            setTimeout(() => {
+                inputRef.current?.focus({ preventScroll: true });
+            }, 300);
         };
 
         window.addEventListener('focus-terminal', handleCustomEvent as EventListener);

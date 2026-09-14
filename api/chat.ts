@@ -31,7 +31,7 @@ SUAS DIRETRIZES FUNDAMENTAIS:
 - Formatação terminal: destaque comandos e termos técnicos com crases (\`Postman\`, \`SQL Server\`, etc.).
 - Responda no mesmo idioma do usuário (Português, Inglês ou Espanhol).`;
 
-const MODEL_NAME = 'gemini-3.6-flash';
+const MODEL_NAME = 'gemini-1.5-flash';
 
 export default async function handler(req: Request): Promise<Response> {
     // Pré-aquecimento rápido de conexão TLS (Edge Pre-Warming)
