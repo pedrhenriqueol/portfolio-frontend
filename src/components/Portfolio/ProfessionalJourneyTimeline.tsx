@@ -242,7 +242,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             archiveTitle: 'ZPE Logística Portuária // ePita QA Core',
             archiveSubtitle: 'Ambiente de Testes & Validação de Sistemas de Missão Crítica',
             image: '/projects/epta_qa_split_2026.png',
-            badge: 'TESTES HOMOLOGADOS // LOGIN 30% + DASHBOARD 70%',
+            badge: 'TESTES HOMOLOGADOS',
             date: 'Jun 2026 — Presente',
             location: 'Fortaleza, CE // Remoto & Híbrido',
             description:
@@ -259,20 +259,20 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             id: 'archive-2025',
             year: '2025',
             company: 'Qualisoft Sistemas // ERP & Fiscal Solutions',
-            role: 'Desenvolvedor Back-End (PHP / Delphi / SQL)',
-            archiveTitle: 'Modernização de Legados // Delphi 11 + UniGui + Laravel',
-            archiveSubtitle: 'Engenharia de Migração Desktop-to-Web e Tuning de Banco',
+            role: 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL)',
+            archiveTitle: 'Desenvolvimento Full Stack & Modernização // React + TypeScript + Delphi 11 + Laravel',
+            archiveSubtitle: 'Aprendizado e Implementação em Produção de TypeScript/React e APIs Laravel',
             image: '/unigui_migration_mockup.jpg',
             badge: 'MODERNIZAÇÃO CONCLUÍDA',
             date: 'Ago 2025 — Jun 2026',
             location: 'Fortaleza, CE',
             description:
-                'Bancada de desenvolvimento e modernização de arquitetura monolítica legado Delphi para Web via UniGui e APIs Laravel. Refatoração de relatórios pesados de 2s para <500ms com índices compostos em SQL Server/MySQL e integração de mensageria fiscal ACBr.',
+                'Atuação como desenvolvedor Full Stack, ambiente no qual aprendi e implementei em produção TypeScript e React para interfaces de retaguarda, APIs RESTful robustas em PHP com Laravel e modernização de ERP legado em Delphi 11 com UniGui. Refatoração profunda de consultas SQL Server/MySQL com redução de 2s para <500ms via índices compostos.',
             telemetry: [
                 { label: 'Otimização Queries', value: '4× Mais Rápido', highlight: true },
                 { label: 'Tempo de Resposta', value: '<500ms (antes 2s)' },
                 { label: 'Usuários Ativos', value: '100+ Diários' },
-                { label: 'Arquitetura', value: 'UniGui + Laravel REST' },
+                { label: 'Arquitetura', value: 'React + TS + Laravel + UniGui' },
             ],
             tags: ['#LEGACY-MODERNIZATION', '#DELPHI-11', '#LARAVEL-PHP', '#REACT-TS', '#SQL-SERVER'],
         },
@@ -328,24 +328,32 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
 
     const qualiExp = experiences.find(e => e.id === 1) || {
         company: 'Qualisoft Sistemas',
-        role: 'Desenvolvedor Back-End (PHP / Delphi / SQL) — Estágio',
+        role: 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL) — Estágio',
         period: 'Agosto de 2025 - Junho de 2026',
-        techBadges: ['PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
+        techBadges: ['React', 'TypeScript', 'PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
         groups: [
+            {
+                title: 'Desenvolvimento Full Stack & Módulos Web',
+                icon: 'fas fa-laptop-code',
+                items: [
+                    'Aprendizado prático e implementação em produção de React + TypeScript para interfaces reativas e módulos de retaguarda.',
+                    'Desenvolvimento de APIs RESTful estruturadas em PHP com Laravel aplicando arquitetura em camadas e autenticação Sanctum.',
+                ],
+            },
             {
                 title: 'Otimização de Banco & Performance',
                 icon: 'fas fa-tachometer-alt',
                 items: [
-                    'Refatoração de consultas SQL Server/MySQL reduzindo tempo de relatórios de 2s para <500ms.',
+                    'Refatoração de consultas SQL Server/MySQL reduzindo tempo de relatórios de 2s para <500ms via índices compostos.',
                     'Criação de procedures e views analíticas para ERP com centenas de operações diárias.',
                 ],
             },
             {
-                title: 'Back-End & Modernização Web',
+                title: 'Modernização de Legados & Delphi',
                 icon: 'fas fa-sync-alt',
                 items: [
                     'Engenharia de migração de monolito Delphi VCL para arquitetura Web moderna com Delphi 11 + UniGui.',
-                    'Construção de APIs RESTful em Laravel e integração fiscal ACBr para NF-e/NFC-e.',
+                    'Integração de bibliotecas fiscais ACBr para emissão de NF-e/NFC-e e manutenção de relatórios.',
                 ],
             },
         ],
@@ -562,7 +570,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.
                                 </p>
 
-                                {/* Card de Snapshot Interativo: Registro Operacional (30% Login / 70% Dashboard) */}
+                                {/* Card de Snapshot Interativo: Registro Operacional */}
                                 <div
                                     onClick={() => setSelectedArchive(ARCHIVES['2026'])}
                                     data-cursor-morph="true"
@@ -575,9 +583,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                         loading="lazy"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-cyan-300 border border-cyan-400/40 backdrop-blur-sm">
-                                        LOGIN 30% // DASHBOARD 70%
-                                    </div>
                                     <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
                                         <span className="font-semibold text-white flex items-center gap-1.5">
                                             <span>🗂️</span>

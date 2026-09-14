@@ -32,46 +32,60 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     {
         id: 'qa-testing',
         keywords: [
-            { term: 'qa', weight: 5 },
-            { term: 'teste', weight: 4 },
-            { term: 'testes', weight: 4 },
-            { term: 'testing', weight: 4 },
-            { term: 'postman', weight: 6 },
-            { term: 'regressivo', weight: 5 },
-            { term: 'qualidade', weight: 4 },
-            { term: 'zpe', weight: 5 },
-            { term: 'zpes', weight: 5 },
+            { term: 'sobre-qa', weight: 12 },
+            { term: 'sobre qa', weight: 12 },
+            { term: 'qa', weight: 8 },
+            { term: 'garantia de qualidade', weight: 8 },
+            { term: 'garantia da qualidade', weight: 8 },
+            { term: 'qualidade e apis', weight: 8 },
+            { term: 'qualidade de software', weight: 8 },
+            { term: 'qualidade', weight: 6 },
+            { term: 'testes de software', weight: 8 },
+            { term: 'testes de api', weight: 8 },
+            { term: 'teste de api', weight: 8 },
+            { term: 'teste', weight: 5 },
+            { term: 'testes', weight: 5 },
+            { term: 'testing', weight: 5 },
+            { term: 'postman', weight: 7 },
+            { term: 'regressivo', weight: 6 },
+            { term: 'regressivos', weight: 6 },
+            { term: 'zpe', weight: 6 },
+            { term: 'zpes', weight: 6 },
             { term: 'aduana', weight: 5 },
             { term: 'aduaneira', weight: 5 },
-            { term: 'bugs', weight: 4 },
-            { term: 'validacao', weight: 4 },
-            { term: 'sete tecnologia', weight: 6 },
-            { term: 'e2e', weight: 4 },
-            { term: 'assercoes', weight: 4 },
+            { term: 'bugs', weight: 5 },
+            { term: 'validacao', weight: 5 },
+            { term: 'sete tecnologia', weight: 8 },
+            { term: 'e2e', weight: 5 },
+            { term: 'assercoes', weight: 5 },
         ],
         responses: {
-            pt: `Na \`SETE Tecnologia\`, atuo na garantia de qualidade de sistemas críticos voltados para logística aduaneira e ZPEs (Zonas de Processamento de Exportação).
-› **Testes de API**: Modelagem e execução de coleções no \`Postman\` com validação de contratos, status codes, schemas JSON e tempos de resposta.
-› **Validação Funcional**: Testes funcionais, regressivos e de ponta a ponta (E2E) para garantir integridade de regras aduaneiras.
-› **Diagnóstico em Banco**: Uso de consultas avançadas em \`SQL Server\` para rastreamento de anomalias em massas de dados transacionais.
-Para simular uma rotina de validação em tempo real, execute o comando \`$ test\`.`,
-            en: `At \`SETE Tecnologia\`, I work in quality assurance for mission-critical port logistics and Export Processing Zones (ZPEs).
-› **API Testing**: Design and automation of \`Postman\` collections validating contracts, status codes, JSON schemas, and latency.
-› **Functional Validation**: Functional, regression, and end-to-end (E2E) suites safeguarding customs compliance rules.
-› **Database Diagnostics**: Advanced \`SQL Server\` profiling queries to trace transaction anomalies and edge cases.
-To simulate an interactive regression run in real-time, execute \`$ test\`.`,
-            es: `En \`SETE Tecnologia\`, me desempeño en el aseguramiento de calidad para logística aduanera y zonas francas (ZPEs).
-› **Pruebas de API**: Diseño y ejecución de colecciones en \`Postman\` con validación de contratos, códigos HTTP y schemas JSON.
-› **Validación Funcional**: Pruebas funcionales, de regresión y E2E para certificar reglas de negocio aduaneras.
-› **Diagnóstico de Base de Datos**: Consultas avanzadas en \`SQL Server\` para auditoría de anomalías en datos transaccionales.
-Para simular una rutina de validación interactiva, escribe \`$ test\`.`,
+            pt: `Na \`SETE Tecnologia\`, atuo diretamente na garantia de qualidade (QA) de sistemas críticos voltados para logística aduaneira e ZPEs (Zonas de Processamento de Exportação):
+› **Testes de API**: Modelagem e execução de coleções no \`Postman\` com validação estrita de contratos, status codes, schemas JSON e tempos de resposta.
+› **Validação Funcional & Regressiva**: Execução de suites completas de testes funcionais e regressivos para garantir zero inconsistências em regras fiscais e aduaneiras.
+› **Diagnóstico em Banco de Dados**: Elaboração de consultas diagnósticas em \`SQL Server\` para auditoria e rastreamento de anomalias em dados transacionais.
+› **Prevenção de Regressões**: Atuação direta em cerimônias ágeis (Scrum/Kanban) resultando em redução comprovada na taxa de bugs em produção.
+Para simular a bateria de testes de homologação no terminal, execute \`$ test\`.`,
+            en: `At \`SETE Tecnologia\`, I focus on Quality Assurance (QA) for mission-critical customs logistics and Export Processing Zones (ZPEs):
+› **API Testing**: Design and automation of \`Postman\` test suites validating HTTP status codes, JSON schemas, contracts, and response latency.
+› **Functional & Regression Suites**: Comprehensive end-to-end (E2E) and regression testing protecting core customs workflows.
+› **Database Diagnostics**: Advanced \`SQL Server\` profiling queries auditing transaction integrity and business rule consistency.
+› **Bug Prevention**: Active participation in agile ceremonies (Scrum/Kanban) delivering measurable regression reduction.
+To run the homologation automated test suite in the terminal, execute \`$ test\`.`,
+            es: `En \`SETE Tecnologia\`, me desempeño en el aseguramiento de calidad (QA) para sistemas de logística aduanera y zonas francas (ZPEs):
+› **Pruebas de API**: Diseño y ejecución de colecciones en \`Postman\` con validación de contratos, códigos HTTP, schemas JSON y tiempos de respuesta.
+› **Validación Funcional y Regresiva**: Pruebas funcionales y de regresión garantizando cero inconsistencias en reglas aduaneras.
+› **Diagnóstico en Base de Datos**: Consultas diagnósticas en \`SQL Server\` para auditoría de anomalías en datos transaccionales.
+› **Prevención de Defectos**: Trabajo en equipo ágil (Scrum/Kanban) logrando reducción sustancial de regresiones en producción.
+Para ejecutar la batería de pruebas en el terminal, escribe \`$ test\`.`,
         },
     },
 
-    // B. Delphi & Modernização de Sistemas Legados (Qualisoft Sistemas)
+    // B. Full Stack & Modernização de Sistemas Legados (Qualisoft Sistemas)
     {
         id: 'delphi-legacy',
         keywords: [
+            { term: 'qualisoft', weight: 8 },
             { term: 'delphi', weight: 6 },
             { term: 'unigui', weight: 6 },
             { term: 'vcl', weight: 5 },
@@ -79,25 +93,24 @@ Para simular una rutina de validación interactiva, escribe \`$ test\`.`,
             { term: 'migracao', weight: 4 },
             { term: 'modernizacao', weight: 4 },
             { term: 'erp', weight: 4 },
-            { term: 'qualisoft', weight: 6 },
             { term: 'desktop', weight: 3 },
             { term: 'pascal', weight: 4 },
             { term: 'delphi 6', weight: 6 },
             { term: 'delphi 11', weight: 6 },
         ],
         responses: {
-            pt: `Possuo sólida experiência prática na manutenção e modernização de arquiteturas corporativas na \`Qualisoft Sistemas\`:
-› **Engenharia Reversa & Refatoração**: Análise e sustentação de regras de negócio em \`Delphi 6\` e \`Delphi 11\`.
-› **Transição Desktop → Web**: Migração de interfaces legadas VCL para a Web utilizando \`UniGui\`, garantindo compatibilidade com browsers modernos sem reescrever o core transacional.
-› **Interoperabilidade**: Criação de pontes e rotas REST em \`PHP/Laravel\` para desacoplar serviços legados e integrar com frontends modernos em \`React\`.`,
-            en: `I hold solid hands-on experience maintaining and modernizing enterprise monolithic architectures at \`Qualisoft Sistemas\`:
-› **Reverse Engineering & Refactoring**: Deep analysis and maintenance of core business logic in \`Delphi 6\` and \`Delphi 11\`.
-› **Desktop → Web Transition**: Porting legacy VCL interfaces to the browser with \`UniGui\`, ensuring zero downtime without rewriting core logic.
-› **Interoperability**: Building REST integration bridges in \`PHP/Laravel\` to decouple legacy services and connect to modern \`React\` frontends.`,
-            es: `Cuento con sólida experiencia en mantenimiento y modernización de arquitecturas empresariales en \`Qualisoft Sistemas\`:
-› **Ingeniería Inversa y Refactorización**: Análisis y soporte de reglas de negocio en \`Delphi 6\` y \`Delphi 11\`.
-› **Transición Escritorio → Web**: Migración de interfaces VCL hacia la web con \`UniGui\`, garantizando compatibilidad sin reescribir el core.
-› **Interoperabilidad**: Desarrollo de puentes REST en \`PHP/Laravel\` para desacoplar módulos legados e integrarlos con interfaces modernas en \`React\`.`,
+            pt: `Atuei como Desenvolvedor Full Stack (Estágio) na \`Qualisoft Sistemas\`, onde aprendi e implementei em produção \`TypeScript\`, \`React\` e \`PHP/Laravel\`, além de modernizar ecossistemas legados:
+› **Desenvolvimento Full Stack**: Construção de interfaces reativas em \`React\` + \`TypeScript\` para módulos de retaguarda e desenvolvimento de APIs RESTful estruturadas em \`PHP/Laravel\`.
+› **Engenharia Reversa & Delphi**: Análise e sustentação de regras de negócio em \`Delphi 6/11\` e migração de monolito desktop VCL para a Web com \`Delphi 11 + UniGui\`.
+› **Otimização de Banco de Dados**: Refatoração de consultas pesadas em \`SQL Server/MySQL\`, reduzindo tempo de resposta de relatórios de 2s para <500ms via índices compostos.`,
+            en: `I worked as a Full Stack Developer (Intern) at \`Qualisoft Sistemas\`, where I learned and implemented in production \`TypeScript\`, \`React\`, and \`PHP/Laravel\`, alongside legacy modernization:
+› **Full Stack Development**: Built reactive interfaces with \`React\` + \`TypeScript\` for backoffice management and developed structured RESTful APIs in \`PHP/Laravel\`.
+› **Legacy Modernization & Delphi**: Maintained business rules in \`Delphi 6/11\` and migrated monolithic desktop VCL systems to web architectures using \`Delphi 11 + UniGui\`.
+› **Database Performance Tuning**: Refactored critical \`SQL Server/MySQL\` queries, slashing report latency from 2s to <500ms via composite indexing.`,
+            es: `Me desempeñé como Desarrollador Full Stack (Pasantía) en \`Qualisoft Sistemas\`, donde aprendí e implementé en producción \`TypeScript\`, \`React\` y \`PHP/Laravel\`, además de modernizar sistemas heredados:
+› **Desarrollo Full Stack**: Creación de interfaces reactivas en \`React\` + \`TypeScript\` para módulos de gestión y APIs RESTful estructuradas en \`PHP/Laravel\`.
+› **Modernización de Sistemas & Delphi**: Mantenimiento de reglas en \`Delphi 6/11\` y migración de escritorio VCL a la Web con \`Delphi 11 + UniGui\`.
+› **Optimización de Base de Datos**: Refactorización de consultas en \`SQL Server/MySQL\`, reduciendo tiempos de reporte de 2s a <500ms mediante índices compuestos.`,
         },
     },
 
@@ -105,12 +118,12 @@ Para simular una rutina de validación interactiva, escribe \`$ test\`.`,
     {
         id: 'backend-php-laravel',
         keywords: [
-            { term: 'php', weight: 5 },
-            { term: 'laravel', weight: 6 },
-            { term: 'backend', weight: 4 },
-            { term: 'api', weight: 3 },
-            { term: 'apis', weight: 3 },
-            { term: 'rest', weight: 3 },
+            { term: 'php', weight: 6 },
+            { term: 'laravel', weight: 7 },
+            { term: 'backend', weight: 5 },
+            { term: 'api rest', weight: 5 },
+            { term: 'apis rest', weight: 5 },
+            { term: 'apis restful', weight: 5 },
             { term: 'restful', weight: 4 },
             { term: 'servidor', weight: 3 },
             { term: 'rotas', weight: 3 },
@@ -303,19 +316,19 @@ Puedes interactuar con las tarjetas 3D desplazándote hasta la sección \`Sistem
 /** Roteador de Resposta Técnica Direta quando nenhum termo atinge correspondência estrita */
 export const GENERIC_ROUTER_RESPONSE: Record<'pt' | 'en' | 'es', string> = {
     pt: `Entendido! Como terminal de engenharia de Pedro Henrique, mantenho registros detalhados sobre todas as realizações técnicas:
-› \`Experiência em QA & APIs\`: automação de testes no Postman e diagnósticos no SQL Server na SETE Tecnologia.
-› \`Sistemas Legados & Delphi\`: modernização desktop/web com UniGui na Qualisoft Sistemas.
-› \`Stack & Backend\`: desenvolvimento de microsserviços em PHP 8, Laravel, React e TypeScript.
+› \`Experiência em QA & APIs\`: garantia de qualidade no Postman e diagnósticos no SQL Server na SETE Tecnologia.
+› \`Full Stack & Sistemas Legados\`: TypeScript, React, PHP/Laravel e modernização Delphi na Qualisoft Sistemas.
+› \`Arquitetura & Engenharia\`: desenvolvimento de microsserviços em PHP 8, Laravel, React e TypeScript.
 › Ou execute comandos diretos de console como \`$ test\`, \`$ sql\` ou \`$ clear\`.`,
     en: `Understood! As Pedro Henrique's engineering terminal, I maintain comprehensive records of all technical achievements:
-› \`QA & API Testing\`: Postman collection automation and SQL Server profiling at SETE Tecnologia.
-› \`Legacy Systems & Delphi\`: desktop to web modernization with UniGui at Qualisoft Sistemas.
-› \`Stack & Backend\`: scalable services in PHP 8, Laravel, React, and TypeScript.
+› \`QA & API Testing\`: Postman collection test automation and SQL Server profiling at SETE Tecnologia.
+› \`Full Stack & Legacy Systems\`: TypeScript, React, PHP/Laravel, and Delphi modernization at Qualisoft Sistemas.
+› \`Architecture & Engineering\`: scalable services in PHP 8, Laravel, React, and TypeScript.
 › Or execute direct console commands like \`$ test\`, \`$ sql\`, or \`$ clear\`.`,
     es: `¡Entendido! Como terminal de ingeniería de Pedro Henrique, mantengo registros detallados sobre todas las realizaciones técnicas:
-› \`Experiencia en QA y APIs\`: automatización de pruebas en Postman y SQL Server en SETE Tecnologia.
-› \`Sistemas Legados y Delphi\`: modernización desktop/web con UniGui en Qualisoft Sistemas.
-› \`Stack y Backend\`: desarrollo de microservicios en PHP 8, Laravel, React y TypeScript.
+› \`Experiencia en QA y APIs\`: aseguramiento de calidad en Postman y SQL Server en SETE Tecnologia.
+› \`Full Stack y Sistemas Legados\`: TypeScript, React, PHP/Laravel y modernización Delphi en Qualisoft Sistemas.
+› \`Arquitectura e Ingeniería\`: desarrollo de microservicios en PHP 8, Laravel, React y TypeScript.
 › O ejecuta comandos directos de consola como \`$ test\`, \`$ sql\` o \`$ clear\`.`,
 };
 

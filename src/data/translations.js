@@ -114,24 +114,24 @@ export const translations = {
                 {
                     id: 1,
                     company: 'Qualisoft Sistemas',
-                    role: 'Desenvolvedor Back-End (PHP / Delphi / SQL) — Estágio',
+                    role: 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL) — Estágio',
                     period: 'Agosto de 2025 - Junho de 2026',
-                    techBadges: ['PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
+                    techBadges: ['React', 'TypeScript', 'PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
                     groups: [
+                        {
+                            title: 'Desenvolvimento Full Stack & Módulos Web',
+                            icon: 'fas fa-laptop-code',
+                            items: [
+                                'Estágio no qual aprendi e implementei em produção TypeScript e React para construção de interfaces reativas e módulos administrativos de retaguarda.',
+                                'Desenvolvimento de APIs RESTful robustas em PHP com Laravel aplicando Service Layers, autenticação Sanctum, paginação otimizada e arquitetura desacoplada.',
+                            ],
+                        },
                         {
                             title: 'Otimização de Banco de Dados & Performance',
                             icon: 'fas fa-tachometer-alt',
                             items: [
                                 'Refatoração profunda de consultas SQL Server/MySQL em produção, reduzindo tempo de resposta de relatórios de 2s para <500ms via índices compostos e eliminação de queries N+1.',
                                 'Construção de procedures e views analíticas para consolidação de dados em ERP corporativo com centenas de operações diárias.',
-                            ],
-                        },
-                        {
-                            title: 'Desenvolvimento Back-End & Módulos Web',
-                            icon: 'fas fa-server',
-                            items: [
-                                'Desenvolvimento de APIs RESTful robustas em PHP/Laravel com autenticação Sanctum, paginação otimizada e arquitetura em camadas de serviço.',
-                                'Criação de interfaces reativas em React + TypeScript para módulo administrativo de retaguarda e controle de contas.',
                             ],
                         },
                         {
@@ -688,24 +688,24 @@ export const translations = {
                 {
                     id: 1,
                     company: 'Qualisoft Sistemas',
-                    role: 'Back-End Developer (PHP / Delphi / SQL) — Intern',
+                    role: 'Full Stack Developer (React / TypeScript / PHP / Delphi / SQL) — Intern',
                     period: 'August 2025 - June 2026',
-                    techBadges: ['PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
+                    techBadges: ['React', 'TypeScript', 'PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
                     groups: [
+                        {
+                            title: 'Full Stack Development & Web Modules',
+                            icon: 'fas fa-laptop-code',
+                            items: [
+                                'Internship where I learned and implemented in production TypeScript and React for building reactive interfaces and backoffice administrative modules.',
+                                'Developed robust RESTful APIs in PHP with Laravel utilizing Service Layers, Sanctum authentication, optimized pagination, and decoupled architecture.',
+                            ],
+                        },
                         {
                             title: 'Database Optimization & Performance',
                             icon: 'fas fa-tachometer-alt',
                             items: [
                                 'Deep refactoring of SQL Server/MySQL queries in production, reducing report response time from 2s to <500ms via composite indexing and N+1 query elimination.',
                                 'Constructed analytical stored procedures and views for data consolidation in an enterprise ERP handling hundreds of daily operations.',
-                            ],
-                        },
-                        {
-                            title: 'Back-End Development & Web Modules',
-                            icon: 'fas fa-server',
-                            items: [
-                                'Built robust RESTful APIs in PHP/Laravel with Sanctum authentication, optimized pagination, and layered service architecture.',
-                                'Created reactive interfaces in React + TypeScript for backoffice administration and accounts receivable management.',
                             ],
                         },
                         {
@@ -1262,24 +1262,24 @@ export const translations = {
                 {
                     id: 1,
                     company: 'Qualisoft Sistemas',
-                    role: 'Desarrollador Back-End (PHP / Delphi / SQL) — Pasantía',
+                    role: 'Desarrollador Full Stack (React / TypeScript / PHP / Delphi / SQL) — Pasantía',
                     period: 'Agosto 2025 - Junio 2026',
-                    techBadges: ['PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
+                    techBadges: ['React', 'TypeScript', 'PHP / Laravel', 'Delphi 11', 'UniGui', 'MySQL', 'SQL Server', 'ACBr', 'RESTful APIs', 'FortesReport'],
                     groups: [
+                        {
+                            title: 'Desarrollo Full Stack & Módulos Web',
+                            icon: 'fas fa-laptop-code',
+                            items: [
+                                'Pasantía donde aprendí e implementé en producción TypeScript y React para construcción de interfaces reactivas y módulos administrativos de gestión.',
+                                'Desarrollo de APIs RESTful robustas en PHP con Laravel aplicando Service Layers, autenticación Sanctum, paginación optimizada y arquitectura desacoplada.',
+                            ],
+                        },
                         {
                             title: 'Optimización de Bases de Datos & Rendimiento',
                             icon: 'fas fa-tachometer-alt',
                             items: [
                                 'Refactorización profunda de consultas SQL Server/MySQL en producción, reduciendo tiempo de respuesta de 2s a <500ms mediante índices compuestos y eliminación de consultas N+1.',
                                 'Construcción de procedimientos almacenados y vistas analíticas para consolidación de datos en ERP corporativo con cientos de operaciones diarias.',
-                            ],
-                        },
-                        {
-                            title: 'Desarrollo Back-End & Módulos Web',
-                            icon: 'fas fa-server',
-                            items: [
-                                'Desarrollo de APIs RESTful robustas en PHP/Laravel con autenticación Sanctum, paginación optimizada y arquitectura de servicios.',
-                                'Creación de interfaces reactivas en React + TypeScript para módulo administrativo de gestión y control de cuentas.',
                             ],
                         },
                         {

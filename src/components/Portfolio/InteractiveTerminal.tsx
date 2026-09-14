@@ -265,6 +265,12 @@ function getSqlSimulationSteps(lang: string): SimulationStep[] {
         ? '✔ Index Seek aplicado con éxito. Consulta refactorizada.'
         : '✔ Index Seek aplicado com sucesso. Query refatorada.';
 
+    const q5 = isEn
+        ? 'FINAL EXECUTION TIME: 19ms (Optimization: -99.1%)'
+        : isEs
+        ? 'TIEMPO DE EJECUCIÓN FINAL: 19ms (Optimización: -99.1%)'
+        : 'TEMPO DE EXECUÇÃO FINAL: 19ms (Otimização: -99.1%)';
+
     return [
         {
             delay: 0,
@@ -989,7 +995,14 @@ export const InteractiveTerminal: React.FC = () => {
                     whileHover={{ scale: 1.05, y: -1 }}
                     whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
-                    onClick={() => streamTerminalResponse('Como você atua na garantia de qualidade e APIs?', '$ sobre-qa')}
+                    onClick={() => {
+                        const question = lang === 'en'
+                            ? 'How do you work in Quality Assurance (QA) and test automation?'
+                            : lang === 'es'
+                            ? '¿Cómo trabajas en aseguramiento de calidad (QA) y pruebas de software?'
+                            : 'Como você atua na garantia de qualidade (QA) e testes de software?';
+                        streamTerminalResponse(question, '$ sobre-qa');
+                    }}
                     className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/30 text-[11px] font-mono text-neutral-400 hover:text-emerald-300 transition-all cursor-pointer disabled:opacity-50"
                 >
                     $ sobre-qa

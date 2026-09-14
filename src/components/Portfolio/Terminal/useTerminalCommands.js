@@ -203,10 +203,10 @@ export const getCommands = (lang) => [
                     { text: '  - Quality assurance for critical port logistics systems (ePita platform)', color: 'text-primary' },
                     { text: '  - REST API validation via Postman and SQL Server audits (-25% bug rate)', color: 'text-primary' },
                     { text: '', color: '' },
-                    { text: 'Qualisoft Sistemas  →  Backend Software Developer (Aug 2025 - June 2026)', color: 'text-secondary font-bold' },
+                    { text: 'Qualisoft Sistemas  →  Full Stack Developer (Aug 2025 - June 2026)', color: 'text-secondary font-bold' },
                     { text: '  - Critical query optimization on SQL Server / MySQL (2s → <500ms)', color: 'text-primary' },
-                    { text: '  - Legacy Delphi ERP maintenance + Laravel / React web migration', color: 'text-primary' },
-                    { text: '  - Internal automation with low-code tools & Generative AI workflows', color: 'text-primary' },
+                    { text: '  - Learned & implemented TypeScript + React interfaces and Laravel REST APIs', color: 'text-primary' },
+                    { text: '  - Legacy Delphi ERP modernization with UniGui web architecture', color: 'text-primary' },
                 ];
             }
             if (lang === 'es') {
@@ -216,10 +216,10 @@ export const getCommands = (lang) => [
                     { text: '  - Aseguramiento de calidad en sistemas logísticos portuarios críticos (ePita)', color: 'text-primary' },
                     { text: '  - Validación de APIs REST con Postman y consultas SQL Server (-25% bugs)', color: 'text-primary' },
                     { text: '', color: '' },
-                    { text: 'Qualisoft Sistemas  →  Desarrollador Back-End (Ago 2025 - Junio 2026)', color: 'text-secondary font-bold' },
+                    { text: 'Qualisoft Sistemas  →  Desarrollador Full Stack (Ago 2025 - Junio 2026)', color: 'text-secondary font-bold' },
                     { text: '  - Optimización crítica de consultas SQL Server/MySQL (2s → <500ms)', color: 'text-primary' },
-                    { text: '  - Mantenimiento de ERP monolítico Delphi + Plataforma Laravel/React', color: 'text-primary' },
-                    { text: '  - Automatizaciones internas con plataformas low-code e IA Generativa', color: 'text-primary' },
+                    { text: '  - Aprendizaje e implementación en producción de TypeScript + React y Laravel', color: 'text-primary' },
+                    { text: '  - Modernización de ERP monolítico Delphi a entorno web con UniGui', color: 'text-primary' },
                 ];
             }
             return [
@@ -228,10 +228,10 @@ export const getCommands = (lang) => [
                 { text: '  - Garantia de qualidade em sistemas críticos de logística portuária (ePita)', color: 'text-primary' },
                 { text: '  - Validação de APIs REST via Postman e consultas SQL Server (-25% bugs)', color: 'text-primary' },
                 { text: '', color: '' },
-                { text: 'Qualisoft Sistemas  →  Desenvolvedor Back-End (Ago 2025 - Junho 2026)', color: 'text-secondary font-bold' },
+                { text: 'Qualisoft Sistemas  →  Desenvolvedor Full Stack (Ago 2025 - Junho 2026)', color: 'text-secondary font-bold' },
                 { text: '  - Otimização crítica de queries SQL Server/MySQL (2s → <500ms)', color: 'text-primary' },
-                { text: '  - Manutenção de ERP monolítico Delphi + Plataforma Laravel/React', color: 'text-primary' },
-                { text: '  - Automações internas com plataformas low-code e IA Generativa', color: 'text-primary' },
+                { text: '  - Aprendizado e implementação em produção de TypeScript + React e APIs Laravel', color: 'text-primary' },
+                { text: '  - Modernização de ERP monolítico Delphi para arquitetura web com UniGui', color: 'text-primary' },
             ];
         },
     },
@@ -300,9 +300,11 @@ export function useTerminalCommands(lang) {
         const trimmed = raw.trim();
         if (!trimmed) return;
 
-        const lower = trimmed.toLowerCase();
+        // Sanitiza comandos removendo prefixos de prompt como '$' ou '>'
+        const cleanCmd = trimmed.replace(/^[$>]\s*/, '').trim();
+        const cleanLower = cleanCmd.toLowerCase();
 
-        if (lower === 'exit' || lower === 'quit') {
+        if (cleanLower === 'exit' || cleanLower === 'quit') {
             onLaunchGame(null);
             const exitMsg = lang === 'en' ? 'Exiting game... Returning to main shell.' : lang === 'es' ? 'Saliendo del juego... Regresando al shell principal.' : 'Saindo do jogo... Retornando ao shell principal.';
             setLines(prev => [
@@ -314,15 +316,15 @@ export function useTerminalCommands(lang) {
             return;
         }
 
-        if (lower === 'clear') {
+        if (cleanLower === 'clear') {
             onClear();
             return;
         }
 
         // Comandos de Engenharia (Simulações Assíncronas de QA & SQL Tuning)
         if (
-            lower === 'test' || lower === 'qa' || lower === 'test:run' || lower === 'postman' ||
-            lower === 'pedro --test' || lower === 'pedro --qa' || lower === 'pedro --test:run' || lower === 'pedro --postman'
+            cleanLower === 'test' || cleanLower === 'qa' || cleanLower === 'test:run' || cleanLower === 'postman' ||
+            cleanLower === 'pedro --test' || cleanLower === 'pedro --qa' || cleanLower === 'pedro --test:run' || cleanLower === 'pedro --postman'
         ) {
             if (runSimulation) {
                 runSimulation('test', trimmed);
@@ -331,8 +333,8 @@ export function useTerminalCommands(lang) {
         }
 
         if (
-            lower === 'sql' || lower === 'query' || lower === 'sql:explain' || lower === 'tuning' ||
-            lower === 'pedro --sql' || lower === 'pedro --query' || lower === 'pedro --sql:explain' || lower === 'pedro --tuning'
+            cleanLower === 'sql' || cleanLower === 'query' || cleanLower === 'sql:explain' || cleanLower === 'tuning' ||
+            cleanLower === 'pedro --sql' || cleanLower === 'pedro --query' || cleanLower === 'pedro --sql:explain' || cleanLower === 'pedro --tuning'
         ) {
             if (runSimulation) {
                 runSimulation('sql', trimmed);
@@ -340,8 +342,24 @@ export function useTerminalCommands(lang) {
             }
         }
 
+        // Roteamento direto de pergunta/comando sobre QA
+        if (
+            cleanLower === 'sobre-qa' || cleanLower === 'sobre qa' ||
+            cleanLower === 'pedro --sobre-qa' || cleanLower === 'pedro --sobre qa'
+        ) {
+            if (handleDirectQuery) {
+                const qaQuestion = lang === 'en'
+                    ? 'How do you work in Quality Assurance (QA) and test automation?'
+                    : lang === 'es'
+                    ? '¿Cómo trabajas en aseguramiento de calidad (QA) y pruebas de software?'
+                    : 'Como você atua na garantia de qualidade (QA) e testes de software?';
+                handleDirectQuery(qaQuestion, trimmed);
+                return;
+            }
+        }
+
         // Easter eggs
-        if (lower === 'pedro --sudo rm -rf /' || lower === 'sudo rm -rf /') {
+        if (cleanLower === 'pedro --sudo rm -rf /' || cleanLower === 'sudo rm -rf /') {
             const rm1 = lang === 'en' ? '💥 rm: Permission denied. This portfolio is indestructible.' : lang === 'es' ? '💥 rm: Permiso denegado. Este portafolio es indestructible.' : '💥 rm: Permissão negada. Esse portfólio é indestrutível.';
             const rm2 = lang === 'en' ? '🛡️ Auto-deploy protection enabled. Nice try!' : lang === 'es' ? '🛡️ Protección de despliegue automático activada. ¡Buen intento!' : '🛡️ Proteção deploy automático ativada. Nice try!';
             setLines(prev => [
@@ -354,7 +372,7 @@ export function useTerminalCommands(lang) {
             return;
         }
 
-        if (lower === 'pedro --version' || lower === 'version') {
+        if (cleanLower === 'pedro --version' || cleanLower === 'version') {
             const title = lang === 'en' ? '// Interactive Terminal v2.1 — Arcade Edition 🕹️' : lang === 'es' ? '// Terminal Interactivo v2.1 — Edición Arcade 🕹️' : '// Terminal Interativo v2.1 — Arcade Edition 🕹️';
             const gText = lang === 'en' ? '5 interactive minigames' : lang === 'es' ? '5 minijuegos interactivos' : '5 minijogos interativos';
             setLines(prev => [
@@ -371,30 +389,30 @@ export function useTerminalCommands(lang) {
         }
 
         // Comandos de Jogos
-        if (lower === 'pedro --play snake' || lower === 'snake') {
+        if (cleanLower === 'pedro --play snake' || cleanLower === 'snake') {
             onLaunchGame('snake');
             return;
         }
-        if (lower === 'pedro --play bug-hunter' || lower === 'bughunter' || lower === 'bug-hunter') {
+        if (cleanLower === 'pedro --play bug-hunter' || cleanLower === 'bughunter' || cleanLower === 'bug-hunter') {
             onLaunchGame('bug-hunter');
             return;
         }
-        if (lower === 'pedro --play trivia' || lower === 'trivia' || lower === 'quiz') {
+        if (cleanLower === 'pedro --play trivia' || cleanLower === 'trivia' || cleanLower === 'quiz') {
             onLaunchGame('trivia');
             return;
         }
-        if (lower === 'pedro --play aim-test' || lower === 'aim-test' || lower === 'aim') {
+        if (cleanLower === 'pedro --play aim-test' || cleanLower === 'aim-test' || cleanLower === 'aim') {
             onLaunchGame('aim-test');
             return;
         }
-        if (lower === 'pedro --sudo matrix' || lower === 'matrix') {
+        if (cleanLower === 'pedro --sudo matrix' || cleanLower === 'matrix') {
             onLaunchGame('matrix');
             return;
         }
 
         // Invocação de consulta técnica direta
-        if (lower.startsWith('ask ') || lower.startsWith('query ') || lower.startsWith('ai ') || lower === 'ask' || lower === 'query' || lower === 'ai') {
-            const question = trimmed.replace(/^(ask|query|ai)\s*/i, '').trim();
+        if (cleanLower.startsWith('ask ') || cleanLower.startsWith('query ') || cleanLower.startsWith('ai ') || cleanLower === 'ask' || cleanLower === 'query' || cleanLower === 'ai') {
+            const question = cleanCmd.replace(/^(ask|query|ai)\s*/i, '').trim();
             if (handleDirectQuery) {
                 handleDirectQuery(
                     question || (lang === 'en' ? 'Who is Pedro Henrique and what is his experience?' : 'Quem é o Pedro Henrique e qual é a experiência dele?'),
@@ -405,8 +423,8 @@ export function useTerminalCommands(lang) {
         }
 
         // Standard commands
-        const cmdKey = lower.replace('pedro --', '').replace('pedro-', '');
-        const found = commandsList.find(c => c.cmd === cmdKey || trimmed === `pedro --${c.cmd}`);
+        const cmdKey = cleanLower.replace('pedro --', '').replace('pedro-', '');
+        const found = commandsList.find(c => c.cmd === cmdKey || cleanCmd === `pedro --${c.cmd}`);
 
         if (found) {
             const out = found.output();
@@ -418,7 +436,7 @@ export function useTerminalCommands(lang) {
             ]);
         } else if (handleDirectQuery) {
             // Comando não reconhecido ou pergunta em linguagem natural -> Encaminha para motor do terminal
-            handleDirectQuery(trimmed, trimmed);
+            handleDirectQuery(cleanCmd, trimmed);
         } else {
             const unknown = lang === 'en'
                 ? `Unknown command: "${trimmed}". Type "pedro --help" or "pedro --games".`

@@ -47,7 +47,7 @@ SUAS DIRETRIZES FUNDAMENTAIS:
 3. NÃO force biografia do Pedro quando a pergunta for sobre outros temas.
 4. Quando a pergunta for sobre o Pedro Henrique, sua stack ou seus projetos:
 - Analista de QA / Testes na SETE Tecnologia (ZPEs / ePita, testes automatizados de API no Postman, tuning de queries no SQL Server, -25% taxa de bugs).
-- Ex-Desenvolvedor Back-End na Qualisoft Sistemas (modernização de ERP em Delphi 11 VCL/UniGui, APIs REST PHP/Laravel, interfaces React/TypeScript, tuning SQL de 2s para <500ms).
+- Ex-Desenvolvedor Full Stack na Qualisoft Sistemas (modernização de ERP em Delphi 11 VCL/UniGui, onde aprendeu e implementou TypeScript e React, APIs REST PHP/Laravel, tuning SQL de 2s para <500ms).
 - Formação: Cursando Engenharia de Software na Unifanor Wyden; Técnico em Informática pela EEEP Luiza de Teodoro Vieira.
 - Projetos: PayStream Gateway, PortLog OS, SPECTR TestOps.
 - Tecnologias: PHP, Laravel, TypeScript, React, Delphi, SQL Server, Postman, Tailwind CSS, Docker, Linux.
