@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../../context/LanguageContext';
 import { playMechanicalClick, playPingPulse } from '../../../lib/sound';
 
 const SERVICES = [
@@ -44,12 +45,13 @@ function formatLatency(ms) {
     return `${(ms / 1000).toFixed(1)}s`;
 }
 
-function relativeTime(ts) {
+function relativeTime(ts, lang = 'pt') {
     if (!ts) return '';
     const diff = Math.round((Date.now() - ts) / 1000);
-    if (diff < 5) return 'agora';
-    if (diff < 60) return `há ${diff}s`;
-    return `há ${Math.round(diff / 60)}min`;
+    if (diff < 5) return lang === 'en' ? 'just now' : lang === 'es' ? 'ahora' : 'agora';
+    if (diff < 60) return lang === 'en' ? `${diff}s ago` : lang === 'es' ? `hace ${diff}s` : `há ${diff}s`;
+    const mins = Math.round(diff / 60);
+    return lang === 'en' ? `${mins}m ago` : lang === 'es' ? `hace ${mins}min` : `há ${mins}min`;
 }
 
 async function checkHealth(service) {
@@ -76,6 +78,7 @@ async function checkHealth(service) {
 }
 
 export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) {
+    const { lang } = useLanguage();
     const [results, setResults] = useState(() =>
         Object.fromEntries(SERVICES.map(s => [s.id, { status: 'checking', latency: null, timestamp: null }]))
     );
@@ -160,21 +163,21 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                 <button
                                     onClick={() => { playMechanicalClick(); onClose(); }}
                                     className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E] hover:opacity-80 transition-opacity cursor-pointer flex items-center justify-center group"
-                                    title="Fechar"
+                                    title={lang === 'en' ? 'Close' : lang === 'es' ? 'Cerrar' : 'Fechar'}
                                 >
                                     <span className="opacity-0 group-hover:opacity-100 text-[8px] text-black font-bold">×</span>
                                 </button>
                                 <button
                                     onClick={() => { playMechanicalClick(); setMinimized(v => !v); }}
                                     className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123] hover:opacity-80 transition-opacity cursor-pointer flex items-center justify-center group"
-                                    title={minimized ? 'Restaurar' : 'Minimizar'}
+                                    title={minimized ? (lang === 'en' ? 'Restore' : lang === 'es' ? 'Restaurar' : 'Restaurar') : (lang === 'en' ? 'Minimize' : lang === 'es' ? 'Minimizar' : 'Minimizar')}
                                 >
                                     <span className="opacity-0 group-hover:opacity-100 text-[8px] text-black font-bold">−</span>
                                 </button>
                                 <button
                                     onClick={() => { playMechanicalClick(); runHealthCheck(); }}
                                     className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29] hover:opacity-80 transition-opacity cursor-pointer flex items-center justify-center group"
-                                    title="Executar Ping Imediato"
+                                    title={lang === 'en' ? 'Execute Immediate Ping' : lang === 'es' ? 'Ejecutar Ping Inmediato' : 'Executar Ping Imediato'}
                                 >
                                     <span className="opacity-0 group-hover:opacity-100 text-[6px] text-black font-bold">↻</span>
                                 </button>
@@ -207,8 +210,8 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                 >
                                     <div className="p-3 space-y-2">
                                         {SERVICES.map((s) => {
-                                            const r = results[s.id];
-                                            return (
+                                             const r = results[s.id];
+                                             return (
                                                 <div
                                                     key={s.id}
                                                     className="flex items-center gap-3 px-3 py-2 bg-gradient-to-b from-white/[0.04] to-transparent border border-white/[0.06] border-t-white/15 rounded-xl hover:border-white/20 transition-colors shadow-sm"
@@ -231,7 +234,7 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                                             {r.status === 'checking' ? '...' : formatLatency(r.latency)}
                                                         </div>
                                                         <div className="text-[9px] font-mono text-primary/40">
-                                                            {relativeTime(r.timestamp)}
+                                                            {relativeTime(r.timestamp, lang)}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -252,7 +255,7 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                                 animate={isChecking ? { rotate: 360 } : { rotate: 0 }}
                                                 transition={isChecking ? { repeat: Infinity, duration: 1, ease: 'linear' } : {}}
                                             />
-                                            <span>{isChecking ? 'Verificando Endpoints...' : 'Varredura de Produção'}</span>
+                                            <span>{isChecking ? (lang === 'en' ? 'Checking Endpoints...' : lang === 'es' ? 'Verificando Endpoints...' : 'Verificando Endpoints...') : (lang === 'en' ? 'Production Health Scan' : lang === 'es' ? 'Escaneo de Producción' : 'Varredura de Produção')}</span>
                                         </button>
                                     </div>
                                 </motion.div>
@@ -266,13 +269,13 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
                                 >
                                     <span className="flex items-center gap-2">
                                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                                        Monitor ativo em background
+                                        {lang === 'en' ? 'Active background monitor' : lang === 'es' ? 'Monitor activo en segundo plano' : 'Monitor ativo em background'}
                                     </span>
                                     <button
                                         onClick={() => { playMechanicalClick(); setMinimized(false); }}
                                         className="text-accent text-[11px] hover:underline cursor-pointer"
                                     >
-                                        Restaurar
+                                        {lang === 'en' ? 'Restore' : lang === 'es' ? 'Restaurar' : 'Restaurar'}
                                     </button>
                                 </motion.div>
                             )}

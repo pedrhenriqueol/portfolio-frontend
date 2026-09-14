@@ -1008,10 +1008,10 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 clearInterval(interval);
                 setActiveAssertionIndex(null);
                 setRunnerState('COMPLETED');
-                showToast('Bateria de asserções executada com 100% de sucesso!');
+                showToast(lang === 'en' ? 'Assertion battery executed with 100% success!' : lang === 'es' ? '¡Batería de aserciones ejecutada con 100% de éxito!' : 'Bateria de asserções executada com 100% de sucesso!');
             }
         }, 420);
-    }, [runnerState, specs.engineeringTests, showToast]);
+    }, [runnerState, specs.engineeringTests, showToast, lang]);
 
     // Navegação por teclado: ESC para fechar, setas para alternar estritamente entre as abas disponíveis
     useEffect(() => {
@@ -1102,11 +1102,11 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                 </h2>
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span>{specs.version}</span>
+                                    <span>{lang === 'en' ? specs.version.replace('Produção', 'Production') : specs.version}</span>
                                 </span>
                             </div>
                             <p className="text-xs text-primary/60 truncate font-mono">
-                                {specs.domain}
+                                {lang === 'en' && specs.domain === 'Logística Portuária & ZPEs' ? 'Port Logistics & FTZ' : specs.domain}
                             </p>
                         </div>
                     </div>
@@ -1117,16 +1117,16 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                             <button
                                 onClick={copyCurlCommand}
                                 data-cursor-morph="true"
-                                title="Copiar comando cURL de teste"
+                                title={lang === 'en' ? 'Copy test cURL command' : 'Copiar comando cURL de teste'}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-primary/80 hover:text-white text-xs font-mono transition-colors cursor-pointer"
                             >
                                 <i className="fas fa-terminal text-[10px] text-accent" />
-                                <span className="hidden sm:inline">Copiar cURL</span>
+                                <span className="hidden sm:inline">{lang === 'en' ? 'Copy cURL' : 'Copiar cURL'}</span>
                             </button>
                         ) : (
                             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-primary/70 text-[10px] font-mono select-none">
                                 <i className="fas fa-shield-alt text-accent text-[9px]" />
-                                <span>Sistema Corporativo</span>
+                                <span>{lang === 'en' ? 'Enterprise System' : lang === 'es' ? 'Sistema Corporativo' : 'Sistema Corporativo'}</span>
                             </div>
                         )}
 
@@ -1134,7 +1134,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                         <button
                             onClick={onClose}
                             data-cursor-morph="true"
-                            aria-label="Fechar Gaveta de Detalhes"
+                            aria-label={lang === 'en' ? 'Close Details Drawer' : 'Fechar Gaveta de Detalhes'}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
                         >
                             <i className="fas fa-times text-xs" />
@@ -1194,7 +1194,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-network-wired text-accent" />
-                                            <span>Domínio</span>
+                                            <span>{lang === 'en' ? 'Domain' : 'Domínio'}</span>
                                         </div>
                                         <div className="text-xs sm:text-sm font-semibold text-white">
                                             {specs.domain}
@@ -1204,7 +1204,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-sitemap text-accent" />
-                                            <span>Padrão Arquitetural</span>
+                                            <span>{lang === 'en' ? 'Architectural Pattern' : lang === 'es' ? 'Patrón Arquitectural' : 'Padrão Arquitetural'}</span>
                                         </div>
                                         <div className="text-xs sm:text-sm font-semibold text-white truncate">
                                             {specs.architectureType}
@@ -1214,7 +1214,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-database text-accent" />
-                                            <span>Persistência / Banco</span>
+                                            <span>{lang === 'en' ? 'Persistence / Database' : lang === 'es' ? 'Persistencia / Base de Datos' : 'Persistência / Banco'}</span>
                                         </div>
                                         <div className="text-xs sm:text-sm font-semibold text-white truncate">
                                             {specs.database}
@@ -1224,7 +1224,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
                                         <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                             <i className="fas fa-chart-line text-accent" />
-                                            <span>Escala & Volume</span>
+                                            <span>{lang === 'en' ? 'Scale & Volume' : lang === 'es' ? 'Escala y Volumen' : 'Escala & Volume'}</span>
                                         </div>
                                         <div className="text-xs sm:text-sm font-semibold text-white">
                                             {specs.volume}
@@ -1237,21 +1237,21 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="space-y-3">
                                         <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                             <i className="fas fa-tools text-xs" />
-                                            <span>Desafios Críticos & Soluções Aplicadas</span>
+                                            <span>{lang === 'en' ? 'Critical Challenges & Engineering Solutions' : lang === 'es' ? 'Desafíos Críticos y Soluciones Aplicadas' : 'Desafios Críticos & Soluções Aplicadas'}</span>
                                         </h3>
                                         <div className="space-y-3">
                                             {specs.challenges.map((ch, idx) => (
                                                 <div key={idx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 space-y-2 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
                                                     <div className="flex items-start justify-between gap-3">
                                                         <p className="text-xs text-gray-300 font-sans leading-relaxed">
-                                                            <strong className="text-white">Problema:</strong> {ch.problem}
+                                                            <strong className="text-white">{lang === 'en' ? 'Problem:' : 'Problema:'}</strong> {ch.problem}
                                                         </p>
                                                         <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-accent/15 text-accent border border-accent/30">
                                                             {ch.impactChip}
                                                         </span>
                                                     </div>
                                                     <p className="text-xs text-emerald-300/90 font-mono leading-relaxed pl-3 border-l-2 border-emerald-500/40">
-                                                        ↳ <strong className="text-emerald-400">Solução:</strong> {ch.solution}
+                                                        ↳ <strong className="text-emerald-400">{lang === 'en' ? 'Solution:' : lang === 'es' ? 'Solución:' : 'Solução:'}</strong> {ch.solution}
                                                     </p>
                                                 </div>
                                             ))}
@@ -1264,7 +1264,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="space-y-2.5">
                                         <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                             <i className="fas fa-layer-group text-xs" />
-                                            <span>Tecnologias & Ferramentas Validadas</span>
+                                            <span>{lang === 'en' ? 'Validated Tech Stack & Tools' : lang === 'es' ? 'Tecnologías y Herramientas Validadas' : 'Tecnologias & Ferramentas Validadas'}</span>
                                         </h3>
                                         <div className="flex flex-wrap gap-2">
                                             {project.tags.map((tag, idx) => (
@@ -1295,7 +1295,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="space-y-3">
                                         <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                             <i className="fas fa-sitemap text-xs" />
-                                            <span>Camadas da Arquitetura de Software</span>
+                                            <span>{lang === 'en' ? 'Software Architecture Layers' : lang === 'es' ? 'Capas de la Arquitectura de Software' : 'Camadas da Arquitetura de Software'}</span>
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {(specs.layers || project.details?.architecture || []).map((layer, lIdx) => (
@@ -1319,7 +1319,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                                 <i className="fas fa-code text-xs" />
-                                                <span>Padrão de Implementação no Core</span>
+                                                <span>{lang === 'en' ? 'Core Implementation Pattern' : lang === 'es' ? 'Patrón de Implementación en el Core' : 'Padrão de Implementação no Core'}</span>
                                             </h3>
                                             <button
                                                 onClick={() => copyToClipboard(specs.codeSnippet || '', 'Código-fonte')}
@@ -1327,7 +1327,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                                 className="text-[10px] font-mono text-primary/70 hover:text-white flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 cursor-pointer"
                                             >
                                                 <i className="fas fa-copy text-[9px]" />
-                                                <span>Copiar Código</span>
+                                                <span>{lang === 'en' ? 'Copy Code' : lang === 'es' ? 'Copiar Código' : 'Copiar Código'}</span>
                                             </button>
                                         </div>
                                         <div className="rounded-xl border border-white/10 bg-black/60 p-4 font-mono text-xs overflow-x-auto text-gray-300 leading-relaxed shadow-inner">
@@ -1341,15 +1341,15 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="space-y-3">
                                         <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                             <i className="fas fa-shield-halved text-xs" />
-                                            <span>Mecanismos de Resiliência & Concorrência</span>
+                                            <span>{lang === 'en' ? 'Resilience & Concurrency Mechanisms' : lang === 'es' ? 'Mecanismos de Resiliencia y Concurrencia' : 'Mecanismos de Resiliência & Concorrência'}</span>
                                         </h3>
                                         <div className="rounded-xl border border-white/10 overflow-hidden">
                                             <table className="w-full text-left text-xs font-mono border-collapse">
                                                 <thead>
                                                     <tr className="border-b border-white/10 bg-white/[0.03] text-[10px] uppercase tracking-wider text-primary/60">
-                                                        <th className="py-2.5 px-3.5">Mecanismo / Trava</th>
-                                                        <th className="py-2.5 px-3.5">Tratamento de Exceção</th>
-                                                        <th className="py-2.5 px-3.5">Garantia ACID</th>
+                                                        <th className="py-2.5 px-3.5">{lang === 'en' ? 'Mechanism / Lock' : lang === 'es' ? 'Mecanismo / Bloqueo' : 'Mecanismo / Trava'}</th>
+                                                        <th className="py-2.5 px-3.5">{lang === 'en' ? 'Exception Handling' : lang === 'es' ? 'Manejo de Excepciones' : 'Tratamento de Exceção'}</th>
+                                                        <th className="py-2.5 px-3.5">{lang === 'en' ? 'ACID Guarantee' : lang === 'es' ? 'Garantía ACID' : 'Garantia ACID'}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-white/5">
@@ -1485,7 +1485,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                             <i className="fas fa-tachometer-alt text-xs" />
-                                            <span>SLA Auditado & Percentis de Latência (NIST)</span>
+                                            <span>{lang === 'en' ? 'Audited SLA & Latency Percentiles (NIST)' : lang === 'es' ? 'SLA Auditado y Percentiles de Latencia (NIST)' : 'SLA Auditado & Percentis de Latência (NIST)'}</span>
                                         </h3>
                                         <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
                                             {specs.engineeringTests.uptime || '99.9%'} Uptime
@@ -1504,7 +1504,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                                     style={{ width: `${Math.min(100, currentPercentiles.p50 * 2)}%` }}
                                                 />
                                             </div>
-                                            <span className="text-[10px] font-mono text-primary/50">Mediana de latência</span>
+                                            <span className="text-[10px] font-mono text-primary/50">{lang === 'en' ? 'Median latency' : lang === 'es' ? 'Mediana de latencia' : 'Mediana de latência'}</span>
                                         </div>
 
                                         <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
@@ -1518,7 +1518,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                                     style={{ width: `${Math.min(100, currentPercentiles.p95 * 1.5)}%` }}
                                                 />
                                             </div>
-                                            <span className="text-[10px] font-mono text-primary/50">95% das requisições</span>
+                                            <span className="text-[10px] font-mono text-primary/50">{lang === 'en' ? '95% of requests' : lang === 'es' ? '95% de las peticiones' : '95% das requisições'}</span>
                                         </div>
 
                                         <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
@@ -1532,7 +1532,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                                     style={{ width: `${Math.min(100, currentPercentiles.p99 * 0.8)}%` }}
                                                 />
                                             </div>
-                                            <span className="text-[10px] font-mono text-primary/50">Cauda crítica de latência</span>
+                                            <span className="text-[10px] font-mono text-primary/50">{lang === 'en' ? 'Critical latency tail' : lang === 'es' ? 'Cola crítica de latencia' : 'Cauda crítica de latência'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1542,7 +1542,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                             <i className="fas fa-check-double text-xs" />
-                                            <span>Bateria de Asserções Automatizadas</span>
+                                            <span>{lang === 'en' ? 'Automated Assertion Battery' : lang === 'es' ? 'Batería de Aserciones Automatizadas' : 'Bateria de Asserções Automatizadas'}</span>
                                         </h3>
                                         <button
                                             onClick={runAssertionsSimulation}
@@ -1565,10 +1565,10 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                             } text-[10px]`} />
                                             <span>
                                                 {runnerState === 'RUNNING'
-                                                    ? 'Testando...'
+                                                    ? (lang === 'en' ? 'Testing...' : lang === 'es' ? 'Probando...' : 'Testando...')
                                                     : runnerState === 'COMPLETED'
-                                                    ? 'Re-executar Testes'
-                                                    : 'Executar Bateria'}
+                                                    ? (lang === 'en' ? 'Rerun Tests' : lang === 'es' ? 'Reejecutar Pruebas' : 'Re-executar Testes')
+                                                    : (lang === 'en' ? 'Run Battery' : lang === 'es' ? 'Ejecutar Batería' : 'Executar Bateria')}
                                             </span>
                                         </button>
                                     </div>
@@ -1615,13 +1615,15 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
                                                 <i className="fas fa-biohazard text-xs" />
-                                                <span>Resultados do Chaos Engineering Lab</span>
+                                                <span>{lang === 'en' ? 'Chaos Engineering Lab Results' : lang === 'es' ? 'Resultados del Chaos Engineering Lab' : 'Resultados do Chaos Engineering Lab'}</span>
                                             </h3>
                                             <button
                                                 onClick={() => {
                                                     playMechanicalClick();
                                                     setChaosActive(curr => !curr);
-                                                    showToast(!chaosActive ? 'Injeção de estresse ativada (+150ms jitter)' : 'Injeção de caos desativada');
+                                                    showToast(!chaosActive
+                                                        ? (lang === 'en' ? 'Stress injection active (+150ms jitter)' : 'Injeção de estresse ativada (+150ms jitter)')
+                                                        : (lang === 'en' ? 'Chaos injection disabled' : 'Injeção de caos desativada'));
                                                 }}
                                                 data-cursor-morph="true"
                                                 className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
@@ -1631,7 +1633,11 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                                                 }`}
                                             >
                                                 <i className={`fas fa-bolt text-[10px] ${chaosActive ? 'text-red-400 animate-bounce' : 'text-amber-400'}`} />
-                                                <span>{chaosActive ? 'Injeção de Caos Ativa' : 'Simular Injeção de Caos'}</span>
+                                                <span>
+                                                    {chaosActive
+                                                        ? (lang === 'en' ? 'Chaos Injection Active' : lang === 'es' ? 'Inyección de Caos Activa' : 'Injeção de Caos Ativa')
+                                                        : (lang === 'en' ? 'Simulate Chaos Injection' : lang === 'es' ? 'Simular Inyección de Caos' : 'Simular Injeção de Caos')}
+                                                </span>
                                             </button>
                                         </div>
 
@@ -1658,8 +1664,8 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 {/* ── D. Rodapé do Console com Atalhos e Informações de Build ── */}
                 <footer className="shrink-0 border-t border-white/10 bg-[#090b10]/95 px-6 py-3 flex items-center justify-between text-[11px] font-mono text-primary/60">
                     <div className="flex items-center gap-4">
-                        <span>← → alternar abas</span>
-                        <span>ESC fechar</span>
+                        <span>{lang === 'en' ? '← → switch tabs' : lang === 'es' ? '← → cambiar pestañas' : '← → alternar abas'}</span>
+                        <span>{lang === 'en' ? 'ESC close' : lang === 'es' ? 'ESC cerrar' : 'ESC fechar'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-accent/80">DevTools v2.4.0</span>

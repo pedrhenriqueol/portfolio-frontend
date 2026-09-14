@@ -57,17 +57,17 @@ function CorporateProjectsGrid({
         if (p.details?.architecture?.[0]?.tech) {
             return p.details.architecture[0].tech.split('+')[0].trim();
         }
-        if ((p.tags || []).includes('Multi-tenant')) return 'Multi-tenant Lógico';
+        if ((p.tags || []).includes('Multi-tenant')) return lang === 'en' ? 'Logical Multi-tenant' : lang === 'es' ? 'Multi-inquilino Lógico' : 'Multi-tenant Lógico';
         if ((p.tags || []).includes('UniGui')) return 'RAD ServerModule Web';
-        if ((p.tags || []).includes('Laravel')) return 'REST API Desacoplada';
-        return 'Camada de Serviços';
+        if ((p.tags || []).includes('Laravel')) return lang === 'en' ? 'Decoupled REST API' : lang === 'es' ? 'API REST Desacoplada' : 'REST API Desacoplada';
+        return lang === 'en' ? 'Service Layer' : lang === 'es' ? 'Capa de Servicios' : 'Camada de Serviços';
     };
 
     const getProjectKeyMetric = (p: Project) => {
         const metric = p.details?.metrics?.[0];
         if (typeof metric === 'object' && metric?.value) return metric.value;
         if (p.details?.subtitle) return p.details.subtitle;
-        return 'Produção Estável';
+        return lang === 'en' ? 'Stable Production' : lang === 'es' ? 'Producción Estable' : 'Produção Estável';
     };
 
     return (
@@ -109,7 +109,7 @@ function CorporateProjectsGrid({
                     <button
                         onClick={() => handleViewModeChange('grid')}
                         data-cursor-morph="true"
-                        title="Modo Grade 3D"
+                        title={lang === 'en' ? '3D Grid Mode' : lang === 'es' ? 'Modo Cuadrícula 3D' : 'Modo Grade 3D'}
                         className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
                             viewMode === 'grid'
                                 ? 'bg-accent text-darker font-bold shadow-xs'
@@ -122,7 +122,7 @@ function CorporateProjectsGrid({
                     <button
                         onClick={() => handleViewModeChange('table')}
                         data-cursor-morph="true"
-                        title="Modo Tabela de Especificações de Engenharia"
+                        title={lang === 'en' ? 'Engineering Specs Table Mode' : lang === 'es' ? 'Modo Tabla de Especificaciones' : 'Modo Tabela de Especificações de Engenharia'}
                         className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
                             viewMode === 'table'
                                 ? 'bg-accent text-darker font-bold shadow-xs'
@@ -130,7 +130,7 @@ function CorporateProjectsGrid({
                         }`}
                     >
                         <i className="fas fa-table-list text-[10px]" />
-                        <span>{lang === 'en' ? 'Specs Table' : 'Tabela Densa'}</span>
+                        <span>{lang === 'en' ? 'Specs Table' : lang === 'es' ? 'Tabla Técnica' : 'Tabela Densa'}</span>
                     </button>
                 </div>
             </div>
@@ -144,7 +144,9 @@ function CorporateProjectsGrid({
                         : `sistema${filteredProjects.length !== 1 ? 's' : ''} corporativo${filteredProjects.length !== 1 ? 's' : ''}`}
                 </span>
                 <span className="text-[11px] text-accent/80">
-                    {viewMode === 'grid' ? 'Micro-Tilt 3D Ativo' : 'Engineering Specs Density View'}
+                    {viewMode === 'grid'
+                        ? (lang === 'en' ? '3D Micro-Tilt Active' : lang === 'es' ? 'Micro-Tilt 3D Activo' : 'Micro-Tilt 3D Ativo')
+                        : (lang === 'en' ? 'Engineering Specs Density View' : lang === 'es' ? 'Vista de Especificaciones de Ingeniería' : 'Visualização Densa de Engenharia')}
                 </span>
             </div>
 
@@ -190,12 +192,12 @@ function CorporateProjectsGrid({
                             <table className="w-full text-left text-xs font-mono border-collapse">
                                 <thead>
                                     <tr className="border-b border-white/10 bg-black/40 text-[11px] uppercase tracking-wider text-primary/60">
-                                        <th className="py-3 px-4">Sistema / Projeto</th>
-                                        <th className="py-3 px-4">Arquitetura & Padrão</th>
-                                        <th className="py-3 px-4">Stack / Tecnologias</th>
-                                        <th className="py-3 px-4">Banco de Dados</th>
-                                        <th className="py-3 px-4">Métrica & Escopo</th>
-                                        <th className="py-3 px-4 text-right">Ação</th>
+                                        <th className="py-3 px-4">{lang === 'en' ? 'System / Project' : lang === 'es' ? 'Sistema / Proyecto' : 'Sistema / Projeto'}</th>
+                                        <th className="py-3 px-4">{lang === 'en' ? 'Architecture & Pattern' : lang === 'es' ? 'Arquitectura y Patrón' : 'Arquitetura & Padrão'}</th>
+                                        <th className="py-3 px-4">{lang === 'en' ? 'Stack / Technologies' : lang === 'es' ? 'Stack / Tecnologías' : 'Stack / Tecnologias'}</th>
+                                        <th className="py-3 px-4">{lang === 'en' ? 'Database' : lang === 'es' ? 'Base de Datos' : 'Banco de Dados'}</th>
+                                        <th className="py-3 px-4">{lang === 'en' ? 'Metric & Scope' : lang === 'es' ? 'Métrica y Alcance' : 'Métrica & Escopo'}</th>
+                                        <th className="py-3 px-4 text-right">{lang === 'en' ? 'Action' : lang === 'es' ? 'Acción' : 'Ação'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
@@ -281,7 +283,7 @@ function CorporateProjectsGrid({
                                                         className="px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 text-accent hover:bg-accent hover:text-darker text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
                                                     >
                                                         <i className="fas fa-microchip text-[10px]" />
-                                                        <span>Inspecionar</span>
+                                                        <span>{lang === 'en' ? 'Inspect' : lang === 'es' ? 'Inspeccionar' : 'Inspecionar'}</span>
                                                     </button>
                                                 </td>
                                             </motion.tr>

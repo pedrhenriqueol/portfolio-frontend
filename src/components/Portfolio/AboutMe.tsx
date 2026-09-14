@@ -263,7 +263,13 @@ function SqlBenchmarkModal({
                     <div className="p-5 md:p-6 space-y-5">
                         {/* Target Query */}
                         <div className="bg-black/40 p-3 rounded-lg border border-white/[0.05] text-neutral-300">
-                            <div className="text-[10px] text-neutral-500 uppercase tracking-widest mb-1">// CONSULTA ANALISADA (T-SQL)</div>
+                            <div className="text-[10px] text-neutral-500 uppercase tracking-widest mb-1">
+                                {lang === 'en'
+                                    ? '// ANALYZED QUERY (T-SQL)'
+                                    : lang === 'es'
+                                    ? '// CONSULTA ANALIZADA (T-SQL)'
+                                    : '// CONSULTA ANALISADA (T-SQL)'}
+                            </div>
                             <code className="text-neutral-200 text-[11.5px] block font-mono">
                                 SELECT * FROM Transacoes WITH(NOLOCK) WHERE Status = 'PENDENTE' AND DataCriacao &gt;= '2026-01-01'
                             </code>
@@ -276,7 +282,11 @@ function SqlBenchmarkModal({
                                 <div className="flex items-center justify-between border-b border-rose-500/15 pb-2">
                                     <span className="text-rose-400 font-semibold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                        Antes da Otimização
+                                        {lang === 'en'
+                                            ? 'Before Optimization'
+                                            : lang === 'es'
+                                            ? 'Antes de la Optimización'
+                                            : 'Antes da Otimização'}
                                     </span>
                                     <span className="text-rose-300 font-mono text-[10px] bg-rose-500/10 px-1.5 py-0.5 rounded">
                                         COST: 82%
@@ -284,19 +294,29 @@ function SqlBenchmarkModal({
                                 </div>
                                 <div className="space-y-1.5 text-neutral-300 text-[11px]">
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Operador:</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Operator:' : 'Operador:'}
+                                        </span>
                                         <strong className="text-rose-400 font-medium">Table Scan (Clustered)</strong>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Tempo Execução:</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Execution Time:' : lang === 'es' ? 'Tiempo de Ejecución:' : 'Tempo Execução:'}
+                                        </span>
                                         <strong className="text-amber-400 font-medium">2.140 ms</strong>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Leituras Lógicas:</span>
-                                        <span className="text-neutral-300">8.420 páginas</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Logical Reads:' : lang === 'es' ? 'Lecturas Lógicas:' : 'Leituras Lógicas:'}
+                                        </span>
+                                        <span className="text-neutral-300">
+                                            {lang === 'en' ? '8,420 pages' : '8.420 páginas'}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Diagnóstico:</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Diagnosis:' : lang === 'es' ? 'Diagnóstico:' : 'Diagnóstico:'}
+                                        </span>
                                         <span className="text-rose-300">N+1 Loop / I/O Spike</span>
                                     </div>
                                 </div>
@@ -307,7 +327,11 @@ function SqlBenchmarkModal({
                                 <div className="flex items-center justify-between border-b border-emerald-500/15 pb-2">
                                     <span className="text-emerald-400 font-semibold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                        Depois da Otimização
+                                        {lang === 'en'
+                                            ? 'After Optimization'
+                                            : lang === 'es'
+                                            ? 'Después de la Optimización'
+                                            : 'Depois da Otimização'}
                                     </span>
                                     <span className="text-emerald-300 font-mono text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded">
                                         COST: 18%
@@ -315,19 +339,29 @@ function SqlBenchmarkModal({
                                 </div>
                                 <div className="space-y-1.5 text-neutral-300 text-[11px]">
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Operador:</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Operator:' : 'Operador:'}
+                                        </span>
                                         <strong className="text-emerald-400 font-medium">Index Seek (Nonclustered)</strong>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Tempo Execução:</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Execution Time:' : lang === 'es' ? 'Tiempo de Ejecución:' : 'Tempo Execução:'}
+                                        </span>
                                         <strong className="text-emerald-300 font-medium">412 ms (-80.7%)</strong>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Leituras Lógicas:</span>
-                                        <span className="text-emerald-200">12 páginas</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Logical Reads:' : lang === 'es' ? 'Lecturas Lógicas:' : 'Leituras Lógicas:'}
+                                        </span>
+                                        <span className="text-emerald-200">
+                                            {lang === 'en' ? '12 pages' : '12 páginas'}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-neutral-400">Índice:</span>
+                                        <span className="text-neutral-400">
+                                            {lang === 'en' ? 'Index:' : lang === 'es' ? 'Índice:' : 'Índice:'}
+                                        </span>
                                         <span className="text-neutral-300 font-mono text-[10px]">IX_Transacoes_Audit</span>
                                     </div>
                                 </div>
@@ -338,7 +372,13 @@ function SqlBenchmarkModal({
                         {isReplaying && (
                             <div className="space-y-1">
                                 <div className="flex justify-between text-[10px] text-neutral-400">
-                                    <span>Simulando execução do benchmark...</span>
+                                    <span>
+                                        {lang === 'en'
+                                            ? 'Simulating benchmark execution...'
+                                            : lang === 'es'
+                                            ? 'Simulando ejecución del benchmark...'
+                                            : 'Simulando execução do benchmark...'}
+                                    </span>
                                     <span>{replayProgress}%</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
@@ -359,14 +399,18 @@ function SqlBenchmarkModal({
                                 className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.15] text-neutral-200 font-medium transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                             >
                                 <span className="text-emerald-400">⚡</span>
-                                <span>{isReplaying ? 'Executando...' : 'Re-executar Teste / Benchmark'}</span>
+                                <span>
+                                    {isReplaying
+                                        ? (lang === 'en' ? 'Executing...' : lang === 'es' ? 'Ejecutando...' : 'Executando...')
+                                        : (lang === 'en' ? 'Rerun Test / Benchmark' : lang === 'es' ? 'Reejecutar Prueba / Benchmark' : 'Re-executar Teste / Benchmark')}
+                                </span>
                             </button>
                             <button
                                 type="button"
                                 onClick={onClose}
                                 className="px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-neutral-400 hover:text-white transition-colors cursor-pointer"
                             >
-                                Fechar
+                                {lang === 'en' ? 'Close' : lang === 'es' ? 'Cerrar' : 'Fechar'}
                             </button>
                         </div>
                     </div>
@@ -427,7 +471,7 @@ function AboutMe() {
     const handleTechChipClick = useCallback((tech: string) => {
         playMechanicalKey(650, 0.04);
 
-        const queryMap: Record<string, string> = {
+        const queryMapPt: Record<string, string> = {
             'Delphi 11': 'Qual a sua experiência prática com Delphi 11 e modernização na Qualisoft?',
             'UniGui': 'Como você realizou a migração de desktop VCL para a web com UniGui?',
             'Laravel': 'Como você constrói APIs REST e microsserviços em PHP e Laravel?',
@@ -438,14 +482,70 @@ function AboutMe() {
             'MySQL': 'Qual sua experiência com bancos de dados relacionais MySQL?',
             'PostgreSQL': 'Como você modela esquemas e transações no PostgreSQL?',
             'Indexação': 'Como você otimiza índices compostos para eliminar Table Scans?',
+            'Indexing': 'Como você otimiza índices compostos para eliminar Table Scans?',
+            'Indexación': 'Como você otimiza índices compostos para eliminar Table Scans?',
             'Tuning': 'Quais técnicas de query tuning e execution plan você utiliza?',
             'Postman': 'Como você automatiza testes de API e regressão com Postman na SETE Tecnologia?',
             'Testes Funcionais': 'Como você modela suítes de testes funcionais e regressivos?',
+            'Functional Testing': 'Como você modela suítes de testes funcionais e regressivos?',
+            'Pruebas Funcionales': 'Como você modela suítes de testes funcionais e regressivos?',
             'Scrum / Kanban': 'Como é a sua rotina com metodologias ágeis em equipes de engenharia?',
             'ZPEs / Portos': 'Como funciona a validação em sistemas críticos de logística aduaneira e ZPEs?',
+            'FTZ / Ports': 'Como funciona a validação em sistemas críticos de logística aduaneira e ZPEs?',
+            'ZPEs / Puertos': 'Como funciona a validação em sistemas críticos de logística aduaneira e ZPEs?',
         };
 
-        const query = queryMap[tech] || `Qual sua experiência técnica com ${tech}?`;
+        const queryMapEn: Record<string, string> = {
+            'Delphi 11': 'What is your practical experience with Delphi 11 and modernization at Qualisoft?',
+            'UniGui': 'How did you achieve desktop VCL to web migration using UniGui?',
+            'Laravel': 'How do you build REST APIs and microservices with PHP and Laravel?',
+            'React': 'How do you leverage React and TypeScript for modern frontend engineering?',
+            'TypeScript': 'What is your architectural standard for strict TypeScript typing?',
+            'Tailwind': 'How do you implement Tailwind CSS and design tokens in dense interfaces?',
+            'SQL Server': 'How do you perform query tuning and execution plan analysis in SQL Server?',
+            'MySQL': 'What is your experience with MySQL relational database architecture?',
+            'PostgreSQL': 'How do you design schemas and handle transactions in PostgreSQL?',
+            'Indexação': 'How do you optimize composite indexes to eliminate Table Scans?',
+            'Indexing': 'How do you optimize composite indexes to eliminate Table Scans?',
+            'Indexación': 'How do you optimize composite indexes to eliminate Table Scans?',
+            'Tuning': 'Which query tuning and execution plan optimization techniques do you use?',
+            'Postman': 'How do you automate API testing and regression suites with Postman at SETE Tecnologia?',
+            'Testes Funcionais': 'How do you design functional and regression test suites?',
+            'Functional Testing': 'How do you design functional and regression test suites?',
+            'Pruebas Funcionales': 'How do you design functional and regression test suites?',
+            'Scrum / Kanban': 'What is your workflow with agile methodologies in engineering teams?',
+            'ZPEs / Portos': 'How does validation work in mission-critical customs logistics and FTZ systems?',
+            'FTZ / Ports': 'How does validation work in mission-critical customs logistics and FTZ systems?',
+            'ZPEs / Puertos': 'How does validation work in mission-critical customs logistics and FTZ systems?',
+        };
+
+        const queryMapEs: Record<string, string> = {
+            'Delphi 11': '¿Cuál es tu experiencia práctica con Delphi 11 y modernización en Qualisoft?',
+            'UniGui': '¿Cómo realizaste la migración de escritorio VCL a la web con UniGui?',
+            'Laravel': '¿Cómo construyes APIs REST y microservicios con PHP y Laravel?',
+            'React': '¿Cómo utilizas React y TypeScript en el desarrollo frontend moderno?',
+            'TypeScript': '¿Cuál es tu estándar de tipado estricto con TypeScript en producción?',
+            'Tailwind': '¿Cómo aplicas Tailwind CSS y design tokens en interfaces de alta densidad?',
+            'SQL Server': '¿Cómo funciona el ajuste de consultas y planes de ejecución en SQL Server?',
+            'MySQL': '¿Cuál es tu experiencia con bases de datos relacionales MySQL?',
+            'PostgreSQL': '¿Cómo modelas esquemas y transacciones en PostgreSQL?',
+            'Indexação': '¿Cómo optimizas índices compuestos para eliminar Table Scans?',
+            'Indexing': '¿Cómo optimizas índices compuestos para eliminar Table Scans?',
+            'Indexación': '¿Cómo optimizas índices compuestos para eliminar Table Scans?',
+            'Tuning': '¿Qué técnicas de ajuste de consultas y planes de ejecución utilizas?',
+            'Postman': '¿Cómo automatizas pruebas de API y regresión con Postman en SETE Tecnologia?',
+            'Testes Funcionais': '¿Cómo diseñas suites de pruebas funcionales y regresivas?',
+            'Functional Testing': '¿Cómo diseñas suites de pruebas funcionales y regresivas?',
+            'Pruebas Funcionales': '¿Cómo diseñas suites de pruebas funcionales y regresivas?',
+            'Scrum / Kanban': '¿Cómo es tu dinámica con metodologías ágeis en equipos de ingeniería?',
+            'ZPEs / Portos': '¿Cómo funciona la validación en sistemas críticos de logística aduanera y ZPEs?',
+            'FTZ / Ports': '¿Cómo funciona la validación en sistemas críticos de logística aduanera y ZPEs?',
+            'ZPEs / Puertos': '¿Cómo funciona la validación en sistemas críticos de logística aduanera y ZPEs?',
+        };
+
+        const map = lang === 'en' ? queryMapEn : lang === 'es' ? queryMapEs : queryMapPt;
+        const fallback = lang === 'en' ? `What is your technical experience with ${tech}?` : lang === 'es' ? `¿Cuál es tu experiencia técnica con ${tech}?` : `Qual sua experiência técnica com ${tech}?`;
+        const query = map[tech] || fallback;
 
         // Scroll suave até o Terminal
         const termEl = document.getElementById('terminal') || document.getElementById('home');
@@ -461,7 +561,7 @@ function AboutMe() {
                 })
             );
         }, 300);
-    }, []);
+    }, [lang]);
 
     // ── Métricas estatísticas estruturadas (padrão de ícone em caixa lateral) ──
     const aboutMetrics = [
@@ -491,12 +591,13 @@ function AboutMe() {
         },
     ];
 
+    // ── Pilares de especialidade unificados ──
     const pillars = [
         {
-            icon: 'fas fa-laptop-code',
-            title: lang === 'en' ? 'Fullstack & Modernization' : lang === 'es' ? 'Fullstack y Modernización' : 'Fullstack & Modernização',
+            icon: 'fas fa-sync-alt',
+            title: lang === 'en' ? 'Legacy Modernization' : lang === 'es' ? 'Modernización Legacy' : 'Modernização de Legados',
             desc: lang === 'en'
-                ? 'Expert in transitioning legacy monoliths into modern SPAs and decoupled RESTful APIs.'
+                ? 'Expertise in migrating legacy monoliths to modern SPAs and decoupled REST APIs.'
                 : lang === 'es'
                 ? 'Especialista en migración de monolitos heredados a SPAs modernas y APIs REST desacopladas.'
                 : 'Especialista em transição de monolitos legados para SPAs modernas e APIs REST desacopladas.',
@@ -510,7 +611,7 @@ function AboutMe() {
                 : lang === 'es'
                 ? 'Refactorización crítica de consultas N+1, indexación inteligente e integridad transaccional.'
                 : 'Refatoração de queries críticas N+1, indexação inteligente e garantia de integridade transacional.',
-            tags: ['SQL Server', 'MySQL', 'PostgreSQL', 'Indexação', 'Tuning'],
+            tags: ['SQL Server', 'MySQL', 'PostgreSQL', lang === 'en' ? 'Indexing' : lang === 'es' ? 'Indexación' : 'Indexação', 'Tuning'],
         },
         {
             icon: 'fas fa-shield-alt',
@@ -520,7 +621,7 @@ function AboutMe() {
                 : lang === 'es'
                 ? 'Ingeniería de requisitos, pruebas automatizadas/manuales con Postman y blindaje contra regresiones.'
                 : 'Engenharia de requisitos, testes automatizados/manuais via Postman e blindagem contra regressões.',
-            tags: ['Postman', 'Testes Funcionais', 'Scrum / Kanban', 'ZPEs / Portos'],
+            tags: ['Postman', lang === 'en' ? 'Functional Testing' : lang === 'es' ? 'Pruebas Funcionales' : 'Testes Funcionais', 'Scrum / Kanban', lang === 'en' ? 'FTZ / Ports' : lang === 'es' ? 'ZPEs / Puertos' : 'ZPEs / Portos'],
         },
     ];
 
@@ -539,7 +640,11 @@ function AboutMe() {
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
                         <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase">
-                            // 01. BIOGRAFIA & DIRETRIZES TÉCNICAS
+                            {lang === 'en'
+                                ? '// 01. BIOGRAPHY & TECHNICAL GUIDELINES'
+                                : lang === 'es'
+                                ? '// 01. BIOGRAFÍA Y DIRECTRICES TÉCNICAS'
+                                : '// 01. BIOGRAFIA & DIRETRIZES TÉCNICAS'}
                         </span>
                     </div>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
@@ -571,12 +676,28 @@ function AboutMe() {
                                             ? 'bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
                                             : 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 hover:border-emerald-500/40'
                                     }`}
-                                    title={tacticalMode ? 'Modo Tático Ativo! Clique 3x para retornar' : 'Disponível para desafios (Triplo-clique: Modo Tático)'}
+                                    title={
+                                        tacticalMode
+                                            ? (lang === 'en'
+                                                ? 'Tactical Mode Active! Click 3x to return'
+                                                : lang === 'es'
+                                                ? '¡Modo Táctico Activo! Clic 3x para volver'
+                                                : 'Modo Tático Ativo! Clique 3x para retornar')
+                                            : (lang === 'en'
+                                                ? 'Available for opportunities (Triple-click: Tactical Mode)'
+                                                : lang === 'es'
+                                                ? 'Disponible para desafíos (Triple-clic: Modo Táctico)'
+                                                : 'Disponível para desafios (Triplo-clique: Modo Tático)')
+                                    }
                                 >
                                     <span className={`w-1.5 h-1.5 rounded-full ${tacticalMode ? 'bg-cyan-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
                                     <span>
                                         {tacticalMode
-                                            ? 'TÁTICO: 180 FPS // LATENCY 0.5ms'
+                                            ? (lang === 'en'
+                                                ? 'TACTICAL: 180 FPS // LATENCY 0.5ms'
+                                                : lang === 'es'
+                                                ? 'TÁCTICO: 180 FPS // LATENCY 0.5ms'
+                                                : 'TÁTICO: 180 FPS // LATENCY 0.5ms')
                                             : lang === 'en'
                                             ? 'Available'
                                             : lang === 'es'
@@ -621,10 +742,10 @@ function AboutMe() {
                                 setShowSqlModal(true);
                             }}
                             className="text-[10px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors flex items-center gap-1.5 pt-3 mt-4 border-t border-white/[0.04] cursor-pointer group/query w-fit"
-                            title="Ver análise de plano de execução T-SQL"
+                            title={lang === 'en' ? 'View T-SQL execution plan analysis' : lang === 'es' ? 'Ver análisis de plan de ejecución T-SQL' : 'Ver análise de plano de execução T-SQL'}
                         >
                             <span className="text-emerald-400">›</span>
-                            <span>query_profile: 2s ➔ 412ms (ver análise)</span>
+                            <span>query_profile: 2s ➔ 412ms ({lang === 'en' ? 'view analysis' : lang === 'es' ? 'ver análisis' : 'ver análise'})</span>
                         </button>
                     </BentoCard>
 
@@ -791,7 +912,13 @@ function AboutMe() {
                                         type="button"
                                         onClick={() => handleTechChipClick(tag)}
                                         className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none cursor-pointer flex items-center gap-1 active:scale-95"
-                                        title={`Consultar no Terminal sobre ${tag}`}
+                                        title={
+                                            lang === 'en'
+                                                ? `Query Terminal about ${tag}`
+                                                : lang === 'es'
+                                                ? `Consultar en la Terminal sobre ${tag}`
+                                                : `Consultar no Terminal sobre ${tag}`
+                                        }
                                     >
                                         <span>{tag}</span>
                                     </button>

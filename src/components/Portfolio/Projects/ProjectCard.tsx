@@ -152,7 +152,7 @@ const ProjectCard = memo(function ProjectCard({
                             className="py-1.5 px-3 border border-white/10 bg-white/[0.03] backdrop-blur-sm text-primary text-xs font-semibold rounded-lg hover:border-accent/40 hover:text-accent transition-all cursor-pointer flex items-center gap-1.5"
                         >
                             <i className="fas fa-microchip text-accent text-[11px]" />
-                            <span>Detalhes Técnicos</span>
+                            <span>{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
                         </motion.button>
                     )}
 
@@ -164,7 +164,7 @@ const ProjectCard = memo(function ProjectCard({
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
                             className="p-2 border border-white/10 bg-white/[0.03] backdrop-blur-sm text-primary hover:text-white hover:border-white/30 text-xs rounded-lg transition-all cursor-pointer flex items-center justify-center"
-                            title="Código-Fonte no GitHub"
+                            title={lang === 'en' ? 'Source Code on GitHub' : lang === 'es' ? 'Código Fuente en GitHub' : 'Código-Fonte no GitHub'}
                         >
                             <i className="fab fa-github text-[13px]" />
                         </a>
@@ -179,7 +179,7 @@ const ProjectCard = memo(function ProjectCard({
                             data-cursor-morph="true"
                             className="py-1.5 px-3 bg-accent text-darker text-xs font-bold rounded-lg hover:bg-accent-hover transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                         >
-                            <span>Acessar Demonstração</span>
+                            <span>{lang === 'en' ? 'Live Demo' : lang === 'es' ? 'Demostración' : 'Acessar Demonstração'}</span>
                             <i className="fas fa-external-link-alt text-[9px]" />
                         </a>
                     )}
@@ -261,7 +261,7 @@ const ProjectCard = memo(function ProjectCard({
                                     className="flex-1 py-2 px-2.5 bg-white/[0.03] border border-white/10 backdrop-blur-sm text-primary hover:text-accent hover:border-accent/40 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                                 >
                                     <i className="fas fa-microchip text-accent text-[11px] shrink-0" />
-                                    <span className="truncate">Detalhes Técnicos</span>
+                                    <span className="truncate">{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
                                 </motion.button>
                             )}
 
@@ -275,12 +275,15 @@ const ProjectCard = memo(function ProjectCard({
                                     className="flex-1 py-2 px-2.5 bg-white/[0.03] border border-white/10 backdrop-blur-sm text-primary hover:text-white hover:border-white/30 text-xs font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                                 >
                                     <i className="fab fa-github text-[13px] shrink-0" />
-                                    <span className="truncate">Código-Fonte</span>
+                                    <span className="truncate">{lang === 'en' ? 'Source Code' : lang === 'es' ? 'Código Fuente' : 'Código-Fonte'}</span>
                                 </a>
                             ) : isPrivate ? (
-                                <span className="flex-1 py-2 px-2.5 bg-white/[0.02] border border-white/[0.06] text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed" title="Sistema Corporativo Interno Privado">
+                                <span
+                                    className="flex-1 py-2 px-2.5 bg-white/[0.02] border border-white/[0.06] text-primary/50 text-xs font-medium rounded-lg select-none flex items-center justify-center gap-1.5 cursor-not-allowed"
+                                    title={lang === 'en' ? 'Private Internal Corporate System' : lang === 'es' ? 'Sistema Corporativo Interno Privado' : 'Sistema Corporativo Interno Privado'}
+                                >
                                     <i className="fas fa-lock text-[10px] shrink-0" />
-                                    <span className="truncate">Corporativo</span>
+                                    <span className="truncate">{lang === 'en' ? 'Corporate' : lang === 'es' ? 'Corporativo' : 'Corporativo'}</span>
                                 </span>
                             ) : null}
                         </div>
@@ -294,7 +297,7 @@ const ProjectCard = memo(function ProjectCard({
                                 data-cursor-morph="true"
                                 className="w-full py-2.5 px-4 bg-accent text-darker font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(255,108,55,0.3)] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer text-center active:scale-95"
                             >
-                                <span>Acessar Demonstração</span>
+                                <span>{lang === 'en' ? 'Live Demo' : lang === 'es' ? 'Demostración' : 'Acessar Demonstração'}</span>
                                 <i className="fas fa-external-link-alt text-[10px]" />
                             </a>
                         )}

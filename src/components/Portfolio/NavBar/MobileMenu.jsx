@@ -22,7 +22,7 @@ export default function MobileMenu({ isOpen, navLinks, active, scrollTo, onClose
                         <ThemeDropdown isMobile onSelect={onClose} />
 
                         {/* Navigation Links */}
-                        {[...navLinks, { id: 'contato', label: t('nav.contato') }].map(({ id, label }, i) => (
+                        {[...navLinks, { id: 'contato', label: typeof t === 'function' ? t('nav.contato') : 'Contato' }].map(({ id, label }, i) => (
                             <motion.button
                                 key={id}
                                 initial={{ opacity: 0, x: -10 }}

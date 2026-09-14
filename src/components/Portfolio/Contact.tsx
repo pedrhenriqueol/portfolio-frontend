@@ -1,38 +1,40 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
 const EMAIL_ADDRESS = 'pedrohc.forza@gmail.com';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const SOCIAL_LINKS = [
-    {
-        icon: 'fab fa-linkedin',
-        label: 'LinkedIn',
-        subtitle: 'Perfil profissional',
-        href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
-    },
-    {
-        icon: 'fab fa-github',
-        label: 'GitHub',
-        subtitle: 'Repositórios e projetos',
-        href: 'https://github.com/pedrhenriqueol',
-    },
-    {
-        icon: 'fab fa-instagram',
-        label: 'Instagram',
-        subtitle: 'Rede pessoal',
-        href: 'https://www.instagram.com/pedrherg',
-    },
-];
-
-export default function Contact() {
+function Contact() {
+    const { t, lang = 'pt' } = useLanguage();
 
     const [data, setData] = useState({ name: '', email: '', subject: '', message: '' });
     const [processing, setProcessing] = useState(false);
     const [success, setSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [copiedEmail, setCopiedEmail] = useState(false);
+
+    const socialLinks = useMemo(() => [
+        {
+            icon: 'fab fa-linkedin',
+            label: 'LinkedIn',
+            subtitle: lang === 'en' ? 'Professional profile' : lang === 'es' ? 'Perfil profesional' : 'Perfil profissional',
+            href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
+        },
+        {
+            icon: 'fab fa-github',
+            label: 'GitHub',
+            subtitle: lang === 'en' ? 'Repositories & projects' : lang === 'es' ? 'Repositorios y proyectos' : 'Repositórios e projetos',
+            href: 'https://github.com/pedrhenriqueol',
+        },
+        {
+            icon: 'fab fa-instagram',
+            label: 'Instagram',
+            subtitle: lang === 'en' ? 'Personal network' : lang === 'es' ? 'Red personal' : 'Rede pessoal',
+            href: 'https://www.instagram.com/pedrherg',
+        },
+    ], [lang]);
 
     // Spotlight direto via DOM Custom Properties (Zero Re-renders de Estado)
     const handleCardMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -74,26 +76,37 @@ export default function Contact() {
     const handleSubmit = async (e: React.FormEvent) => {
         if (e && e.preventDefault) e.preventDefault();
 
-        // Validação suave ao enviar
         const trimmedName = data.name.trim();
         const trimmedEmail = data.email.trim();
         const trimmedSubject = data.subject.trim();
         const trimmedMessage = data.message.trim();
 
         if (!trimmedName) {
-            setErrorMessage('Por favor, informe seu nome.');
+            setErrorMessage(
+                lang === 'en' ? 'Please enter your name.' : lang === 'es' ? 'Por favor, ingresa tu nombre.' : 'Por favor, informe seu nome.'
+            );
             return;
         }
         if (!EMAIL_REGEX.test(trimmedEmail)) {
-            setErrorMessage('Por favor, informe um e-mail válido.');
+            setErrorMessage(
+                lang === 'en' ? 'Please enter a valid email address.' : lang === 'es' ? 'Por favor, ingresa un correo válido.' : 'Por favor, informe um e-mail válido.'
+            );
             return;
         }
         if (!trimmedSubject) {
-            setErrorMessage('Por favor, preencha o assunto.');
+            setErrorMessage(
+                lang === 'en' ? 'Please enter a subject.' : lang === 'es' ? 'Por favor, completa el asunto.' : 'Por favor, preencha o assunto.'
+            );
             return;
         }
         if (trimmedMessage.length < 10) {
-            setErrorMessage('Por favor, escreva uma mensagem com pelo menos 10 caracteres.');
+            setErrorMessage(
+                lang === 'en'
+                    ? 'Please write a message with at least 10 characters.'
+                    : lang === 'es'
+                    ? 'Por favor, escribe un mensaje de al menos 10 caracteres.'
+                    : 'Por favor, escreva uma mensagem com pelo menos 10 caracteres.'
+            );
             return;
         }
 
@@ -112,16 +125,25 @@ export default function Contact() {
                 setSuccess(true);
                 setData({ name: '', email: '', subject: '', message: '' });
             } else {
-                setErrorMessage('Não foi possível enviar a mensagem no momento. Tente pelo e-mail ou LinkedIn.');
+                setErrorMessage(
+                    t('contact.errorMsg') ||
+                    (lang === 'en'
+                        ? 'Could not send the message right now. Please try via email or LinkedIn.'
+                        : 'Não foi possível enviar a mensagem no momento. Tente pelo e-mail ou LinkedIn.')
+                );
             }
         } catch {
-            setErrorMessage('Erro de conexão. Verifique sua rede e tente novamente.');
+            setErrorMessage(
+                t('contact.errorConn') ||
+                (lang === 'en'
+                    ? 'Connection error. Check your network and try again.'
+                    : 'Erro de conexão. Verifique sua rede e tente novamente.')
+            );
         } finally {
             setProcessing(false);
         }
     };
 
-    // Suporte discreto a Ctrl+Enter sem elementos visuais pesados
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -144,14 +166,17 @@ export default function Contact() {
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
-                            Contato
+                            {t('contact.tag') || (lang === 'en' ? 'Contact' : 'Contato')}
                         </span>
                     </div>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
-                        Vamos <span className="italic font-serif">conversar?</span>
+                        {t('contact.title1') || (lang === 'en' ? "Let's " : "Vamos ")}
+                        <span className="italic font-serif">{t('contact.title2') || (lang === 'en' ? "talk?" : "conversar?")}</span>
                     </h2>
                     <p className="text-neutral-400 max-w-xl mx-auto font-sans text-sm sm:text-base leading-relaxed">
-                        Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.
+                        {t('contact.subtitle') || (lang === 'en'
+                            ? "I am open to new opportunities, collaborations, or discussing software engineering."
+                            : "Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.")}
                     </p>
                 </motion.div>
 
@@ -180,10 +205,12 @@ export default function Contact() {
                             />
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans">
-                                    Canais diretos
+                                    {lang === 'en' ? 'Direct Channels' : lang === 'es' ? 'Canales Directos' : 'Canais diretos'}
                                 </h3>
                                 <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mt-1.5 mb-6">
-                                    Sinta-se à vontade para me mandar uma mensagem por aqui ou pelos canais abaixo.
+                                    {t('contact.directMessage') || (lang === 'en'
+                                        ? "Prefer to get straight to the point? Feel free to reach out via any channel below."
+                                        : "Sinta-se à vontade para me mandar uma mensagem por aqui ou pelos canais abaixo.")}
                                 </p>
 
                                 <div className="space-y-3">
@@ -194,7 +221,7 @@ export default function Contact() {
                                                 <i className="fas fa-envelope text-sm" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-xs font-medium text-white">E-mail</p>
+                                                <p className="text-xs font-medium text-white">{lang === 'en' ? 'Email' : 'E-mail'}</p>
                                                 <p className="text-[12px] text-neutral-400 truncate" title={EMAIL_ADDRESS}>
                                                     {EMAIL_ADDRESS}
                                                 </p>
@@ -205,24 +232,26 @@ export default function Contact() {
                                             type="button"
                                             onClick={handleCopyEmail}
                                             className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.16] text-[11px] font-sans text-neutral-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
-                                            title="Copiar endereço de e-mail"
+                                            title={lang === 'en' ? 'Copy email address' : 'Copiar endereço de e-mail'}
                                         >
                                             {copiedEmail ? (
                                                 <>
                                                     <i className="fas fa-check text-emerald-400 text-[10px]" />
-                                                    <span className="text-emerald-400 font-medium">Copiado!</span>
+                                                    <span className="text-emerald-400 font-medium">
+                                                        {lang === 'en' ? 'Copied!' : 'Copiado!'}
+                                                    </span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <i className="fas fa-copy text-[10px]" />
-                                                    <span>Copiar</span>
+                                                    <span>{lang === 'en' ? 'Copy' : 'Copiar'}</span>
                                                 </>
                                             )}
                                         </button>
                                     </div>
 
                                     {/* Redes Sociais */}
-                                    {SOCIAL_LINKS.map(({ icon, label, subtitle, href }) => (
+                                    {socialLinks.map(({ icon, label, subtitle, href }) => (
                                         <a
                                             key={label}
                                             href={href}
@@ -252,13 +281,17 @@ export default function Contact() {
                             {/* Rodapé humano da coluna esquerda */}
                             <div className="pt-4 border-t border-white/[0.05]">
                                 <span className="text-[12px] text-neutral-400">
-                                    Normalmente respondo em menos de 24 horas.
+                                    {lang === 'en'
+                                        ? 'Usually reply in less than 24 hours.'
+                                        : lang === 'es'
+                                        ? 'Suelo responder en menos de 24 horas.'
+                                        : 'Normalmente respondo em menos de 24 horas.'}
                                 </span>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* ── Coluna Direita: Formulário Limpo em Português (7 Colunas) ── */}
+                    {/* ── Coluna Direita: Formulário de Contato ── */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -280,10 +313,14 @@ export default function Contact() {
                             />
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
-                                    Mande uma mensagem
+                                    {lang === 'en' ? 'Send a message' : lang === 'es' ? 'Enviar un mensaje' : 'Mande uma mensagem'}
                                 </h3>
                                 <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mb-6">
-                                    Preencha os campos abaixo e entrarei em contato o mais rápido possível.
+                                    {lang === 'en'
+                                        ? 'Fill in the fields below and I will get back to you as soon as possible.'
+                                        : lang === 'es'
+                                        ? 'Completa los campos a continuación y me pondré en contacto lo antes posible.'
+                                        : 'Preencha os campos abaixo e entrarei em contato o mais rápido possível.'}
                                 </p>
 
                                 {/* Mensagem de Sucesso */}
@@ -296,7 +333,11 @@ export default function Contact() {
                                             className="mb-5 bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 px-4 py-3 rounded-xl flex items-center gap-2.5 text-xs sm:text-sm"
                                         >
                                             <i className="fas fa-check-circle text-emerald-400 text-sm shrink-0" />
-                                            <span>Mensagem enviada com sucesso! Entrarei em contato em breve.</span>
+                                            <span>
+                                                {t('contact.successMsg') || (lang === 'en'
+                                                    ? 'Message sent successfully! I will reach out soon.'
+                                                    : 'Mensagem enviada com sucesso! Entrarei em contato em breve.')}
+                                            </span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -308,7 +349,7 @@ export default function Contact() {
                                         {/* Nome */}
                                         <div className="space-y-1.5">
                                             <label className="block text-xs font-medium text-neutral-300">
-                                                Nome
+                                                {t('contact.labelName') || (lang === 'en' ? 'Name' : 'Nome')}
                                             </label>
                                             <input
                                                 type="text"
@@ -316,7 +357,7 @@ export default function Contact() {
                                                 value={data.name}
                                                 onChange={handleChange}
                                                 disabled={processing}
-                                                placeholder="Como posso te chamar?"
+                                                placeholder={lang === 'en' ? 'Your name' : 'Como posso te chamar?'}
                                                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
                                             />
                                         </div>
@@ -324,7 +365,7 @@ export default function Contact() {
                                         {/* E-mail */}
                                         <div className="space-y-1.5">
                                             <label className="block text-xs font-medium text-neutral-300">
-                                                E-mail
+                                                {t('contact.labelEmail') || (lang === 'en' ? 'Email' : 'E-mail')}
                                             </label>
                                             <input
                                                 type="email"
@@ -332,7 +373,7 @@ export default function Contact() {
                                                 value={data.email}
                                                 onChange={handleChange}
                                                 disabled={processing}
-                                                placeholder="seu.email@exemplo.com"
+                                                placeholder={lang === 'en' ? 'your.email@company.com' : 'seu.email@exemplo.com'}
                                                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
                                             />
                                         </div>
@@ -342,7 +383,7 @@ export default function Contact() {
                                     {/* Assunto */}
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-medium text-neutral-300">
-                                            Assunto
+                                            {t('contact.labelSubject') || (lang === 'en' ? 'Subject' : 'Assunto')}
                                         </label>
                                         <input
                                             type="text"
@@ -350,7 +391,7 @@ export default function Contact() {
                                             value={data.subject}
                                             onChange={handleChange}
                                             disabled={processing}
-                                            placeholder="Sobre uma oportunidade, projeto ou conversa"
+                                            placeholder={t('contact.formSubjectPlaceholder') || (lang === 'en' ? 'Opportunity, project or collaboration' : 'Sobre uma oportunidade, projeto ou conversa')}
                                             className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
                                         />
                                     </div>
@@ -358,7 +399,7 @@ export default function Contact() {
                                     {/* Mensagem */}
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-medium text-neutral-300">
-                                            Mensagem
+                                            {t('contact.labelMessage') || (lang === 'en' ? 'Message' : 'Mensagem')}
                                         </label>
                                         <textarea
                                             name="message"
@@ -366,7 +407,7 @@ export default function Contact() {
                                             value={data.message}
                                             onChange={handleChange}
                                             disabled={processing}
-                                            placeholder="Escreva sua mensagem aqui..."
+                                            placeholder={t('contact.formMessagePlaceholder') || (lang === 'en' ? 'Write your message here...' : 'Escreva sua mensagem aqui...')}
                                             className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all resize-none"
                                         />
                                     </div>
@@ -382,10 +423,14 @@ export default function Contact() {
                                                 {processing ? (
                                                     <>
                                                         <i className="fas fa-circle-notch fa-spin text-xs" />
-                                                        <span>Enviando...</span>
+                                                        <span>{t('contact.btnSending') || (lang === 'en' ? 'Sending...' : 'Enviando...')}</span>
                                                     </>
                                                 ) : (
-                                                    <span>{isProposalMode ? 'Enviar proposta ✦' : 'Enviar mensagem'}</span>
+                                                    <span>
+                                                        {isProposalMode
+                                                            ? (lang === 'en' ? 'Send proposal ✦' : 'Enviar proposta ✦')
+                                                            : (t('contact.btnSend') || (lang === 'en' ? 'Send message' : 'Enviar mensagem'))}
+                                                    </span>
                                                 )}
                                             </button>
 
@@ -393,7 +438,7 @@ export default function Contact() {
                                             {isProposalMode && (
                                                 <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                                    Prioridade alta
+                                                    {lang === 'en' ? 'High priority' : 'Prioridade alta'}
                                                 </span>
                                             )}
                                         </div>

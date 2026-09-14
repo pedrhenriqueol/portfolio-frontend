@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 export interface SystemPreloaderProps {
     onComplete: () => void;
@@ -16,6 +17,7 @@ export interface SystemPreloaderProps {
  * - Fase 4 (Entrada do Hero): Hero emerge no App com profundidade (opacity: 1, scale: 1, y: 0).
  */
 export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
+    const { lang } = useLanguage();
     const [progress, setProgress] = useState<number>(0);
     const [isExiting, setIsExiting] = useState<boolean>(false);
     const lastProgressRef = useRef<number>(0);
@@ -112,7 +114,7 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
                 willChange: 'opacity',
             }}
             aria-live="polite"
-            aria-label="Carregando Workstation"
+            aria-label={lang === 'en' ? 'Loading Workstation' : lang === 'es' ? 'Cargando Workstation' : 'Carregando Workstation'}
         >
             {/* ── Miolo Central: Desaparece na Fase 2 antes da dissolução do fundo ── */}
             <motion.div
@@ -148,7 +150,7 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
 
                 {/* ── Elemento 3: Legenda Técnica Nítida (text-xs tracking-[0.28em]) ── */}
                 <span className="text-xs font-mono tracking-[0.28em] text-neutral-400 uppercase mt-2">
-                    CARREGANDO WORKSTATION
+                    {lang === 'en' ? 'LOADING WORKSTATION' : lang === 'es' ? 'CARGANDO WORKSTATION' : 'CARREGANDO WORKSTATION'}
                 </span>
             </motion.div>
         </motion.aside>

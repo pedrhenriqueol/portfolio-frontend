@@ -4,7 +4,7 @@ export const translations = {
             home: 'Home',
             sobre: 'Sobre',
             experiencia: 'Experiência',
-            conhecimentos: 'Skills',
+            conhecimentos: 'Habilidades',
             projetos: 'Projetos',
             contato: 'Contato'
         },
@@ -64,7 +64,7 @@ export const translations = {
                 },
                 {
                     icon: 'fas fa-database',
-                    title: 'Database',
+                    title: 'Banco de Dados',
                     items: ['MySQL', 'SQL Server (cloud)', 'PostgreSQL', 'Otimização de queries'],
                 },
                 {
@@ -748,7 +748,7 @@ export const translations = {
                 { id: 15, name: 'Linux Server',   icon_class: 'fab fa-linux',               category: 'DevOps & QA',  color: '#FCC624', desc: 'Deployment, Nginx Setup & Shell Scripting' },
                 { id: 16, name: 'APIs RESTful',   icon_class: 'fas fa-network-wired',       category: 'Back-end',     color: '#A855F7', desc: 'Data Contracts, JSON & Sanctum Auth' },
                 { id: 17, name: 'Scrum / Kanban', icon_class: 'fas fa-tasks',               category: 'DevOps & QA',  color: '#F59E0B', desc: 'Agile Methodologies & Continuous Delivery' },
-                { id: 18, name: 'Regressão QA',   icon_class: 'fas fa-bug',                 category: 'DevOps & QA',  color: '#EC4899', desc: 'Bug Prevention & Load Testing' },
+                { id: 18, name: 'QA Regression',   icon_class: 'fas fa-bug',                 category: 'DevOps & QA',  color: '#EC4899', desc: 'Bug Prevention & Load Testing' },
             ]
         },
         projects: {
@@ -1322,7 +1322,7 @@ export const translations = {
                 { id: 15, name: 'Linux Server',   icon_class: 'fab fa-linux',               category: 'DevOps & QA',  color: '#FCC624', desc: 'Despliegue, Configuración Nginx & Shell Script' },
                 { id: 16, name: 'APIs RESTful',   icon_class: 'fas fa-network-wired',       category: 'Back-end',     color: '#A855F7', desc: 'Contratos de datos, JSON & Autenticación Sanctum' },
                 { id: 17, name: 'Scrum / Kanban', icon_class: 'fas fa-tasks',               category: 'DevOps & QA',  color: '#F59E0B', desc: 'Metodologías ágiles & Entregas continuas' },
-                { id: 18, name: 'Regressão QA',   icon_class: 'fas fa-bug',                 category: 'DevOps & QA',  color: '#EC4899', desc: 'Prevención de errores & Pruebas de carga' },
+                { id: 18, name: 'Regresión QA',   icon_class: 'fas fa-bug',                 category: 'DevOps & QA',  color: '#EC4899', desc: 'Prevención de errores & Pruebas de carga' },
             ]
         },
         projects: {

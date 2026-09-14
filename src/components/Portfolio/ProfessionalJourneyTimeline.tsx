@@ -234,25 +234,29 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     ];
 
     // Registros fotográficos e operacionais associados a cada marco temporal
-    const ARCHIVES: Record<string, JourneyMilestoneArchive> = {
+    const ARCHIVES: Record<string, JourneyMilestoneArchive> = useMemo(() => ({
         '2026': {
             id: 'archive-2026',
             year: '2026',
             company: 'SETE Tecnologia // ZPE Porto Logistics',
-            role: 'Analista de QA & Testes de Software',
-            archiveTitle: 'ZPE Logística Portuária // ePita QA Core',
-            archiveSubtitle: 'Ambiente de Testes & Validação de Sistemas de Missão Crítica',
+            role: lang === 'en' ? 'QA Analyst & Software Testing' : lang === 'es' ? 'Analista de QA y Pruebas de Software' : 'Analista de QA & Testes de Software',
+            archiveTitle: lang === 'en' ? 'FTZ Port Logistics // ePita QA Core' : 'ZPE Logística Portuária // ePita QA Core',
+            archiveSubtitle: lang === 'en' ? 'Testing & Validation Environment for Mission-Critical Systems' : 'Ambiente de Testes & Validação de Sistemas de Missão Crítica',
             image: '/projects/epta_qa_split_2026.png',
-            badge: 'TESTES HOMOLOGADOS',
-            date: 'Jun 2026 — Presente',
-            location: 'Fortaleza, CE // Remoto & Híbrido',
+            badge: lang === 'en' ? 'AUDITED TESTING' : lang === 'es' ? 'PRUEBAS HOMOLOGADAS' : 'TESTES HOMOLOGADOS',
+            date: lang === 'en' ? 'Jun 2026 — Present' : 'Jun 2026 — Presente',
+            location: lang === 'en' ? 'Fortaleza, CE // Remote & Hybrid' : 'Fortaleza, CE // Remoto & Híbrido',
             description:
-                'Ambiente operacional de garantia de qualidade para sistemas alfandegários e logísticos portuários (ePita). Execução de suites completas de testes funcionais e regressivos no Postman, mapeamento estrito de regras de negócio em ZPEs e auditoria de consistência em queries SQL Server de alta criticidade.',
+                lang === 'en'
+                    ? 'Operational quality assurance environment for customs and port logistics systems (ePita). Execution of comprehensive functional and regression test suites in Postman, strict business rule mapping in FTZs, and consistency auditing across mission-critical SQL Server queries.'
+                    : lang === 'es'
+                    ? 'Ambiente operacional de aseguramiento de calidad para sistemas aduaneros y logísticos portuarios (ePita). Ejecución de suites completas de pruebas funcionales y de regresión en Postman, mapeo estricto de reglas de negocio en ZPEs y auditoría de consistencia en consultas SQL Server.'
+                    : 'Ambiente operacional de garantia de qualidade para sistemas alfandegários e logísticos portuários (ePita). Execução de suites completas de testes funcionais e regressivos no Postman, mapeamento estrito de regras de negócio em ZPEs e auditoria de consistência em queries SQL Server de alta criticidade.',
             telemetry: [
-                { label: 'Redução de Bugs', value: '25% Menos Regressões', highlight: true },
-                { label: 'Endpoints Auditados', value: '100+ Endpoints' },
-                { label: 'Queries Validadas', value: '<50ms Tempo Médio' },
-                { label: 'Metodologia', value: 'Scrum / Kanban' },
+                { label: lang === 'en' ? 'Bug Reduction' : 'Redução de Bugs', value: lang === 'en' ? '25% Fewer Regressions' : '25% Menos Regressões', highlight: true },
+                { label: lang === 'en' ? 'Audited Endpoints' : 'Endpoints Auditados', value: '100+ Endpoints' },
+                { label: lang === 'en' ? 'Validated Queries' : 'Queries Validadas', value: lang === 'en' ? '<50ms Avg Time' : '<50ms Tempo Médio' },
+                { label: lang === 'en' ? 'Methodology' : 'Metodologia', value: 'Scrum / Kanban' },
             ],
             tags: ['#QA-ENGINEERING', '#SQL-SERVER', '#POSTMAN', '#TEST-REGRESSIVO', '#SCRUM-KANBAN'],
         },
@@ -260,20 +264,24 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             id: 'archive-2025',
             year: '2025',
             company: 'Qualisoft Sistemas // ERP & Fiscal Solutions',
-            role: 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL)',
-            archiveTitle: 'Desenvolvimento Full Stack & Modernização // React + TypeScript + Delphi 11 + Laravel',
-            archiveSubtitle: 'Aprendizado e Implementação em Produção de TypeScript/React e APIs Laravel',
+            role: lang === 'en' ? 'Full Stack Developer (React / TypeScript / PHP / Delphi / SQL)' : 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL)',
+            archiveTitle: lang === 'en' ? 'Full Stack Development & Modernization // React + TypeScript + Delphi 11 + Laravel' : 'Desenvolvimento Full Stack & Modernização // React + TypeScript + Delphi 11 + Laravel',
+            archiveSubtitle: lang === 'en' ? 'Hands-on Production Implementation of TypeScript/React and Laravel APIs' : 'Aprendizado e Implementação em Produção de TypeScript/React e APIs Laravel',
             image: '/unigui_migration_mockup.jpg',
-            badge: 'MODERNIZAÇÃO CONCLUÍDA',
-            date: 'Ago 2025 — Jun 2026',
+            badge: lang === 'en' ? 'MODERNIZATION COMPLETE' : lang === 'es' ? 'MODERNIZACIÓN CONCLUIDA' : 'MODERNIZAÇÃO CONCLUÍDA',
+            date: lang === 'en' ? 'Aug 2025 — Jun 2026' : 'Ago 2025 — Jun 2026',
             location: 'Fortaleza, CE',
             description:
-                'Atuação como desenvolvedor Full Stack, ambiente no qual aprendi e implementei em produção TypeScript e React para interfaces de retaguarda, APIs RESTful robustas em PHP com Laravel e modernização de ERP legado em Delphi 11 com UniGui. Refatoração profunda de consultas SQL Server/MySQL com redução de 2s para <500ms via índices compostos.',
+                lang === 'en'
+                    ? 'Full Stack developer role where I learned and deployed TypeScript and React for management web interfaces, built robust RESTful APIs in PHP with Laravel, and modernized legacy ERP systems from Delphi VCL to Delphi 11 with UniGui. Deep refactoring of SQL Server/MySQL queries reducing report runtimes from 2s to <500ms.'
+                    : lang === 'es'
+                    ? 'Desempeño como desarrollador Full Stack, implementando en producción TypeScript y React para interfaces de gestión, APIs RESTful robustas en PHP con Laravel y modernización de ERP heredado en Delphi 11 con UniGui. Refactorización profunda de consultas SQL Server/MySQL reduciendo de 2s a <500ms.'
+                    : 'Atuação como desenvolvedor Full Stack, ambiente no qual aprendi e implementei em produção TypeScript e React para interfaces de retaguarda, APIs RESTful robustas em PHP com Laravel e modernização de ERP legado em Delphi 11 com UniGui. Refatoração profunda de consultas SQL Server/MySQL com redução de 2s para <500ms via índices compostos.',
             telemetry: [
-                { label: 'Otimização Queries', value: '4× Mais Rápido', highlight: true },
-                { label: 'Tempo de Resposta', value: '<500ms (antes 2s)' },
-                { label: 'Usuários Ativos', value: '100+ Diários' },
-                { label: 'Arquitetura', value: 'React + TS + Laravel + UniGui' },
+                { label: lang === 'en' ? 'Query Tuning' : 'Otimização Queries', value: lang === 'en' ? '4× Faster' : '4× Mais Rápido', highlight: true },
+                { label: lang === 'en' ? 'Response Time' : 'Tempo de Resposta', value: lang === 'en' ? '<500ms (was 2s)' : '<500ms (antes 2s)' },
+                { label: lang === 'en' ? 'Active Users' : 'Usuários Ativos', value: lang === 'en' ? '100+ Daily' : '100+ Diários' },
+                { label: lang === 'en' ? 'Architecture' : 'Arquitetura', value: 'React + TS + Laravel + UniGui' },
             ],
             tags: ['#LEGACY-MODERNIZATION', '#DELPHI-11', '#LARAVEL-PHP', '#REACT-TS', '#SQL-SERVER'],
         },
@@ -281,24 +289,28 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             id: 'archive-2024',
             year: '2024',
             company: 'EEEP Luiza de Teodoro Vieira',
-            role: 'Ensino Médio Integrado ao Técnico em Informática',
-            archiveTitle: 'Formação Técnica // EEEP Luiza de Teodoro Vieira',
-            archiveSubtitle: 'Ensino Médio Integrado ao Técnico em Informática (2023 — 2025)',
+            role: lang === 'en' ? 'Integrated High School & Technical IT Diploma' : 'Ensino Médio Integrado ao Técnico em Informática',
+            archiveTitle: lang === 'en' ? 'Technical Education // EEEP Luiza de Teodoro Vieira' : 'Formação Técnica // EEEP Luiza de Teodoro Vieira',
+            archiveSubtitle: lang === 'en' ? 'Integrated High School & Technical IT Diploma (2023 — 2025)' : 'Ensino Médio Integrado ao Técnico em Informática (2023 — 2025)',
             image: '/projects/eeep_turma_2024.jpg',
-            badge: 'TURMA TÉCNICA // EEEP LUIZA DE TEODORO VIEIRA',
-            date: 'Jan 2023 — Dez 2025',
+            badge: lang === 'en' ? 'TECHNICAL COHORT // EEEP LUIZA DE TEODORO VIEIRA' : 'TURMA TÉCNICA // EEEP LUIZA DE TEODORO VIEIRA',
+            date: lang === 'en' ? 'Jan 2023 — Dec 2025' : 'Jan 2023 — Dez 2025',
             location: 'Pacatuba, CE',
             description:
-                'Registro fotográfico oficial da turma de Ensino Médio Integrado ao Técnico em Informática da EEEP Luiza de Teodoro Vieira. Período formativo com aprendizado prático e aprofundado em lógica de programação, estruturas de dados, algoritmos, orientação a objetos com Python e Java, desenvolvimento web (HTML5, CSS3, JavaScript), fundamentos de UI/UX Design e projetos integradores de robótica.',
+                lang === 'en'
+                    ? 'Official class photo of the Integrated High School & Technical IT Diploma cohort at EEEP Luiza de Teodoro Vieira. Rigorous formative cycle with deep hands-on learning in algorithmic logic, data structures, OOP with Python and Java, web development (HTML5, CSS3, JavaScript), UI/UX design fundamentals, and robotics projects.'
+                    : lang === 'es'
+                    ? 'Registro fotográfico oficial de la promoción de Bachillerato Técnico en Informática de EEEP Luiza de Teodoro Vieira. Período formativo con aprendizaje práctico en lógica algorítmica, estructuras de datos, POO con Python y Java, desarrollo web (HTML5, CSS3, JavaScript), fundamentos de UI/UX y proyectos de robótica.'
+                    : 'Registro fotográfico oficial da turma de Ensino Médio Integrado ao Técnico em Informática da EEEP Luiza de Teodoro Vieira. Período formativo com aprendizado prático e aprofundado em lógica de programação, estruturas de dados, algoritmos, orientação a objetos com Python e Java, desenvolvimento web (HTML5, CSS3, JavaScript), fundamentos de UI/UX Design e projetos integradores de robótica.',
             telemetry: [
-                { label: 'Formação Técnica', value: 'Informática Integral', highlight: true },
-                { label: 'Turma & Laboratório', value: 'EEEP Luiza de Teodoro' },
-                { label: 'Linguagens Base', value: 'Python & Java' },
-                { label: 'Ciclo Formativo', value: '2023 — 2025 (Concluído)' },
+                { label: lang === 'en' ? 'Technical Degree' : 'Formação Técnica', value: lang === 'en' ? 'Full-Time IT' : 'Informática Integral', highlight: true },
+                { label: lang === 'en' ? 'Classroom & Labs' : 'Turma & Laboratório', value: 'EEEP Luiza de Teodoro' },
+                { label: lang === 'en' ? 'Core Languages' : 'Linguagens Base', value: 'Python & Java' },
+                { label: lang === 'en' ? 'Cycle' : 'Ciclo Formativo', value: lang === 'en' ? '2023 — 2025 (Graduated)' : '2023 — 2025 (Concluído)' },
             ],
             tags: ['#EEEP-LUIZA-TEODORO', '#TURMA-TECNICA', '#ENSINO-MEDIO', '#PYTHON', '#JAVA', '#HTML-CSS-JS', '#ROBOTICA'],
         },
-    };
+    }), [lang]);
 
     // Dados dinâmicos para cada um dos 3 marcos (2026, 2025, 2024)
     const seteExp = experiences.find(e => e.id === 2) || {
@@ -362,24 +374,40 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
 
     const tecnicoExp = {
         company: 'EEEP Luiza de Teodoro Vieira',
-        role: 'Ensino Médio Integrado ao Técnico em Informática',
-        period: 'Janeiro de 2023 - Dezembro de 2025',
+        role: lang === 'en' ? 'Integrated High School & Technical IT Diploma' : lang === 'es' ? 'Bachillerato Integrado con Técnico en Informática' : 'Ensino Médio Integrado ao Técnico em Informática',
+        period: lang === 'en' ? 'January 2023 - December 2025' : lang === 'es' ? 'Enero de 2023 - Diciembre de 2025' : 'Janeiro de 2023 - Dezembro de 2025',
         techBadges: ['Python', 'Java', 'HTML5', 'CSS3', 'JavaScript', 'Robótica', 'UI/UX Design', 'Algoritmos', 'Lógica de Programação'],
         groups: [
             {
-                title: 'Programação & Desenvolvimento Web',
+                title: lang === 'en' ? 'Programming & Web Development' : lang === 'es' ? 'Programación y Desarrollo Web' : 'Programação & Desenvolvimento Web',
                 icon: 'fas fa-code',
                 items: [
-                    'Formação prática e contínua em lógica algorítmica, estruturas de dados e programação orientada a objetos com Python e Java.',
-                    'Construção de aplicações e interfaces web aplicando padrões semânticos de HTML5, estilização moderna com CSS3 e dinamismo com JavaScript.',
+                    lang === 'en'
+                        ? 'Hands-on training in algorithmic logic, data structures, and object-oriented programming with Python and Java.'
+                        : lang === 'es'
+                        ? 'Formación práctica en lógica algorítmica, estructuras de datos y programación orientada a objetos con Python y Java.'
+                        : 'Formação prática e contínua em lógica algorítmica, estruturas de dados e programação orientada a objetos com Python e Java.',
+                    lang === 'en'
+                        ? 'Building web applications and interfaces applying semantic HTML5, modern CSS3 styling, and JavaScript interactivity.'
+                        : lang === 'es'
+                        ? 'Construcción de aplicaciones e interfaces web aplicando estándares semánticos de HTML5, CSS3 moderno y dinamismo con JavaScript.'
+                        : 'Construção de aplicações e interfaces web aplicando padrões semânticos de HTML5, estilização moderna com CSS3 e dinamismo com JavaScript.',
                 ],
             },
             {
-                title: 'Design, Robótica & Projetos Práticos',
+                title: lang === 'en' ? 'Design, Robotics & Applied Projects' : lang === 'es' ? 'Diseño, Robótica y Proyectos Prácticos' : 'Design, Robótica & Projetos Práticos',
                 icon: 'fas fa-robot',
                 items: [
-                    'Desenvolvimento e montagem de projetos práticos de robótica e circuitos integrando automação e hardware programável.',
-                    'Conceitos fundamentais de UI/UX Design, prototipagem visual e princípios de organização e código limpo.',
+                    lang === 'en'
+                        ? 'Hands-on assembly of robotics projects integrating automation and programmable microcontrollers.'
+                        : lang === 'es'
+                        ? 'Desarrollo y montaje de proyectos prácticos de robótica integrando automatización y hardware programable.'
+                        : 'Desenvolvimento e montagem de projetos práticos de robótica e circuitos integrando automação e hardware programável.',
+                    lang === 'en'
+                        ? 'Core UI/UX Design concepts, visual prototyping, and clean code principles.'
+                        : lang === 'es'
+                        ? 'Conceptos fundamentales de UI/UX Design, prototipado visual y principios de código limpio.'
+                        : 'Conceitos fundamentais de UI/UX Design, prototipagem visual e princípios de organização e código limpo.',
                 ],
             },
         ],
@@ -410,7 +438,11 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         transition={{ duration: 0.65 }}
                     >
                         <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
-                            // 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL
+                            {lang === 'en'
+                                ? '// 03. CAREER & OPERATIONAL ENGINEERING'
+                                : lang === 'es'
+                                ? '// 03. TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                : '// 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
                         </span>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
                             {t('experience.title') || 'Trajetória Profissional'}
@@ -552,7 +584,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    <span>ATUALMENTE // EM PRODUÇÃO</span>
+                                    <span>{lang === 'en' ? 'CURRENTLY // IN PRODUCTION' : lang === 'es' ? 'ACTUALMENTE // EN PRODUCCIÓN' : 'ATUALMENTE // EM PRODUÇÃO'}</span>
                                 </div>
 
                                 {/* Ano Monumental em Outline com micro-escala reativa */}
@@ -568,7 +600,11 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 </motion.span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
-                                    Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.
+                                    {lang === 'en'
+                                        ? 'Quality assurance, operational rules mapping in FTZs, and transaction validation in the ePita core.'
+                                        : lang === 'es'
+                                        ? 'Aseguramiento de calidad, mapeo de reglas operacionales en ZPEs y validación de transacciones en el core ePita.'
+                                        : 'Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.'}
                                 </p>
 
                                 {/* Card de Snapshot Interativo: Registro Operacional */}
@@ -587,10 +623,10 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
                                         <span className="font-semibold text-white flex items-center gap-1.5">
                                             <span>🗂️</span>
-                                            <span>Registro Operacional</span>
+                                            <span>{lang === 'en' ? 'Operational Record' : 'Registro Operacional'}</span>
                                         </span>
                                         <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                                            Ver ↗
+                                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
                                         </span>
                                     </div>
                                 </div>
@@ -672,7 +708,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             <div className="order-1 md:order-2 flex flex-col items-center md:items-start text-center md:text-left space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-accent/10 text-secondary border border-accent/30">
                                     <i className="fas fa-check text-[10px]" />
-                                    <span>CONCLUÍDO COM SUCESSO</span>
+                                    <span>{lang === 'en' ? 'SUCCESSFULLY COMPLETED' : lang === 'es' ? 'CONCLUIDO CON ÉXITO' : 'CONCLUÍDO COM SUCESSO'}</span>
                                 </div>
 
                                 {/* Ano Monumental em Outline com micro-escala reativa */}
@@ -688,7 +724,11 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 </motion.span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
-                                    Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para &lt;500ms.
+                                    {lang === 'en'
+                                        ? 'Legacy Desktop VCL monolith modernization to Web via UniGui, Laravel APIs, and query tuning from 2s to <500ms.'
+                                        : lang === 'es'
+                                        ? 'Modernización de monolito Desktop VCL a Web vía UniGui, APIs Laravel y optimización de consultas de 2s a <500ms.'
+                                        : 'Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para <500ms.'}
                                 </p>
 
                                 {/* Card de Snapshot Interativo: Arquivo de Desenvolvimento */}
@@ -710,10 +750,10 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
                                         <span className="font-semibold text-white flex items-center gap-1.5">
                                             <span>🗂️</span>
-                                            <span>Arquivo de Desenvolvimento</span>
+                                            <span>{lang === 'en' ? 'Development Archive' : lang === 'es' ? 'Archivo de Desarrollo' : 'Arquivo de Desenvolvimento'}</span>
                                         </span>
                                         <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                                            Ver ↗
+                                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
                                         </span>
                                     </div>
                                 </div>
@@ -769,7 +809,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/5 text-primary border border-white/10">
                                     <i className="fas fa-graduation-cap text-[10px]" />
-                                    <span>ENSINO MÉDIO & TÉCNICO // 2023 - 2025</span>
+                                    <span>{lang === 'en' ? 'HIGH SCHOOL & TECHNICAL DIPLOMA // 2023 - 2025' : lang === 'es' ? 'BACHILLERATO Y TÉCNICO // 2023 - 2025' : 'ENSINO MÉDIO & TÉCNICO // 2023 - 2025'}</span>
                                 </div>
 
                                 {/* Ano Monumental em Outline com micro-escala reativa */}
@@ -785,7 +825,11 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 </motion.span>
 
                                 <p className="text-xs font-mono text-gray-400 max-w-xs">
-                                    Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.
+                                    {lang === 'en'
+                                        ? 'High School and Technical Diploma in IT at EEEP Luiza de Teodoro Vieira: Python, Java, web with HTML/CSS/JS, robotics, and design.'
+                                        : lang === 'es'
+                                        ? 'Bachillerato y Técnico en Informática en EEEP Luiza de Teodoro Vieira: programación con Python y Java, web con HTML/CSS/JS, robótica y diseño.'
+                                        : 'Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.'}
                                 </p>
 
                                 {/* Card de Snapshot Interativo: Foto Oficial da Turma Técnica EEEP */}
@@ -802,15 +846,15 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
                                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40 backdrop-blur-sm">
-                                        TURMA TÉCNICA EEEP // 2024
+                                        {lang === 'en' ? 'EEEP TECHNICAL COHORT // 2024' : 'TURMA TÉCNICA EEEP // 2024'}
                                     </div>
                                     <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
                                         <span className="font-semibold text-white flex items-center gap-1.5">
                                             <span>🗂️</span>
-                                            <span>Registro Técnico // EEEP</span>
+                                            <span>{lang === 'en' ? 'Technical Record // EEEP' : lang === 'es' ? 'Registro Técnico // EEEP' : 'Registro Técnico // EEEP'}</span>
                                         </span>
                                         <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                                            Ver ↗
+                                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
                                         </span>
                                     </div>
                                 </div>

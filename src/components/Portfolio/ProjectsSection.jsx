@@ -42,14 +42,24 @@ export default function ProjectsSection({ projects }) {
                     className="text-center mb-10"
                 >
                     <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
-                        // 05. REPOSITÓRIO CORPORATIVO & SOLUÇÕES
+                        {lang === 'en'
+                            ? '// 05. ENTERPRISE REPOSITORY & SOLUTIONS'
+                            : lang === 'es'
+                            ? '// 05. REPOSITORIO CORPORATIVO Y SOLUCIONES'
+                            : '// 05. REPOSITÓRIO CORPORATIVO & SOLUÇÕES'}
                     </span>
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
-                        {lang === 'en' ? 'Enterprise Systems & Utilities' : 'Projetos Corporativos & Soluções'}
+                        {lang === 'en'
+                            ? 'Enterprise Systems & Utilities'
+                            : lang === 'es'
+                            ? 'Sistemas Empresariales y Utilidades'
+                            : 'Projetos Corporativos & Soluções'}
                     </h2>
                     <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
                         {lang === 'en'
                             ? 'ERP administration, legacy desktop migration, fiscal compliance, and software engineering tools.'
+                            : lang === 'es'
+                            ? 'Sistemas de gestión empresarial (ERP/POS), modernización de sistemas legacy, módulos fiscales y utilidades.'
                             : 'Sistemas de gestão empresarial (ERP/PDV), modernização de legados, módulos fiscais e utilitários.'}
                     </p>
                 </motion.div>

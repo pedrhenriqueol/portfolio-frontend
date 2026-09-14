@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 export interface TechItem {
     id?: string | number;
@@ -87,12 +88,21 @@ export interface SkillsOrbital3DProps {
 }
 
 export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOrbital3DProps) {
+    const { lang = 'pt' } = useLanguage();
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const nodeElementsRef = useRef<(HTMLDivElement | null)[]>([]);
     const iconWrappersRef = useRef<(HTMLDivElement | null)[]>([]);
     const iconElementsRef = useRef<(HTMLElement | null)[]>([]);
     const labelElementsRef = useRef<(HTMLElement | null)[]>([]);
+
+    const categories = useMemo(() => [
+        { id: 'all',          label: lang === 'en' ? 'All' : lang === 'es' ? 'Todas' : 'Todas' },
+        { id: 'Front-end',    label: 'Frontend' },
+        { id: 'Back-end',     label: 'Backend' },
+        { id: 'Database',     label: lang === 'en' ? 'Databases' : lang === 'es' ? 'Bases de Datos' : 'Bancos' },
+        { id: 'DevOps & QA',  label: 'QA' },
+    ], [lang]);
 
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [hoveredTech, setHoveredTech] = useState<TechItem | null>(null);
@@ -418,7 +428,7 @@ export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOr
         <div className="relative w-full py-2 select-none flex flex-col items-center">
             {/* Pacificação dos Filtros de Categoria (Paleta Translúcida) */}
             <div className="flex flex-wrap justify-center gap-2 mb-6 z-20">
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                     <button
                         key={cat.id}
                         type="button"
@@ -601,7 +611,13 @@ export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOr
                                     </span>
                                 </div>
                                 <p className="text-neutral-400 text-xs font-sans mt-0.5 line-clamp-1 antialiased leading-relaxed">
-                                    {activeItemData.desc || 'Tecnologia utilizada em produção e desenvolvimento de software.'}
+                                    {activeItemData.desc || (
+                                        lang === 'en'
+                                            ? 'Technology used in production and software development.'
+                                            : lang === 'es'
+                                            ? 'Tecnología utilizada en producción y desarrollo de software.'
+                                            : 'Tecnologia utilizada em produção e desenvolvimento de software.'
+                                    )}
                                 </p>
                             </div>
                         </motion.div>
@@ -614,7 +630,11 @@ export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOr
                             className="text-xs text-neutral-500 font-sans tracking-wide flex items-center gap-2 antialiased"
                         >
                             <i className="fas fa-arrows-alt text-[10px] text-neutral-400 animate-pulse" />
-                            Arraste a constelação para girar ou clique em um nó para inspecionar
+                            {lang === 'en'
+                                ? 'Drag constellation to rotate or click a node to inspect'
+                                : lang === 'es'
+                                ? 'Arrastra la constelación para girar o haz clic en un nodo para inspeccionar'
+                                : 'Arraste a constelação para girar ou clique em um nó para inspecionar'}
                         </motion.p>
                     )}
                 </AnimatePresence>

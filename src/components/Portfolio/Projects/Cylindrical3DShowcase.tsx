@@ -3,6 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'fr
 import MagneticButton from '../MagneticButton';
 import { playMechanicalClick, playTabSwitch } from '../../../lib/sound';
 import useSectionInView from '../../../hooks/useSectionInView';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export interface FlagshipProject {
     id: number;
@@ -60,6 +61,92 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
     },
 ];
 
+export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
+    pt: FLAGSHIP_CONFIGS,
+    en: [
+        {
+            id: 101,
+            title: 'PayStream Gateway',
+            tagline: 'Transactional Payment Engine & Settlement Split',
+            stepLabel: '# 01. Transaction Engine',
+            badge: 'High-Concurrency Fintech',
+            stat: 'Atomic Idempotency',
+            description: 'Enterprise fintech payment gateway featuring full-cent multipart split settlement, atomic idempotency via PostgreSQL P2002 constraint, and HMAC-SHA256 signed webhooks protected against timing attacks.',
+            image: '/projects/paystream-dash.png',
+            techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
+            url: 'https://paystream-gateaway.vercel.app',
+            repo: 'https://github.com/pedrhenriqueol/paystream-gateway',
+        },
+        {
+            id: 102,
+            title: 'PortLog OS',
+            tagline: 'Port Operations & Industrial Telemetry',
+            stepLabel: '# 02. Port Operations',
+            badge: 'Port Logistics & FTZ',
+            stat: '100% Valid FSM',
+            description: 'Port operating system with strict per-terminal multi-tenant governance, finite state machine (FSM) for heavy crane maintenance Kanban (STS/RTG), and real-time IoT predictive telemetry.',
+            image: '/projects/portlog-dash.png',
+            techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
+            url: 'https://portlog-os.vercel.app',
+            repo: 'https://github.com/pedrhenriqueol/portlog-os',
+        },
+        {
+            id: 103,
+            title: 'SPECTR TestOps',
+            tagline: 'API Quality Engineering & Resilience Platform',
+            stepLabel: '# 03. Quality Engineering',
+            badge: 'Observability & TestOps',
+            stat: 'NIST Nearest Rank Math',
+            description: 'Enterprise test engineering platform featuring isolated test runner, recursive OpenAPI/JSON Schema validation, Chaos Lab resilience testing, and NIST-standardized tail latency percentiles (p50/p90/p95/p99).',
+            image: '/projects/spectr-workbench.png',
+            techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
+            url: 'https://spectr-testops.vercel.app',
+            repo: 'https://github.com/pedrhenriqueol/spectr-testops',
+        },
+    ],
+    es: [
+        {
+            id: 101,
+            title: 'PayStream Gateway',
+            tagline: 'Motor Transaccional de Pagos y Split de Liquidación',
+            stepLabel: '# 01. Motor Transaccional',
+            badge: 'Fintech de Alta Concurrencia',
+            stat: 'Idempotencia Atómica',
+            description: 'Pasarela corporativa de pagos fintech con liquidación de split multipartes en centavos enteros, idempotencia atómica vía restricción P2002 en PostgreSQL y webhooks firmados con HMAC-SHA256 contra timing attacks.',
+            image: '/projects/paystream-dash.png',
+            techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
+            url: 'https://paystream-gateaway.vercel.app',
+            repo: 'https://github.com/pedrhenriqueol/paystream-gateway',
+        },
+        {
+            id: 102,
+            title: 'PortLog OS',
+            tagline: 'Operaciones Portuarias y Telemetría Industrial',
+            stepLabel: '# 02. Operaciones Portuarias',
+            badge: 'Logística Portuaria y ZPEs',
+            stat: '100% FSM Válida',
+            description: 'Sistema operativo portuario con gobernanza multi-tenant estricta por terminal, máquina de estados finitos (FSM) en Kanban de mantenimiento de grúas pesadas (STS/RTG) y telemetría predictiva IoT en tiempo real.',
+            image: '/projects/portlog-dash.png',
+            techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
+            url: 'https://portlog-os.vercel.app',
+            repo: 'https://github.com/pedrhenriqueol/portlog-os',
+        },
+        {
+            id: 103,
+            title: 'SPECTR TestOps',
+            tagline: 'Ingeniería de Calidad y Resiliencia de APIs',
+            stepLabel: '# 03. Ingeniería de Calidad',
+            badge: 'Observabilidad y TestOps',
+            stat: 'NIST Nearest Rank Math',
+            description: 'Plataforma corporativa de ingeniería de pruebas con ejecutor aislado, validación recursiva de esquemas OpenAPI/JSON Schema, pruebas de estrés en Chaos Lab y percentiles NIST p50/p90/p95/p99.',
+            image: '/projects/spectr-workbench.png',
+            techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
+            url: 'https://spectr-testops.vercel.app',
+            repo: 'https://github.com/pedrhenriqueol/spectr-testops',
+        },
+    ],
+};
+
 interface CylindricalCardProps {
     project: FlagshipProject;
     index: number;
@@ -67,6 +154,7 @@ interface CylindricalCardProps {
     smoothProgress: any;
     onSelect: (project: FlagshipProject) => void;
     onCardFocus: (index: number) => void;
+    lang?: string;
 }
 
 /**
@@ -80,6 +168,7 @@ const CylindricalCard = memo(function CylindricalCard({
     smoothProgress,
     onSelect,
     onCardFocus,
+    lang = 'pt',
 }: CylindricalCardProps) {
     const isCurrent = index === activeIndex;
 
@@ -218,7 +307,7 @@ const CylindricalCard = memo(function CylindricalCard({
                             className="flex-1 min-w-[135px] py-3 px-4 bg-accent/20 border border-accent/40 hover:bg-accent hover:text-darker text-accent font-semibold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 relative z-30"
                         >
                             <i className="fas fa-microchip text-xs" />
-                            <span>Detalhes Técnicos</span>
+                            <span>{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
                         </button>
                         
                         {/* Botão Acessar Demonstração */}
@@ -230,7 +319,7 @@ const CylindricalCard = memo(function CylindricalCard({
                             data-cursor-morph="true"
                             className="flex-1 min-w-[155px] py-3 px-4 bg-accent hover:bg-accent-hover text-darker font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md active:scale-95 relative z-30 cursor-pointer"
                         >
-                            <span>Acessar Demonstração</span>
+                            <span>{lang === 'en' ? 'Live Demo' : lang === 'es' ? 'Demostración en Vivo' : 'Acessar Demonstração'}</span>
                             <i className="fas fa-external-link-alt text-[9px]" />
                         </a>
 
@@ -242,8 +331,8 @@ const CylindricalCard = memo(function CylindricalCard({
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
                             className="p-3 bg-dark/90 hover:bg-dark border border-white/15 hover:border-accent/50 text-primary hover:text-white rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center shrink-0 shadow-sm relative z-30 cursor-pointer"
-                            title="Código-Fonte no GitHub"
-                            aria-label={`Código-fonte de ${project.title} no GitHub`}
+                            title={lang === 'en' ? 'Source Code on GitHub' : lang === 'es' ? 'Código Fuente en GitHub' : 'Código-Fonte no GitHub'}
+                            aria-label={lang === 'en' ? `${project.title} source code on GitHub` : `Código-fonte de ${project.title} no GitHub`}
                         >
                             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
@@ -274,6 +363,8 @@ interface Cylindrical3DShowcaseProps {
  * Cylindrical3DShowcase - Showcase Cilíndrico 3D em ESCALA MONUMENTAL
  */
 export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }: Cylindrical3DShowcaseProps) {
+    const { lang = 'pt' } = useLanguage();
+    const flagshipItems = FLAGSHIP_CONFIGS_I18N[lang] || FLAGSHIP_CONFIGS;
     const [activeIndex, setActiveIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const { containerRef: sectionRef, isInView } = useSectionInView({ rootMargin: '200px 0px' });
@@ -298,9 +389,11 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     const startProgressRef = useRef(0);
     const lastXRef = useRef(0);
     const lastTimeRef = useRef(0);
+    const velocityTrackerRef = useRef(0);
+    const animationFrameRef = useRef<number | null>(null);
     const velocityRef = useRef(0);
 
-    const totalSlides = FLAGSHIP_CONFIGS.length;
+    const totalSlides = flagshipItems.length;
 
     // Atualiza o estado visual do índice ativo conforme o progresso da mola (apenas quando visível)
     useEffect(() => {
@@ -435,13 +528,25 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                     <div>
                         <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block mb-2">
-                            // 02. ARQUITETURA DE SISTEMAS & PROJETOS 3D
+                            {lang === 'en'
+                                ? '// 02. SYSTEMS ARCHITECTURE & 3D PROJECTS'
+                                : lang === 'es'
+                                ? '// 02. ARQUITECTURA DE SISTEMAS Y PROYECTOS 3D'
+                                : '// 02. ARQUITETURA DE SISTEMAS & PROJETOS 3D'}
                         </span>
                         <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white font-serif">
-                            Sistemas & Arquiteturas em Produção
+                            {lang === 'en'
+                                ? 'Production Systems & Architectures'
+                                : lang === 'es'
+                                ? 'Sistemas y Arquitecturas en Producción'
+                                : 'Sistemas & Arquiteturas em Produção'}
                         </h2>
                         <p className="text-gray-300 text-sm sm:text-base max-w-2xl mt-2.5 font-sans leading-relaxed">
-                            Sistemas corporativos de missão crítica desenvolvidos com foco em concorrência, idempotência contábil e telemetria preditiva.
+                            {lang === 'en'
+                                ? 'Mission-critical enterprise systems engineered for high concurrency, accounting idempotency, and predictive telemetry.'
+                                : lang === 'es'
+                                ? 'Sistemas corporativos de misión crítica desarrollados con enfoque en concurrencia, idempotencia contable y telemetría predictiva.'
+                                : 'Sistemas corporativos de missão crítica desenvolvidos com foco em concorrência, idempotência contábil e telemetria preditiva.'}
                         </p>
                     </div>
 
@@ -449,14 +554,20 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                     <div className="flex items-center gap-4 shrink-0">
                         <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-primary/70 bg-darker/90 px-3.5 py-1.5 rounded-full border border-white/10 pointer-events-none">
                             <i className="fas fa-arrows-alt-h text-accent text-xs" />
-                            <span>Arraste para girar a esteira 3D</span>
+                            <span>
+                                {lang === 'en'
+                                    ? 'Drag to rotate 3D carousel'
+                                    : lang === 'es'
+                                    ? 'Arrastra para girar el carrusel 3D'
+                                    : 'Arraste para girar a esteira 3D'}
+                            </span>
                         </div>
 
                         {/* Botões Magnéticos de Navegação */}
                         <div className="flex items-center gap-2">
                             <MagneticButton
                                 onClick={handlePrev}
-                                aria-label="Projeto Anterior"
+                                aria-label={lang === 'en' ? 'Previous Project' : 'Projeto Anterior'}
                                 data-cursor-morph="true"
                                 className="w-10 h-10 rounded-xl bg-dark/90 border border-white/15 text-primary hover:text-white hover:border-accent/50 transition-colors shadow-sm active:scale-95"
                             >
@@ -464,7 +575,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                             </MagneticButton>
                             <MagneticButton
                                 onClick={handleNext}
-                                aria-label="Próximo Projeto"
+                                aria-label={lang === 'en' ? 'Next Project' : 'Próximo Projeto'}
                                 data-cursor-morph="true"
                                 className="w-10 h-10 rounded-xl bg-dark/90 border border-white/15 text-primary hover:text-white hover:border-accent/50 transition-colors shadow-sm active:scale-95"
                             >
@@ -476,7 +587,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
 
                 {/* ── Seletor de Abas Superior Sincronizado com layoutId ── */}
                 <div className="flex items-center gap-2.5 mb-10 overflow-x-auto scrollbar-none py-1">
-                    {FLAGSHIP_CONFIGS.map((item, idx) => {
+                    {flagshipItems.map((item, idx) => {
                         const isActive = idx === activeIndex;
                         return (
                             <button
@@ -524,7 +635,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                         }}
                         className="relative w-full h-full min-h-[480px] sm:min-h-[500px] lg:min-h-[520px] will-change-transform"
                     >
-                        {FLAGSHIP_CONFIGS.map((project, idx) => (
+                        {flagshipItems.map((project, idx) => (
                             <CylindricalCard
                                 key={project.id}
                                 project={project}
@@ -533,6 +644,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                                 smoothProgress={smoothProgress}
                                 onSelect={handleInspect}
                                 onCardFocus={navigateTo}
+                                lang={lang}
                             />
                         ))}
                     </motion.div>
@@ -540,8 +652,20 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
 
                 {/* Footer Minimalista de Status */}
                 <div className="mt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-primary/50 gap-2 border-t border-white/5 pt-4">
-                    <span>Projeção Cilíndrica 3D • DOM Nativo Vetorial • Perspectiva 1400px</span>
-                    <span>Navegação contínua por arraste, abas e teclado • {activeIndex + 1} de {totalSlides}</span>
+                    <span>
+                        {lang === 'en'
+                            ? '3D Cylindrical Projection • Native Vector DOM • 1400px Perspective'
+                            : lang === 'es'
+                            ? 'Proyección Cilíndrica 3D • DOM Nativo Vectorial • Perspectiva 1400px'
+                            : 'Projeção Cilíndrica 3D • DOM Nativo Vetorial • Perspectiva 1400px'}
+                    </span>
+                    <span>
+                        {lang === 'en'
+                            ? `Continuous navigation by drag, tabs & keyboard • ${activeIndex + 1} of ${totalSlides}`
+                            : lang === 'es'
+                            ? `Navegación continua por arrastre, pestañas y teclado • ${activeIndex + 1} de ${totalSlides}`
+                            : `Navegação contínua por arraste, abas e teclado • ${activeIndex + 1} de ${totalSlides}`}
+                    </span>
                 </div>
             </div>
         </section>
