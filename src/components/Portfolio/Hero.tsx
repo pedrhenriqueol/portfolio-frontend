@@ -7,7 +7,7 @@ import { useLanguage } from '../../context/LanguageContext';
 const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
 export const Hero: React.FC = () => {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement | null>(null);
     const textRef = useRef<HTMLDivElement | null>(null);
     const termRef = useRef<HTMLDivElement | null>(null);
@@ -137,7 +137,11 @@ export const Hero: React.FC = () => {
                         ref={textRef}
                     >
                         <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block">
-                            // 00. ENGENHARIA DE SOFTWARE & QA
+                            {lang === 'en'
+                                ? '// 00. SOFTWARE ENGINEERING & QA'
+                                : lang === 'es'
+                                ? '// 00. INGENIERÍA DE SOFTWARE & QA'
+                                : '// 00. ENGENHARIA DE SOFTWARE & QA'}
                         </span>
 
                         {/* Altura mínima fixada para evitar Layout Shift (CLS) no TypeAnimation */}
@@ -161,7 +165,8 @@ export const Hero: React.FC = () => {
                         <p className="text-neutral-400 max-w-lg mx-auto lg:mx-0 text-base sm:text-lg leading-relaxed min-h-[72px]">
                             {t('hero.description')}{' '}
                             <strong className="text-white font-medium">Delphi (Desktop/UniGui)</strong>,{' '}
-                            <strong className="text-white font-medium">PHP/Laravel</strong> e{' '}
+                            <strong className="text-white font-medium">PHP/Laravel</strong>
+                            {lang === 'en' ? ' and ' : lang === 'es' ? ' y ' : ' e '}
                             <strong className="text-white font-medium">React</strong>.
                         </p>
 

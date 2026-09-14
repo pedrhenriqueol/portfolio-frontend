@@ -32,9 +32,13 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     {
         id: 'qa-testing',
         keywords: [
+            { term: 'about-qa', weight: 12 },
+            { term: 'about qa', weight: 12 },
             { term: 'sobre-qa', weight: 12 },
             { term: 'sobre qa', weight: 12 },
             { term: 'qa', weight: 8 },
+            { term: 'quality assurance', weight: 10 },
+            { term: 'test automation', weight: 8 },
             { term: 'garantia de qualidade', weight: 8 },
             { term: 'garantia da qualidade', weight: 8 },
             { term: 'qualidade e apis', weight: 8 },

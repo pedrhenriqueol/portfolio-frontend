@@ -48,7 +48,7 @@ export default function LanguageDropdown({ isMobile = false, onSelect }) {
             <button
                 onClick={() => setOpen(prev => !prev)}
                 className="flex items-center gap-1.5 border border-white/10 hover:border-accent/35 text-primary hover:text-accent text-[10px] tracking-widest uppercase px-3 py-2 transition-all duration-200 rounded-xs cursor-pointer"
-                aria-label="Selecionar idioma"
+                aria-label={lang === 'en' ? 'Select language' : lang === 'es' ? 'Seleccionar idioma' : 'Selecionar idioma'}
             >
                 <span>{FLAGS[lang]}</span>
                 <i className={`fas fa-chevron-down text-[9px] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />

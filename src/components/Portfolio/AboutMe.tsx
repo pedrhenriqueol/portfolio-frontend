@@ -655,7 +655,7 @@ export default function AboutMe() {
                                             setIsClockFlipped(true);
                                         }}
                                         className="w-full h-full [backface-visibility:hidden] flex flex-col justify-between cursor-pointer group/clock select-none"
-                                        title="Clique para ver especificações da workstation"
+                                        title={lang === 'en' ? 'Click to view workstation specs' : lang === 'es' ? 'Clic para ver especificaciones de la workstation' : 'Clique para ver especificações da workstation'}
                                     >
                                         <div className="flex items-center justify-between">
                                             <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
@@ -672,7 +672,7 @@ export default function AboutMe() {
 
                                         <div className="text-xs text-neutral-400 font-mono flex items-center gap-1.5">
                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
-                                            <span>Fortaleza, CE — Brasil</span>
+                                            <span>Fortaleza, CE — {lang === 'en' ? 'Brazil' : 'Brasil'}</span>
                                         </div>
                                     </div>
 
@@ -693,7 +693,7 @@ export default function AboutMe() {
                                                     setIsClockFlipped(false);
                                                 }}
                                                 className="w-5 h-5 rounded flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors text-xs font-mono cursor-pointer"
-                                                title="Voltar ao relógio"
+                                                title={lang === 'en' ? 'Back to clock' : lang === 'es' ? 'Volver al reloj' : 'Voltar ao relógio'}
                                             >
                                                 ✕
                                             </button>
@@ -713,7 +713,7 @@ export default function AboutMe() {
                                                 <span className="text-neutral-200 font-medium">180Hz Display</span>
                                             </div>
                                             <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                                                <span className="text-[9px] text-neutral-500 block">PERIFÉRICO</span>
+                                                <span className="text-[9px] text-neutral-500 block">{lang === 'en' ? 'PERIPHERAL' : 'PERIFÉRICO'}</span>
                                                 <span className="text-neutral-200 font-medium">Rapoo VT7 @ 1000Hz</span>
                                             </div>
                                         </div>

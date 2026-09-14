@@ -699,7 +699,7 @@ export const InteractiveTerminal: React.FC = () => {
                 setLines(prev => [
                     ...prev.map(l => (l.id === streamLineId ? { ...l, isStreaming: false, node: <FormattedWorkstationResponse text={l.text || ''} isStreaming={false} /> } : l)),
                     {
-                        text: '[sistema] Interrompido',
+                        text: lang === 'en' ? '[system] Interrupted' : lang === 'es' ? '[sistema] Interrumpido' : '[sistema] Interrompido',
                         color: 'text-neutral-500 font-mono text-xs',
                     },
                     { text: '', color: '' },
@@ -901,8 +901,8 @@ export const InteractiveTerminal: React.FC = () => {
                             setLines(getWelcomeLines(lang));
                         }}
                     />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/80 transition-colors cursor-pointer" title="Minimize Shell" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/80 transition-colors cursor-pointer" title="Maximize Shell" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/80 transition-colors cursor-pointer" title={lang === 'en' ? 'Minimize Shell' : lang === 'es' ? 'Minimizar Shell' : 'Minimizar Shell'} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/80 transition-colors cursor-pointer" title={lang === 'en' ? 'Maximize Shell' : lang === 'es' ? 'Maximizar Shell' : 'Maximizar Shell'} />
                 </div>
 
                 {/* Centro: Aba ativa chanfrada estilo terminal profissional */}
@@ -910,7 +910,11 @@ export const InteractiveTerminal: React.FC = () => {
                     <span className="text-emerald-400 font-bold">❯_</span>
                     <span>terminal.sh</span>
                     <span className="text-emerald-400 text-[9px] font-semibold tracking-wider">
-                        {activeGame ? `(${activeGame})` : isStreaming ? '[a processar...]' : '[ativo]'}
+                        {activeGame
+                            ? `(${activeGame})`
+                            : isStreaming
+                            ? (lang === 'en' ? '[processing...]' : lang === 'es' ? '[procesando...]' : '[processando...]')
+                            : (lang === 'en' ? '[active]' : lang === 'es' ? '[activo]' : '[ativo]')}
                     </span>
                 </div>
 
@@ -969,7 +973,9 @@ export const InteractiveTerminal: React.FC = () => {
 
             {/* Pílulas de Atalho Integradas com Micro-Animações */}
             <div className="flex items-center gap-2 px-4 py-2 border-t border-white/[0.04] bg-white/[0.01] overflow-x-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0 select-none">
-                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest mr-1">Sugestões:</span>
+                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest mr-1">
+                    {lang === 'en' ? 'SUGGESTIONS:' : lang === 'es' ? 'SUGERENCIAS:' : 'SUGESTÕES:'}
+                </span>
                 <motion.button
                     type="button"
                     whileHover={{ scale: 1.05, y: -1 }}
@@ -1001,11 +1007,11 @@ export const InteractiveTerminal: React.FC = () => {
                             : lang === 'es'
                             ? '¿Cómo trabajas en aseguramiento de calidad (QA) y pruebas de software?'
                             : 'Como você atua na garantia de qualidade (QA) e testes de software?';
-                        streamTerminalResponse(question, '$ sobre-qa');
+                        streamTerminalResponse(question, lang === 'en' ? '$ about-qa' : '$ sobre-qa');
                     }}
                     className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/30 text-[11px] font-mono text-neutral-400 hover:text-emerald-300 transition-all cursor-pointer disabled:opacity-50"
                 >
-                    $ sobre-qa
+                    {lang === 'en' ? '$ about-qa' : '$ sobre-qa'}
                 </motion.button>
                 <motion.button
                     type="button"
@@ -1015,7 +1021,7 @@ export const InteractiveTerminal: React.FC = () => {
                     onClick={() => handleRunCommand('clear')}
                     className="ml-auto text-[11px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                    clear
+                    {lang === 'en' ? 'clear' : lang === 'es' ? 'limpiar' : 'limpar'}
                 </motion.button>
             </div>
 
@@ -1089,13 +1095,13 @@ export const InteractiveTerminal: React.FC = () => {
                             activeGame
                                 ? (lang === 'en' ? 'Type "exit" to return to shell...' : lang === 'es' ? 'Escribe "exit" para volver al shell...' : 'Digite "exit" para voltar ao shell...')
                                 : isStreaming
-                                ? (lang === 'en' ? 'Processing command... (Ctrl+C to abort)' : 'A processar comando... (Ctrl+C para cancelar)')
+                                ? (lang === 'en' ? 'Processing command... (Ctrl+C to abort)' : lang === 'es' ? 'Procesando comando... (Ctrl+C para cancelar)' : 'Processando comando... (Ctrl+C para cancelar)')
                                 : (lang === 'en' ? 'Ask anything about stack or type test, sql, help...' : lang === 'es' ? 'Pregunta sobre proyectos o escribe test, sql, help...' : 'Pergunte sobre trajetória ou digite test, sql, help...')
                         }
                         className="w-full bg-transparent text-transparent font-mono text-xs md:text-[13px] outline-none placeholder-white/20 relative z-20 disabled:opacity-60 caret-transparent"
                         spellCheck={false}
                         autoComplete="off"
-                        aria-label="Terminal interativo"
+                        aria-label={lang === 'en' ? 'Interactive terminal' : lang === 'es' ? 'Terminal interactivo' : 'Terminal interativo'}
                     />
                 </div>
 
@@ -1106,7 +1112,7 @@ export const InteractiveTerminal: React.FC = () => {
                         className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 select-none shrink-0"
                     >
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        <span>• terminal [a processar...]</span>
+                        <span>• terminal {lang === 'en' ? '[processing...]' : lang === 'es' ? '[procesando...]' : '[processando...]'}</span>
                     </motion.div>
                 )}
             </div>

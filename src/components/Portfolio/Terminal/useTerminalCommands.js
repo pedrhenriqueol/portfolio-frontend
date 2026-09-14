@@ -3,11 +3,12 @@ import { GAMES_INFO } from './TerminalGames';
 
 export const ALL_CMD_STRINGS = [
     'ai', 'ask', 'test', 'qa', 'test:run', 'postman', 'sql', 'query', 'sql:explain', 'tuning',
+    'about-qa', 'sobre-qa',
     'pedro --test', 'pedro --qa', 'pedro --sql', 'pedro --query',
     'pedro --help', 'pedro --projects', 'pedro --skills', 'pedro --experience', 'pedro --contact',
     'pedro --status', 'pedro --games', 'pedro --play snake', 'pedro --play bug-hunter',
     'pedro --play trivia', 'pedro --play aim-test', 'pedro --sudo matrix',
-    'pedro --sudo rm -rf /', 'pedro --version', 'clear', 'exit',
+    'pedro --sudo rm -rf /', 'pedro --version', 'clear', 'limpar', 'limpiar', 'exit',
 ];
 
 export const getWelcomeLines = (lang) => {
@@ -316,7 +317,7 @@ export function useTerminalCommands(lang) {
             return;
         }
 
-        if (cleanLower === 'clear') {
+        if (cleanLower === 'clear' || cleanLower === 'limpar' || cleanLower === 'limpiar') {
             onClear();
             return;
         }
@@ -345,7 +346,9 @@ export function useTerminalCommands(lang) {
         // Roteamento direto de pergunta/comando sobre QA
         if (
             cleanLower === 'sobre-qa' || cleanLower === 'sobre qa' ||
-            cleanLower === 'pedro --sobre-qa' || cleanLower === 'pedro --sobre qa'
+            cleanLower === 'about-qa' || cleanLower === 'about qa' ||
+            cleanLower === 'pedro --sobre-qa' || cleanLower === 'pedro --sobre qa' ||
+            cleanLower === 'pedro --about-qa' || cleanLower === 'pedro --about qa'
         ) {
             if (handleDirectQuery) {
                 const qaQuestion = lang === 'en'
