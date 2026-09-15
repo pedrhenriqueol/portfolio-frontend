@@ -1,4 +1,4 @@
-import React, { useRef, useState, memo } from 'react';
+import React, { useRef, useState, useMemo, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import JourneyPhotoModal, { JourneyMilestoneArchive } from './JourneyPhotoModal';
