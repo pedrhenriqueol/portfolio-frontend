@@ -116,6 +116,10 @@ export const Hero: React.FC = () => {
         <section
             id="home"
             ref={sectionRef}
+            style={{
+                maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+            }}
             className="pt-32 pb-24 md:pt-40 md:pb-36 bg-transparent flex items-center justify-center min-h-[100vh] relative overflow-hidden"
         >
             {/* Background blobs com máscara gradual de desvanecimento na base */}

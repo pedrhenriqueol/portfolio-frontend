@@ -62,7 +62,7 @@ export default function LanguageDropdown({ isMobile = false, onSelect }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-1.5 w-28 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50 backdrop-blur-xl rounded-xs"
+                        className="absolute right-0 mt-1.5 w-28 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50 backdrop-blur-sm rounded-xs"
                     >
                         {['pt', 'en', 'es'].map((l) => (
                             <button

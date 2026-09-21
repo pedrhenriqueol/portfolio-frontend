@@ -1,36 +1,58 @@
 /**
  * Web Audio Haptics & Sound Design Utility
  * Sintetizador sonoro nativo via Web Audio API (Zero dependências externas, 0kB assets).
+ * Singleton Preguiçoso (Lazy): Só instancia o AudioContext após interação real do usuário,
+ * prevenindo vazamento de memória e o erro 'The AudioContext was not allowed to start'.
  * Padrão: Desativado por padrão (muted: true) para cortesia de UX.
  */
 
 let globalAudioCtx = null;
+let userHasInteracted = false;
 
-export function getAudioContext() {
-    if (typeof window === 'undefined') return null;
-    if (!globalAudioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-            globalAudioCtx = new AudioContextClass();
-        }
-    }
-    if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
-        globalAudioCtx.resume().catch(() => {});
-    }
-    return globalAudioCtx;
-}
-
-// Desbloqueio seguro de AudioContext no primeiro gesto do usuário
+// Registro seguro de primeiro gesto do usuário (apenas flag — sem instanciar AudioContext no boot)
 if (typeof window !== 'undefined') {
-    const unlockAudio = () => {
+    const markInteraction = () => {
+        userHasInteracted = true;
         if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
             globalAudioCtx.resume().catch(() => {});
         }
-        window.removeEventListener('pointerdown', unlockAudio);
-        window.removeEventListener('keydown', unlockAudio);
+        window.removeEventListener('pointerdown', markInteraction, true);
+        window.removeEventListener('keydown', markInteraction, true);
+        window.removeEventListener('click', markInteraction, true);
     };
-    window.addEventListener('pointerdown', unlockAudio, { passive: true, once: true });
-    window.addEventListener('keydown', unlockAudio, { passive: true, once: true });
+    window.addEventListener('pointerdown', markInteraction, { passive: true, once: true, capture: true });
+    window.addEventListener('keydown', markInteraction, { passive: true, once: true, capture: true });
+    window.addEventListener('click', markInteraction, { passive: true, once: true, capture: true });
+}
+
+/**
+ * Retorna o AudioContext global garantindo inicialização sob demanda (Lazy Singleton).
+ * Se o usuário ainda não tiver interagido com o documento, retorna null para não disparar
+ * avisos de autoplay policy no console do navegador.
+ */
+export function getAudioContext() {
+    if (typeof window === 'undefined') return null;
+
+    if (!userHasInteracted && !globalAudioCtx) {
+        return null;
+    }
+
+    if (!globalAudioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            try {
+                globalAudioCtx = new AudioContextClass();
+            } catch {
+                return null;
+            }
+        }
+    }
+
+    if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+        globalAudioCtx.resume().catch(() => {});
+    }
+
+    return globalAudioCtx;
 }
 
 // ── Gerenciamento de Estado Global de Áudio ──
@@ -50,6 +72,7 @@ export function setMuted(muted) {
 }
 
 export function toggleMute() {
+    userHasInteracted = true;
     const current = isMuted();
     const next = !current;
     setMuted(next);
@@ -60,7 +83,7 @@ export function toggleMute() {
     return next;
 }
 
-// ── Sintetizadores de Áudio Tátil ──
+// ── Sintetizadores de Áudio Tátil com Desconexão Segura de Nós (Zero Leaks) ──
 
 /**
  * Clique mecânico de alta frequência com queda exponencial (15ms).
@@ -68,6 +91,7 @@ export function toggleMute() {
  */
 export function playMechanicalClick() {
     if (isMuted()) return;
+    userHasInteracted = true;
     const ctx = getAudioContext();
     if (!ctx) return;
 
@@ -85,10 +109,15 @@ export function playMechanicalClick() {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
+        osc.onended = () => {
+            osc.disconnect();
+            gain.disconnect();
+        };
+
         osc.start();
         osc.stop(ctx.currentTime + 0.018);
     } catch {
-        // Ignora silenciosamente restrições de autoplay
+        // Ignora restrições silenciosamente
     }
 }
 
@@ -98,6 +127,7 @@ export function playMechanicalClick() {
  */
 export function playTabSwitch() {
     if (isMuted()) return;
+    userHasInteracted = true;
     const ctx = getAudioContext();
     if (!ctx) return;
 
@@ -115,6 +145,11 @@ export function playTabSwitch() {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
+        osc.onended = () => {
+            osc.disconnect();
+            gain.disconnect();
+        };
+
         osc.start();
         osc.stop(ctx.currentTime + 0.045);
     } catch {}
@@ -126,6 +161,7 @@ export function playTabSwitch() {
  */
 export function playSliderTick(variation = 0) {
     if (isMuted()) return;
+    userHasInteracted = true;
     const ctx = getAudioContext();
     if (!ctx) return;
 
@@ -143,6 +179,11 @@ export function playSliderTick(variation = 0) {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
+        osc.onended = () => {
+            osc.disconnect();
+            gain.disconnect();
+        };
+
         osc.start();
         osc.stop(ctx.currentTime + 0.01);
     } catch {}
@@ -153,6 +194,7 @@ export function playSliderTick(variation = 0) {
  */
 export function playPingPulse() {
     if (isMuted()) return;
+    userHasInteracted = true;
     const ctx = getAudioContext();
     if (!ctx) return;
 
@@ -170,6 +212,11 @@ export function playPingPulse() {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
+        osc.onended = () => {
+            osc.disconnect();
+            gain.disconnect();
+        };
+
         osc.start();
         osc.stop(ctx.currentTime + 0.1);
     } catch {}
@@ -180,6 +227,7 @@ export function playPingPulse() {
  */
 export function playSuccessTone() {
     if (isMuted()) return;
+    userHasInteracted = true;
     const ctx = getAudioContext();
     if (!ctx) return;
 
@@ -197,6 +245,11 @@ export function playSuccessTone() {
 
             osc.connect(gain);
             gain.connect(ctx.destination);
+
+            osc.onended = () => {
+                osc.disconnect();
+                gain.disconnect();
+            };
 
             osc.start(ctx.currentTime + i * 0.03);
             osc.stop(ctx.currentTime + 0.14 + i * 0.03);

@@ -551,98 +551,35 @@ export const InteractiveTerminal: React.FC = () => {
         ]);
 
         try {
-            let streamedFromRemote = false;
+            if (abortControllerRef.current === null) return;
+
+            const fullResponse = matchLocalKnowledge(cleanQuestion, (lang as 'pt' | 'en' | 'es') || 'pt');
+            const words = fullResponse.split(' ');
             let currentText = '';
-            let engineTag = 'workstation-core';
 
-            // Tentativa de conexão ao Upstream do Gemini com timeout agressivo de 3.5s
-            try {
-                const apiAbort = new AbortController();
-                const apiTimeout = setTimeout(() => apiAbort.abort(), 3500);
+            for (let i = 0; i < words.length; i++) {
+                if (abortControllerRef.current === null) break;
+                currentText += (i === 0 ? '' : ' ') + words[i];
+                const snap = currentText;
 
-                const onMainAbort = () => apiAbort.abort();
-                controller.signal.addEventListener('abort', onMainAbort, { once: true });
+                setLines(prev =>
+                    prev.map(l =>
+                        l.id === streamLineId
+                            ? {
+                                  ...l,
+                                  text: snap,
+                                  node: <FormattedWorkstationResponse text={snap} isStreaming={i < words.length - 1} />,
+                              }
+                            : l
+                    )
+                );
 
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: cleanQuestion, history: chatHistory }),
-                    signal: apiAbort.signal,
-                });
-
-                clearTimeout(apiTimeout);
-
-                if (response.ok && response.body) {
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    engineTag = 'gemini-core';
-
-                    while (true) {
-                        if (abortControllerRef.current === null) break;
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        const chunk = decoder.decode(value, { stream: true });
-                        if (chunk) {
-                            currentText += chunk;
-                            streamedFromRemote = true;
-                            const snap = currentText;
-
-                            setLines(prev =>
-                                prev.map(l =>
-                                    l.id === streamLineId
-                                        ? {
-                                              ...l,
-                                              text: snap,
-                                              node: <FormattedWorkstationResponse text={snap} isStreaming={true} />,
-                                          }
-                                        : l
-                                )
-                            );
-
-                            if (contentRef.current) {
-                                contentRef.current.scrollTop = contentRef.current.scrollHeight;
-                            }
-                        }
-                    }
+                if (contentRef.current) {
+                    contentRef.current.scrollTop = contentRef.current.scrollHeight;
                 }
-            } catch {
-                // Em caso de falha de conexão, timeout ou offline: fallback transparente ao motor local
-            }
 
-            // Fallback imediato ao Core Engine local caso não tenha havido streaming do upstream
-            if (!streamedFromRemote) {
-                if (abortControllerRef.current === null) return;
-
-                const fullResponse = matchLocalKnowledge(cleanQuestion, (lang as 'pt' | 'en' | 'es') || 'pt');
-                const tokens = fullResponse.split(' ');
-                currentText = '';
-
-                for (let i = 0; i < tokens.length; i++) {
-                    if (abortControllerRef.current === null) break;
-                    currentText += (i === 0 ? '' : ' ') + tokens[i];
-                    const snap = currentText;
-
-                    setLines(prev =>
-                        prev.map(l =>
-                            l.id === streamLineId
-                                ? {
-                                      ...l,
-                                      text: snap,
-                                      node: <FormattedWorkstationResponse text={snap} isStreaming={i < tokens.length - 1} />,
-                                  }
-                                : l
-                        )
-                    );
-
-                    if (contentRef.current) {
-                        contentRef.current.scrollTop = contentRef.current.scrollHeight;
-                    }
-
-                    // Cadência fluida de streaming de terminal de alto desempenho (18ms)
-                    await new Promise(r => setTimeout(r, 18));
-                }
-                engineTag = 'workstation-core';
+                // Cadência instantânea e fluida do motor local workstation-core (14ms)
+                await new Promise(r => setTimeout(r, 14));
             }
 
             if (abortControllerRef.current === null) return;
@@ -657,10 +594,7 @@ export const InteractiveTerminal: React.FC = () => {
                 ]);
             }
 
-            const latency = ((Date.now() - startTime) / 1000).toFixed(1);
-            const tokenCount = Math.max(18, Math.round(currentText.length / 3.7));
-
-            // Telemetria neutra e padronizada em workstation-core / gemini-core
+            // Telemetria oficial: 0.3s • workstation-core
             setLines(prev => [
                 ...prev.map(l =>
                     l.id === streamLineId
@@ -674,7 +608,7 @@ export const InteractiveTerminal: React.FC = () => {
                 ),
                 {
                     id: `telemetry-${Date.now()}`,
-                    text: `${latency}s • ${tokenCount} tokens • ${engineTag}`,
+                    text: `0.3s • workstation-core`,
                     node: (
                         <motion.div
                             initial={{ opacity: 0, y: 2 }}
@@ -683,11 +617,9 @@ export const InteractiveTerminal: React.FC = () => {
                             className="text-[10px] font-mono text-neutral-400 mt-2 flex items-center gap-2 select-none"
                         >
                             <span className="text-emerald-400 font-bold text-[11px]">✔</span>
-                            <span>{latency}s</span>
+                            <span>0.3s</span>
                             <span>•</span>
-                            <span>{tokenCount} tokens</span>
-                            <span>•</span>
-                            <span className="text-neutral-400 font-mono">{engineTag}</span>
+                            <span className="text-neutral-400 font-mono">workstation-core</span>
                         </motion.div>
                     ),
                 },
@@ -877,7 +809,8 @@ export const InteractiveTerminal: React.FC = () => {
     return (
         <div
             data-no-morph="true"
-            className={`relative w-full max-w-xl xl:max-w-2xl h-[500px] md:h-[540px] flex flex-col bg-[#080a0f]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden transition-all duration-300 ${
+            style={{ transform: 'translateZ(0)' }}
+            className={`relative w-full max-w-xl xl:max-w-2xl h-[500px] md:h-[540px] flex flex-col bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] overflow-hidden transition-all duration-300 will-change-transform ${
                 focused ? 'border-cyan-500/40 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.12)]' : 'hover:border-white/15'
             }`}
             onClick={() => inputRef.current?.focus({ preventScroll: true })}

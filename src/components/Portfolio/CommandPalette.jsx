@@ -271,7 +271,7 @@ export default function CommandPalette() {
             {/* Botão de Dica Flutuante Desktop */}
             <button
                 onClick={() => setOpen(true)}
-                className="hidden lg:flex fixed bottom-6 right-6 z-[9990] items-center gap-2 bg-darker/90 border border-primary/25 text-primary text-[11px] tracking-widest uppercase px-4 py-2.5 rounded-full backdrop-blur-xl shadow-xl hover:border-accent/50 hover:text-accent transition-all duration-200 group cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
+                className="hidden lg:flex fixed bottom-6 right-6 z-[9990] items-center gap-2 bg-darker/90 border border-primary/25 text-primary text-[11px] tracking-widest uppercase px-4 py-2.5 rounded-full backdrop-blur-sm shadow-xl hover:border-accent/50 hover:text-accent transition-all duration-200 group cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
                 aria-label="Abrir command palette"
                 title="Command Palette (Ctrl+K)"
             >
@@ -288,7 +288,7 @@ export default function CommandPalette() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-20 right-6 z-[99999] bg-darker border border-accent/30 text-secondary text-sm px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-xl"
+                        className="fixed bottom-20 right-6 z-[99999] bg-darker border border-accent/30 text-secondary text-sm px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-sm"
                     >
                         {toastMsg}
                     </motion.div>

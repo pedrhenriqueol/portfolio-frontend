@@ -19,7 +19,30 @@ export default function InteractiveParticleField() {
         if (!ctx) return;
 
         let animationFrameId = null;
-        let isVisible = !document.hidden;
+        let isDocVisible = !document.hidden;
+        let isHeroVisible = true;
+
+        // IntersectionObserver para pausar rAF quando o Hero não estiver visível na tela
+        const heroEl = document.getElementById('home');
+        const heroObserver = new IntersectionObserver(
+            ([entry]) => {
+                isHeroVisible = entry ? entry.isIntersecting : true;
+                if (isHeroVisible && isDocVisible) {
+                    wakeUp();
+                    if (!animationFrameId) {
+                        animationFrameId = requestAnimationFrame(render);
+                    }
+                } else if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+            },
+            { threshold: 0 }
+        );
+
+        if (heroEl) {
+            heroObserver.observe(heroEl);
+        }
 
         // Mouse coordinates, velocity and dynamic radius
         const mouse = {
@@ -113,9 +136,9 @@ export default function InteractiveParticleField() {
             if (isSleeping) {
                 isSleeping = false;
                 idleFrames = 0;
-                if (!animationFrameId && isVisible) {
-                    animationFrameId = requestAnimationFrame(render);
-                }
+            }
+            if (!animationFrameId && isDocVisible && isHeroVisible) {
+                animationFrameId = requestAnimationFrame(render);
             }
         };
 
@@ -161,11 +184,11 @@ export default function InteractiveParticleField() {
         };
 
         const handleVisibilityChange = () => {
-            isVisible = !document.hidden;
-            if (isVisible) {
+            isDocVisible = !document.hidden;
+            if (isDocVisible && isHeroVisible) {
                 wakeUp();
                 if (!animationFrameId) {
-                    render();
+                    animationFrameId = requestAnimationFrame(render);
                 }
             } else if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
@@ -174,7 +197,7 @@ export default function InteractiveParticleField() {
         };
 
         const render = () => {
-            if (!isVisible) {
+            if (!isDocVisible || !isHeroVisible) {
                 animationFrameId = null;
                 return;
             }
@@ -297,6 +320,7 @@ export default function InteractiveParticleField() {
 
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            heroObserver.disconnect();
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', updateRect);
             window.removeEventListener('mousemove', handleMouseMove);

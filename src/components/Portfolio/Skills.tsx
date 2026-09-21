@@ -400,7 +400,7 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
                     </p>
 
                     {/* ── Seletor Minimalista de Modos (Grade Técnica vs 3D) ── */}
-                    <div className="inline-flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-md">
+                    <div className="inline-flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-sm">
                         <button
                             type="button"
                             onClick={() => setViewMode('bento')}

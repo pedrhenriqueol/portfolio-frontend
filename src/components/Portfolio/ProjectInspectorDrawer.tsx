@@ -1071,7 +1071,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="fixed top-6 right-6 z-[100000] bg-darker/95 border border-accent/40 text-secondary text-xs font-mono px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-xl flex items-center gap-2"
+                        className="fixed top-6 right-6 z-[100000] bg-darker/95 border border-accent/40 text-secondary text-xs font-mono px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-sm flex items-center gap-2"
                     >
                         <i className="fas fa-check-circle text-emerald-400 text-sm" />
                         <span>{toastMessage}</span>
@@ -1090,7 +1090,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#090b10] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden will-change-transform"
             >
                 {/* ── A. Cabeçalho Fixo do Console de Engenharia ── */}
-                <header className="shrink-0 border-b border-white/10 bg-[#090b10]/95 backdrop-blur-xl px-6 py-4 flex items-center justify-between gap-4">
+                <header className="shrink-0 border-b border-white/10 bg-[#0c0e14]/95 backdrop-blur-sm px-6 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                             <i className={`${specs.ecosystemIcon} text-accent text-sm`} />

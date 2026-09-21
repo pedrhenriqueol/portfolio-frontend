@@ -190,7 +190,8 @@ export default function Dock({
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[9980] items-center gap-1.5 px-4 py-2 bg-black/65 border border-white/10 rounded-full backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+                style={{ transform: 'translateZ(0)' }}
+                className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[9980] items-center gap-1.5 px-4 py-2 bg-[#0c0e14]/90 border border-white/10 rounded-full backdrop-blur-sm shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
             >
                 {dockItems.map((item, idx) => (
                     <DockButton
@@ -229,7 +230,7 @@ export default function Dock({
                                         <Tag
                                             {...linkProps}
                                             onClick={!isLink ? () => { handleClick(item.id); setMobileExpanded(false); } : undefined}
-                                            className="flex items-center gap-2 px-3.5 py-2 bg-darker/95 border border-white/15 rounded-xl backdrop-blur-xl text-primary text-xs shadow-lg cursor-pointer"
+                                            className="flex items-center gap-2 px-3.5 py-2 bg-darker/95 border border-white/15 rounded-xl backdrop-blur-sm text-primary text-xs shadow-lg cursor-pointer"
                                         >
                                             <i className={`${item.icon} text-accent w-4`} />
                                             <span>{item.labelKey}</span>

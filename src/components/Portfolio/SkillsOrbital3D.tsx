@@ -122,7 +122,7 @@ export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOr
     const isDraggingRef = useRef(false);
     const dragDistanceRef = useRef(0);
     const lastPointerRef = useRef({ x: 0, y: 0 });
-    const isVisibleRef = useRef(true);
+    const isVisibleRef = useRef(false);
     const rafIdRef = useRef<number | null>(null);
 
     const localizedSkills = useMemo(() => {
@@ -584,7 +584,8 @@ export default function SkillsOrbital3D({ skills = [], active = true }: SkillsOr
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -8, scale: 0.96 }}
                             transition={{ duration: 0.2 }}
-                            className="w-full bg-[#0c0e14]/90 border border-white/10 p-3.5 rounded-2xl flex items-center gap-4 shadow-xl backdrop-blur-md"
+                            className="w-full bg-[#0c0e14]/90 border border-white/10 p-3.5 rounded-2xl flex items-center gap-4 shadow-xl backdrop-blur-sm"
+                            style={{ transform: 'translateZ(0)' }}
                         >
                             <div
                                 className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-white/10"

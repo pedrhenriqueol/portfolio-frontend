@@ -91,7 +91,7 @@ export default function ThemeDropdown({ isMobile = false, onSelect }) {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.97 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-1.5 w-48 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50 backdrop-blur-xl rounded-sm"
+                        className="absolute right-0 mt-1.5 w-48 bg-darker border border-primary/20 shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50 backdrop-blur-sm rounded-sm"
                     >
                         <div className="text-[9px] uppercase tracking-widest text-primary/60 px-2.5 py-1.5 font-semibold border-b border-white/5 mb-1 flex items-center justify-between">
                             <span>{t('palette.title')}</span>
