@@ -420,7 +420,26 @@ function SqlBenchmarkModal({
     );
 }
 
-function AboutMe() {
+// ── Variantes de Animação Cinemática Compositor-Only (Padrão Linear / Raycast) ──
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 24, filter: 'blur(4px)' },
+    visible: {
+        opacity: 1,
+        y: 0,
+        filter: 'blur(0px)',
+        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+    }
+};
+
+export function AboutMe() {
     const { t, lang } = useLanguage();
 
     const [isSectionVisible, setIsSectionVisible] = useState(false);
@@ -563,7 +582,7 @@ function AboutMe() {
         }, 300);
     }, [lang]);
 
-    // ── Métricas estatísticas estruturadas (padrão de ícone em caixa lateral) ──
+    // ── Métricas estatísticas estruturadas ──
     const aboutMetrics = [
         {
             icon: 'fas fa-calendar-check',
@@ -626,15 +645,15 @@ function AboutMe() {
     ];
 
     return (
-        <section id="sobre" ref={sectionRef} className="py-24 md:py-36 bg-transparent relative select-text">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="sobre" ref={sectionRef} className="py-24 bg-transparent relative select-text">
+            <div className="max-w-7xl mx-auto px-6">
 
-                {/* ── Section Header com estética sóbria e industrial ── */}
+                {/* ── Section Header com entrada cinemática isolada ── */}
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-60px' }}
-                    transition={{ duration: 0.7 }}
+                    initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+                    whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                     className="text-center md:text-left mb-12"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
@@ -655,278 +674,290 @@ function AboutMe() {
                     </p>
                 </motion.div>
 
-                {/* ── Bento Grid Superior (lg:grid-cols-12 gap-5) ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5">
+                {/* ── Cascata Cinemática do Bento Grid com Stagger Suave (whileInView) ── */}
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.15 }}
+                    className="space-y-6"
+                >
+                    {/* ── Bento Grid Superior (lg:grid-cols-12 gap-5) ── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-                    {/* Coluna Esquerda: Card Resumo Profissional (lg:col-span-8) */}
-                    <BentoCard className="lg:col-span-8 p-5 md:p-6 h-full flex flex-col justify-between">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="flex items-center gap-2 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest font-mono">
-                                    <i className="fas fa-terminal text-[10px] text-neutral-500" />
-                                    {t('about.resumoTitle')}
-                                </span>
+                        {/* Coluna Esquerda: Card Resumo Profissional (lg:col-span-8) */}
+                        <motion.div variants={itemVariants} className="lg:col-span-8 h-full">
+                            <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="flex items-center gap-2 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest font-mono">
+                                            <i className="fas fa-terminal text-[10px] text-neutral-500" />
+                                            {t('about.resumoTitle')}
+                                        </span>
 
-                                {/* StatusBadge Canônico Unificado */}
+                                        {/* StatusBadge Canônico Unificado */}
+                                        <button
+                                            type="button"
+                                            onClick={handleBadgeClick}
+                                            className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full font-mono text-[11px] transition-all duration-200 cursor-pointer select-none ${
+                                                tacticalMode
+                                                    ? 'bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                                                    : 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 hover:border-emerald-500/40'
+                                            }`}
+                                            title={
+                                                tacticalMode
+                                                    ? (lang === 'en'
+                                                        ? 'Tactical Mode Active! Click 3x to return'
+                                                        : lang === 'es'
+                                                        ? '¡Modo Táctico Activo! Clic 3x para volver'
+                                                        : 'Modo Tático Ativo! Clique 3x para retornar')
+                                                    : (lang === 'en'
+                                                        ? 'Available for opportunities (Triple-click: Tactical Mode)'
+                                                        : lang === 'es'
+                                                        ? 'Disponible para desafíos (Triple-clic: Modo Táctico)'
+                                                        : 'Disponível para desafios (Triplo-clique: Modo Tático)')
+                                            }
+                                        >
+                                            <span className={`w-1.5 h-1.5 rounded-full ${tacticalMode ? 'bg-cyan-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+                                            <span>
+                                                {tacticalMode
+                                                    ? (lang === 'en'
+                                                        ? 'TACTICAL: 180 FPS // LATENCY 0.5ms'
+                                                        : lang === 'es'
+                                                        ? 'TÁCTICO: 180 FPS // LATENCY 0.5ms'
+                                                        : 'TÁTICO: 180 FPS // LATENCY 0.5ms')
+                                                    : lang === 'en'
+                                                    ? 'Available'
+                                                    : lang === 'es'
+                                                    ? 'Disponible'
+                                                    : 'Disponível'}
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    {/* Parágrafos biográficos */}
+                                    <p className="text-neutral-300 text-xs md:text-[13px] leading-relaxed tracking-normal font-normal">
+                                        {t('about.resumo1')}{' '}
+                                        <strong className="text-white font-medium">{t('about.resumo1_highlight1')}</strong>{' '}
+                                        {t('about.resumo1_rest')}{' '}
+                                        <strong className="text-white font-medium">{t('about.resumo1_highlight2')}</strong>
+                                    </p>
+
+                                    <p className="text-neutral-300 text-xs md:text-[13px] leading-relaxed tracking-normal font-normal">
+                                        {t('about.resumo2')}{' '}
+                                        <strong className="text-white font-medium">Delphi (Desktop &amp; UniGui)</strong>,{' '}
+                                        <strong className="text-white font-medium">PHP/Laravel</strong>,{' '}
+                                        <strong className="text-white font-medium">React + TypeScript</strong> e{' '}
+                                        <strong className="text-white font-medium">Tailwind CSS</strong>. {t('about.resumo2_rest')}{' '}
+                                        <strong className="text-white font-medium">{t('about.resumo2_highlight')}</strong> {t('about.resumo2_final')}
+                                    </p>
+
+                                    <p className="text-neutral-300 text-xs md:text-[13px] leading-relaxed tracking-normal font-normal">
+                                        {t('about.resumo3')}{' '}
+                                        <strong className="text-white font-medium">{t('about.resumo3_highlight')}</strong>{' '}
+                                        {t('about.resumo3_final')} {t('about.resumo4')}{' '}
+                                        <strong className="text-white font-medium">{t('about.resumo4_highlight1')}</strong>{' '}
+                                        {t('about.resumo4_rest')}{' '}
+                                        <strong className="text-white font-medium">{t('about.resumo4_highlight2')}</strong>
+                                    </p>
+                                </div>
+
+                                {/* Benchmark de Banco de Dados Discreto */}
                                 <button
                                     type="button"
-                                    onClick={handleBadgeClick}
-                                    className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full font-mono text-[11px] transition-all duration-200 cursor-pointer select-none ${
-                                        tacticalMode
-                                            ? 'bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                                            : 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 hover:border-emerald-500/40'
-                                    }`}
-                                    title={
-                                        tacticalMode
-                                            ? (lang === 'en'
-                                                ? 'Tactical Mode Active! Click 3x to return'
-                                                : lang === 'es'
-                                                ? '¡Modo Táctico Activo! Clic 3x para volver'
-                                                : 'Modo Tático Ativo! Clique 3x para retornar')
-                                            : (lang === 'en'
-                                                ? 'Available for opportunities (Triple-click: Tactical Mode)'
-                                                : lang === 'es'
-                                                ? 'Disponible para desafíos (Triple-clic: Modo Táctico)'
-                                                : 'Disponível para desafios (Triplo-clique: Modo Tático)')
-                                    }
+                                    onClick={() => {
+                                        playMechanicalKey(800, 0.05);
+                                        setShowSqlModal(true);
+                                    }}
+                                    className="text-[10px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors flex items-center gap-1.5 pt-3 mt-4 border-t border-white/[0.04] cursor-pointer group/query w-fit"
+                                    title={lang === 'en' ? 'View T-SQL execution plan analysis' : lang === 'es' ? 'Ver análisis de plan de ejecución T-SQL' : 'Ver análise de plano de execução T-SQL'}
                                 >
-                                    <span className={`w-1.5 h-1.5 rounded-full ${tacticalMode ? 'bg-cyan-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-                                    <span>
-                                        {tacticalMode
-                                            ? (lang === 'en'
-                                                ? 'TACTICAL: 180 FPS // LATENCY 0.5ms'
-                                                : lang === 'es'
-                                                ? 'TÁCTICO: 180 FPS // LATENCY 0.5ms'
-                                                : 'TÁTICO: 180 FPS // LATENCY 0.5ms')
-                                            : lang === 'en'
-                                            ? 'Available'
-                                            : lang === 'es'
-                                            ? 'Disponible'
-                                            : 'Disponível'}
-                                    </span>
+                                    <span className="text-emerald-400">›</span>
+                                    <span>query_profile: 2s ➔ 412ms ({lang === 'en' ? 'view analysis' : lang === 'es' ? 'ver análisis' : 'ver análise'})</span>
                                 </button>
-                            </div>
+                            </BentoCard>
+                        </motion.div>
 
-                            {/* Parágrafos biográficos limpos e unificados */}
-                            <p className="text-neutral-300 text-xs md:text-[13px] leading-relaxed tracking-normal font-normal">
-                                {t('about.resumo1')}{' '}
-                                <strong className="text-white font-medium">{t('about.resumo1_highlight1')}</strong>{' '}
-                                {t('about.resumo1_rest')}{' '}
-                                <strong className="text-white font-medium">{t('about.resumo1_highlight2')}</strong>
-                            </p>
+                        {/* Coluna Direita: Educação & Hora Local (lg:col-span-4 flex flex-col gap-5) */}
+                        <div className="lg:col-span-4 flex flex-col gap-5">
 
-                            <p className="text-neutral-300 text-xs md:text-[13px] leading-relaxed tracking-normal font-normal">
-                                {t('about.resumo2')}{' '}
-                                <strong className="text-white font-medium">Delphi (Desktop &amp; UniGui)</strong>,{' '}
-                                <strong className="text-white font-medium">PHP/Laravel</strong>,{' '}
-                                <strong className="text-white font-medium">React + TypeScript</strong> e{' '}
-                                <strong className="text-white font-medium">Tailwind CSS</strong>. {t('about.resumo2_rest')}{' '}
-                                <strong className="text-white font-medium">{t('about.resumo2_highlight')}</strong> {t('about.resumo2_final')}
-                            </p>
-
-                            <p className="text-neutral-300 text-xs md:text-[13px] leading-relaxed tracking-normal font-normal">
-                                {t('about.resumo3')}{' '}
-                                <strong className="text-white font-medium">{t('about.resumo3_highlight')}</strong>{' '}
-                                {t('about.resumo3_final')} {t('about.resumo4')}{' '}
-                                <strong className="text-white font-medium">{t('about.resumo4_highlight1')}</strong>{' '}
-                                {t('about.resumo4_rest')}{' '}
-                                <strong className="text-white font-medium">{t('about.resumo4_highlight2')}</strong>
-                            </p>
-                        </div>
-
-                        {/* Benchmark de Banco de Dados Discreto */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                playMechanicalKey(800, 0.05);
-                                setShowSqlModal(true);
-                            }}
-                            className="text-[10px] font-mono text-neutral-400 hover:text-neutral-200 transition-colors flex items-center gap-1.5 pt-3 mt-4 border-t border-white/[0.04] cursor-pointer group/query w-fit"
-                            title={lang === 'en' ? 'View T-SQL execution plan analysis' : lang === 'es' ? 'Ver análisis de plan de ejecución T-SQL' : 'Ver análise de plano de execução T-SQL'}
-                        >
-                            <span className="text-emerald-400">›</span>
-                            <span>query_profile: 2s ➔ 412ms ({lang === 'en' ? 'view analysis' : lang === 'es' ? 'ver análisis' : 'ver análise'})</span>
-                        </button>
-                    </BentoCard>
-
-                    {/* Coluna Direita: Educação & Hora Local (lg:col-span-4 flex flex-col gap-5) */}
-                    <div className="lg:col-span-4 flex flex-col gap-5">
-
-                        {/* Card Educação */}
-                        <BentoCard className="p-5 md:p-6 flex-1 flex flex-col justify-between">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="flex items-center gap-2 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest font-mono">
-                                    <i className="fas fa-graduation-cap text-[10px] text-neutral-500" />
-                                    {t('about.educacaoTitle')}
-                                </span>
-                            </div>
-
-                            <div className="space-y-3.5">
-                                <div className="border-l-2 border-white/20 pl-3.5 space-y-0.5">
-                                    <h4 className="text-xs sm:text-[13px] font-medium text-white font-sans">{t('about.edu1Title')}</h4>
-                                    <p className="text-[11px] text-neutral-400 font-mono">{t('about.edu1Desc')}</p>
-                                </div>
-                                <div className="border-l-2 border-white/10 pl-3.5 space-y-0.5">
-                                    <h4 className="text-xs sm:text-[13px] font-medium text-white font-sans">{t('about.edu2Title')}</h4>
-                                    <p className="text-[11px] text-neutral-400 font-mono">{t('about.edu2Desc')}</p>
-                                </div>
-                            </div>
-                        </BentoCard>
-
-                        {/* Card Hora Local (Flip 3D) */}
-                        <BentoCard className="p-5 md:p-6 flex-1 flex flex-col justify-between">
-                            <div className="relative w-full h-full min-h-[120px] [perspective:1000px]">
-                                <div
-                                    className={`w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
-                                        isClockFlipped ? '[transform:rotateY(180deg)]' : ''
-                                    }`}
-                                >
-                                    {/* Frente: Relógio com elegância de consola */}
-                                    <div
-                                        onClick={() => {
-                                            playMechanicalKey(750, 0.04);
-                                            setIsClockFlipped(true);
-                                        }}
-                                        className="w-full h-full [backface-visibility:hidden] flex flex-col justify-between cursor-pointer group/clock select-none"
-                                        title={lang === 'en' ? 'Click to view workstation specs' : lang === 'es' ? 'Clic para ver especificaciones de la workstation' : 'Clique para ver especificações da workstation'}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
-                                                {lang === 'en' ? 'LOCAL TIME (UTC-3)' : 'HORA LOCAL (UTC-3)'}
-                                            </span>
-                                            <span className="text-[10px] font-mono text-neutral-500 group-hover/clock:text-neutral-300 transition-colors flex items-center gap-1">
-                                                specs ↻
-                                            </span>
-                                        </div>
-
-                                        <div className="my-auto py-1">
-                                            <LiveClock lang={lang} />
-                                        </div>
-
-                                        <div className="text-xs text-neutral-400 font-mono flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
-                                            <span>Fortaleza, CE — {lang === 'en' ? 'Brazil' : 'Brasil'}</span>
-                                        </div>
+                            {/* Card Educação */}
+                            <motion.div variants={itemVariants} className="flex-1">
+                                <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="flex items-center gap-2 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest font-mono">
+                                            <i className="fas fa-graduation-cap text-[10px] text-neutral-500" />
+                                            {t('about.educacaoTitle')}
+                                        </span>
                                     </div>
 
-                                    {/* Verso: Telemetria de Hardware da Workstation */}
-                                    <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-between p-1 bg-black/40 rounded-xl">
-                                        <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5 mb-1.5">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                                <span className="text-[10px] font-mono font-medium text-neutral-300 uppercase tracking-wider">
-                                                    // WORKSTATION TELEMETRY
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    playMechanicalKey(550, 0.04);
-                                                    setIsClockFlipped(false);
+                                    <div className="space-y-3.5">
+                                        <div className="border-l-2 border-white/20 pl-3.5 space-y-0.5">
+                                            <h4 className="text-xs sm:text-[13px] font-medium text-white font-sans">{t('about.edu1Title')}</h4>
+                                            <p className="text-[11px] text-neutral-400 font-mono">{t('about.edu1Desc')}</p>
+                                        </div>
+                                        <div className="border-l-2 border-white/10 pl-3.5 space-y-0.5">
+                                            <h4 className="text-xs sm:text-[13px] font-medium text-white font-sans">{t('about.edu2Title')}</h4>
+                                            <p className="text-[11px] text-neutral-400 font-mono">{t('about.edu2Desc')}</p>
+                                        </div>
+                                    </div>
+                                </BentoCard>
+                            </motion.div>
+
+                            {/* Card Hora Local (Flip 3D) */}
+                            <motion.div variants={itemVariants} className="flex-1">
+                                <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
+                                    <div className="relative w-full h-full min-h-[120px] [perspective:1000px]">
+                                        <div
+                                            className={`w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
+                                                isClockFlipped ? '[transform:rotateY(180deg)]' : ''
+                                            }`}
+                                        >
+                                            {/* Frente: Relógio com elegância de consola */}
+                                            <div
+                                                onClick={() => {
+                                                    playMechanicalKey(750, 0.04);
+                                                    setIsClockFlipped(true);
                                                 }}
-                                                className="w-5 h-5 rounded flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors text-xs font-mono cursor-pointer"
-                                                title={lang === 'en' ? 'Back to clock' : lang === 'es' ? 'Volver al reloj' : 'Voltar ao relógio'}
+                                                className="w-full h-full [backface-visibility:hidden] flex flex-col justify-between cursor-pointer group/clock select-none"
+                                                title={lang === 'en' ? 'Click to view workstation specs' : lang === 'es' ? 'Clic para ver especificaciones de la workstation' : 'Clique para ver especificações da workstation'}
                                             >
-                                                ✕
-                                            </button>
-                                        </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
+                                                        {lang === 'en' ? 'LOCAL TIME (UTC-3)' : 'HORA LOCAL (UTC-3)'}
+                                                    </span>
+                                                    <span className="text-[10px] font-mono text-neutral-500 group-hover/clock:text-neutral-300 transition-colors flex items-center gap-1">
+                                                        specs ↻
+                                                    </span>
+                                                </div>
 
-                                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                                            <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                                                <span className="text-[9px] text-neutral-500 block">CHIPSET</span>
-                                                <span className="text-neutral-200 font-medium">Ryzen 5 3500X</span>
+                                                <div className="my-auto py-1">
+                                                    <LiveClock lang={lang} />
+                                                </div>
+
+                                                <div className="text-xs text-neutral-400 font-mono flex items-center gap-1.5">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
+                                                    <span>Fortaleza, CE — {lang === 'en' ? 'Brazil' : 'Brasil'}</span>
+                                                </div>
                                             </div>
-                                            <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                                                <span className="text-[9px] text-neutral-500 block">GPU</span>
-                                                <span className="text-neutral-200 font-medium">Radeon RX 580</span>
-                                            </div>
-                                            <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                                                <span className="text-[9px] text-neutral-500 block">DISPLAY</span>
-                                                <span className="text-neutral-200 font-medium">180Hz Display</span>
-                                            </div>
-                                            <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                                                <span className="text-[9px] text-neutral-500 block">{lang === 'en' ? 'PERIPHERAL' : 'PERIFÉRICO'}</span>
-                                                <span className="text-neutral-200 font-medium">Rapoo VT7 @ 1000Hz</span>
+
+                                            {/* Verso: Telemetria de Hardware da Workstation */}
+                                            <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-between p-1 bg-black/40 rounded-xl">
+                                                <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5 mb-1.5">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                                        <span className="text-[10px] font-mono font-medium text-neutral-300 uppercase tracking-wider">
+                                                            // WORKSTATION TELEMETRY
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            playMechanicalKey(550, 0.04);
+                                                            setIsClockFlipped(false);
+                                                        }}
+                                                        className="w-5 h-5 rounded flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors text-xs font-mono cursor-pointer"
+                                                        title={lang === 'en' ? 'Back to clock' : lang === 'es' ? 'Volver al reloj' : 'Voltar ao relógio'}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                                                    <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
+                                                        <span className="text-[9px] text-neutral-500 block">CHIPSET</span>
+                                                        <span className="text-neutral-200 font-medium">Ryzen 5 3500X</span>
+                                                    </div>
+                                                    <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
+                                                        <span className="text-[9px] text-neutral-500 block">GPU</span>
+                                                        <span className="text-neutral-200 font-medium">Radeon RX 580</span>
+                                                    </div>
+                                                    <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
+                                                        <span className="text-[9px] text-neutral-500 block">DISPLAY</span>
+                                                        <span className="text-neutral-200 font-medium">180Hz Display</span>
+                                                    </div>
+                                                    <div className="bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
+                                                        <span className="text-[9px] text-neutral-500 block">{lang === 'en' ? 'PERIPHERAL' : 'PERIFÉRICO'}</span>
+                                                        <span className="text-neutral-200 font-medium">Rapoo VT7 @ 1000Hz</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </BentoCard>
+                                </BentoCard>
+                            </motion.div>
 
-                    </div>
-                </div>
-
-                {/* ── Grid Independente de Métricas Estatísticas (Padrão Unificado) ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-5"
-                >
-                    {aboutMetrics.map((m, idx) => (
-                        <div
-                            key={idx}
-                            className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
-                        >
-                            {/* Box do Ícone */}
-                            <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
-                                <i className={`${m.icon} text-sm`} />
-                            </div>
-                            {/* Texto da Métrica */}
-                            <div className="flex flex-col min-w-0">
-                                <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
-                                    <AnimatedCounter targetValue={m.value} suffix={m.suffix} isVisible={isSectionVisible} />
-                                </span>
-                                <span className="text-[11px] text-neutral-400 font-sans truncate" title={m.label}>
-                                    {m.label}
-                                </span>
-                            </div>
                         </div>
-                    ))}
-                </motion.div>
+                    </div>
 
-                {/* ── Grid Inferior: 3 Pilares de Especialidades (grid-cols-1 md:grid-cols-3 gap-5) ── */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {pillars.map((p, idx) => (
-                        <BentoCard key={idx} className="p-5 md:p-6 h-full flex flex-col justify-between">
-                            <div>
-                                <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-3 text-neutral-300">
-                                    <i className={`${p.icon} text-xs`} />
+                    {/* ── Grid Independente de Métricas Estatísticas ── */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+                        {aboutMetrics.map((m, idx) => (
+                            <motion.div
+                                key={idx}
+                                variants={itemVariants}
+                                className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
+                            >
+                                {/* Box do Ícone */}
+                                <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
+                                    <i className={`${m.icon} text-sm`} />
                                 </div>
-                                <h4 className="text-base font-semibold text-white font-serif mb-1.5">
-                                    {p.title}
-                                </h4>
-                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mb-4">
-                                    {p.desc}
-                                </p>
-                            </div>
+                                {/* Texto da Métrica */}
+                                <div className="flex flex-col min-w-0">
+                                    <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
+                                        <AnimatedCounter targetValue={m.value} suffix={m.suffix} isVisible={isSectionVisible} />
+                                    </span>
+                                    <span className="text-[11px] text-neutral-400 font-sans truncate" title={m.label}>
+                                        {m.label}
+                                    </span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
 
-                            {/* TechChips Canônicos com Bridge ao Terminal */}
-                            <div className="flex flex-wrap gap-1.5 pt-3 border-t border-white/[0.04]">
-                                {p.tags.map((tag, tIdx) => (
-                                    <button
-                                        key={tIdx}
-                                        type="button"
-                                        onClick={() => handleTechChipClick(tag)}
-                                        className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none cursor-pointer flex items-center gap-1 active:scale-95"
-                                        title={
-                                            lang === 'en'
-                                                ? `Query Terminal about ${tag}`
-                                                : lang === 'es'
-                                                ? `Consultar en la Terminal sobre ${tag}`
-                                                : `Consultar no Terminal sobre ${tag}`
-                                        }
-                                    >
-                                        <span>{tag}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </BentoCard>
-                    ))}
-                </div>
+                    {/* ── Grid Inferior: 3 Pilares de Especialidades (grid-cols-1 md:grid-cols-3 gap-5) ── */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        {pillars.map((p, idx) => (
+                            <motion.div key={idx} variants={itemVariants} className="h-full">
+                                <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
+                                    <div>
+                                        <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-3 text-neutral-300">
+                                            <i className={`${p.icon} text-xs`} />
+                                        </div>
+                                        <h4 className="text-base font-semibold text-white font-serif mb-1.5">
+                                            {p.title}
+                                        </h4>
+                                        <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mb-4">
+                                            {p.desc}
+                                        </p>
+                                    </div>
+
+                                    {/* TechChips Canônicos com Bridge ao Terminal */}
+                                    <div className="flex flex-wrap gap-1.5 pt-3 border-t border-white/[0.04]">
+                                        {p.tags.map((tag, tIdx) => (
+                                            <button
+                                                key={tIdx}
+                                                type="button"
+                                                onClick={() => handleTechChipClick(tag)}
+                                                className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none cursor-pointer flex items-center gap-1 active:scale-95"
+                                                title={
+                                                    lang === 'en'
+                                                        ? `Query Terminal about ${tag}`
+                                                        : lang === 'es'
+                                                        ? `Consultar en la Terminal sobre ${tag}`
+                                                        : `Consultar no Terminal sobre ${tag}`
+                                                }
+                                            >
+                                                <span>{tag}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </BentoCard>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
 
             </div>
 

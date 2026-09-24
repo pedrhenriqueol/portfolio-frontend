@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
@@ -16,6 +16,11 @@ export const Hero: React.FC = () => {
     const isRunningRef = useRef(false);
     const targetRef = useRef({ x: 0, y: 0 });
     const currRef = useRef({ x: 0, y: 0 });
+
+    // ── Transição cinemática de saída por viewport no scroll nativo (Padrão Linear / Raycast) ──
+    const { scrollY } = useScroll();
+    const heroOpacity = useTransform(scrollY, [0, 450], [1, 0.25]);
+    const heroY = useTransform(scrollY, [0, 450], [0, -40]);
 
     // Parallax sob demanda — otimizado por requestAnimationFrame
     useEffect(() => {
@@ -116,11 +121,7 @@ export const Hero: React.FC = () => {
         <section
             id="home"
             ref={sectionRef}
-            style={{
-                maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-            }}
-            className="pt-32 pb-24 md:pt-40 md:pb-36 bg-transparent flex items-center justify-center min-h-[100vh] relative overflow-hidden"
+            className="min-h-[90vh] py-20 bg-transparent flex items-center justify-center relative overflow-hidden"
         >
             {/* Background blobs com máscara gradual de desvanecimento na base */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
@@ -147,7 +148,11 @@ export const Hero: React.FC = () => {
                 ))}
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+            {/* Conteúdo com Interpolação Cinemática Suave na Saída (Linear / Raycast) */}
+            <motion.div
+                style={{ opacity: heroOpacity, y: heroY }}
+                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full"
+            >
                 {/* Grid Hero Calibrado: 5 colunas para Conteúdo Textual / 7 colunas para o Terminal Interativo */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
@@ -294,12 +299,12 @@ export const Hero: React.FC = () => {
                     </motion.div>
 
                 </div>
-            </div>
+            </motion.div>
 
             {/* Gradiente de fade out na base do Hero para transição imperceptível com a seção Sobre Mim */}
             <div
                 aria-hidden="true"
-                className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-b from-transparent via-[#05070a]/75 to-[#05070a] pointer-events-none z-20"
+                className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-[#05070a] pointer-events-none z-20"
             />
         </section>
     );

@@ -2,7 +2,7 @@
 @import "lenis/dist/lenis.css";
 
 html {
-    scroll-behavior: auto; /* Lenis controla a inércia de rolagem */
+    scroll-behavior: smooth;
     zoom: 0.8;
 }
 

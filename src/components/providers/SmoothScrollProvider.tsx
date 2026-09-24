@@ -1,25 +1,21 @@
-import { useEffect, useRef, createContext, useContext, type ReactNode } from 'react';
-import Lenis from 'lenis';
+import { createContext, useContext, type ReactNode } from 'react';
 
-/* ── Provedor de Inércia de Rolagem (Lenis Smooth Scroll) ──
+/* ── Provedor de Rolagem Nativa Estável ──
  * 
- * Responsável por:
- * 1. Instanciar o Lenis com curva de easing exponencial de baixo custo de CPU.
- * 2. Manter o loop `requestAnimationFrame` sob controle rígido de ciclo de vida:
- *    - Pausa automática ao minimizar a aba via `visibilitychange`.
- *    - Cancelamento absoluto no teardown do `useEffect`.
- * 3. Expor a instância do Lenis via Context para que o `HeroAboutScrolly`
- *    e outros componentes possam acionar `lenis.scrollTo()` programaticamente.
+ * O scroll-jacking via Lenis foi desativado em favor da rolagem nativa
+ * da janela (scroll-behavior: smooth), eliminando qualquer concorrência
+ * de eventos de roda/toque e garantindo 60 FPS contínuos e sem saltos.
+ * O contexto é mantido para preservar compatibilidade de hooks.
  */
 
 interface SmoothScrollContextValue {
-    lenis: Lenis | null;
+    lenis: null;
 }
 
 const SmoothScrollContext = createContext<SmoothScrollContextValue>({ lenis: null });
 
-export function useLenis(): Lenis | null {
-    return useContext(SmoothScrollContext).lenis;
+export function useLenis() {
+    return null;
 }
 
 interface SmoothScrollProviderProps {
@@ -27,65 +23,8 @@ interface SmoothScrollProviderProps {
 }
 
 export default function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
-    const lenisRef = useRef<Lenis | null>(null);
-    const rafIdRef = useRef<number | null>(null);
-    const isPausedRef = useRef(false);
-
-    useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            orientation: 'vertical',
-            gestureOrientation: 'vertical',
-            smoothWheel: true,
-            touchMultiplier: 1.2,
-        });
-
-        lenisRef.current = lenis;
-
-        /* ── RAF Loop com guarda de visibilidade ── */
-        const tick = (time: number) => {
-            if (isPausedRef.current) return;
-            lenis.raf(time);
-            rafIdRef.current = requestAnimationFrame(tick);
-        };
-
-        const startLoop = () => {
-            if (rafIdRef.current !== null) return;
-            isPausedRef.current = false;
-            rafIdRef.current = requestAnimationFrame(tick);
-        };
-
-        const stopLoop = () => {
-            isPausedRef.current = true;
-            if (rafIdRef.current !== null) {
-                cancelAnimationFrame(rafIdRef.current);
-                rafIdRef.current = null;
-            }
-        };
-
-        /* ── Visibilidade da aba: pausa o RAF quando a aba está em segundo plano ── */
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                stopLoop();
-            } else {
-                startLoop();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
-        startLoop();
-
-        return () => {
-            stopLoop();
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            lenis.destroy();
-            lenisRef.current = null;
-        };
-    }, []);
-
     return (
-        <SmoothScrollContext.Provider value={{ lenis: lenisRef.current }}>
+        <SmoothScrollContext.Provider value={{ lenis: null }}>
             {children}
         </SmoothScrollContext.Provider>
     );
