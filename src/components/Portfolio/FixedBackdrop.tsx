@@ -12,7 +12,8 @@ export const FixedBackdrop: React.FC = memo(function FixedBackdrop() {
     return (
         <div
             aria-hidden="true"
-            className="fixed inset-0 pointer-events-none -z-10 bg-[#05070a] overflow-hidden"
+            className="fixed inset-0 pointer-events-none -z-10 bg-[#05070a]"
+            style={{ overflow: 'clip' }}
         >
             {/* Iluminação Especular Ambiente Suave no Topo */}
             <div

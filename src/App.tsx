@@ -25,6 +25,11 @@ import FixedBackdrop from './components/Portfolio/FixedBackdrop';
 import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
 import SectionDivider from './components/Portfolio/Common/SectionDivider';
 
+/* ── Reset do scroll ao recarregar: impede o pulo automático do navegador ── */
+if (typeof window !== 'undefined') {
+    window.history.scrollRestoration = 'manual';
+}
+
 function SectionSkeleton() {
     return (
         <div className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
@@ -74,7 +79,14 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#05070a] text-white font-sans selection:bg-white selection:text-black relative">
+        /* ⚠ REGRA CRÍTICA: O div raiz NÃO pode ter overflow-hidden nem transform.
+         * Para suprimir scrollbar horizontal usar overflow-x: clip.
+         * Qualquer transform (incluindo scale) num ancestral do sticky INVALIDA
+         * o cálculo de position: sticky pelo navegador. */
+        <div
+            className="min-h-screen bg-[#05070a] text-white font-sans selection:bg-white selection:text-black relative"
+            style={{ overflowX: 'clip' }}
+        >
             {/* ── Substrato Fixo Monolítico (#05070a com Iluminação Especular Superior) ── */}
             <FixedBackdrop />
 
@@ -115,27 +127,42 @@ export default function App() {
             {/* ── Header (Fixo no Topo com Revelação Sincronizada) ── */}
             <Header isLoaded={isLoaded} />
 
-            {/* ── Hero & Conteúdo Principal (Elevação do Fundo — Revelação em Pinça) ── */}
+            {/* ══════════════════════════════════════════════════════════════
+             * ⚠ ARQUITETURA CRÍTICA DO SCROLLYTELLING:
+             *
+             * O HeroAboutScrolly usa position: sticky internamente.
+             * Por isso DEVE ficar FORA de qualquer wrapper com transform
+             * (como o motion.div de revelação com scale).
+             *
+             * A animação de revelação (fade-in após preloader) é aplicada
+             * via opacity pura, SEM scale/translate, para preservar o
+             * containing block do sticky.
+             * ══════════════════════════════════════════════════════════════ */}
+
+            {/* ── Iluminação Volumétrica de Dupla Camada ── */}
+            <div className="relative z-10 w-full">
+                <AmbientBackdrop />
+            </div>
+
+            {/* ── Scrollytelling: Hero → Sobre Mim (260vh Pinned Stage) ── */}
             <motion.div
-                initial={{ y: 14, opacity: 0, scale: 0.98 }}
-                animate={isLoaded ? { y: 0, opacity: 1, scale: 1 } : { y: 14, opacity: 0, scale: 0.98 }}
-                transition={{
-                    type: 'spring',
-                    stiffness: 240,
-                    damping: 26,
-                    mass: 0.6,
-                }}
-                style={{ willChange: isLoaded ? 'auto' : 'transform, opacity' }}
+                initial={{ opacity: 0 }}
+                animate={isLoaded ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
                 className="relative z-10 w-full"
             >
-                {/* ── Iluminação Volumétrica de Dupla Camada (Cones Fixos + Spotlight Reativo ao Scroll) ── */}
-                <AmbientBackdrop />
-
-                {/* ── Scrollytelling: Cena Pinned Hero ➔ Sobre Mim (260vh) ── */}
                 <HeroAboutScrolly />
+            </motion.div>
 
-                {/* ── Container Principal Estático, Estável e Ortogonal (Padrão Rauno Freiberg) ── */}
-                <main className="relative z-10 w-full overflow-x-hidden bg-transparent pb-8 lg:pb-10">
+            {/* ── Conteúdo Principal Pós-Scrollytelling ── */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={isLoaded ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                className="relative z-10 w-full"
+            >
+                {/* ⚠ overflow-x: clip em vez de overflow-x-hidden para não quebrar sticky */}
+                <main className="relative z-10 w-full bg-transparent pb-8 lg:pb-10" style={{ overflowX: 'clip' }}>
                     {/* ── Sobre Mim Detalhado (Bento Grid, Projetos-Chave, SQL Benchmark) ── */}
                     <AboutSection />
 
