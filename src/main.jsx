@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import SmoothScrollProvider from './components/providers/SmoothScrollProvider';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -66,7 +67,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <LanguageProvider>
         <ThemeProvider>
-          <App />
+          <SmoothScrollProvider>
+            <App />
+          </SmoothScrollProvider>
         </ThemeProvider>
       </LanguageProvider>
     </ErrorBoundary>

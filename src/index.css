@@ -1,7 +1,8 @@
 @import "tailwindcss";
+@import "lenis/dist/lenis.css";
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto; /* Lenis controla a inércia de rolagem */
     zoom: 0.8;
 }
 

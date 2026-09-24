@@ -4,7 +4,7 @@ import InteractiveParticleField from './components/Portfolio/InteractiveParticle
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import Header from './components/Portfolio/Header';
-import HeroSection from './components/Portfolio/HeroSection';
+import HeroAboutScrolly from './components/sections/HeroAboutScrolly';
 import AboutSection from './components/Portfolio/AboutSection';
 import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
@@ -131,9 +131,12 @@ export default function App() {
                 {/* ── Iluminação Volumétrica de Dupla Camada (Cones Fixos + Spotlight Reativo ao Scroll) ── */}
                 <AmbientBackdrop />
 
+                {/* ── Scrollytelling: Cena Pinned Hero ➔ Sobre Mim (260vh) ── */}
+                <HeroAboutScrolly />
+
                 {/* ── Container Principal Estático, Estável e Ortogonal (Padrão Rauno Freiberg) ── */}
                 <main className="relative z-10 w-full overflow-x-hidden bg-transparent pb-8 lg:pb-10">
-                    <HeroSection />
+                    {/* ── Sobre Mim Detalhado (Bento Grid, Projetos-Chave, SQL Benchmark) ── */}
                     <AboutSection />
 
                     {/* ── Filamento Óptico Esvaecido: Transição para os Sistemas 3D ── */}
