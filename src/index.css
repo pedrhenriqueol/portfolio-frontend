@@ -3,6 +3,7 @@
 html {
     scroll-behavior: smooth;
     zoom: 0.8;
+    overflow-x: clip;
 }
 
 @theme {
@@ -30,6 +31,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
 }
 
 /* ── Tipografia Editorial: headings e classes serif ── */

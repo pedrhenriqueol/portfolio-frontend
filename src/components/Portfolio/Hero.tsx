@@ -1,12 +1,26 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type MotionValue } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
 
 const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
-export const Hero: React.FC = () => {
+export interface HeroProps {
+    heroTextOpacity?: MotionValue<number>;
+    heroTextX?: MotionValue<number>;
+    terminalScale?: MotionValue<number>;
+    terminalX?: MotionValue<number>;
+    terminalOpacity?: MotionValue<number>;
+}
+
+export const Hero: React.FC<HeroProps> = ({
+    heroTextOpacity,
+    heroTextX,
+    terminalScale,
+    terminalX,
+    terminalOpacity,
+}) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement | null>(null);
     const textRef = useRef<HTMLDivElement | null>(null);
@@ -16,8 +30,6 @@ export const Hero: React.FC = () => {
     const isRunningRef = useRef(false);
     const targetRef = useRef({ x: 0, y: 0 });
     const currRef = useRef({ x: 0, y: 0 });
-
-    // Nota: Interpolação de scroll agora controlada pelo HeroAboutPinnedStage pai
 
     // Parallax sob demanda — otimizado por requestAnimationFrame
     useEffect(() => {
@@ -150,145 +162,152 @@ export const Hero: React.FC = () => {
                 {/* Grid Hero Calibrado: 5 colunas para Conteúdo Textual / 7 colunas para o Terminal Interativo */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
-                    {/* Text Container com min-height estável para ZERO CLS (5 colunas) */}
+                    {/* Text Container com Framer Motion Scroll Sync (5 colunas) */}
                     <motion.div
-                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        style={{
+                            opacity: heroTextOpacity,
+                            x: heroTextX,
+                            willChange: 'transform, opacity',
+                        }}
                         className="lg:col-span-5 text-center lg:text-left space-y-6 min-h-[420px] sm:min-h-[460px] flex flex-col justify-center"
-                        ref={textRef}
                     >
-                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block">
-                            {lang === 'en'
-                                ? '// 00. SOFTWARE ENGINEERING & QA'
-                                : lang === 'es'
-                                ? '// 00. INGENIERÍA DE SOFTWARE & QA'
-                                : '// 00. ENGENHARIA DE SOFTWARE & QA'}
-                        </span>
+                        <div ref={textRef} className="w-full space-y-6">
+                            <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block">
+                                {lang === 'en'
+                                    ? '// 00. SOFTWARE ENGINEERING & QA'
+                                    : lang === 'es'
+                                    ? '// 00. INGENIERÍA DE SOFTWARE & QA'
+                                    : '// 00. ENGENHARIA DE SOFTWARE & QA'}
+                            </span>
 
-                        {/* Altura mínima fixada para evitar Layout Shift (CLS) no TypeAnimation */}
-                        <div className="min-h-[96px] sm:min-h-[130px] md:min-h-[160px] flex items-center">
-                            <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-none">
-                                <TypeAnimation
-                                    sequence={['PEDRO\nHENRIQUE', 8000, 'PEDRO\nHENRIQUE', 1000]}
-                                    wrapper="span"
-                                    cursor={true}
-                                    repeat={Infinity}
-                                    style={{ whiteSpace: 'pre-line' }}
-                                    className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-400 inline-block font-serif"
-                                />
-                            </h1>
-                        </div>
+                            {/* Altura mínima fixada para evitar Layout Shift (CLS) no TypeAnimation */}
+                            <div className="min-h-[96px] sm:min-h-[130px] md:min-h-[160px] flex items-center">
+                                <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-none">
+                                    <TypeAnimation
+                                        sequence={['PEDRO\nHENRIQUE', 8000, 'PEDRO\nHENRIQUE', 1000]}
+                                        wrapper="span"
+                                        cursor={true}
+                                        repeat={Infinity}
+                                        style={{ whiteSpace: 'pre-line' }}
+                                        className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-400 inline-block font-serif"
+                                    />
+                                </h1>
+                            </div>
 
-                        <h3 className="text-xl md:text-2xl text-neutral-300 font-serif font-light">
-                            {t('hero.developer')} <span className="text-white italic font-serif">{t('hero.role')}</span>
-                        </h3>
+                            <h3 className="text-xl md:text-2xl text-neutral-300 font-serif font-light">
+                                {t('hero.developer')} <span className="text-white italic font-serif">{t('hero.role')}</span>
+                            </h3>
 
-                        <p className="text-neutral-400 max-w-lg mx-auto lg:mx-0 text-base sm:text-lg leading-relaxed min-h-[72px]">
-                            {t('hero.description')}{' '}
-                            <strong className="text-white font-medium">Delphi (Desktop/UniGui)</strong>,{' '}
-                            <strong className="text-white font-medium">PHP/Laravel</strong>
-                            {lang === 'en' ? ' and ' : lang === 'es' ? ' y ' : ' e '}
-                            <strong className="text-white font-medium">React</strong>.
-                        </p>
+                            <p className="text-neutral-400 max-w-lg mx-auto lg:mx-0 text-base sm:text-lg leading-relaxed min-h-[72px]">
+                                {t('hero.description')}{' '}
+                                <strong className="text-white font-medium">Delphi (Desktop/UniGui)</strong>,{' '}
+                                <strong className="text-white font-medium">PHP/Laravel</strong>
+                                {lang === 'en' ? ' and ' : lang === 'es' ? ' y ' : ' e '}
+                                <strong className="text-white font-medium">React</strong>.
+                            </p>
 
-                        {/* Botões CTA com feedback tátil e padronização nobre de alta densidade */}
-                        <div className="flex flex-col sm:flex-row gap-3.5 pt-4 justify-center lg:justify-start items-center">
-                            <MagneticButton strength={0.35}>
-                                <a
-                                    href="#projetos"
-                                    data-cursor-morph="true"
-                                    className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-mono text-xs font-semibold tracking-tight transition-all active:scale-[0.98] shadow-sm inline-flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden"
-                                >
-                                    {t('hero.verProjetos')}
-                                </a>
-                            </MagneticButton>
+                            {/* Botões CTA com feedback tátil e padronização nobre de alta densidade */}
+                            <div className="flex flex-col sm:flex-row gap-3.5 pt-4 justify-center lg:justify-start items-center">
+                                <MagneticButton strength={0.35}>
+                                    <a
+                                        href="#projetos"
+                                        data-cursor-morph="true"
+                                        className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-mono text-xs font-semibold tracking-tight transition-all active:scale-[0.98] shadow-sm inline-flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden"
+                                    >
+                                        {t('hero.verProjetos')}
+                                    </a>
+                                </MagneticButton>
 
-                            {/* Download CV */}
-                            <MagneticButton strength={0.3}>
-                                <a
-                                    href="/curriculo_pedro_henrique.pdf"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    download="curriculo_pedro_henrique.pdf"
-                                    data-cursor-morph="true"
-                                    className="px-5 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.15] text-neutral-200 font-mono text-xs font-medium transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-hidden"
-                                >
-                                    <i className="fas fa-file-pdf text-neutral-400" />
-                                    {t('hero.downloadCV') || 'Download CV'}
-                                </a>
-                            </MagneticButton>
+                                {/* Download CV */}
+                                <MagneticButton strength={0.3}>
+                                    <a
+                                        href="/curriculo_pedro_henrique.pdf"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download="curriculo_pedro_henrique.pdf"
+                                        data-cursor-morph="true"
+                                        className="px-5 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.15] text-neutral-200 font-mono text-xs font-medium transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-hidden"
+                                    >
+                                        <i className="fas fa-file-pdf text-neutral-400" />
+                                        {t('hero.downloadCV') || 'Download CV'}
+                                    </a>
+                                </MagneticButton>
 
-                            {/* Redes Sociais com mesmo chassi vítreo */}
-                            <div className="flex justify-center gap-2.5">
-                                {[
-                                    {
-                                        href: 'https://github.com/pedrhenriqueol',
-                                        label: 'GitHub',
-                                        icon: (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-                                                <path d="M9 18c-4.51 2-5-2-7-2" />
-                                            </svg>
-                                        ),
-                                    },
-                                    {
-                                        href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
-                                        label: 'LinkedIn',
-                                        icon: (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                                                <rect x="2" y="9" width="4" height="12" />
-                                                <circle cx="4" cy="4" r="2" />
-                                            </svg>
-                                        ),
-                                    },
-                                ].map((s, idx) => (
-                                    <MagneticButton key={idx} strength={0.3}>
-                                        <a
-                                            href={s.href}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            data-cursor-morph="true"
-                                            className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] text-neutral-300 hover:text-white transition-all inline-flex items-center justify-center active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-hidden"
-                                            aria-label={s.label}
-                                        >
-                                            {s.icon}
-                                        </a>
-                                    </MagneticButton>
-                                ))}
+                                {/* Redes Sociais com mesmo chassi vítreo */}
+                                <div className="flex justify-center gap-2.5">
+                                    {[
+                                        {
+                                            href: 'https://github.com/pedrhenriqueol',
+                                            label: 'GitHub',
+                                            icon: (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                                                    <path d="M9 18c-4.51 2-5-2-7-2" />
+                                                </svg>
+                                            ),
+                                        },
+                                        {
+                                            href: 'https://www.linkedin.com/in/pedro-henrique-b0a015391/',
+                                            label: 'LinkedIn',
+                                            icon: (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                                                    <rect x="2" y="9" width="4" height="12" />
+                                                    <circle cx="4" cy="4" r="2" />
+                                                </svg>
+                                            ),
+                                        },
+                                    ].map((s, idx) => (
+                                        <MagneticButton key={idx} strength={0.3}>
+                                            <a
+                                                href={s.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                data-cursor-morph="true"
+                                                className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] text-neutral-300 hover:text-white transition-all inline-flex items-center justify-center active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-hidden"
+                                                aria-label={s.label}
+                                            >
+                                                {s.icon}
+                                            </a>
+                                        </MagneticButton>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Terminal interativo com Lazy Loading & Suspense (7 colunas com respiro amplo) */}
+                    {/* Terminal interativo com Pivô Central no Scrollytelling (7 colunas) */}
                     <motion.div
-                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                        style={{
+                            scale: terminalScale,
+                            x: terminalX,
+                            opacity: terminalOpacity,
+                            willChange: 'transform, opacity',
+                        }}
                         className="lg:col-span-7 flex justify-center lg:justify-end w-full"
-                        ref={termRef}
                     >
-                        <div id="terminal" className="relative w-full max-w-xl xl:max-w-2xl">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/[0.03] blur-[100px] rounded-full pointer-events-none" />
-                            <Suspense fallback={
-                                <div className="w-full h-[500px] md:h-[540px] rounded-2xl bg-[#080a0f]/90 border border-white/10 p-6 flex flex-col justify-between animate-pulse">
-                                    <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                                        <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                                        <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                                        <div className="w-24 h-3 rounded bg-white/10 ml-auto" />
+                        <div ref={termRef} className="w-full flex justify-center lg:justify-end">
+                            <div id="terminal" className="relative w-full max-w-xl xl:max-w-2xl">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/[0.03] blur-[100px] rounded-full pointer-events-none" />
+                                <Suspense fallback={
+                                    <div className="w-full h-[500px] md:h-[540px] rounded-2xl bg-[#080a0f]/90 border border-white/10 p-6 flex flex-col justify-between animate-pulse">
+                                        <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                                            <div className="w-24 h-3 rounded bg-white/10 ml-auto" />
+                                        </div>
+                                        <div className="space-y-4 py-6 flex-grow">
+                                            <div className="w-3/4 h-3 rounded bg-white/10" />
+                                            <div className="w-1/2 h-3 rounded bg-white/10" />
+                                            <div className="w-5/6 h-3 rounded bg-white/10" />
+                                        </div>
+                                        <div className="w-full h-10 rounded bg-white/10" />
                                     </div>
-                                    <div className="space-y-4 py-6 flex-grow">
-                                        <div className="w-3/4 h-3 rounded bg-white/10" />
-                                        <div className="w-1/2 h-3 rounded bg-white/10" />
-                                        <div className="w-5/6 h-3 rounded bg-white/10" />
-                                    </div>
-                                    <div className="w-full h-10 rounded bg-white/10" />
-                                </div>
-                            }>
-                                <InteractiveTerminal />
-                            </Suspense>
+                                }>
+                                    <InteractiveTerminal />
+                                </Suspense>
+                            </div>
                         </div>
                     </motion.div>
 

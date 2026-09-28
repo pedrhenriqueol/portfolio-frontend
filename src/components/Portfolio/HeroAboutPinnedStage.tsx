@@ -6,41 +6,30 @@ import AboutMe from './AboutMe';
 /**
  * HeroAboutPinnedStage — Palco Fixo de Scrollytelling (Pinned Container)
  *
- * Arquitetura:
- * ┌─────────────────────────────────────────────┐
- * │  Track Exterior: height 220vh (scroll rail)  │
- * │  ┌─────────────────────────────────────────┐ │
- * │  │  Viewport Fixada: sticky top-0 h-screen │ │
- * │  │  ┌────────────────────────────────────┐  │ │
- * │  │  │  Camada Hero (sai com fade/blur)   │  │ │
- * │  │  ├────────────────────────────────────┤  │ │
- * │  │  │  Camada AboutMe (entra com fade)   │  │ │
- * │  │  └────────────────────────────────────┘  │ │
- * │  └─────────────────────────────────────────┘ │
- * └─────────────────────────────────────────────┘
+ * Arquitetura de Linha do Tempo (220vh):
+ * ┌────────────────────────────────────────────────────────────────────────┐
+ * │  Pista de Rolagem (Scroll Track): relative h-[220vh] bg-[#05070a]       │
+ * │  ┌──────────────────────────────────────────────────────────────────┐  │
+ * │  │  Palco Fixo (Sticky Viewport): sticky top-0 h-screen w-full      │  │
+ * │  │  ┌────────────────────────────────────────────────────────────┐  │  │
+ * │  │  │  Fase 1 (0.00-0.35): Hero Texto estável, desliza e fade    │  │  │
+ * │  │  │  Fase 2 (0.15-0.65): Terminal pivô central (scale 1->0.92)│  │  │
+ * │  │  │  Fase 3 (0.40-0.90): Sobre Mim entra da direita (x: 60->0) │  │  │
+ * │  │  │  Fase 4 (0.90-1.00): Liberação natural do sticky           │  │  │
+ * │  │  └────────────────────────────────────────────────────────────┘  │  │
+ * │  └──────────────────────────────────────────────────────────────────┘  │
+ * └────────────────────────────────────────────────────────────────────────┘
  *
- * Fases de Scroll (0 → 1 dentro do track):
- *   0.00 – 0.30  →  Hero 100% visível, estável
- *   0.30 – 0.55  →  Hero faz fade out + blur + translação Y negativa
- *   0.40 – 0.70  →  AboutMe faz fade in + deblur + translação Y positiva → 0
- *   0.65 – 1.00  →  AboutMe 100% visível, estável
- *
- * Regras de Performance:
- * - Estritamente compositor-only: anima APENAS opacity, transform e filter (blur)
- * - Zero geometry changes (width, height, margin, padding)
- * - will-change: transform, opacity em ambas as camadas
- * - transform: translateZ(0) para promoção de camada de composição
- * - Compatível com low-end (iGPU Intel / throttling térmico)
- *
- * Regras Estruturais:
- * - O container pai NÃO pode ter overflow: hidden no eixo Y (quebraria sticky)
- * - Usa overflow-x: clip no body (já configurado no App.tsx)
- * - Reset de scroll no topo ao recarregar (scrollRestoration: manual)
+ * Performance Low-End:
+ * - Aceleração exclusiva por GPU (transform: x, scale; e opacity)
+ * - Zero propriedades de geometria (width, height, top, left, margin)
+ * - will-change: transform, opacity em nós animados
+ * - Prevenção de conflito de overflow (overflow-x: clip na raiz, nunca overflow-y: hidden)
  */
 export default function HeroAboutPinnedStage() {
     const trackRef = useRef<HTMLDivElement>(null);
 
-    // ── Reset de scroll no topo ao recarregar a página ──
+    // Reset de scroll no topo ao recarregar a página para evitar desfasamento
     useEffect(() => {
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual';
@@ -48,81 +37,74 @@ export default function HeroAboutPinnedStage() {
         window.scrollTo(0, 0);
     }, []);
 
-    // ── Progresso de scroll normalizado (0 → 1) dentro do track de 220vh ──
+    // Progresso de scroll normalizado (0 -> 1) dentro do track estendido de 220vh
     const { scrollYProgress } = useScroll({
         target: trackRef,
         offset: ['start start', 'end end'],
     });
 
-    // ── Hero: Interpolação de Saída ──
-    // Fase estável (0 – 0.30), depois fade+blur+translate para cima
-    const heroOpacity = useTransform(scrollYProgress, [0, 0.30, 0.55], [1, 1, 0]);
-    const heroY = useTransform(scrollYProgress, [0, 0.30, 0.55], [0, 0, -60]);
-    const heroBlur = useTransform(scrollYProgress, [0, 0.30, 0.50], [0, 0, 12]);
-    const heroScale = useTransform(scrollYProgress, [0, 0.30, 0.55], [1, 1, 0.97]);
-    // Pointer events: desabilita interação com Hero quando ele já desapareceu
-    const heroPointerEvents = useTransform(scrollYProgress, (v: number) =>
-        v > 0.50 ? 'none' : 'auto'
-    );
-    // Filter blur derivado (deve ser declarado no corpo do componente, não inline)
-    const heroFilter = useTransform(heroBlur, (v: number) => `blur(${v}px)`);
+    // ── Fase 1: Hero Text (0.0 a 0.35 estável; fade out e translação X negativa entre 0.25 e 0.40) ──
+    const heroTextOpacity = useTransform(scrollYProgress, [0, 0.25, 0.40], [1, 1, 0]);
+    const heroTextX       = useTransform(scrollYProgress, [0, 0.25, 0.40], [0, 0, -60]);
 
-    // ── AboutMe: Interpolação de Entrada ──
-    // Começa invisível, sobe de baixo com deblur
-    const aboutOpacity = useTransform(scrollYProgress, [0.35, 0.55, 0.70], [0, 0.6, 1]);
-    const aboutY = useTransform(scrollYProgress, [0.35, 0.55, 0.70], [50, 20, 0]);
-    const aboutBlur = useTransform(scrollYProgress, [0.35, 0.55, 0.65], [10, 4, 0]);
-    const aboutScale = useTransform(scrollYProgress, [0.35, 0.55, 0.70], [0.97, 0.99, 1]);
-    // Pointer events: desabilita interação com AboutMe quando ele ainda não apareceu
+    // ── Fase 2: Terminal Interativo Pivô Central (0.15 a 0.65) ──
+    // Translada para a esquerda e reduz suavemente a escala (1 -> 0.92) para abrir espaço visual
+    const terminalScale   = useTransform(scrollYProgress, [0, 0.15, 0.65], [1, 1, 0.92]);
+    const terminalX       = useTransform(scrollYProgress, [0, 0.15, 0.65], [0, 0, -40]);
+    // Fade out suave do terminal após o pivô para focar integralmente no Sobre Mim
+    const terminalOpacity = useTransform(scrollYProgress, [0, 0.62, 0.80], [1, 1, 0]);
+
+    // Pointer events da camada Hero: desabilita interação após transição do texto
+    const heroPointerEvents = useTransform(scrollYProgress, (v: number) =>
+        v > 0.45 ? 'none' : 'auto'
+    );
+
+    // ── Fase 3: Sobre Mim vindo da direita (0.40 a 0.90) ──
+    // Entrada com opacidade 0 -> 1 e translação suave x: 60px -> 0
+    const aboutOpacity = useTransform(scrollYProgress, [0.40, 0.70, 0.90], [0, 0.75, 1]);
+    const aboutX       = useTransform(scrollYProgress, [0.40, 0.80], [60, 0]);
+
+    // Pointer events da camada Sobre Mim: habilita interação quando estiver visível
     const aboutPointerEvents = useTransform(scrollYProgress, (v: number) =>
         v < 0.45 ? 'none' : 'auto'
     );
-    // Filter blur derivado
-    const aboutFilter = useTransform(aboutBlur, (v: number) => `blur(${v}px)`);
 
     return (
         <div
+            id="pinned-stage"
             ref={trackRef}
-            className="relative w-full"
-            style={{ height: '220vh' }}
+            className="relative h-[220vh] bg-[#05070a] w-full"
         >
-            {/* ── Viewport Fixada (Sticky Stage) ── */}
-            <div
-                className="sticky top-0 w-full overflow-hidden"
-                style={{
-                    height: '100vh',
-                    /* Não usar overflow: hidden no eixo Y no pai,
-                       mas podemos usar no viewport fixada pois ela é um nó folha */
-                }}
-            >
-                {/* ── Camada Hero (z-20, sai primeiro) ── */}
+            {/* ── Palco Fixo (Sticky Viewport) ── */}
+            <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+
+                {/* ── Camada 1: Hero (Texto + Terminal Pivô) ── */}
                 <motion.div
-                    className="absolute inset-0 w-full h-full z-20"
+                    className="absolute inset-0 w-full h-full z-10 flex items-center justify-center"
                     style={{
-                        opacity: heroOpacity,
-                        y: heroY,
-                        scale: heroScale,
-                        filter: heroFilter,
                         pointerEvents: heroPointerEvents,
-                        willChange: 'transform, opacity, filter',
                         transform: 'translateZ(0)',
                     }}
                 >
-                    <div className="w-full h-full overflow-y-auto">
-                        <Hero />
+                    <div className="w-full h-full flex items-center justify-center">
+                        <Hero
+                            heroTextOpacity={heroTextOpacity}
+                            heroTextX={heroTextX}
+                            terminalScale={terminalScale}
+                            terminalX={terminalX}
+                            terminalOpacity={terminalOpacity}
+                        />
                     </div>
                 </motion.div>
 
-                {/* ── Camada AboutMe (z-10, entra por baixo) ── */}
+                {/* ── Camada 2: Sobre Mim (Entrada da direita no Scrollytelling) ── */}
                 <motion.div
-                    className="absolute inset-0 w-full h-full z-10"
+                    className="absolute inset-0 w-full h-full z-20 flex items-center justify-center"
                     style={{
                         opacity: aboutOpacity,
-                        y: aboutY,
-                        scale: aboutScale,
-                        filter: aboutFilter,
+                        x: aboutX,
                         pointerEvents: aboutPointerEvents,
-                        willChange: 'transform, opacity, filter',
+                        willChange: 'transform, opacity',
                         transform: 'translateZ(0)',
                     }}
                 >
@@ -131,7 +113,7 @@ export default function HeroAboutPinnedStage() {
                     </div>
                 </motion.div>
 
-                {/* ── Gradiente de Transição na Base (suaviza corte visual com a próxima seção) ── */}
+                {/* ── Gradiente de Transição na Base ── */}
                 <div
                     aria-hidden="true"
                     className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#05070a] pointer-events-none z-30"

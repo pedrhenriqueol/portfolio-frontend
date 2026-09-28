@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import InteractiveParticleField from './components/Portfolio/InteractiveParticleField';
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
-import Header from './components/Portfolio/Header';
+import Navbar from './components/Portfolio/Navbar';
 import HeroAboutPinnedStage from './components/Portfolio/HeroAboutPinnedStage';
 import Experience from './components/Portfolio/Experience';
 import Skills from './components/Portfolio/Skills';
@@ -99,8 +99,8 @@ export default function App() {
                 />
             </Suspense>
 
-            {/* ── Header (Fixo no Topo com Revelação Sincronizada) ── */}
-            <Header isLoaded={isLoaded} />
+            {/* ── Navbar (Fixo no Topo com Revelação Sincronizada) ── */}
+            <Navbar isLoaded={isLoaded} />
 
             {/* ── Iluminação Volumétrica de Dupla Camada ── */}
             <div className="relative z-10 w-full pointer-events-none">
