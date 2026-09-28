@@ -20,29 +20,6 @@ export default function InteractiveParticleField() {
 
         let animationFrameId = null;
         let isDocVisible = !document.hidden;
-        let isHeroVisible = true;
-
-        // IntersectionObserver para pausar rAF quando o Hero não estiver visível na tela
-        const heroEl = document.getElementById('home');
-        const heroObserver = new IntersectionObserver(
-            ([entry]) => {
-                isHeroVisible = entry ? entry.isIntersecting : true;
-                if (isHeroVisible && isDocVisible) {
-                    wakeUp();
-                    if (!animationFrameId) {
-                        animationFrameId = requestAnimationFrame(render);
-                    }
-                } else if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-            },
-            { threshold: 0 }
-        );
-
-        if (heroEl) {
-            heroObserver.observe(heroEl);
-        }
 
         // Mouse coordinates, velocity and dynamic radius
         const mouse = {
@@ -137,7 +114,7 @@ export default function InteractiveParticleField() {
                 isSleeping = false;
                 idleFrames = 0;
             }
-            if (!animationFrameId && isDocVisible && isHeroVisible) {
+            if (!animationFrameId && isDocVisible) {
                 animationFrameId = requestAnimationFrame(render);
             }
         };
@@ -181,11 +158,12 @@ export default function InteractiveParticleField() {
             mouse.y = -1000;
             mouse.speed = 0;
             mouse.currentRadius = mouse.baseRadius;
+            wakeUp();
         };
 
         const handleVisibilityChange = () => {
             isDocVisible = !document.hidden;
-            if (isDocVisible && isHeroVisible) {
+            if (isDocVisible) {
                 wakeUp();
                 if (!animationFrameId) {
                     animationFrameId = requestAnimationFrame(render);
@@ -197,7 +175,7 @@ export default function InteractiveParticleField() {
         };
 
         const render = () => {
-            if (!isDocVisible || !isHeroVisible) {
+            if (!isDocVisible) {
                 animationFrameId = null;
                 return;
             }
@@ -290,8 +268,9 @@ export default function InteractiveParticleField() {
                 }
             }
 
-            // Deteccao de repouso: se o mouse esta parado e particulas assentadas
-            if (mouse.x < 0 && maxDisplacement < 0.15 && maxVelocity < 0.05) {
+            // Deteccao de repouso: se o mouse esta inativo ou fora e as particulas assentadas
+            const isMouseIdle = (performance.now() - lastMoveTime) > 1200;
+            if ((mouse.x < 0 || isMouseIdle) && maxDisplacement < 0.15 && maxVelocity < 0.05) {
                 idleFrames++;
                 if (idleFrames > 30) {
                     // Particulas em repouso total: parar o loop para zerar consumo de CPU/GPU
@@ -320,7 +299,6 @@ export default function InteractiveParticleField() {
 
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            heroObserver.disconnect();
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', updateRect);
             window.removeEventListener('mousemove', handleMouseMove);
