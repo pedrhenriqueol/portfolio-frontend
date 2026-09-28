@@ -7,25 +7,12 @@ const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
 /**
  * HeroAboutScrollytelling:
- * Coreografia de Scrollytelling Pinned Stage inspirada na referência técnica de alto padrão:
+ * Coreografia de animação cinemática por rolagem com Palco Fixo (Pinned Stage).
  * 
- * 1. Dobra 1 (Hero State - 0.00 a 0.35):
- *    - Esquerda: Identificação, tipografia display monumental, badge de status, biografia e CTAs magnéticos.
- *    - Direita: Cockpit de engenharia (InteractiveTerminal).
- * 
- * 2. Transição Imersiva (Cross-fade Coreografado - 0.25 a 0.60):
- *    - Textos do Hero deslizam para a esquerda com fade out e blur progressivo.
- *    - O elemento pivô (Terminal) translada suavemente para a direita e reduz levemente a escala (profundidade de câmera 3D).
- *    - A seção "O QUE EU FAÇO" surge com tipografia brutalista à esquerda e cards técnicos à direita.
- * 
- * 3. Dobra 2 ("O QUE EU FAÇO" - 0.55 a 0.88):
- *    - Tipografia de impacto: "O QUE" em branco puro e "EU FAÇO" em verde esmeralda.
- *    - Dois cards de capacidade técnica com spotlight nativo via CSS Custom Properties (--mouse-x, --mouse-y).
- *    - Âncora de navegação fluida "Minha carreira & experiência ➔" apontando para a Bento Grid completa em #sobre.
- * 
- * 4. Desbloqueio e Saída Natural (0.88 a 1.00):
- *    - O palco sticky desliza suavemente junto com a rolagem nativa da janela.
- *    - Zero Scroll Hijacking: 100% dirigido por window.scrollY, sem overflow-y interno capturando a roda do mouse.
+ * FASE 1 (0.00 - 0.25): Hero em destaque total (Texto de impacto + Cockpit Terminal + Dock de redes).
+ * FASE 2 (0.25 - 0.50): Transição fluida de saída (Hero foge com blur progressivo; Terminal desliza com scale-down).
+ * FASE 3 (0.45 - 0.85): Entrada sincronizada de "O QUE EU FAÇO" (Tipografia brutalista + 2 cards técnicos de alta densidade).
+ * FASE 4 (0.85 - 1.00): Liberação natural do palco para a sequência da página (Zero scroll-hijacking / 100% window scroll).
  */
 export default function HeroAboutScrollytelling() {
     const { t, lang } = useLanguage();
@@ -37,30 +24,30 @@ export default function HeroAboutScrollytelling() {
         offset: ['start start', 'end end'],
     });
 
-    // ── Interpolações GPU-only (Compositor Thread): Hero ──
-    const heroTextX = useTransform(scrollYProgress, [0.1, 0.42], [0, -120]);
-    const heroTextOpacity = useTransform(scrollYProgress, [0.1, 0.38], [1, 0]);
-    const heroTextFilter = useTransform(scrollYProgress, [0.1, 0.38], ['blur(0px)', 'blur(8px)']);
+    // ── FASE 2: Transição Fluida de Saída do Hero (Compositor GPU-Only) ──
+    const heroTextOpacity = useTransform(scrollYProgress, [0.20, 0.38], [1, 0]);
+    const heroTextX = useTransform(scrollYProgress, [0.20, 0.38], [0, -100]);
+    const heroTextFilter = useTransform(scrollYProgress, [0.20, 0.38], ['blur(0px)', 'blur(8px)']);
 
-    // Elemento Pivô (Terminal): translada em X e assume papel de background técnico
-    const pivotX = useTransform(scrollYProgress, [0.1, 0.55], [0, 120]);
-    const pivotScale = useTransform(scrollYProgress, [0.1, 0.55], [1, 0.88]);
-    const pivotOpacity = useTransform(scrollYProgress, [0.38, 0.65], [1, 0.7]);
+    // O Terminal translada suavemente e reduz de escala para abrir espaço cênico
+    const terminalScale = useTransform(scrollYProgress, [0.25, 0.45], [1, 0.90]);
+    const terminalX = useTransform(scrollYProgress, [0.25, 0.45], ['0%', '-25%']);
+    const terminalOpacity = useTransform(scrollYProgress, [0.25, 0.42, 0.52], [1, 0.6, 0]);
 
-    // ── Interpolações GPU-only (Compositor Thread): "O QUE EU FAÇO" ──
-    const aboutTitleX = useTransform(scrollYProgress, [0.35, 0.65], [-90, 0]);
-    const aboutTitleOpacity = useTransform(scrollYProgress, [0.35, 0.62], [0, 1]);
-    const aboutTitleFilter = useTransform(scrollYProgress, [0.35, 0.62], ['blur(8px)', 'blur(0px)']);
+    // ── FASE 3: Entrada Sincronizada do Bloco "O QUE EU FAÇO" (Compositor GPU-Only) ──
+    const aboutTitleOpacity = useTransform(scrollYProgress, [0.42, 0.55], [0, 1]);
+    const aboutTitleX = useTransform(scrollYProgress, [0.42, 0.55], [-60, 0]);
+    const aboutTitleFilter = useTransform(scrollYProgress, [0.42, 0.55], ['blur(8px)', 'blur(0px)']);
 
-    const aboutCardsX = useTransform(scrollYProgress, [0.4, 0.7], [90, 0]);
-    const aboutCardsOpacity = useTransform(scrollYProgress, [0.4, 0.68], [0, 1]);
-    const aboutCardsFilter = useTransform(scrollYProgress, [0.4, 0.68], ['blur(8px)', 'blur(0px)']);
+    const aboutCardsOpacity = useTransform(scrollYProgress, [0.45, 0.58], [0, 1]);
+    const aboutCardsX = useTransform(scrollYProgress, [0.45, 0.58], [80, 0]);
+    const aboutCardsFilter = useTransform(scrollYProgress, [0.45, 0.58], ['blur(8px)', 'blur(0px)']);
 
-    // Visibilidade estrita dos ponteiros para blindar contra cliques fantasmas
-    const heroPointerEvents = useTransform(scrollYProgress, (v) => (v < 0.4 ? 'auto' : 'none'));
-    const aboutPointerEvents = useTransform(scrollYProgress, (v) => (v > 0.4 ? 'auto' : 'none'));
+    // Pointer Events dinâmicos para proteção rigorosa contra cliques fantasmas
+    const heroPointerEvents = useTransform(scrollYProgress, (v) => (v < 0.40 ? 'auto' : 'none'));
+    const aboutPointerEvents = useTransform(scrollYProgress, (v) => (v >= 0.45 && v <= 0.95 ? 'auto' : 'none'));
 
-    // Manipulador de spotlight nativo nos cards (Zero useState / Zero re-render overhead)
+    // Manipulador de spotlight nativo nos cartões de engenharia (Zero useState / Zero re-render overhead)
     const handleCardMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
@@ -71,15 +58,12 @@ export default function HeroAboutScrollytelling() {
         <section
             id="home"
             ref={containerRef}
-            className="relative w-full h-[220vh] bg-transparent"
+            className="relative w-full h-[220vh] bg-[#05070a]"
         >
-            {/* ── Palco Fixo Pinned na Viewport (100% Window Scroll / Sem Trava de Rolagem) ── */}
-            <div 
-                className="sticky top-0 h-screen w-full flex items-center justify-center pointer-events-none"
-                style={{ overflow: 'clip' }}
-            >
+            {/* ── Palco Visual Travado na Viewport (Sem Capturar a Roda do Mouse) ── */}
+            <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center pointer-events-none">
                 
-                {/* ── Dock Lateral Esquerda (Redes Sociais Fixas) ── */}
+                {/* ── Dock Lateral Esquerda (Atalhos Sociais Fixos) ── */}
                 <div className="hidden xl:flex fixed left-8 bottom-12 flex-col items-center gap-5 z-20 pointer-events-auto">
                     {[
                         {
@@ -132,11 +116,11 @@ export default function HeroAboutScrollytelling() {
                 <div className="max-w-7xl mx-auto px-6 sm:px-8 w-full relative h-full flex items-center">
                     
                     {/* ═════════════════════════════════════════════════════════════════ */}
-                    {/* FASE 1: HERO STATE (Textos Iniciais + Cockpit Terminal)            */}
+                    {/* FASE 1: HERO EM DESTAQUE (0.00 a 0.25 do scroll)                  */}
                     {/* ═════════════════════════════════════════════════════════════════ */}
                     <div className="absolute inset-x-6 sm:inset-x-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                         
-                        {/* Coluna de Texto Hero (Esquerda) */}
+                        {/* Coluna Esquerda: Apresentação */}
                         <motion.div
                             style={{
                                 x: heroTextX,
@@ -144,28 +128,24 @@ export default function HeroAboutScrollytelling() {
                                 filter: heroTextFilter,
                                 pointerEvents: heroPointerEvents,
                             }}
-                            className="lg:col-span-5 text-center lg:text-left space-y-5"
+                            className="lg:col-span-5 text-center lg:text-left space-y-5 will-change-[transform,opacity]"
                         >
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="font-mono text-[11px] tracking-[0.22em] text-neutral-300 uppercase">
-                                    {lang === 'en'
-                                        ? '// 00. FULLSTACK SOFTWARE ENGINEER'
-                                        : lang === 'es'
-                                        ? '// 00. INGENIERO DE SOFTWARE FULLSTACK'
-                                        : '// 00. ENGENHARIA DE SOFTWARE & QA'}
+                            {/* Badge superior: "Olá! Eu sou" em verde esmeralda com fundo translúcido sutil */}
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                                <span className="font-serif italic text-emerald-400 text-sm font-medium tracking-wide">
+                                    {lang === 'en' ? "Hello! I'm" : lang === 'es' ? '¡Hola! Soy' : 'Olá! Eu sou'}
                                 </span>
                             </div>
 
+                            {/* Título de impacto: "PEDRO HENRIQUE" em tipografia bold de alto contraste */}
                             <div>
-                                <span className="text-emerald-400 text-lg sm:text-xl font-serif italic block mb-1">
-                                    {lang === 'en' ? "Hello! I'm" : lang === 'es' ? '¡Hola! Soy' : 'Olá! Eu sou'}
-                                </span>
-                                <h1 className="text-4xl sm:text-6xl md:text-7xl font-sans font-black text-white tracking-tight leading-none uppercase">
+                                <h1 className="text-4xl sm:text-6xl md:text-7xl font-sans font-black text-white tracking-tight leading-none uppercase drop-shadow-sm">
                                     Pedro<br />Henrique
                                 </h1>
                             </div>
 
+                            {/* Subtítulo técnico */}
                             <p className="text-neutral-400 text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0">
                                 {lang === 'en'
                                     ? 'Specialist in modern web architecture, enterprise legacy modernization (Delphi/Laravel), and high-reliability systems.'
@@ -174,6 +154,7 @@ export default function HeroAboutScrollytelling() {
                                     : 'Especialista em arquitetura web moderna, modernização de sistemas corporativos (Delphi/Laravel) e alta disponibilidade.'}
                             </p>
 
+                            {/* Botões de Ação */}
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
                                 <MagneticButton strength={0.35}>
                                     <a
@@ -192,20 +173,20 @@ export default function HeroAboutScrollytelling() {
                                         className="px-5 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-neutral-200 font-mono text-xs font-medium transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98] pointer-events-auto"
                                     >
                                         <i className="fas fa-file-pdf text-neutral-400" />
-                                        {t('hero.downloadCV') || 'Download CV'}
+                                        {t('hero.downloadCV') || 'Baixar CV'}
                                     </a>
                                 </MagneticButton>
                             </div>
                         </motion.div>
 
-                        {/* Coluna Direita: Interactive Terminal (Elemento Pivô de Transição) */}
+                        {/* Coluna Direita: Interactive Terminal (Cockpit de Engenharia) */}
                         <motion.div
                             style={{
-                                x: pivotX,
-                                scale: pivotScale,
-                                opacity: pivotOpacity,
+                                x: terminalX,
+                                scale: terminalScale,
+                                opacity: terminalOpacity,
                             }}
-                            className="hidden sm:flex lg:col-span-7 justify-center pointer-events-auto"
+                            className="hidden sm:flex lg:col-span-7 justify-center pointer-events-auto will-change-[transform,opacity]"
                         >
                             <div className="w-full max-w-xl">
                                 <Suspense fallback={<div className="h-64 rounded-xl bg-white/[0.02] border border-white/10 animate-pulse" />}>
@@ -216,11 +197,11 @@ export default function HeroAboutScrollytelling() {
                     </div>
 
                     {/* ═════════════════════════════════════════════════════════════════ */}
-                    {/* FASE 2: "O QUE EU FAÇO" STATE (Exatamente como na Referência)     */}
+                    {/* FASE 3: ENTRADA DO BLOCO "O QUE EU FAÇO" (0.45 a 0.85 do scroll)  */}
                     {/* ═════════════════════════════════════════════════════════════════ */}
                     <div className="absolute inset-x-6 sm:inset-x-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pointer-events-none">
                         
-                        {/* Coluna Esquerda: Tipografia Monumental "O QUE EU FAÇO" */}
+                        {/* Coluna Esquerda: Tipografia Brutalista & Posicionamento */}
                         <motion.div
                             style={{
                                 x: aboutTitleX,
@@ -228,7 +209,7 @@ export default function HeroAboutScrollytelling() {
                                 filter: aboutTitleFilter,
                                 pointerEvents: aboutPointerEvents,
                             }}
-                            className="lg:col-span-5 space-y-6 text-left"
+                            className="lg:col-span-5 space-y-6 text-left will-change-[transform,opacity]"
                         >
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -241,17 +222,17 @@ export default function HeroAboutScrollytelling() {
                                 <h2 className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-white drop-shadow-sm">
                                     {lang === 'en' ? 'WHAT' : lang === 'es' ? 'LO QUE' : 'O QUE'}
                                 </h2>
-                                <h2 className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-emerald-400 drop-shadow-[0_2px_18px_rgba(52,211,153,0.25)]">
+                                <h2 className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-[#10b981] drop-shadow-[0_2px_20px_rgba(16,185,129,0.30)]">
                                     {lang === 'en' ? 'I DO' : lang === 'es' ? 'HAGO' : 'EU FAÇO'}
                                 </h2>
                             </div>
 
                             <p className="text-neutral-300 text-sm sm:text-base leading-relaxed max-w-md">
                                 {lang === 'en'
-                                    ? 'Engineering solutions from end-to-end: system architecture, API performance tuning, database optimization, and modern reactive frontends.'
+                                    ? 'Software Engineer focused on mission-critical enterprise systems, legacy modernization, high-scale APIs, and rigorous software quality.'
                                     : lang === 'es'
-                                    ? 'Ingeniería de software de punta a punta: arquitectura de sistemas, optimización de APIs, ajuste de bases de datos e interfaces reactivas.'
-                                    : 'Engenharia de software de ponta a ponta: arquitetura de sistemas, tuning de APIs, modelagem de bancos relacionais e interfaces reativas modernas.'}
+                                    ? 'Ingeniero de Software enfocado en sistemas corporativos de misión crítica, modernización legacy, APIs de alta escala y rigurosa calidad de software.'
+                                    : 'Engenheiro de Software com foco em sistemas corporativos de missão crítica, modernização de legados, APIs de alta escala e qualidade rigorosa de software.'}
                             </p>
 
                             <div className="pt-2">
@@ -262,20 +243,20 @@ export default function HeroAboutScrollytelling() {
                                     >
                                         <span>
                                             {lang === 'en'
-                                                ? 'My career & experience'
+                                                ? 'My career & experience ↓'
                                                 : lang === 'es'
-                                                ? 'Mi carrera y experiencia'
-                                                : 'Minha carreira & experiência'}
+                                                ? 'Mi carrera y experiencia ↓'
+                                                : 'Minha carreira & experiência ↓'}
                                         </span>
-                                        <span className="w-8 h-8 rounded-full border border-white/20 group-hover:border-emerald-400/50 bg-white/5 flex items-center justify-center transition-all group-hover:translate-x-1">
-                                            ➔
+                                        <span className="w-8 h-8 rounded-full border border-white/20 group-hover:border-emerald-400/50 bg-white/5 flex items-center justify-center transition-all group-hover:translate-y-0.5">
+                                            ↓
                                         </span>
                                     </a>
                                 </MagneticButton>
                             </div>
                         </motion.div>
 
-                        {/* Coluna Direita: Cards de Engenharia com Spotlight e Alta Densidade */}
+                        {/* Coluna Direita: 2 Cards Técnicos de Engenharia com Efeito Spotlight */}
                         <motion.div
                             style={{
                                 x: aboutCardsX,
@@ -283,9 +264,9 @@ export default function HeroAboutScrollytelling() {
                                 filter: aboutCardsFilter,
                                 pointerEvents: aboutPointerEvents,
                             }}
-                            className="lg:col-span-7 space-y-4"
+                            className="lg:col-span-7 space-y-4 will-change-[transform,opacity]"
                         >
-                            {/* Card 1: Full Stack & Arquitetura */}
+                            {/* Card 1: FULL STACK & ARQUITETURA CORPORATIVA */}
                             <div 
                                 onMouseMove={handleCardMouseMove}
                                 style={{ transform: 'translateZ(0)' }}
@@ -294,13 +275,13 @@ export default function HeroAboutScrollytelling() {
                                 <div
                                     className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10"
                                     style={{
-                                        background: 'radial-gradient(500px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(52, 211, 153, 0.08), transparent 60%)',
+                                        background: 'radial-gradient(500px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(16, 185, 129, 0.08), transparent 60%)',
                                     }}
                                 />
                                 <div className="relative z-20 flex items-center justify-between">
                                     <h3 className="font-mono text-sm font-bold tracking-wider uppercase text-white flex items-center gap-2.5">
                                         <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                                        FULL STACK &amp; ARQUITETURA
+                                        FULL STACK &amp; ARQUITETURA CORPORATIVA
                                     </h3>
                                     <span className="text-[10px] font-mono text-neutral-400 border border-white/10 px-2.5 py-0.5 rounded-full bg-white/[0.02]">
                                         CORE
@@ -308,13 +289,13 @@ export default function HeroAboutScrollytelling() {
                                 </div>
                                 <p className="relative z-20 text-neutral-300 text-xs sm:text-sm leading-relaxed">
                                     {lang === 'en'
-                                        ? 'End-to-end web products: responsive interfaces, RESTful APIs, third-party integrations, and robust business logic.'
+                                        ? 'End-to-end web products: modern SPAs, decoupled REST APIs, legacy monolith transitions, and clean domain architectures.'
                                         : lang === 'es'
-                                        ? 'Productos web de punta a punta: interfaces reactivas, APIs RESTful, integraciones y lógica de negocio sólida.'
-                                        : 'Produtos web de ponta a ponta: interfaces reativas, APIs RESTful, integrações e regras de negócio sólidas com arquitetura limpa.'}
+                                        ? 'Productos web de punta a punta: SPAs modernas, APIs REST desacopladas, transición de monolitos y arquitectura limpia.'
+                                        : 'Produtos web de ponta a ponta: SPAs modernas, APIs REST desacopladas, modernização de legados corporativos e regras de negócio sólidas.'}
                                 </p>
                                 <div className="relative z-20 flex flex-wrap gap-1.5 pt-2">
-                                    {['TypeScript', 'React.js', 'PHP/Laravel', 'Delphi/UniGui', 'SQL Server', 'Docker'].map((tech) => (
+                                    {['Delphi/UniGui', 'PHP/Laravel', 'React', 'TypeScript', 'SQL Server', 'Docker'].map((tech) => (
                                         <span
                                             key={tech}
                                             className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-white/[0.04] border border-white/[0.08] text-neutral-300 group-hover:border-white/20 transition-colors"
@@ -325,7 +306,7 @@ export default function HeroAboutScrollytelling() {
                                 </div>
                             </div>
 
-                            {/* Card 2: Produção & Performance */}
+                            {/* Card 2: PRODUÇÃO, BANCO DE DADOS & QA */}
                             <div 
                                 onMouseMove={handleCardMouseMove}
                                 style={{ transform: 'translateZ(0)' }}
@@ -340,21 +321,21 @@ export default function HeroAboutScrollytelling() {
                                 <div className="relative z-20 flex items-center justify-between">
                                     <h3 className="font-mono text-sm font-bold tracking-wider uppercase text-emerald-300 flex items-center gap-2.5">
                                         <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-                                        PRODUÇÃO &amp; PERFORMANCE
+                                        PRODUÇÃO, BANCO DE DADOS &amp; QA
                                     </h3>
                                     <span className="text-[10px] font-mono text-emerald-400/90 border border-emerald-500/25 px-2.5 py-0.5 rounded-full bg-emerald-500/[0.04]">
-                                        QUALITY
+                                        RELIABILITY
                                     </span>
                                 </div>
                                 <p className="relative z-20 text-neutral-300 text-xs sm:text-sm leading-relaxed">
                                     {lang === 'en'
-                                        ? 'Focus on post-deploy reliability: sub-100ms LCP, database query optimization, automated test pipelines, and zero layout shift.'
+                                        ? 'Post-deploy reliability: sub-100ms LCP, SQL query execution tuning, automated API testing suites, and continuous delivery.'
                                         : lang === 'es'
-                                        ? 'Enfoque en resiliencia post-despliegue: LCP sub-100ms, optimización de queries, pruebas de API y cero saltos de diseño.'
-                                        : 'Foco na resiliência em produção: LCP sub-100ms, eliminação de Table Scans via Index Seek, testes automatizados e zero layout shift.'}
+                                        ? 'Resiliencia en producción: LCP sub-100ms, optimización de queries SQL, pruebas automatizadas de API y entrega continua.'
+                                        : 'Foco na resiliência em produção: LCP sub-100ms, query tuning no SQL Server (Index Seek), esteiras de testes automatizados e observabilidade.'}
                                 </p>
                                 <div className="relative z-20 flex flex-wrap gap-1.5 pt-2">
-                                    {['Core Web Vitals', 'Index Seek Tuning', 'Postman QA', 'CI/CD Pipelines'].map((tag) => (
+                                    {['Otimização de Queries', 'Testes Automatizados', 'CI/CD', 'Observabilidade'].map((tag) => (
                                         <span
                                             key={tag}
                                             className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-emerald-500/[0.06] border border-emerald-500/25 text-emerald-300 group-hover:border-emerald-500/40 transition-colors"
@@ -370,7 +351,7 @@ export default function HeroAboutScrollytelling() {
 
                 </div>
 
-                {/* ── Indicador de Rolagem Sutil no Rodapé do Palco ── */}
+                {/* ── FASE 1: Indicador de Rolagem Sutil no Rodapé do Palco ── */}
                 <div className="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none">
                     <motion.div
                         style={{ opacity: heroTextOpacity }}
