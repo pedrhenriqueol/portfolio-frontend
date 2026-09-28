@@ -17,7 +17,7 @@ export const Hero: React.FC = () => {
     const targetRef = useRef({ x: 0, y: 0 });
     const currRef = useRef({ x: 0, y: 0 });
 
-    // ── Transição cinemática de saída por viewport no scroll nativo (Padrão Linear / Raycast) ──
+    // ── Transição cinemática suave na saída da viewport (Linear / Vercel) ──
     const { scrollY } = useScroll();
     const heroOpacity = useTransform(scrollY, [0, 450], [1, 0.25]);
     const heroY = useTransform(scrollY, [0, 450], [0, -40]);
@@ -121,7 +121,7 @@ export const Hero: React.FC = () => {
         <section
             id="home"
             ref={sectionRef}
-            className="min-h-[90vh] py-20 bg-transparent flex items-center justify-center relative overflow-hidden"
+            className="min-h-[85vh] py-16 flex items-center justify-center relative overflow-hidden bg-transparent"
         >
             {/* Background blobs com máscara gradual de desvanecimento na base */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
@@ -148,7 +148,7 @@ export const Hero: React.FC = () => {
                 ))}
             </div>
 
-            {/* Conteúdo com Interpolação Cinemática Suave na Saída (Linear / Raycast) */}
+            {/* Conteúdo com Interpolação Cinemática Suave na Saída */}
             <motion.div
                 style={{ opacity: heroOpacity, y: heroY }}
                 className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full"
@@ -158,9 +158,9 @@ export const Hero: React.FC = () => {
 
                     {/* Text Container com min-height estável para ZERO CLS (5 colunas) */}
                     <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                         className="lg:col-span-5 text-center lg:text-left space-y-6 min-h-[420px] sm:min-h-[460px] flex flex-col justify-center"
                         ref={textRef}
                     >
@@ -269,9 +269,9 @@ export const Hero: React.FC = () => {
 
                     {/* Terminal interativo com Lazy Loading & Suspense (7 colunas com respiro amplo) */}
                     <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
                         className="lg:col-span-7 flex justify-center lg:justify-end w-full"
                         ref={termRef}
                     >
@@ -301,10 +301,10 @@ export const Hero: React.FC = () => {
                 </div>
             </motion.div>
 
-            {/* Gradiente de fade out na base do Hero para transição imperceptível com a seção Sobre Mim */}
+            {/* Gradiente de transição subtil na base do Hero para eliminar cortes visuais */}
             <div
                 aria-hidden="true"
-                className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-[#05070a] pointer-events-none z-20"
+                className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-b from-transparent to-[#05070a] pointer-events-none z-20"
             />
         </section>
     );
