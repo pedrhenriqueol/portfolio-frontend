@@ -160,7 +160,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                 mass: 0.5,
             }}
             style={{ willChange: 'transform, opacity' }}
-            className="fixed top-0 left-0 right-0 w-full z-50 transform-gpu bg-[#05070a]/80 backdrop-blur-md border-b border-white/[0.06] transition-colors duration-300"
+            className="fixed top-0 left-0 right-0 w-full z-50 transform-gpu bg-[#05070a]/85 backdrop-blur-md border-b border-white/[0.06] transition-colors duration-300"
         >
             {/* Linha sutil de progresso de rolagem no topo */}
             <div className="absolute top-0 left-0 right-0 h-[1.5px] z-10 bg-white/[0.03]">
@@ -171,7 +171,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                 />
             </div>
 
-            <div className={`transition-all duration-300 ${scrolled ? 'bg-[#05070a]/90' : 'bg-transparent'}`}>
+            <div className={`transition-all duration-300 ${scrolled ? 'bg-[#05070a]/95' : 'bg-transparent'}`}>
                 <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
                     
                     {/* Logotipo / Monograma (Esquerda): PH. */}
@@ -184,13 +184,13 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                         className="group flex items-center select-none cursor-pointer focus-visible:outline-none"
                         aria-label="Pedro Henrique - Início"
                     >
-                        <span className="font-sans text-[19px] font-extrabold tracking-tight text-white group-hover:text-accent transition-colors">
-                            PH<span className="text-emerald-400 font-extrabold ml-0.5">.</span>
+                        <span className="font-mono text-[18px] font-bold tracking-tight text-white group-hover:text-accent transition-colors">
+                            PH<span className="text-emerald-400 font-bold ml-0.5">.</span>
                         </span>
                     </a>
 
-                    {/* Grupo à Direita: Links + Pílula de Idiomas + Seletor de Paleta */}
-                    <div className="flex items-center gap-6 lg:gap-8">
+                    {/* Grupo à Direita: Links + Status + Pílula de Idiomas + Seletor de Paleta */}
+                    <div className="flex items-center gap-5 lg:gap-7">
 
                         {/* Links de Navegação (Desktop) */}
                         <nav className="hidden md:flex items-center gap-6 lg:gap-7" aria-label="Navegação principal">
@@ -217,6 +217,15 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                                 );
                             })}
                         </nav>
+
+                        {/* Indicador de Status Ativo (● online) */}
+                        <div className="hidden xl:inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px] tracking-wider uppercase select-none">
+                            <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                            </span>
+                            <span>online</span>
+                        </div>
 
                         {/* Pílula Seletora de Idiomas (PT | EN | ES) */}
                         <div className="inline-flex items-center bg-white/[0.04] border border-white/10 rounded-full p-0.5 gap-0.5 select-none">
