@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
@@ -17,10 +17,7 @@ export const Hero: React.FC = () => {
     const targetRef = useRef({ x: 0, y: 0 });
     const currRef = useRef({ x: 0, y: 0 });
 
-    // ── Transição cinemática suave na saída da viewport (Linear / Vercel) ──
-    const { scrollY } = useScroll();
-    const heroOpacity = useTransform(scrollY, [0, 450], [1, 0.25]);
-    const heroY = useTransform(scrollY, [0, 450], [0, -40]);
+    // Nota: Interpolação de scroll agora controlada pelo HeroAboutPinnedStage pai
 
     // Parallax sob demanda — otimizado por requestAnimationFrame
     useEffect(() => {
@@ -121,7 +118,7 @@ export const Hero: React.FC = () => {
         <section
             id="home"
             ref={sectionRef}
-            className="min-h-[85vh] py-16 flex items-center justify-center relative overflow-hidden bg-transparent"
+            className="h-screen py-16 flex items-center justify-center relative overflow-hidden bg-transparent"
         >
             {/* Background blobs com máscara gradual de desvanecimento na base */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
@@ -148,11 +145,8 @@ export const Hero: React.FC = () => {
                 ))}
             </div>
 
-            {/* Conteúdo com Interpolação Cinemática Suave na Saída */}
-            <motion.div
-                style={{ opacity: heroOpacity, y: heroY }}
-                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full"
-            >
+            {/* Conteúdo Principal */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
                 {/* Grid Hero Calibrado: 5 colunas para Conteúdo Textual / 7 colunas para o Terminal Interativo */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
@@ -299,13 +293,8 @@ export const Hero: React.FC = () => {
                     </motion.div>
 
                 </div>
-            </motion.div>
+            </div>
 
-            {/* Gradiente de transição subtil na base do Hero para eliminar cortes visuais */}
-            <div
-                aria-hidden="true"
-                className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-b from-transparent to-[#05070a] pointer-events-none z-20"
-            />
         </section>
     );
 };
