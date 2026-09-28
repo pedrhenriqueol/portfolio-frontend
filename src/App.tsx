@@ -16,6 +16,7 @@ import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import SystemPreloader from './components/Portfolio/SystemPreloader';
 import AmbientBackdrop from './components/Portfolio/AmbientBackdrop';
 import FixedBackdrop from './components/Portfolio/FixedBackdrop';
+import SceneCanvas from './components/canvas/SceneCanvas';
 import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
 import SectionDivider from './components/Portfolio/Common/SectionDivider';
 import { useLanguage } from './context/LanguageContext';
@@ -66,6 +67,9 @@ export default function App() {
             {/* ── Substrato Fixo Monolítico (#05070a com Iluminação Especular Superior) ── */}
             <FixedBackdrop />
 
+            {/* ── Camada de Fundo (WebGL Canvas R3F Fixo com frameloop="demand") ── */}
+            <SceneCanvas />
+
             {/* ── Sequência de Inicialização / Preloader Minimalista ── */}
             <AnimatePresence mode="wait">
                 {!isLoaded && (
@@ -108,14 +112,14 @@ export default function App() {
                 <AmbientBackdrop />
             </div>
 
-            {/* ── Conteúdo Principal com Fluxo de Rolagem Nativo ── */}
+            {/* ── Camada Superior (HUD / HTML Tradicional com Rolagem Vertical Nativa) ── */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={isLoaded ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="relative z-10 w-full"
+                className="relative z-10 w-full pointer-events-auto"
             >
-                <main className="relative min-h-screen bg-[#05070a] text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
+                <main className="relative min-h-screen bg-transparent text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
                     <Hero />
                     <SectionDivider marker="+" />
                     <AboutMe />
