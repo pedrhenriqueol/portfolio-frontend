@@ -1,26 +1,14 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { motion, type MotionValue } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
 
 const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
-export interface HeroProps {
-    heroTextOpacity?: MotionValue<number>;
-    heroTextX?: MotionValue<number>;
-    terminalScale?: MotionValue<number>;
-    terminalX?: MotionValue<number>;
-    terminalOpacity?: MotionValue<number>;
-}
+export interface HeroProps {}
 
-export const Hero: React.FC<HeroProps> = ({
-    heroTextOpacity,
-    heroTextX,
-    terminalScale,
-    terminalX,
-    terminalOpacity,
-}) => {
+export const Hero: React.FC<HeroProps> = () => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement | null>(null);
     const textRef = useRef<HTMLDivElement | null>(null);
@@ -130,7 +118,7 @@ export const Hero: React.FC<HeroProps> = ({
         <section
             id="home"
             ref={sectionRef}
-            className="h-screen py-16 flex items-center justify-center relative overflow-hidden bg-transparent"
+            className="min-h-screen py-20 lg:py-28 flex items-center justify-center relative overflow-hidden bg-transparent"
         >
             {/* Background blobs com máscara gradual de desvanecimento na base */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
@@ -162,13 +150,11 @@ export const Hero: React.FC<HeroProps> = ({
                 {/* Grid Hero Calibrado: 5 colunas para Conteúdo Textual / 7 colunas para o Terminal Interativo */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
-                    {/* Text Container com Framer Motion Scroll Sync (5 colunas) */}
+                    {/* Text Container com entrada cinemática limpa (5 colunas) */}
                     <motion.div
-                        style={{
-                            opacity: heroTextOpacity,
-                            x: heroTextX,
-                            willChange: 'transform, opacity',
-                        }}
+                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                         className="lg:col-span-5 text-center lg:text-left space-y-6 min-h-[420px] sm:min-h-[460px] flex flex-col justify-center"
                     >
                         <div ref={textRef} className="w-full space-y-6">
@@ -276,14 +262,11 @@ export const Hero: React.FC<HeroProps> = ({
                         </div>
                     </motion.div>
 
-                    {/* Terminal interativo com Pivô Central no Scrollytelling (7 colunas) */}
+                    {/* Terminal interativo com Lazy Loading & Suspense (7 colunas) */}
                     <motion.div
-                        style={{
-                            scale: terminalScale,
-                            x: terminalX,
-                            opacity: terminalOpacity,
-                            willChange: 'transform, opacity',
-                        }}
+                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
                         className="lg:col-span-7 flex justify-center lg:justify-end w-full"
                     >
                         <div ref={termRef} className="w-full flex justify-center lg:justify-end">

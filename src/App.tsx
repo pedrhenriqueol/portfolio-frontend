@@ -4,7 +4,8 @@ import InteractiveParticleField from './components/Portfolio/InteractiveParticle
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import Navbar from './components/Portfolio/Navbar';
-import HeroAboutPinnedStage from './components/Portfolio/HeroAboutPinnedStage';
+import Hero from './components/Portfolio/Hero';
+import AboutMe from './components/Portfolio/AboutMe';
 import Experience from './components/Portfolio/Experience';
 import Skills from './components/Portfolio/Skills';
 import Projects from './components/Portfolio/Projects';
@@ -115,7 +116,9 @@ export default function App() {
                 className="relative z-10 w-full"
             >
                 <main className="relative min-h-screen bg-[#05070a] text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
-                    <HeroAboutPinnedStage />
+                    <Hero />
+                    <SectionDivider marker="+" />
+                    <AboutMe />
                     <SectionDivider marker="+" />
                     <Experience experiences={EXPERIENCES} />
                     <SectionDivider marker="+" />
