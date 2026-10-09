@@ -2,9 +2,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LanguageDropdown from './LanguageDropdown';
 import ThemeDropdown from './ThemeDropdown';
 
-export default function MobileMenu({ isOpen, navLinks, active, scrollTo, onClose, t }) {
+export default function MobileMenu({ isOpen, navLinks, active, scrollTo, onClose, onExited, t }) {
     return (
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" onExitComplete={onExited}>
             {isOpen && (
                 <motion.div
                     key="mobile-nav-menu"

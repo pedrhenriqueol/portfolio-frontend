@@ -1,3 +1,4 @@
+import { ChapterHeading } from './Common/ScrollChapter';
 import React, { useState, useCallback, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
@@ -156,13 +157,7 @@ function Contact() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                 {/* ── Cabeçalho Limpo da Seção ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-80px' }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-12"
-                >
+                <ChapterHeading className="text-center mb-12">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
@@ -178,7 +173,7 @@ function Contact() {
                             ? "I am open to new opportunities, collaborations, or discussing software engineering."
                             : "Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.")}
                     </p>
-                </motion.div>
+                </ChapterHeading>
 
                 {/* ── Grid Principal de Dois Cartões (Alinhados e Limpos) ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

@@ -1,3 +1,4 @@
+import { ChapterHeading } from '../Common/ScrollChapter';
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
@@ -509,8 +510,6 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             tabIndex={0}
             onKeyDown={handleKeyDown}
             style={{
-                contentVisibility: 'auto',
-                containIntrinsicSize: '0 700px',
                 transform: 'translateZ(0)',
                 isolation: 'isolate',
                 transformStyle: 'preserve-3d',
@@ -525,7 +524,8 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 
                 {/* ── Header da Seção com Tipografia Nítida & Subtítulo Sóbrio ── */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                <ChapterHeading className="mb-8">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block mb-2">
                             {lang === 'en'
@@ -584,6 +584,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                         </div>
                     </div>
                 </div>
+                </ChapterHeading>
 
                 {/* ── Seletor de Abas Superior Sincronizado com layoutId ── */}
                 <div className="flex items-center gap-2.5 mb-10 overflow-x-auto scrollbar-none py-1">

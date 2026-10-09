@@ -439,7 +439,31 @@ const itemVariants = {
     }
 };
 
-export function AboutMe() {
+export function AboutIntro() {
+    const { t, lang } = useLanguage();
+    return (
+        <header id="sobre" className="about-intro text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase">
+                    {lang === 'en'
+                        ? '// 01. BIOGRAPHY & TECHNICAL GUIDELINES'
+                        : lang === 'es'
+                        ? '// 01. BIOGRAFÍA Y DIRECTRICES TÉCNICAS'
+                        : '// 01. BIOGRAFIA & DIRETRIZES TÉCNICAS'}
+                </span>
+            </div>
+            <h2 id="about-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
+                {t('about.title')}
+            </h2>
+            <p className="text-neutral-400 max-w-2xl font-sans text-sm sm:text-base leading-relaxed">
+                {t('about.subtitle') || 'Engenharia de software focada em modernização, alta disponibilidade e impacto real em produção.'}
+            </p>
+        </header>
+    );
+}
+
+export function AboutMe({ showIntro = true }: { showIntro?: boolean }) {
     const { t, lang } = useLanguage();
 
     const [isSectionVisible, setIsSectionVisible] = useState(false);
@@ -566,20 +590,10 @@ export function AboutMe() {
         const fallback = lang === 'en' ? `What is your technical experience with ${tech}?` : lang === 'es' ? `¿Cuál es tu experiencia técnica con ${tech}?` : `Qual sua experiência técnica com ${tech}?`;
         const query = map[tech] || fallback;
 
-        // Scroll suave até o Terminal
-        const termEl = document.getElementById('terminal') || document.getElementById('home');
-        if (termEl) {
-            termEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        // Dispara o evento de foco e injeção do comando
-        window.setTimeout(() => {
-            window.dispatchEvent(
-                new CustomEvent('focus-terminal', {
-                    detail: { command: query },
-                })
-            );
-        }, 300);
+        // One owner handles navigation, focus and command execution.
+        window.dispatchEvent(new CustomEvent('focus-terminal', {
+            detail: { command: query },
+        }));
     }, [lang]);
 
     // ── Métricas estatísticas estruturadas ──
@@ -645,34 +659,10 @@ export function AboutMe() {
     ];
 
     return (
-        <section id="sobre" ref={sectionRef} className="py-24 bg-transparent relative select-text">
+        <section id="about-details" aria-labelledby="about-heading" ref={sectionRef} className={`${showIntro ? 'py-24' : 'pt-8 pb-16'} bg-transparent relative select-text`}>
             <div className="max-w-7xl mx-auto px-6">
 
-                {/* ── Section Header com entrada cinemática isolada ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
-                    whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                    viewport={{ once: true, amount: 0.15 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-center md:text-left mb-12"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase">
-                            {lang === 'en'
-                                ? '// 01. BIOGRAPHY & TECHNICAL GUIDELINES'
-                                : lang === 'es'
-                                ? '// 01. BIOGRAFÍA Y DIRECTRICES TÉCNICAS'
-                                : '// 01. BIOGRAFIA & DIRETRIZES TÉCNICAS'}
-                        </span>
-                    </div>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
-                        {t('about.title')}
-                    </h2>
-                    <p className="text-neutral-400 max-w-2xl font-sans text-sm sm:text-base leading-relaxed">
-                        {t('about.subtitle') || 'Engenharia de software focada em modernização, alta disponibilidade e impacto real em produção.'}
-                    </p>
-                </motion.div>
+                {showIntro && <div className="mb-12"><AboutIntro /></div>}
 
                 {/* ── Cascata Cinemática do Bento Grid com Stagger Suave (whileInView) ── */}
                 <motion.div
@@ -917,7 +907,7 @@ export function AboutMe() {
                     </div>
 
                     {/* ── Grid Inferior: 3 Pilares de Especialidades (grid-cols-1 md:grid-cols-3 gap-5) ── */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="chapter-tail grid grid-cols-1 md:grid-cols-3 gap-5">
                         {pillars.map((p, idx) => (
                             <motion.div key={idx} variants={itemVariants} className="h-full">
                                 <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">

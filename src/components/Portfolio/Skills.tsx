@@ -1,3 +1,4 @@
+import { ChapterHeading } from './Common/ScrollChapter';
 import React, { useState, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SkillsOrbital3D, { TechItem } from './SkillsOrbital3D';
@@ -369,13 +370,7 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                 {/* ── Cabeçalho Limpo da Seção ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-80px' }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-10"
-                >
+                <ChapterHeading className="text-center mb-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                         <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
@@ -424,10 +419,10 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
                             {lang === 'en' ? '3D Visualizer' : lang === 'es' ? 'Visualizador 3D' : 'Visualizador 3D'}
                         </button>
                     </div>
-                </motion.div>
+                </ChapterHeading>
 
                 {/* ── Conteúdo Alternável com Cross-Fade Suave ── */}
-                <div className="min-h-[480px] w-full">
+                <div className="chapter-tail min-h-[480px] w-full">
                     <AnimatePresence mode="wait">
                         {viewMode === 'bento' ? (
                             <motion.div

@@ -1,3 +1,4 @@
+import { ChapterHeading } from './Common/ScrollChapter';
 import React, { useRef, useState, useMemo, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
@@ -422,7 +423,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 
                 {/* ── Section Header com Easter Egg Sentinela 1 ── */}
-                <div className="relative text-center mb-14">
+                <ChapterHeading className="relative text-center mb-14">
                     <div className="flex justify-center mb-4">
                         <TechCompanionCritter
                             variant="sentinel-timeline"
@@ -431,12 +432,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         />
                     </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 25 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-80px' }}
-                        transition={{ duration: 0.65 }}
-                    >
+                    <div>
                         <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
                             {lang === 'en'
                                 ? '// 03. CAREER & OPERATIONAL ENGINEERING'
@@ -450,8 +446,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
                             {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
                         </p>
-                    </motion.div>
-                </div>
+                    </div>
+                </ChapterHeading>
 
                 {/* ── Career Summary Stats Strip ── */}
                 <motion.div
@@ -764,6 +760,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             MARCO 2024: EEEP LUIZA DE TEODORO VIEIRA (Formação Técnica)
                             Desktop: Esquerda = Ano 2024 + Pasta | Direita = Card Acadêmico
                             ══════════════════════════════════════════════════════════ */}
+                        <div className="chapter-tail">
                         <motion.div
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -873,6 +870,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 />
                             </div>
                         </motion.div>
+                        </div>
 
                     </div>
                 </div>

@@ -19,6 +19,7 @@ import FixedBackdrop from './components/Portfolio/FixedBackdrop';
 import SceneCanvas from './components/canvas/SceneCanvas';
 import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
 import SectionDivider from './components/Portfolio/Common/SectionDivider';
+import ScrollChapter from './components/Portfolio/Common/ScrollChapter';
 import { useLanguage } from './context/LanguageContext';
 
 const ProjectInspectorDrawer = lazy(() => import('./components/Portfolio/ProjectInspectorDrawer'));
@@ -42,6 +43,32 @@ export default function App() {
     const handlePreloaderComplete = useCallback(() => {
         setIsLoaded(true);
     }, []);
+
+    // Restore a direct section link after the initial fonts and sticky layout
+    // settle. Never override a visitor who has already started interacting.
+    useEffect(() => {
+        if (!isLoaded || !window.location.hash) return;
+        let cancelled = false;
+        let frame = 0;
+        const cancel = () => { cancelled = true; };
+        const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+        events.forEach(event => window.addEventListener(event, cancel, { passive: true, once: true }));
+        document.fonts.ready.then(() => {
+            if (cancelled) return;
+            frame = requestAnimationFrame(() => {
+                if (cancelled) return;
+                try {
+                    const id = decodeURIComponent(window.location.hash.slice(1));
+                    document.getElementById(id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
+                } catch { /* Ignore malformed URLs. */ }
+            });
+        });
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(frame);
+            events.forEach(event => window.removeEventListener(event, cancel));
+        };
+    }, [isLoaded]);
 
     // ── Workstation State ──
     const [telemetryOpen, setTelemetryOpen] = useState<boolean>(false);
@@ -120,17 +147,14 @@ export default function App() {
                 className="relative z-10 w-full pointer-events-auto"
             >
                 <main className="relative min-h-screen bg-transparent text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
-                    <Hero />
-                    <SectionDivider marker="+" />
-                    <AboutMe />
-                    <SectionDivider marker="+" />
-                    <Experience experiences={EXPERIENCES} />
-                    <SectionDivider marker="+" />
-                    <Skills skills={SKILLS} />
-                    <SectionDivider marker="+" />
-                    <Projects projects={PROJECTS} onSelectProject={setSelectedProject} />
-                    <SectionDivider marker="+" />
-                    <Contact />
+                    <ScrollChapter opening>
+                        <Hero />
+                        <AboutMe showIntro={false} />
+                    </ScrollChapter>
+                    <ScrollChapter><Experience experiences={EXPERIENCES} /></ScrollChapter>
+                    <ScrollChapter><Skills skills={SKILLS} /></ScrollChapter>
+                    <ScrollChapter><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
+                    <ScrollChapter><Contact /></ScrollChapter>
                 </main>
 
                 <footer className="bg-transparent py-12 text-center text-gray-500 text-sm lg:pb-14">

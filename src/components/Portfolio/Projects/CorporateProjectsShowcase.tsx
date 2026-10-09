@@ -568,8 +568,6 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
             tabIndex={0}
             onKeyDown={handleKeyDown}
             style={{
-                contentVisibility: 'auto',
-                containIntrinsicSize: '0 650px',
                 transform: 'translateZ(0)',
                 isolation: 'isolate',
                 transformStyle: 'preserve-3d',

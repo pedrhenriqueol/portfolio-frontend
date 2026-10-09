@@ -688,21 +688,29 @@ export const InteractiveTerminal: React.FC = () => {
 
     // Listener de eventos customizados para foco global do terminal
     useEffect(() => {
+        let focusTimer: number | undefined;
         const handleCustomEvent = (e: CustomEvent<{ command?: string }>) => {
             if (e.detail?.command) {
                 handleRunCommand(e.detail.command);
             }
             const terminalEl = document.getElementById('terminal');
             if (terminalEl) {
-                terminalEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                terminalEl.scrollIntoView({
+                    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                    block: 'center',
+                });
             }
-            setTimeout(() => {
+            window.clearTimeout(focusTimer);
+            focusTimer = window.setTimeout(() => {
                 inputRef.current?.focus({ preventScroll: true });
             }, 300);
         };
 
         window.addEventListener('focus-terminal', handleCustomEvent as EventListener);
-        return () => window.removeEventListener('focus-terminal', handleCustomEvent as EventListener);
+        return () => {
+            window.clearTimeout(focusTimer);
+            window.removeEventListener('focus-terminal', handleCustomEvent as EventListener);
+        };
     }, [handleRunCommand]);
 
     // Teclas globais de navegação do prompt (Tab, Enter, Up, Down, Ctrl+C)
@@ -1015,7 +1023,8 @@ export const InteractiveTerminal: React.FC = () => {
                         ref={inputRef}
                         type="text"
                         value={input}
-                        disabled={isStreaming}
+                        readOnly={isStreaming}
+                        aria-busy={isStreaming}
                         onChange={handleInputChange}
                         onKeyDown={onKeyDown}
                         onFocus={() => {

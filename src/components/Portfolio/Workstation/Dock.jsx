@@ -42,6 +42,9 @@ function DockButton({ item, onClick, isActive }) {
                 onClick={!isLink ? onClick : undefined}
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
+                onFocus={() => setHovered(true)}
+                onBlur={() => setHovered(false)}
+                aria-label={item.labelKey}
                 data-cursor-morph="true"
                 className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer group ${
                     isActive
@@ -50,6 +53,8 @@ function DockButton({ item, onClick, isActive }) {
                 }`}
             >
                 <motion.i
+                    aria-hidden="true"
+                    tabIndex={-1}
                     className={`${item.icon} text-sm`}
                     whileHover={{ scale: 1.15 }}
                     whileTap={{ scale: 0.9 }}

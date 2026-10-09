@@ -34,6 +34,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
     const hideTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
     const progressRef    = useRef<HTMLDivElement | null>(null);
     const paletteMenuRef = useRef<HTMLDivElement | null>(null);
+    const pendingMobileSection = useRef<string | null>(null);
 
     // Links de navegação principais (padronizados em maiúsculas)
     const navLinks = useMemo(() => [
@@ -105,6 +106,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
 
                 const delta = y - lastY.current;
                 if (y < SHOW_THRESHOLD) {
+                    if (hideTimer.current) clearTimeout(hideTimer.current);
                     setVisible(true);
                 } else if (Math.abs(delta) > JITTER_DELTA) {
                     if (delta > 0) {
@@ -130,18 +132,35 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
     }, []);
 
     // Rolagem suave nativa para as seções
-    const scrollTo = useCallback((id: string) => {
-        setMobileOpen(false);
+    const navigateToSection = useCallback((id: string) => {
+        const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
         if (id === 'home') {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior });
             return;
         }
 
         const el = document.getElementById(id);
         if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.scrollIntoView({ behavior, block: 'start' });
         }
     }, []);
+
+    const scrollTo = useCallback((id: string) => {
+        if (mobileOpen) {
+            // A touch-focused button being unmounted can cancel a native
+            // smooth scroll. Hand navigation off after the menu has exited.
+            pendingMobileSection.current = id;
+            setMobileOpen(false);
+        } else {
+            navigateToSection(id);
+        }
+    }, [mobileOpen, navigateToSection]);
+
+    const handleMobileMenuExited = useCallback(() => {
+        const id = pendingMobileSection.current;
+        pendingMobileSection.current = null;
+        if (id) navigateToSection(id);
+    }, [navigateToSection]);
 
     const languages: Array<{ code: 'pt' | 'en' | 'es'; label: string }> = [
         { code: 'pt', label: 'PT' },
@@ -151,6 +170,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
 
     return (
         <motion.header
+            inert={!isLoaded || !visible}
             initial={{ y: -12, opacity: 0 }}
             animate={isLoaded ? (visible ? { y: 0, opacity: 1 } : { y: -80, opacity: 0 }) : { y: -12, opacity: 0 }}
             transition={{
@@ -353,6 +373,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                 active={active}
                 scrollTo={scrollTo}
                 onClose={() => setMobileOpen(false)}
+                onExited={handleMobileMenuExited}
                 t={t}
             />
         </motion.header>

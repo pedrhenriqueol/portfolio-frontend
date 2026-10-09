@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
+import { AboutIntro } from './AboutMe';
+import { useHeroHandoff } from '../../hooks/useHeroHandoff';
+import './scroll-transitions.css';
 
 const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
@@ -11,6 +14,7 @@ export interface HeroProps {}
 export const Hero: React.FC<HeroProps> = () => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement | null>(null);
+    useHeroHandoff(sectionRef);
     const textRef = useRef<HTMLDivElement | null>(null);
     const termRef = useRef<HTMLDivElement | null>(null);
     const rafRef = useRef<number | null>(null);
@@ -118,7 +122,7 @@ export const Hero: React.FC<HeroProps> = () => {
         <section
             id="home"
             ref={sectionRef}
-            className="min-h-screen py-20 lg:py-28 flex items-center justify-center relative overflow-hidden bg-transparent"
+            className="hero-story relative bg-transparent"
         >
             {/* Background blobs com máscara gradual de desvanecimento na base */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
@@ -148,8 +152,10 @@ export const Hero: React.FC<HeroProps> = () => {
             {/* Conteúdo Principal */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
                 {/* Grid Hero Calibrado: 5 colunas para Conteúdo Textual / 7 colunas para o Terminal Interativo */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+                <div className="hero-story-layout">
 
+                    <div className="hero-copy-cell">
+                    <div className="hero-copy-motion">
                     {/* Text Container com entrada cinemática limpa (5 colunas) */}
                     <motion.div
                         initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
@@ -262,6 +268,12 @@ export const Hero: React.FC<HeroProps> = () => {
                         </div>
                     </motion.div>
 
+                    </div>
+                    </div>
+
+                    <div className="hero-terminal-rail">
+                    <div className="hero-terminal-sticky">
+                    <div className="hero-terminal-motion">
                     {/* Terminal interativo com Lazy Loading & Suspense (7 colunas) */}
                     <motion.div
                         initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
@@ -293,7 +305,13 @@ export const Hero: React.FC<HeroProps> = () => {
                             </div>
                         </div>
                     </motion.div>
+                    </div>
+                    </div>
+                    </div>
 
+                    <div className="hero-intro-cell">
+                        <div className="hero-intro-motion"><AboutIntro /></div>
+                    </div>
                 </div>
             </div>
 

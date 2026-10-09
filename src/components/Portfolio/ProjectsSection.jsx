@@ -18,7 +18,7 @@ export default function ProjectsSection({ projects }) {
     }, [projects]);
 
     return (
-        <section id="projetos" className="py-24 md:py-36 bg-transparent relative">
+        <section id="projetos-corporativos" className="py-24 md:py-36 bg-transparent relative">
             {/* Drawer de Detalhes Técnicos com AnimatePresence e Error Boundary */}
             <ModalErrorBoundary onClose={() => setSelected(null)}>
                 <AnimatePresence mode="wait">
@@ -65,12 +65,14 @@ export default function ProjectsSection({ projects }) {
                 </motion.div>
 
                 {/* Esteira Cilíndrica 3D com Rotação Espacial e Filtros com layoutId */}
+                <div className="chapter-tail">
                 <CorporateProjectsShowcase
                     projects={corporateProjects}
                     onSelectProject={setSelected}
                     t={t}
                     lang={lang}
                 />
+                </div>
             </div>
         </section>
     );
