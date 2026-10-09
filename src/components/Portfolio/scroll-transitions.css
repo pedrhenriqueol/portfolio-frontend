@@ -1,19 +1,15 @@
-/* Both native rails end before the Bento. The same terminal connects the
-   compositions while the presentation hands its column to About. */
-.hero-story { --handoff: 0; }
-.scroll-chapter { position: relative; }
-.hero-story-layout { display: grid; gap: 2.5rem; padding-top: 7rem; }
+/* Native flow is the baseline. The desktop scene is enabled only after the
+   real reading content has been measured against the available viewport. */
+.hero-story, .scroll-chapter { position: relative; }
+.hero-stage { padding-block: 7rem 2rem; }
+.hero-story-layout { width: min(92%, 1720px); margin-inline: auto; display: grid; gap: 2rem; }
 .hero-copy-cell, .hero-terminal-rail, .hero-intro-cell { min-width: 0; }
-.hero-intro-cell { padding-block: 3rem 1rem; }
-.hero-intro-anchor { width: 100%; }
+.hero-profile-body { margin-top: 1.5rem; }
+.hero-about-anchor { position: absolute; left: 0; width: 1px; height: 1px; scroll-margin-top: 0; pointer-events: none; }
 .about-intro { scroll-margin-top: 110px; }
 main section[id] { scroll-margin-top: 100px; }
 
-/* Compact boundaries let outgoing cards and the next heading share the
-   viewport. The original divider is the visual link between both sections. */
-.scroll-chapter:not([data-opening]) > section {
-    padding-block: clamp(3rem, 6vw, 5.5rem);
-}
+.scroll-chapter:not([data-opening]) > section { padding-block: clamp(3rem, 6vw, 5.5rem); }
 .scroll-chapter > #projetos { padding-block: 0; }
 .scroll-chapter > #projetos > section:first-child { padding-top: 5.5rem; }
 
@@ -24,7 +20,6 @@ main section[id] { scroll-margin-top: 100px; }
     }
     .chapter-tail {
         transform-origin: center top;
-        /* Retreat away from the preceding row instead of lifting over it. */
         transform: translateY(calc(var(--chapter-exit, 0) * 32px)) scale(calc(1 - var(--chapter-exit, 0) * .075));
     }
     .chapter-divider > div { transform: scaleX(calc(.15 + var(--chapter-enter, 1) * .85)); }
@@ -32,106 +27,81 @@ main section[id] { scroll-margin-top: 100px; }
 }
 
 @media (min-width: 1024px) {
-    .hero-story-layout { grid-template-columns: 5fr 7fr; column-gap: 2rem; }
-    .hero-copy-cell { grid-column: 1; grid-row: 1; align-self: center; }
-    .hero-terminal-rail { grid-column: 2; grid-row: 1; }
-    .hero-intro-cell { grid-column: 1 / -1; grid-row: 2; }
+    .hero-story-layout { grid-template-columns: 1fr 1fr; align-items: center; }
+    .hero-intro-cell, .hero-credentials, .hero-metrics { grid-column: 1 / -1; }
+    .hero-intro-cell { padding-top: 2rem; }
 
+    .hero-story[data-connected="true"] { height: calc(var(--scene-height) + var(--scene-run)); }
+    .hero-story[data-connected="true"] .hero-stage {
+        position: sticky;
+        top: 0;
+        height: var(--scene-height);
+        padding: 0;
+    }
     .hero-story[data-connected="true"] .hero-story-layout {
-        padding-top: 0;
-        row-gap: 0;
-        grid-template-rows: var(--hero-first-row) auto;
+        display: block;
+        position: relative;
+        height: 100%;
+        perspective: 1600px;
     }
     .hero-story[data-connected="true"] .hero-copy-cell {
-        grid-row: 1 / 3;
-        align-self: stretch;
+        position: absolute;
+        left: 0;
+        top: var(--copy-y);
+        width: 43%;
+        z-index: 1;
     }
     .hero-story[data-connected="true"] .hero-copy-motion {
-        position: sticky;
-        top: var(--copy-top);
         transform-origin: left center;
-        transform: translate3d(calc(var(--hero-exit) * -96px), calc(var(--hero-exit) * -32px), 0) scale(calc(1 - var(--hero-exit) * .08));
+        transform: translate3d(calc(var(--hero-exit) * -32px), 0, calc(var(--hero-exit) * -100px));
         opacity: calc(1 - var(--hero-exit));
     }
-    .hero-story[data-connected="true"] .hero-copy-motion[inert] { pointer-events: none; }
-    .hero-story[data-connected="true"] .hero-terminal-rail { grid-row: 1 / 3; }
-    .hero-story[data-connected="true"] .hero-terminal-sticky {
-        position: sticky;
-        top: var(--terminal-top);
+    .hero-story[data-connected="true"] h1 { font-size: clamp(5rem, 6.3vw, 8.3rem); }
+    .hero-story[data-connected="true"] .hero-terminal-rail {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 46%;
+        z-index: 3;
+        transform-origin: center top;
+        transform: translate3d(var(--terminal-x), var(--terminal-y), 0) rotateY(var(--terminal-tilt)) scale(var(--terminal-scale));
     }
-    .hero-story[data-connected="true"] .hero-terminal-motion {
-        transform-origin: right center;
-        transform: translate3d(calc(var(--handoff) * -32px), calc(var(--handoff) * -24px), 0) scale(var(--terminal-scale));
+    .hero-story[data-connected="true"] #terminal,
+    .hero-story[data-connected="true"] #terminal > .relative { max-width: none; }
+    .hero-story[data-connected="true"] #terminal > .relative {
+        height: var(--terminal-height);
+        transition: border-color .2s, background-color .2s;
+        contain: layout style;
     }
     .hero-story[data-connected="true"] .hero-intro-cell {
-        grid-column: 1;
-        min-height: calc(var(--story-viewport) * .44);
-        display: flex;
-        align-items: flex-start;
-        padding-block: 3rem;
+        position: absolute;
+        width: 50%;
+        left: 50%;
+        top: 0;
+        padding: 0;
+        z-index: 2;
     }
     .hero-story[data-connected="true"] .hero-intro-motion {
-        transform-origin: left center;
-        transform: translate3d(calc((1 - var(--about-enter)) * 40px), calc((1 - var(--about-enter)) * 28px), 0) scale(calc(.96 + var(--about-enter) * .04));
-        opacity: var(--about-enter);
+        transform: translate3d(calc((1 - var(--profile-reveal)) * 48px), var(--profile-y), 0);
+        clip-path: inset(0 0 calc((1 - var(--profile-reveal)) * 100%) 0);
+        opacity: min(1, calc(var(--profile-reveal) * 3));
     }
+    .hero-story[data-connected="true"] .about-intro h2 { font-size: clamp(3.5rem, 4vw, 5.25rem); line-height: 1.05; }
+    .hero-story[data-connected="true"] [data-about-profile] p { font-size: clamp(1.09375rem, 1.1vw, 1.25rem); line-height: 1.5; }
+    .hero-story[data-connected="true"] [data-about-metrics] [title] { font-size: 13px; line-height: 1.4; }
+    .hero-story[data-connected="true"] .hero-credentials,
+    .hero-story[data-connected="true"] .hero-metrics {
+        position: absolute;
+        left: 0;
+        transform: translateY(calc((1 - var(--panel-reveal)) * 20px));
+        opacity: var(--panel-reveal);
+    }
+    .hero-story[data-connected="true"] .hero-credentials { --panel-reveal: var(--credentials-reveal); top: var(--credentials-y); width: 46%; }
+    .hero-story[data-connected="true"] .hero-metrics { --panel-reveal: var(--metrics-reveal); top: var(--metrics-y); width: 100%; }
+    .hero-story[data-connected="true"] [inert] { pointer-events: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     html:root { scroll-behavior: auto; }
     .hero-story *, .hero-story *::before, .hero-story *::after { scroll-behavior: auto; }
-}
-
-/* The career guide travels in a measured local corridor. A real header slot
-   reserves its landing; the same button keeps its caption and pointer tracking. */
-.journey-story { position: relative; }
-.journey-story #career-details .chapter-heading-content { transform: none; }
-.journey-heading-anchor { scroll-margin-top: 100px; }
-.journey-guide-slot { height: 48px; }
-.journey-guide-rail {
-    position: absolute;
-    top: var(--guide-start);
-    left: var(--guide-left);
-    height: var(--guide-height);
-    width: 48px;
-    pointer-events: none;
-    z-index: 30;
-    visibility: hidden;
-}
-.journey-story[data-connected] .journey-guide-rail { visibility: visible; }
-.journey-guide-sticky { width: 48px; height: 48px; pointer-events: auto; }
-.journey-story[data-connected="true"] .journey-guide-sticky {
-    position: sticky;
-    top: var(--guide-inset);
-    transform: translateX(calc(var(--guide-drift) * (1 - var(--guide-travel))));
-}
-.journey-story[data-connected="true"] .journey-intro { padding-top: calc(var(--journey-viewport) * .12); }
-.journey-story[data-connected="true"] .journey-heading-anchor {
-    display: grid;
-    grid-template-columns: minmax(96px, .3fr) minmax(0, 1fr);
-    align-items: center;
-    column-gap: clamp(2rem, 5vw, 5rem);
-    max-width: 56rem;
-    margin-inline: auto;
-    text-align: left;
-}
-.journey-story[data-connected="true"] .journey-guide-slot { margin-bottom: 0; }
-.journey-story[data-connected="true"] .journey-heading-motion p { margin-inline: 0; }
-.journey-story[data-connected="true"] .journey-guide-portrait {
-    transform-origin: center top;
-    transform: scale(calc(2.6 - var(--journey-progress) * 1.6));
-}
-.journey-story[data-connected="true"] .journey-heading-motion {
-    transform-origin: center top;
-    transform: translateY(calc((1 - var(--journey-progress)) * 64px)) scale(calc(.9 + var(--journey-progress) * .1));
-}
-.journey-story[data-connected="true"] #about-details .chapter-tail {
-    transform-origin: center top;
-    transform: translateY(calc(var(--journey-progress) * 16px)) scale(calc(1 - var(--journey-progress) * .08));
-}
-.journey-story[data-connected="true"] .chapter-divider > div {
-    transform: scaleX(calc(.15 + var(--journey-progress) * .85));
-}
-.journey-story[data-connected="true"] .chapter-divider > span {
-    transform: rotate(calc(var(--journey-progress) * 180deg));
 }

@@ -1,5 +1,7 @@
 import { ChapterHeading } from './Common/ScrollChapter';
-import React, { useRef, useState, useMemo, memo } from 'react';
+import CareerEntranceStage from './Common/CareerEntranceStage';
+import { useCareerRemainder } from '../../hooks/useCareerEntrance';
+import React, { useRef, useState, useMemo, useCallback, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import JourneyPhotoModal, { JourneyMilestoneArchive } from './JourneyPhotoModal';
@@ -24,6 +26,30 @@ function HighlightedText({ text }: { text: string }) {
     );
 }
 
+function TimelineResponsibilities({ groups }: { groups?: { title: string; icon?: string; items: string[] }[] }) {
+    if (!groups?.length) return null;
+    return (
+        <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
+            {groups.map((group, gIdx) => (
+                <div key={gIdx} className="space-y-2.5">
+                    <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
+                        <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
+                        <span>{group.title}</span>
+                    </div>
+                    <ul className="space-y-2">
+                        {group.items && group.items.map((item, iIdx) => (
+                            <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
+                                <span className="text-accent mt-1.5 text-[8px] shrink-0">•</span>
+                                <span><HighlightedText text={item} /></span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 /** Card de Experiência com Micro-tilt 3D Suave */
 const TimelineExperienceCard = memo(function TimelineExperienceCard({
     company,
@@ -33,6 +59,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     techBadges,
     groups,
     lang,
+    headerOnly = false,
 }: {
     company: string;
     role: string;
@@ -41,6 +68,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     techBadges?: string[];
     groups?: { title: string; icon?: string; items: string[] }[];
     lang: string;
+    headerOnly?: boolean;
 }) {
     const cardRef = useRef<HTMLDivElement>(null);
     const rectRef = useRef<DOMRect | null>(null);
@@ -77,7 +105,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     };
 
     return (
-        <div style={{ perspective: 1000 }} className="w-full">
+        <div style={{ perspective: 1000 }} className={headerOnly ? "w-full h-full" : "w-full"}>
             <motion.div
                 ref={cardRef}
                 onMouseEnter={handleMouseEnter}
@@ -90,10 +118,10 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transform: 'translateZ(0)',
                 }}
                 data-cursor-card="true"
-                className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 overflow-hidden group will-change-transform"
+                className={`bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 overflow-hidden group will-change-transform ${headerOnly ? "career-card-preview h-full" : ""}`}
             >
                 {/* Cabeçalho do Card */}
-                <div className="p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015]">
+                <div className={`p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015] ${headerOnly ? "h-full flex flex-col justify-center" : ""}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-3">
                             <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
@@ -130,27 +158,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     )}
                 </div>
 
-                {/* Grupos de Atuação / Responsabilidades */}
-                {groups && groups.length > 0 && (
-                    <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
-                        {groups.map((group, gIdx) => (
-                            <div key={gIdx} className="space-y-2.5">
-                                <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
-                                    <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
-                                    <span>{group.title}</span>
-                                </div>
-                                <ul className="space-y-2">
-                                    {group.items && group.items.map((item, iIdx) => (
-                                        <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
-                                            <span className="text-accent mt-1.5 text-[8px] shrink-0">•</span>
-                                            <span><HighlightedText text={item} /></span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                {!headerOnly && <TimelineResponsibilities groups={groups} />}
             </motion.div>
         </div>
     );
@@ -159,57 +167,75 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
 interface ProfessionalJourneyTimelineProps {
     experiences?: any[];
     guidedIntro?: boolean;
+    entrancePillars?: React.ReactNode;
 }
 
-export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [], guidedIntro = false }) => {
+export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [], guidedIntro = false, entrancePillars }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement>(null);
     const timelineTrackRef = useRef<HTMLDivElement>(null);
+    const hasEntrance = entrancePillars !== undefined;
+    const entranceProgress = useMotionValue(0);
+    const remainderProgress = useMotionValue(0);
+    const station2025 = useMotionValue(.25);
+    const station2024 = useMotionValue(.75);
+    const handleEntranceProgress = useCallback((progress: number) => entranceProgress.set(progress), [entranceProgress]);
+    const handleRemainderProgress = useCallback((progress: number, ratio2025: number, ratio2024: number) => {
+        remainderProgress.set(progress);
+        station2025.set(ratio2025);
+        station2024.set(ratio2024);
+    }, [remainderProgress, station2025, station2024]);
+    useCareerRemainder(timelineTrackRef, hasEntrance, handleRemainderProgress);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
-    // ── CALIBRAÇÃO DO PROGRESSO HIPER-ADIANTADO & FÍSICA DE MOLA ──
-    // O trajeto inicia antecipadamente quando o container ainda está prestes a entrar na tela (110%)
-    // e atinge 100% de percurso bem antes do final (50%), garantindo que o feixe e a bolinha sempre
-    // liderem com folga o olhar do leitor tanto no scroll para baixo quanto no scroll para cima
+    // Preserve the standalone timeline while the scene continuation uses
+    // measured viewport geometry for its real 2025 and 2024 stations.
     const { scrollYProgress } = useScroll({
         target: timelineTrackRef,
-        offset: ['start 110%', 'end 50%'],
+        offset: hasEntrance ? ['start 55%', 'end 55%'] : ['start 110%', 'end 50%'],
     });
 
     // Mola de alta frequência e aceleração imediata
-    const smoothProgress = useSpring(scrollYProgress, {
+    const smoothProgress = useSpring(hasEntrance ? remainderProgress : scrollYProgress, {
         stiffness: 520,
         damping: 24,
         mass: 0.04,
     });
 
-    // Mapeamento hiper-adiantado: o puck e o feixe cruzam os marcos muito à frente do leitor
-    const trackerTop = useTransform(smoothProgress, [0, 0.55], ['0%', '100%'], { clamp: true });
-    const lineHeight = useTransform(smoothProgress, [0, 0.55], ['0%', '100%'], { clamp: true });
+    // The scene tracker stays at the reading line; the classic view keeps
+    // its original accelerated mapping.
+    const trackerTop = useTransform(smoothProgress, [0, hasEntrance ? 1 : .55], ['0%', '100%'], { clamp: true });
+    const lineHeight = useTransform(smoothProgress, [0, hasEntrance ? 1 : .55], ['0%', '100%'], { clamp: true });
+    const trackerOpacity = useTransform(smoothProgress, [0, .015], [hasEntrance ? 0 : 1, 1]);
 
     // Micro-escalas reativas nos anos monumentais (sincronizadas com o percurso super adiantado)
-    const year2026Scale = useTransform(smoothProgress, [0, 0.03, 0.07], [1, 1.08, 1]);
-    const year2025Scale = useTransform(smoothProgress, [0.18, 0.25, 0.32], [1, 1.08, 1]);
-    const year2024Scale = useTransform(smoothProgress, [0.45, 0.52, 0.59], [1, 1.08, 1]);
+    const firstProgress = hasEntrance ? entranceProgress : smoothProgress;
+    const passage2025 = useTransform([smoothProgress, station2025], ([progress, station]) => Math.min(1, Math.max(0, (Number(progress) - Number(station) + .04) / .08)));
+    const passage2024 = useTransform([smoothProgress, station2024], ([progress, station]) => Math.min(1, Math.max(0, (Number(progress) - Number(station) + .04) / .08)));
+    const signal2025 = hasEntrance ? passage2025 : smoothProgress;
+    const signal2024 = hasEntrance ? passage2024 : smoothProgress;
+    const year2026Scale = useTransform(firstProgress, hasEntrance ? [.60, .80, 1] : [0, .03, .07], [1, 1.08, 1]);
+    const year2025Scale = useTransform(signal2025, hasEntrance ? [0, .5, 1] : [.18, .25, .32], [1, 1.08, 1]);
+    const year2024Scale = useTransform(signal2024, hasEntrance ? [0, .5, 1] : [.45, .52, .59], [1, 1.08, 1]);
 
     // Reatividade orgânica dos nós de estação (2026, 2025, 2024) sincronizados com o puck super adiantado:
     // Marco 2026: acende prontamente logo no primeiro scroll
-    const node2026Border = useTransform(smoothProgress, [0, 0.03], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2026Bg = useTransform(smoothProgress, [0, 0.03], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2026Shadow = useTransform(smoothProgress, [0, 0.03], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2026Scale = useTransform(smoothProgress, [0, 0.03], [1, 1.1]);
+    const node2026Border = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2026Bg = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2026Shadow = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2026Scale = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], [1, 1.1]);
 
     // Marco central de 2025 (Qualisoft): acende no exato momento em que o puck passa por ele
-    const node2025Border = useTransform(smoothProgress, [0.20, 0.26], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2025Bg = useTransform(smoothProgress, [0.20, 0.26], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2025Shadow = useTransform(smoothProgress, [0.20, 0.26], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2025Scale = useTransform(smoothProgress, [0.20, 0.26], [1, 1.1]);
+    const node2025Border = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2025Bg = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2025Shadow = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2025Scale = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], [1, 1.1]);
 
     // Marco final de 2024 (EEEP): acende quando a bolinha atinge o pouso final na base da timeline
-    const node2024Border = useTransform(smoothProgress, [0.46, 0.53], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2024Bg = useTransform(smoothProgress, [0.46, 0.53], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2024Shadow = useTransform(smoothProgress, [0.46, 0.53], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2024Scale = useTransform(smoothProgress, [0.46, 0.53], [1, 1.1]);
+    const node2024Border = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
+    const node2024Bg = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.3)', '#ffffff']);
+    const node2024Shadow = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
+    const node2024Scale = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], [1, 1.1]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -415,85 +441,208 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         ],
     };
 
+    const journeyHeader = (
+        <ChapterHeading className="career-heading relative text-center mb-14">
+            <div className="journey-intro">
+                <div id={hasEntrance ? undefined : "experiencia"} className="journey-heading-anchor">
+                    <div data-journey-guide-slot className="journey-guide-slot flex justify-center mb-4">
+                        {(!guidedIntro || hasEntrance) && <TechCompanionCritter
+                            variant="sentinel-timeline"
+                            captionPosition="top"
+                            className="transition-transform duration-300 hover:scale-105"
+                        />}
+                    </div>
+
+                    <div className="journey-heading-motion">
+                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                            {lang === 'en'
+                                ? '// 03. CAREER & OPERATIONAL ENGINEERING'
+                                : lang === 'es'
+                                ? '// 03. TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                : '// 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
+                        </span>
+                        <h2 id="experience-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
+                            {t('experience.title') || 'Trajetória Profissional'}
+                        </h2>
+                        <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                            {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </ChapterHeading>
+    );
+
+    const summaryStrip = (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="career-summary grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16"
+        >
+            {summaryStats.map((stat, idx) => (
+                <div
+                    key={idx}
+                    data-cursor-card="true"
+                    className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
+                >
+                    {/* Box do Ícone */}
+                    <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
+                        <i className={`${stat.icon} text-sm`} />
+                    </div>
+                    {/* Texto da Métrica */}
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
+                            {stat.value}
+                        </span>
+                        <span className="text-[11px] text-neutral-400 font-sans truncate" title={stat.label}>
+                            {stat.label}
+                        </span>
+                    </div>
+                </div>
+            ))}
+        </motion.div>
+    );
+
+    const firstMilestone = (
+        <motion.div data-career-first-milestone
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className={`relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 ${hasEntrance ? "items-stretch" : "items-center"}`}
+        >
+            {/* Nó Central de Conexão do Marco 2026 (Desktop md+) */}
+            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 items-center justify-center z-30 pointer-events-none">
+                <motion.div
+                    style={{
+                        borderColor: node2026Border,
+                        boxShadow: node2026Shadow,
+                        scale: node2026Scale,
+                    }}
+                    className="w-6 h-6 rounded-full border-2 bg-[#090b10] flex items-center justify-center transition-colors duration-200"
+                >
+                    <motion.div
+                        style={{ backgroundColor: node2026Bg }}
+                        className="w-2 h-2 rounded-full transition-colors duration-200"
+                    />
+                </motion.div>
+            </div>
+
+            {/* Nó Lateral Mobile 2026 (< md) */}
+            <div className="md:hidden absolute -left-7 sm:-left-11 top-1/2 -translate-y-1/2 flex items-center justify-center z-30 pointer-events-none">
+                <motion.div
+                    style={{
+                        borderColor: node2026Border,
+                        boxShadow: node2026Shadow,
+                        scale: node2026Scale,
+                    }}
+                    className="w-5 h-5 rounded-full border-2 bg-[#090b10] flex items-center justify-center transition-colors duration-200"
+                >
+                    <motion.div
+                        style={{ backgroundColor: node2026Bg }}
+                        className="w-1.5 h-1.5 rounded-full transition-colors duration-200"
+                    />
+                </motion.div>
+            </div>
+
+            {/* Lado Esquerdo: Ano Escultural Monumental + Botão de Pasta Técnica */}
+            <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <span>{lang === 'en' ? 'CURRENTLY // IN PRODUCTION' : lang === 'es' ? 'ACTUALMENTE // EN PRODUCCIÓN' : 'ATUALMENTE // EM PRODUÇÃO'}</span>
+                </div>
+
+                {/* Ano Monumental em Outline com micro-escala reativa */}
+                <motion.span
+                    style={{
+                        scale: year2026Scale,
+                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
+                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                    }}
+                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-right"
+                >
+                    2026
+                </motion.span>
+
+                <p className="text-xs font-mono text-gray-400 max-w-xs">
+                    {lang === 'en'
+                        ? 'Quality assurance, operational rules mapping in FTZs, and transaction validation in the ePita core.'
+                        : lang === 'es'
+                        ? 'Aseguramiento de calidad, mapeo de reglas operacionales en ZPEs y validación de transacciones en el core ePita.'
+                        : 'Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.'}
+                </p>
+
+                {/* Card de Snapshot Interativo: Registro Operacional */}
+                <button type="button" aria-label={ARCHIVES['2026'].archiveTitle}
+                    onClick={() => setSelectedArchive(ARCHIVES['2026'])}
+                    data-cursor-morph="true"
+                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                >
+                    <img
+                        src={ARCHIVES['2026'].image}
+                        alt={ARCHIVES['2026'].archiveTitle}
+                        className="w-full h-full object-cover object-left-top group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
+                        <span className="font-semibold text-white flex items-center gap-1.5">
+                            <span>🗂️</span>
+                            <span>{lang === 'en' ? 'Operational Record' : 'Registro Operacional'}</span>
+                        </span>
+                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
+                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
+                        </span>
+                    </div>
+                </button>
+            </div>
+
+            {/* Lado Direito: Card Detalhado de QA */}
+            <div>
+                <TimelineExperienceCard
+                    company={seteExp.company}
+                    role={seteExp.role}
+                    headerOnly={hasEntrance}
+                    period={seteExp.period}
+                    isCurrent={true}
+                    techBadges={seteExp.techBadges}
+                    groups={seteExp.groups}
+                    lang={lang}
+                />
+            </div>
+        </motion.div>
+    );
+
     return (
         <section
             id="career-details"
             aria-labelledby="experience-heading"
             ref={sectionRef}
-            className="py-24 md:py-36 bg-transparent relative overflow-hidden"
+            className={hasEntrance ? "career-scene-section bg-transparent relative" : "py-24 md:py-36 bg-transparent relative overflow-hidden"}
         >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 
-                {/* ── Section Header com Easter Egg Sentinela 1 ── */}
-                <ChapterHeading className="relative text-center mb-14">
-                    <div className="journey-intro">
-                        <div id="experiencia" className="journey-heading-anchor">
-                            <div data-journey-guide-slot className="journey-guide-slot flex justify-center mb-4">
-                                {!guidedIntro && <TechCompanionCritter
-                                    variant="sentinel-timeline"
-                                    captionPosition="top"
-                                    className="transition-transform duration-300 hover:scale-105"
-                                />}
-                            </div>
-
-                            <div className="journey-heading-motion">
-                                <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
-                                    {lang === 'en'
-                                        ? '// 03. CAREER & OPERATIONAL ENGINEERING'
-                                        : lang === 'es'
-                                        ? '// 03. TRAYECTORIA E INGENIERÍA OPERACIONAL'
-                                        : '// 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
-                                </span>
-                                <h2 id="experience-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
-                                    {t('experience.title') || 'Trajetória Profissional'}
-                                </h2>
-                                <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
-                                    {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
-                                </p>
-                            </div>
+                {hasEntrance ? (
+                    <CareerEntranceStage pillars={entrancePillars} onProgress={handleEntranceProgress}>
+                        {journeyHeader}
+                        {summaryStrip}
+                        <div className="career-first-track">
+                            <div className="career-first-native-line" aria-hidden="true" />
+                            <div className="career-first-content" data-career-first-layout>{firstMilestone}</div>
                         </div>
-                    </div>
-                </ChapterHeading>
-
-                {/* ── Career Summary Stats Strip ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16"
-                >
-                    {summaryStats.map((stat, idx) => (
-                        <div
-                            key={idx}
-                            data-cursor-card="true"
-                            className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
-                        >
-                            {/* Box do Ícone */}
-                            <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
-                                <i className={`${stat.icon} text-sm`} />
-                            </div>
-                            {/* Texto da Métrica */}
-                            <div className="flex flex-col min-w-0">
-                                <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
-                                    {stat.value}
-                                </span>
-                                <span className="text-[11px] text-neutral-400 font-sans truncate" title={stat.label}>
-                                    {stat.label}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </motion.div>
+                    </CareerEntranceStage>
+                ) : <>{journeyHeader}{summaryStrip}</>}
 
                 {/* ── Espinha Dorsal Central & Timeline Alternada (Zig-Zag) ── */}
-                <div ref={timelineTrackRef} className="relative w-full max-w-5xl mx-auto py-12">
+                <div ref={timelineTrackRef} className={`relative w-full max-w-5xl mx-auto py-12 ${hasEntrance ? "career-remainder" : ""}`}>
 
                     {/* ══════════════════════════════════════════════════════════
                         TRILHO CENTRAL MINIMALISTA (md+) — FILAMENTO FINO DE 2PX
                         Sincronia suave 1:1 focal com o centro da tela
                         ══════════════════════════════════════════════════════════ */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-4 bottom-4 w-[2px] hidden md:block pointer-events-none z-10">
+                    <div className="career-timeline-rail absolute left-1/2 -translate-x-1/2 top-4 bottom-4 w-[2px] hidden md:block pointer-events-none z-10">
                         {/* 1. Trilho Base Guia (Filamento escuro sutil de fundo) */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
 
@@ -506,7 +655,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         {/* 3. Puck / Marcador Rastreador (Ponto tátil que lidera a leitura) */}
                         <motion.div
                             className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2 z-20"
-                            style={{ top: trackerTop }}
+                            style={{ top: trackerTop, opacity: trackerOpacity }}
                         >
                             <div className="w-1 h-1 rounded-full bg-[#090b10]" />
                         </motion.div>
@@ -515,7 +664,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                     {/* ══════════════════════════════════════════════════════════
                         TRILHO LATERAL MINIMALISTA (< md)
                         ══════════════════════════════════════════════════════════ */}
-                    <div className="absolute left-4 sm:left-6 top-4 bottom-4 w-[2px] md:hidden pointer-events-none z-10">
+                    <div className="career-timeline-rail absolute left-4 sm:left-6 top-4 bottom-4 w-[2px] md:hidden pointer-events-none z-10">
                         {/* 1. Trilho Base Guia Mobile */}
                         <div className="absolute inset-0 bg-white/10 rounded-full" />
 
@@ -528,131 +677,34 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         {/* 3. Puck Mobile */}
                         <motion.div
                             className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2 z-20"
-                            style={{ top: trackerTop }}
+                            style={{ top: trackerTop, opacity: trackerOpacity }}
                         >
                             <div className="w-1 h-1 rounded-full bg-[#090b10]" />
                         </motion.div>
                     </div>
 
+                    {hasEntrance && (
+                        <div className="career-first-continuation grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+                            <div className="md:col-start-2 bg-[#0c0e14]/90 border border-white/[0.07] rounded-b-2xl overflow-hidden">
+                                <TimelineResponsibilities groups={seteExp.groups} />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Grid / Itens da Timeline: 2026, 2025, 2024 */}
-                    <div className="space-y-24 md:space-y-36 pl-8 sm:pl-12 md:pl-0">
+                    <div className={`space-y-24 md:space-y-36 pl-8 sm:pl-12 md:pl-0 ${hasEntrance ? "career-later-milestones" : ""}`}>
 
                         {/* ══════════════════════════════════════════════════════════
                             MARCO 2026: SETE TECNOLOGIA (Analista de QA & Testes)
                             Desktop: Esquerda = Ano 2026 + Pasta | Direita = Card QA
                             ══════════════════════════════════════════════════════════ */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 40 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-60px' }}
-                            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                            className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
-                        >
-                            {/* Nó Central de Conexão do Marco 2026 (Desktop md+) */}
-                            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 items-center justify-center z-30 pointer-events-none">
-                                <motion.div
-                                    style={{
-                                        borderColor: node2026Border,
-                                        boxShadow: node2026Shadow,
-                                        scale: node2026Scale,
-                                    }}
-                                    className="w-6 h-6 rounded-full border-2 bg-[#090b10] flex items-center justify-center transition-colors duration-200"
-                                >
-                                    <motion.div
-                                        style={{ backgroundColor: node2026Bg }}
-                                        className="w-2 h-2 rounded-full transition-colors duration-200"
-                                    />
-                                </motion.div>
-                            </div>
-
-                            {/* Nó Lateral Mobile 2026 (< md) */}
-                            <div className="md:hidden absolute -left-7 sm:-left-11 top-1/2 -translate-y-1/2 flex items-center justify-center z-30 pointer-events-none">
-                                <motion.div
-                                    style={{
-                                        borderColor: node2026Border,
-                                        boxShadow: node2026Shadow,
-                                        scale: node2026Scale,
-                                    }}
-                                    className="w-5 h-5 rounded-full border-2 bg-[#090b10] flex items-center justify-center transition-colors duration-200"
-                                >
-                                    <motion.div
-                                        style={{ backgroundColor: node2026Bg }}
-                                        className="w-1.5 h-1.5 rounded-full transition-colors duration-200"
-                                    />
-                                </motion.div>
-                            </div>
-
-                            {/* Lado Esquerdo: Ano Escultural Monumental + Botão de Pasta Técnica */}
-                            <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    <span>{lang === 'en' ? 'CURRENTLY // IN PRODUCTION' : lang === 'es' ? 'ACTUALMENTE // EN PRODUCCIÓN' : 'ATUALMENTE // EM PRODUÇÃO'}</span>
-                                </div>
-
-                                {/* Ano Monumental em Outline com micro-escala reativa */}
-                                <motion.span
-                                    style={{
-                                        scale: year2026Scale,
-                                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
-                                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
-                                    }}
-                                    className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-right"
-                                >
-                                    2026
-                                </motion.span>
-
-                                <p className="text-xs font-mono text-gray-400 max-w-xs">
-                                    {lang === 'en'
-                                        ? 'Quality assurance, operational rules mapping in FTZs, and transaction validation in the ePita core.'
-                                        : lang === 'es'
-                                        ? 'Aseguramiento de calidad, mapeo de reglas operacionales en ZPEs y validación de transacciones en el core ePita.'
-                                        : 'Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.'}
-                                </p>
-
-                                {/* Card de Snapshot Interativo: Registro Operacional */}
-                                <div
-                                    onClick={() => setSelectedArchive(ARCHIVES['2026'])}
-                                    data-cursor-morph="true"
-                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
-                                >
-                                    <img
-                                        src={ARCHIVES['2026'].image}
-                                        alt={ARCHIVES['2026'].archiveTitle}
-                                        className="w-full h-full object-cover object-left-top group-hover:scale-105 transition-transform duration-500"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
-                                        <span className="font-semibold text-white flex items-center gap-1.5">
-                                            <span>🗂️</span>
-                                            <span>{lang === 'en' ? 'Operational Record' : 'Registro Operacional'}</span>
-                                        </span>
-                                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Lado Direito: Card Detalhado de QA */}
-                            <div>
-                                <TimelineExperienceCard
-                                    company={seteExp.company}
-                                    role={seteExp.role}
-                                    period={seteExp.period}
-                                    isCurrent={true}
-                                    techBadges={seteExp.techBadges}
-                                    groups={seteExp.groups}
-                                    lang={lang}
-                                />
-                            </div>
-                        </motion.div>
+                        {!hasEntrance && firstMilestone}
 
                         {/* ══════════════════════════════════════════════════════════
                             MARCO 2025: QUALISOFT SISTEMAS (Back-End / Fullstack)
                             Desktop: Esquerda = Card Qualisoft | Direita = Ano 2025 + Pasta
                             ══════════════════════════════════════════════════════════ */}
-                        <motion.div
+                        <motion.div data-career-year="2025"
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-60px' }}
@@ -767,7 +819,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             Desktop: Esquerda = Ano 2024 + Pasta | Direita = Card Acadêmico
                             ══════════════════════════════════════════════════════════ */}
                         <div className="chapter-tail">
-                        <motion.div
+                        <motion.div data-career-year="2024"
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-60px' }}

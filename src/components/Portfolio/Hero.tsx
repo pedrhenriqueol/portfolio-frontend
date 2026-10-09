@@ -3,15 +3,15 @@ import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
-import { AboutIntro } from './AboutMe';
+import { AboutIntro, type AboutSceneContent } from './AboutMe';
 import { useHeroHandoff } from '../../hooks/useHeroHandoff';
 import './scroll-transitions.css';
 
 const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
-export interface HeroProps {}
+export type HeroProps = Pick<AboutSceneContent, 'profile' | 'credentials' | 'metrics'>;
 
-export const Hero: React.FC<HeroProps> = () => {
+export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement | null>(null);
     useHeroHandoff(sectionRef);
@@ -150,7 +150,7 @@ export const Hero: React.FC<HeroProps> = () => {
             </div>
 
             {/* Conteúdo Principal */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+            <div className="hero-stage relative z-10 w-full">
                 {/* Grid Hero Calibrado: 5 colunas para Conteúdo Textual / 7 colunas para o Terminal Interativo */}
                 <div className="hero-story-layout">
 
@@ -309,14 +309,17 @@ export const Hero: React.FC<HeroProps> = () => {
                     </div>
                     </div>
 
-                    <div className="hero-intro-cell">
-                        <div id="sobre" className="hero-intro-anchor about-intro">
-                            <div className="hero-intro-motion"><AboutIntro anchorId={null} /></div>
+                    <section id="about-details" aria-labelledby="about-heading" className="hero-intro-cell">
+                        <div className="hero-intro-motion">
+                            <AboutIntro anchorId={null} />
+                            <div className="hero-profile-body">{profile}</div>
                         </div>
-                    </div>
+                    </section>
+                    <div className="hero-credentials">{credentials}</div>
+                    <div className="hero-metrics">{metrics}</div>
                 </div>
             </div>
-
+            <span id="sobre" className="hero-about-anchor" aria-hidden="true" />
         </section>
     );
 };

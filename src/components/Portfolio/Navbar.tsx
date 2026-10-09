@@ -55,30 +55,46 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Detecção de seção ativa via IntersectionObserver nativo
+    // A scene's navigation anchor can live at its final composition. Measure
+    // document positions separately from the visible sticky layers so reverse
+    // scrolling also restores Home instead of leaving Sobre selected.
     useEffect(() => {
-        const observers: IntersectionObserver[] = [];
         const ids = ['home', 'sobre', 'experiencia', 'projetos', 'contato'];
-
-        ids.forEach((id) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-
-            const obs = new IntersectionObserver(
-                ([entry]) => {
-                    if (entry.isIntersecting) {
-                        setActive(id);
-                    }
-                },
-                { threshold: 0.25, rootMargin: '-15% 0px -40% 0px' }
-            );
-
-            obs.observe(el);
-            observers.push(obs);
-        });
-
+        let positions: { id: string; el: HTMLElement; top: number }[] = [];
+        let frame = 0;
+        let disposed = false;
+        const paint = () => {
+            frame = 0;
+            if (disposed) return;
+            let current = 'home';
+            for (const section of positions) {
+                const trigger = section.el.dataset.navAt === undefined ? section.top : Number(section.el.dataset.navAt);
+                if (window.scrollY >= trigger) current = section.id;
+            }
+            setActive(previous => previous === current ? previous : current);
+        };
+        const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint); };
+        const measure = () => {
+            if (disposed) return;
+            positions = ids.flatMap(id => {
+                const el = document.getElementById(id);
+                return el ? [{ id, el, top: el.getBoundingClientRect().top + window.scrollY - innerHeight * .3 }] : [];
+            });
+            paint();
+        };
+        const observer = new ResizeObserver(measure);
+        const main = document.querySelector('main');
+        if (main) observer.observe(main);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', measure);
+        document.fonts.ready.then(measure);
+        measure();
         return () => {
-            observers.forEach((obs) => obs.disconnect());
+            disposed = true;
+            cancelAnimationFrame(frame);
+            observer.disconnect();
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', measure);
         };
     }, []);
 

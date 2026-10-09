@@ -694,9 +694,15 @@ export const InteractiveTerminal: React.FC = () => {
                 handleRunCommand(e.detail.command);
             }
             const terminalEl = document.getElementById('terminal');
-            if (terminalEl) {
+            const scene = terminalEl?.closest<HTMLElement>('.hero-story');
+            const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+            if (scene?.dataset.connected === 'true') {
+                // Return to the terminal's stable, expanded composition.
+                // scrollIntoView on a moving sticky child has no fixed target.
+                window.scrollTo({ top: scene.getBoundingClientRect().top + window.scrollY, behavior });
+            } else if (terminalEl) {
                 terminalEl.scrollIntoView({
-                    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                    behavior,
                     block: 'center',
                 });
             }

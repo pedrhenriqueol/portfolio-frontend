@@ -4,7 +4,6 @@ import InteractiveParticleField from './components/Portfolio/InteractiveParticle
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import Navbar from './components/Portfolio/Navbar';
-import Hero from './components/Portfolio/Hero';
 import AboutExperienceStory from './components/Portfolio/AboutExperienceStory';
 import Skills from './components/Portfolio/Skills';
 import Projects from './components/Portfolio/Projects';
@@ -47,28 +46,46 @@ export default function App() {
         setIsLoaded(true);
     }, []);
 
-    // Restore a direct section link after the initial fonts and sticky layout
-    // settle. Never override a visitor who has already started interacting.
+    // Keep a direct link aligned while fonts and lazy sections settle.
+    // Stop correcting as soon as the visitor starts interacting.
     useEffect(() => {
         if (!isLoaded || !window.location.hash) return;
         let cancelled = false;
         let frame = 0;
-        const cancel = () => { cancelled = true; };
+        let observer: ResizeObserver | null = null;
+        const cancel = () => {
+            cancelled = true;
+            cancelAnimationFrame(frame);
+            observer?.disconnect();
+        };
         const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
         events.forEach(event => window.addEventListener(event, cancel, { passive: true, once: true }));
-        document.fonts.ready.then(() => {
+        const align = () => {
             if (cancelled) return;
+            cancelAnimationFrame(frame);
             frame = requestAnimationFrame(() => {
                 if (cancelled) return;
                 try {
                     const id = decodeURIComponent(window.location.hash.slice(1));
-                    document.getElementById(id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    const target = document.getElementById(id);
+                    const terminalScene = id === 'terminal' && target?.closest<HTMLElement>('.hero-story[data-connected="true"]');
+                    if (terminalScene) {
+                        window.scrollTo({ top: terminalScene.getBoundingClientRect().top + window.scrollY, behavior: 'instant' });
+                    } else {
+                        target?.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    }
                 } catch { /* Ignore malformed URLs. */ }
             });
+        };
+        document.fonts.ready.then(() => {
+            if (cancelled) return;
+            observer = new ResizeObserver(align);
+            const main = document.querySelector('main');
+            if (main) observer.observe(main);
+            align();
         });
         return () => {
-            cancelled = true;
-            cancelAnimationFrame(frame);
+            cancel();
             events.forEach(event => window.removeEventListener(event, cancel));
         };
     }, [isLoaded]);
@@ -148,7 +165,6 @@ export default function App() {
             >
                 <main className="relative min-h-screen bg-transparent text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
                     <ScrollChapter opening>
-                        <Hero />
                         <AboutExperienceStory experiences={EXPERIENCES} />
                     </ScrollChapter>
                     <ScrollChapter><Skills skills={SKILLS} /></ScrollChapter>

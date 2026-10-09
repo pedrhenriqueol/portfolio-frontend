@@ -1,0 +1,65 @@
+.career-scene-section { overflow: visible; padding-block: 2rem 4rem; }
+.career-scene-section .career-heading { margin-bottom: 1.5rem; }
+.career-scene-section .career-summary { margin-bottom: 1rem; }
+.career-entrance-track { position: relative; }
+.career-entrance-frame { position: relative; }
+.career-scene-anchor { position: absolute; left: 0; width: 1px; height: 1px; pointer-events: none; }
+.career-pillars-layout { position: relative; margin-bottom: 4rem; }
+.career-incoming-layout { position: relative; }
+.career-scene-thread { display: none; }
+.career-first-track { position: relative; width: 100%; max-width: 64rem; margin-inline: auto; padding-block: 1.5rem 0; }
+.career-first-content { position: relative; }
+.career-first-native-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgb(255 255 255 / .1); pointer-events: none; }
+.career-scene-section .career-remainder { padding-top: 0; }
+.career-scene-section .career-remainder > .career-timeline-rail { top: 0; }
+.career-later-milestones { padding-top: 6rem; }
+.career-card-preview { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .career-entrance-track[data-scene="connected"] { height: calc(var(--career-frame-height) + var(--career-travel)); }
+    .career-entrance-track[data-scene="connected"] .career-entrance-frame {
+        position: sticky;
+        top: var(--career-inset);
+        height: var(--career-frame-height);
+        isolation: isolate;
+    }
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout,
+    .career-entrance-track[data-scene="connected"] .career-incoming-layout { position: absolute; top: 0; left: 0; width: 100%; margin: 0; }
+    .career-entrance-track[data-scene="connected"] .career-incoming-layout { pointer-events: none; }
+    .career-entrance-track[data-scene="connected"] .career-incoming-layout .career-heading:not([inert]),
+    .career-entrance-track[data-scene="connected"] .career-incoming-layout .career-summary:not([inert]),
+    .career-entrance-track[data-scene="connected"] .career-incoming-layout [data-career-first-layout]:not([inert]) { pointer-events: auto; }
+    .career-entrance-track[data-scene="connected"] .career-pillars-motion {
+        transform-origin: center top;
+        transform: translateY(calc(var(--career-outgoing) * -24px));
+    }
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout .chapter-tail { transform: none; }
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout .chapter-tail > * { opacity: calc(1 - var(--career-outgoing)) !important; filter: none !important; }
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout .chapter-tail > :first-child { transform: translateX(calc(var(--career-spread) * var(--career-spread-distance) * -1)) !important; }
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout .chapter-tail > :last-child { transform: translateX(calc(var(--career-spread) * var(--career-spread-distance))) !important; }
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout .chapter-tail > :nth-child(2) { opacity: calc(1 - var(--career-middle-exit)) !important; transform: translateY(calc(var(--career-middle-exit) * -48px)) scale(calc(1 - var(--career-middle-exit) * .14)) !important; }
+    .career-entrance-track[data-scene="connected"] .career-heading {
+        transform-origin: center top;
+        opacity: var(--career-header-enter);
+        transform: translateY(calc((1 - var(--career-header-enter)) * 24px));
+    }
+    .career-entrance-track[data-scene="connected"] .chapter-heading-content { transform: none; }
+    .career-entrance-track[data-scene="connected"] .career-summary { opacity: var(--career-entering) !important; transform: translateY(calc((1 - var(--career-entering)) * 32px)) !important; }
+    .career-entrance-track[data-scene="connected"] .career-first-track { opacity: var(--career-entering); transform: translateY(calc((1 - var(--career-entering)) * 32px)); }
+    .career-entrance-track[data-scene="connected"] [data-career-first-milestone] { opacity: 1 !important; transform: none !important; }
+    .career-entrance-track[data-scene="connected"] .career-first-native-line { display: none; }
+    .career-entrance-track[data-scene="connected"] .career-scene-thread { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: visible; }
+    .career-scene-thread [data-career-thread-base] { stroke: rgb(255 255 255 / .12); stroke-width: 1.5px; }
+    .career-scene-thread [data-career-thread-active] { stroke: rgb(245 235 225 / .6); stroke-width: 1.5px; stroke-dasharray: 1; }
+}
+
+@media (max-width: 767px) {
+    .career-first-native-line { left: 1rem; }
+    .career-first-content { padding-left: 2rem; }
+    .career-first-continuation { padding-left: 2rem; }
+}
+@media (min-width: 640px) and (max-width: 767px) {
+    .career-first-native-line { left: 1.5rem; }
+    .career-first-content { padding-left: 3rem; }
+    .career-first-continuation { padding-left: 3rem; }
+}
