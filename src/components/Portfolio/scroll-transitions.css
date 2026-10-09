@@ -53,8 +53,7 @@ main section[id] { scroll-margin-top: 100px; }
     }
     .hero-story[data-connected="true"] .hero-copy-motion {
         transform-origin: left center;
-        transform: translate3d(calc(var(--hero-exit) * -32px), 0, calc(var(--hero-exit) * -100px));
-        opacity: calc(1 - var(--hero-exit));
+        will-change: transform, opacity;
     }
     .hero-story[data-connected="true"] h1 { font-size: clamp(5rem, 6.3vw, 8.3rem); }
     .hero-story[data-connected="true"] .hero-terminal-rail {
@@ -64,7 +63,7 @@ main section[id] { scroll-margin-top: 100px; }
         width: 46%;
         z-index: 3;
         transform-origin: center top;
-        transform: translate3d(var(--terminal-x), var(--terminal-y), 0) rotateY(var(--terminal-tilt)) scale(var(--terminal-scale));
+        will-change: transform;
     }
     .hero-story[data-connected="true"] #terminal,
     .hero-story[data-connected="true"] #terminal > .relative { max-width: none; }
@@ -82,9 +81,7 @@ main section[id] { scroll-margin-top: 100px; }
         z-index: 2;
     }
     .hero-story[data-connected="true"] .hero-intro-motion {
-        transform: translate3d(calc((1 - var(--profile-reveal)) * 48px), var(--profile-y), 0);
-        clip-path: inset(0 0 calc((1 - var(--profile-reveal)) * 100%) 0);
-        opacity: min(1, calc(var(--profile-reveal) * 3));
+        will-change: transform, opacity, clip-path;
     }
     .hero-story[data-connected="true"] .about-intro h2 { font-size: clamp(3.5rem, 4vw, 5.25rem); line-height: 1.05; }
     .hero-story[data-connected="true"] [data-about-profile] p { font-size: clamp(1.09375rem, 1.1vw, 1.25rem); line-height: 1.5; }
@@ -93,11 +90,10 @@ main section[id] { scroll-margin-top: 100px; }
     .hero-story[data-connected="true"] .hero-metrics {
         position: absolute;
         left: 0;
-        transform: translateY(calc((1 - var(--panel-reveal)) * 20px));
-        opacity: var(--panel-reveal);
+        will-change: transform, opacity;
     }
-    .hero-story[data-connected="true"] .hero-credentials { --panel-reveal: var(--credentials-reveal); top: var(--credentials-y); width: 46%; }
-    .hero-story[data-connected="true"] .hero-metrics { --panel-reveal: var(--metrics-reveal); top: var(--metrics-y); width: 100%; }
+    .hero-story[data-connected="true"] .hero-credentials { top: 0; width: 46%; }
+    .hero-story[data-connected="true"] .hero-metrics { top: var(--metrics-y); width: 100%; }
     .hero-story[data-connected="true"] [inert] { pointer-events: none; }
 }
 

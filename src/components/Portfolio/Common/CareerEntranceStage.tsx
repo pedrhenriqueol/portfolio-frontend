@@ -14,8 +14,8 @@ export default function CareerEntranceStage({ pillars, children, onProgress }: {
             <div id="experiencia" className="career-scene-anchor" aria-hidden="true" />
             <div className="career-entrance-frame">
                 <svg className="career-scene-thread" aria-hidden="true" focusable="false" preserveAspectRatio="none">
-                    <path data-career-thread-base fill="none" vectorEffect="non-scaling-stroke" />
-                    <path data-career-thread-active fill="none" vectorEffect="non-scaling-stroke" pathLength="1" />
+                    <path data-career-thread-base fill="none" />
+                    <path data-career-thread-active fill="none" pathLength="1" />
                 </svg>
                 <div className="career-pillars-layout">
                     <div className="career-pillars-motion">{pillars}</div>

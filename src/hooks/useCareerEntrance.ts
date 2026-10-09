@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
+import { createSceneStyles, setSceneInert } from '../utils/sceneStyles';
 
 /** Coordinates one bounded native sticky scene, with stable native hash links. */
 export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress: (progress: number) => void) {
@@ -8,6 +9,9 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         const frame = root.querySelector<HTMLElement>('.career-entrance-frame')!;
         const pillars = root.querySelector<HTMLElement>('.career-pillars-layout')!;
         const incoming = root.querySelector<HTMLElement>('.career-incoming-layout')!;
+        const pillarsMotion = root.querySelector<HTMLElement>('.career-pillars-motion')!;
+        const firstTrack = root.querySelector<HTMLElement>('.career-first-track')!;
+        const lateralPillars = pillars.querySelectorAll<HTMLElement>('.chapter-tail > :first-child, .chapter-tail > :last-child');
         const heading = root.querySelector<HTMLElement>('.career-heading')!;
         const summary = root.querySelector<HTMLElement>('.career-summary')!;
         const first = root.querySelector<HTMLElement>('[data-career-first-layout]')!;
@@ -22,9 +26,14 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         let distance = 1;
         let width = 1;
         let height = 1;
+        let travel = 0;
         let threadStart = 0;
         let threadTop = 0;
         let threadCenter = 0;
+        let lastProgress = NaN;
+        let lastPath = "";
+        const layout = createSceneStyles();
+        const motion = createSceneStyles();
         let pending = 0;
         let disposed = false;
 
@@ -37,25 +46,29 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             pending = 0;
             if (disposed) return;
             const progress = enabled ? Math.min(1, Math.max(0, (scrollY - start) / distance)) : 1;
+            if (progress === lastProgress) return;
+            lastProgress = progress;
+            root.dataset.sceneProgress = String(progress);
             const outgoing = enabled ? Math.min(1, Math.max(0, (progress - .12) / .30)) : 0;
             const entering = enabled ? Math.min(1, Math.max(0, (progress - .42) / .28)) : 1;
             const headerEnter = enabled ? Math.min(1, Math.max(0, (progress - .18) / .25)) : 1;
             const middleExit = enabled ? Math.min(1, progress / .18) : 0;
             const spread = enabled ? Math.min(1, progress / .32) : 0;
-            root.style.setProperty('--career-progress', String(progress));
-            root.style.setProperty('--career-outgoing', String(outgoing));
-            root.style.setProperty('--career-entering', String(entering));
-            root.style.setProperty('--career-header-enter', String(headerEnter));
-            root.style.setProperty('--career-middle-exit', String(middleExit));
-            root.style.setProperty('--career-spread', String(spread));
-            // Layer transforms remain decorative; hidden controls never become
-            // invisible Tab targets. Hash navigation lands on the final frame.
-            pillars.inert = enabled && outgoing >= .94;
-            if (middlePillar) middlePillar.inert = enabled && middleExit >= .94;
-            incoming.inert = false;
-            heading.inert = enabled && headerEnter < .98;
-            summary.inert = enabled && entering < .98;
-            first.inert = enabled && entering < .98;
+            if (enabled) {
+                motion.set(pillarsMotion, '--career-outgoing', String(outgoing));
+                motion.set(summary, '--career-entering', String(entering));
+                motion.set(firstTrack, '--career-entering', String(entering));
+                motion.set(heading, '--career-header-enter', String(headerEnter));
+                if (middlePillar) motion.set(middlePillar, '--career-middle-exit', String(middleExit));
+                lateralPillars.forEach(node => motion.set(node, '--career-spread', String(spread)));
+            } else {
+                motion.clear();
+            }
+            setSceneInert(pillars, enabled && outgoing >= .94);
+            if (middlePillar) setSceneInert(middlePillar, enabled && middleExit >= .94);
+            setSceneInert(heading, enabled && headerEnter < .98);
+            setSceneInert(summary, enabled && entering < .98);
+            setSceneInert(first, enabled && entering < .98);
             if (enabled) {
                 const half = width / 2;
                 // The axis is vertical before the milestone becomes visible,
@@ -65,11 +78,17 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
                 const endX = width - 24 + (half - width + 24) * turn;
                 const startY = threadStart + (threadTop - threadStart) * turn;
                 const middleY = threadStart + (threadCenter - threadStart) * turn;
-                const endY = threadStart + (height - threadStart) * turn;
+                // The remainder stays in native flow while this frame pins.
+                // Its top converges to the frame bottom at the real release.
+                const continuationY = height + (1 - progress) * travel;
+                const endY = threadStart + (continuationY - threadStart) * turn;
                 const path = `M ${startX} ${startY} Q ${half} ${middleY} ${endX} ${endY}`;
-                base.setAttribute('d', path);
-                active.setAttribute('d', path);
-                active.style.strokeDashoffset = String(1 - turn);
+                if (path !== lastPath) {
+                    base.setAttribute('d', path);
+                    active.setAttribute('d', path);
+                    lastPath = path;
+                }
+                motion.set(active, 'stroke-dashoffset', String(1 - turn));
             }
             onProgress(progress);
         };
@@ -87,15 +106,15 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             const lateralRoom = (innerWidth / zoom - width) / 2 - 24;
             enabled = media.matches && height + inset + 48 < viewport && lateralRoom >= width * .24;
             root.dataset.scene = enabled ? 'connected' : 'flow';
-            const travel = enabled ? viewport * .62 : 0;
-            root.style.setProperty('--career-frame-height', `${height}px`);
-            root.style.setProperty('--career-travel', `${travel}px`);
-            root.style.setProperty('--career-inset', `${inset}px`);
-            root.style.setProperty('--career-spread-distance', `${width * .24}px`);
+            travel = enabled ? viewport * .62 : 0;
+            layout.set(root, '--career-frame-height', `${height}px`);
+            layout.set(root, '--career-travel', `${travel}px`);
+            layout.set(root, '--career-inset', `${inset}px`);
+            layout.set(root, '--career-spread-distance', `${width * .24}px`);
             // A stationary sibling represents the scroll position at which the
             // incoming composition is complete. It never inherits transforms.
-            anchor.style.top = `${enabled ? travel : incoming.offsetTop}px`;
-            anchor.style.scrollMarginTop = `${enabled ? inset : 100}px`;
+            layout.set(anchor, 'top', `${enabled ? travel : incoming.offsetTop}px`);
+            layout.set(anchor, 'scroll-margin-top', `${enabled ? inset : 100}px`);
             const rootTop = root.getBoundingClientRect().top + scrollY;
             start = rootTop - inset * zoom;
             distance = Math.max(1, travel * zoom);
@@ -105,6 +124,7 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
                 threadCenter = threadTop + first.offsetHeight / 2;
                 svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
             }
+            lastProgress = NaN;
             paint();
         };
         const onScroll = () => { if (!pending) pending = requestAnimationFrame(paint); };
@@ -125,15 +145,11 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             window.removeEventListener('resize', measure);
             media.removeEventListener('change', measure);
             delete root.dataset.scene;
-            pillars.inert = false;
-            incoming.inert = false;
-            heading.inert = false;
-            summary.inert = false;
-            first.inert = false;
-            if (middlePillar) middlePillar.inert = false;
-            anchor.style.removeProperty('top');
-            anchor.style.removeProperty('scroll-margin-top');
-            ['--career-frame-height', '--career-travel', '--career-inset', '--career-progress', '--career-outgoing', '--career-entering', '--career-header-enter', '--career-middle-exit', '--career-spread', '--career-spread-distance'].forEach(name => root.style.removeProperty(name));
+            delete root.dataset.sceneProgress;
+            [pillars, heading, summary, first].forEach(node => setSceneInert(node, false));
+            if (middlePillar) setSceneInert(middlePillar, false);
+            motion.clear();
+            layout.clear();
         };
     }, [ref, onProgress]);
 }
@@ -148,11 +164,16 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
         let start = 0;
         let distance = 1;
         let stations = [.25, .75];
+        let lastProgress = NaN;
         let frame = 0;
         let disposed = false;
         const paint = () => {
             frame = 0;
-            if (!disposed) onProgress(Math.min(1, Math.max(0, (scrollY - start) / distance)), stations[0], stations[1]);
+            if (disposed) return;
+            const progress = Math.min(1, Math.max(0, (scrollY - start) / distance));
+            if (progress === lastProgress) return;
+            lastProgress = progress;
+            onProgress(progress, stations[0], stations[1]);
         };
         const measure = () => {
             if (disposed) return;
@@ -167,6 +188,7 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
                 for (let node: HTMLElement | null = row; node && node !== root; node = node.offsetParent as HTMLElement | null) top += node.offsetTop;
                 return Math.min(1, Math.max(0, (top + row.offsetHeight / 2) / lineHeight));
             });
+            lastProgress = NaN;
             paint();
         };
         const scroll = () => { if (!frame) frame = requestAnimationFrame(paint); };

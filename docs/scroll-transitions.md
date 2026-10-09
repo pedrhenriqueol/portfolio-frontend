@@ -22,6 +22,8 @@ A cena contém o ano, o registro operacional e a identificação do cargo de 202
 
 O rastreador da continuação usa as posições reais dos marcos em pixels do viewport, considerando o `zoom: 0.8` existente. Os anos acendem quando a linha de leitura chega a cada marco.
 
+O filamento da cena acompanha a posição real do início da continuação enquanto o quadro está fixo. Assim, os dois segmentos se encontram antes e depois da soltura, inclusive no percurso reverso. SVG e trilho HTML usam a mesma espessura lógica de 2 px e o mesmo eixo central; o marco de 2026 e o rastreador continuam sendo elementos distintos.
+
 ### Demais seções e acessibilidade
 
 Experiência → Habilidades → Projetos → Contato mantêm o progresso compartilhado entre os últimos cards, a divisória e o cabeçalho seguinte. O formulário permanece estável na área de leitura.
@@ -41,10 +43,15 @@ As âncoras `#sobre` e `#experiencia` são marcadores estacionários que levam �
 | `ProfessionalJourneyTimeline.tsx` | Conteúdo único dos marcos, separando a identificação inicial das responsabilidades na cena. |
 | `Common/ScrollChapter.tsx` | Fronteiras das seções seguintes. |
 | `Navbar.tsx`, `InteractiveTerminal.tsx` | Navegação por posição de leitura e retorno ao terminal expandido. |
+| `src/utils/sceneStyles.ts` | Escrita de estilos apenas quando o valor muda e limpeza das propriedades controladas pela cena. |
 
 Hooks ficam em `src/hooks`; os componentes e estilos acima ficam em `src/components/Portfolio`. O antigo `useJourneyHandoff` e sua rail de robô foram removidos.
 
-As medidas são atualizadas em resize, carregamento de fontes e mudanças de conteúdo. O scroll atualiza progresso/estilos por `requestAnimationFrame`. A alteração de altura fica restrita ao corpo isolado do terminal; os marcadores da cena não se movem com os filhos animados.
+As medidas são atualizadas em resize, carregamento de fontes e mudanças de conteúdo. O scroll atualiza progresso/estilos por `requestAnimationFrame`, ignorando progresso e valores repetidos. Os estilos dinâmicos ficam nos elementos que se movem, evitando propagar variáveis pela árvore inteira da cena. O atributo `data-scene-progress` permite inspecionar seu progresso sem uma variável CSS herdada. A alteração de altura fica restrita ao corpo isolado do terminal; formação e relógio acompanham a borda com `transform`. Os marcadores da cena não se movem com os filhos animados. Resize e preferência de movimento reduzido limpam os estilos da composição antes de voltar ao fluxo normal.
+
+O canvas de partículas entra em repouso quando a simulação estabiliza, inclusive com o mouse parado sobre ele, e retoma ao receber movimento, resize ou mudança de visibilidade. O backing store usa os pixels físicos do viewport e DPR limitado a 2, preservando o espaçamento lógico com o zoom existente. Isso reduz em 36% os pixels alocados em comparação com a ampliação anterior por `1 / 0.8` nos dois eixos. A barra de progresso da Navbar usa `scaleX`.
+
+`SceneCanvas` e `AmbientBackdrop` deixaram de ser montados pelo App: o primeiro estava encoberto pelo fundo opaco e o segundo recortado por um contêiner de altura zero. Seus arquivos permanecem disponíveis. A checagem de oclusão confirmou a ausência de contribuição visível do WebGL; a retirada evita renderização e carregamento dessa cena durante o scroll.
 
 ## Executar
 
@@ -68,11 +75,25 @@ O servidor da tarefa pertence ao ambiente de nuvem. Para testar no computador pe
 
 A aprovação estética final permanece com Pedro. Chromium automatizado não substitui Opera, GPU e touchpad físicos.
 
-## Validação desta revisão
+## Medição de fluidez — 9 de outubro de 2026
 
-- Build de produção aprovado; permanece o aviso de chunk acima de 700 kB.
+Comparação do build de produção anterior (`bb5c2a8`) com esta revisão, em Chromium automatizado, viewport 1440×900, fontes originais e 90 passos de scroll por trecho. A instrumentação contou chamadas a `style.setProperty` e alterações de `inert`; os tempos vieram de `Performance.getMetrics`/tracing do Chromium.
+
+| Trecho | Escritas de estilo antes → depois | Alterações de `inert` antes → depois | Recálculo de estilos antes → depois |
+| --- | ---: | ---: | ---: |
+| Home → Sobre | 2160 → 271 | 900 → 4 | 4391 → 462 ms |
+| Pilares → Experiência | 2160 → 214 | 900 → 5 | 3387 → 629 ms |
+| Continuação da timeline | 2160 → 0 | 900 → 0 | 528 → 172 ms |
+
+Os contadores abrangem as chamadas instrumentadas da página; não contam atribuições diretas a propriedades de estilo. Os tempos são totais por percurso, não por frame. O ambiente de nuvem usa renderização por software e os resultados não equivalem a uma garantia de 60 fps em hardware real. Não houve erro JavaScript nesse perfil. Após a estabilização das partículas, nenhum redesenho do canvas foi registrado nos três percursos de scroll.
+
+Verificações isoladas das partículas confirmaram convergência com cursor parado, repouso sem redesenho, ausência de leitura de geometria por scroll e remoção dos listeners na desmontagem. Cinco combinações de resolução, zoom e DPR preservaram as coordenadas aparentes após a redução do backing store.
+
+## Validação funcional
+
+- Build de produção aprovado, agora sem o aviso de chunk acima de 700 kB após retirar a cena WebGL encoberta da montagem.
 - TypeScript dos hooks de cenas e `ScrollChapter` aprovado. O projeto não tem comando global de typecheck/tsconfig.
-- Lint: 43 erros e 6 avisos, mesma contagem preexistente; não é um lint aprovado.
+- Lint: 42 erros e 6 avisos preexistentes; não é um lint aprovado. A remoção de um import sem uso reduziu a contagem anterior de 43 erros.
 - Chromium com fontes originais: cenas completas em 1440×900, 1366×768 e 1920×1080; percurso reverso, limites de leitura, indicadores e sessão única do terminal aprovados.
 - Roda nativa, parada e reversão; robô durante a entrada, TechChip → terminal expandido com foco e comando local aprovados.
 - PT, EN e ES: enquadramentos medidos novamente e sem overflow horizontal.

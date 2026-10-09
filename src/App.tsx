@@ -11,9 +11,7 @@ import Contact from './components/Portfolio/Contact';
 import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
 import SystemPreloader from './components/Portfolio/SystemPreloader';
-import AmbientBackdrop from './components/Portfolio/AmbientBackdrop';
 import FixedBackdrop from './components/Portfolio/FixedBackdrop';
-import SceneCanvas from './components/canvas/SceneCanvas';
 import ModalErrorBoundary from './components/Portfolio/Common/ModalErrorBoundary';
 import SectionDivider from './components/Portfolio/Common/SectionDivider';
 import ScrollChapter from './components/Portfolio/Common/ScrollChapter';
@@ -113,9 +111,6 @@ export default function App() {
             {/* ── Substrato Fixo Monolítico (#05070a com Iluminação Especular Superior) ── */}
             <FixedBackdrop />
 
-            {/* ── Camada de Fundo (WebGL Canvas R3F Fixo com frameloop="demand") ── */}
-            <SceneCanvas />
-
             {/* ── Sequência de Inicialização / Preloader Minimalista ── */}
             <AnimatePresence mode="wait">
                 {!isLoaded && (
@@ -150,11 +145,6 @@ export default function App() {
 
             {/* ── Navbar (Fixo no Topo com Revelação Sincronizada) ── */}
             <Navbar isLoaded={isLoaded} />
-
-            {/* ── Iluminação Volumétrica de Dupla Camada ── */}
-            <div className="relative z-10 w-full pointer-events-none">
-                <AmbientBackdrop />
-            </div>
 
             {/* ── Camada Superior (HUD / HTML Tradicional com Rolagem Vertical Nativa) ── */}
             <motion.div

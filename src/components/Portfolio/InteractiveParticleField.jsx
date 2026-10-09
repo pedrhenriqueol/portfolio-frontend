@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * InteractiveParticleField - Lusion-inspired Physical Particle Mesh in Canvas 2D
@@ -39,6 +39,7 @@ export default function InteractiveParticleField() {
         const SPRING_K = 0.045; // Spring stiffness
         const DAMPING = 0.86; // Velocity friction
         const REPULSION_FORCE = 8.0;
+        const POINTER_SPEED_DECAY_MS = 160;
 
         const getZoom = () => {
             const styleZoom = parseFloat(getComputedStyle(document.documentElement).zoom);
@@ -68,8 +69,9 @@ export default function InteractiveParticleField() {
             currentWidth = Math.ceil(window.innerWidth / zoom);
             currentHeight = Math.ceil(window.innerHeight / zoom);
 
-            canvas.width = Math.round(currentWidth * dpr);
-            canvas.height = Math.round(currentHeight * dpr);
+            // O backing store acompanha pixels fisicos, sem ampliar novamente pelo zoom CSS.
+            canvas.width = Math.round(window.innerWidth * dpr);
+            canvas.height = Math.round(window.innerHeight * dpr);
             canvas.style.width = `${currentWidth}px`;
             canvas.style.height = `${currentHeight}px`;
 
@@ -78,7 +80,8 @@ export default function InteractiveParticleField() {
             } else {
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
             }
-            ctx.scale(dpr, dpr);
+            // Preserva as coordenadas logicas inclusive quando as dimensoes sao arredondadas.
+            ctx.scale(canvas.width / currentWidth, canvas.height / currentHeight);
 
             updateRect();
 
@@ -185,9 +188,11 @@ export default function InteractiveParticleField() {
             // Decaimento suave do raio de dispersao do mouse
             mouse.currentRadius += (mouse.baseRadius - mouse.currentRadius) * 0.08;
 
+            const now = performance.now();
+            // A velocidade do ultimo evento deve perder sua forca mesmo sem outro mousemove.
+            const cursorSpeed = mouse.speed * Math.exp(-(now - lastMoveTime) / POINTER_SPEED_DECAY_MS);
             const activeRadius = mouse.currentRadius;
             const displacedNodes = [];
-            let maxDisplacement = 0;
             let maxVelocity = 0;
 
             // 1. Atualizacao da fisica de cada particula
@@ -203,7 +208,7 @@ export default function InteractiveParticleField() {
                     const factor = (1 - dist / activeRadius);
                     const angle = Math.atan2(dy, dx);
                     // Forca amplificada com a aceleracao do mouse
-                    const force = factor * (REPULSION_FORCE + mouse.speed * 4);
+                    const force = factor * (REPULSION_FORCE + cursorSpeed * 4);
                     p.vx -= Math.cos(angle) * force;
                     p.vy -= Math.sin(angle) * force;
                 }
@@ -219,7 +224,6 @@ export default function InteractiveParticleField() {
                 p.y += p.vy;
 
                 const disp = Math.hypot(p.x - p.originX, p.y - p.originY);
-                if (disp > maxDisplacement) maxDisplacement = disp;
                 const vel = Math.hypot(p.vx, p.vy);
                 if (vel > maxVelocity) maxVelocity = vel;
 
@@ -268,9 +272,11 @@ export default function InteractiveParticleField() {
                 }
             }
 
-            // Deteccao de repouso: se o mouse esta inativo ou fora e as particulas assentadas
-            const isMouseIdle = (performance.now() - lastMoveTime) > 1200;
-            if ((mouse.x < 0 || isMouseIdle) && maxDisplacement < 0.15 && maxVelocity < 0.05) {
+            // O cursor parado mantem uma deformacao estavel: repouso depende do movimento
+            // entre frames, nao da distancia ate a origem de cada particula.
+            const isMouseIdle = (now - lastMoveTime) > 1200;
+            const isRadiusSettled = Math.abs(mouse.currentRadius - mouse.baseRadius) < 0.05;
+            if ((mouse.x < 0 || isMouseIdle) && maxVelocity < 0.05 && cursorSpeed < 0.01 && isRadiusSettled) {
                 idleFrames++;
                 if (idleFrames > 30) {
                     // Particulas em repouso total: parar o loop para zerar consumo de CPU/GPU
@@ -285,22 +291,23 @@ export default function InteractiveParticleField() {
             animationFrameId = requestAnimationFrame(render);
         };
 
+        const handleWindowResize = () => {
+            handleResize();
+            wakeUp();
+        };
+
         handleResize();
         render();
 
-        window.addEventListener('resize', () => {
-            handleResize();
-            wakeUp();
-        }, { passive: true });
-        window.addEventListener('scroll', updateRect, { passive: true });
+        window.addEventListener('resize', handleWindowResize, { passive: true });
+        // O canvas e fixo e nao tem ancestral transformado; seu retangulo nao muda ao rolar.
         window.addEventListener('mousemove', handleMouseMove, { passive: true });
         window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            window.removeEventListener('resize', handleResize);
-            window.removeEventListener('scroll', updateRect);
+            window.removeEventListener('resize', handleWindowResize);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseleave', handleMouseLeave);
             document.removeEventListener('visibilitychange', handleVisibilityChange);

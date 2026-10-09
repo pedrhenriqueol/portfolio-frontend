@@ -21,10 +21,13 @@ export default function ScrollChapter({ children, opening = false }: { children:
         let distance = 1;
         let frame = 0;
         let disposed = false;
+        let lastProgress = NaN;
         const paint = () => {
             frame = 0;
             if (disposed) return;
             const progress = Math.min(1, Math.max(0, (scrollY - start) / distance));
+            if (progress === lastProgress) return;
+            lastProgress = progress;
             root.style.setProperty('--chapter-enter', String(media.matches ? progress : 1));
             previous?.style.setProperty('--chapter-exit', String(media.matches ? progress : 0));
         };
@@ -35,6 +38,7 @@ export default function ScrollChapter({ children, opening = false }: { children:
             start = root.getBoundingClientRect().top + scrollY - innerHeight * .86;
             const end = (heading || root).getBoundingClientRect().top + scrollY - innerHeight * .34;
             distance = Math.max(1, end - start);
+            lastProgress = NaN;
             paint();
         };
         const onScroll = () => {

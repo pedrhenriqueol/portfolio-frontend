@@ -114,7 +114,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                 const pct  = maxY > 0 ? (y / maxY) * 100 : 0;
 
                 if (progressRef.current) {
-                    progressRef.current.style.width = `${pct}%`;
+                    progressRef.current.style.transform = `scaleX(${pct / 100})`;
                 }
 
                 const isScrolledNow = y > 30;
@@ -202,8 +202,8 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
             <div className="absolute top-0 left-0 right-0 h-[1.5px] z-10 bg-white/[0.03]">
                 <div
                     ref={progressRef}
-                    className="h-full bg-accent/80 will-change-[width]"
-                    style={{ width: '0%' }}
+                    className="h-full w-full bg-accent/80 origin-left will-change-transform"
+                    style={{ transform: 'scaleX(0)' }}
                 />
             </div>
 

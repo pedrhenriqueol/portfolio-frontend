@@ -9,7 +9,7 @@
 .career-scene-thread { display: none; }
 .career-first-track { position: relative; width: 100%; max-width: 64rem; margin-inline: auto; padding-block: 1.5rem 0; }
 .career-first-content { position: relative; }
-.career-first-native-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgb(255 255 255 / .1); pointer-events: none; }
+.career-first-native-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: rgb(255 255 255 / .1); pointer-events: none; }
 .career-scene-section .career-remainder { padding-top: 0; }
 .career-scene-section .career-remainder > .career-timeline-rail { top: 0; }
 .career-later-milestones { padding-top: 6rem; }
@@ -49,12 +49,12 @@
     .career-entrance-track[data-scene="connected"] [data-career-first-milestone] { opacity: 1 !important; transform: none !important; }
     .career-entrance-track[data-scene="connected"] .career-first-native-line { display: none; }
     .career-entrance-track[data-scene="connected"] .career-scene-thread { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: visible; }
-    .career-scene-thread [data-career-thread-base] { stroke: rgb(255 255 255 / .12); stroke-width: 1.5px; }
-    .career-scene-thread [data-career-thread-active] { stroke: rgb(245 235 225 / .6); stroke-width: 1.5px; stroke-dasharray: 1; }
+    .career-scene-thread [data-career-thread-base] { stroke: rgb(255 255 255 / .12); stroke-width: 2px; }
+    .career-scene-thread [data-career-thread-active] { stroke: rgb(245 235 225 / .6); stroke-width: 2px; stroke-dasharray: 1; }
 }
 
 @media (max-width: 767px) {
-    .career-first-native-line { left: 1rem; }
+    .career-first-native-line { left: 1rem; transform: none; }
     .career-first-content { padding-left: 2rem; }
     .career-first-continuation { padding-left: 2rem; }
 }
