@@ -40,7 +40,7 @@ main section[id] { scroll-margin-top: 100px; }
     .hero-story[data-connected="true"] .hero-story-layout {
         padding-top: 0;
         row-gap: 0;
-        grid-template-rows: var(--story-viewport) auto;
+        grid-template-rows: var(--hero-first-row) auto;
     }
     .hero-story[data-connected="true"] .hero-copy-cell {
         grid-row: 1 / 3;
@@ -65,18 +65,73 @@ main section[id] { scroll-margin-top: 100px; }
     }
     .hero-story[data-connected="true"] .hero-intro-cell {
         grid-column: 1;
-        min-height: calc(var(--story-viewport) * .62);
+        min-height: calc(var(--story-viewport) * .44);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         padding-block: 3rem;
     }
     .hero-story[data-connected="true"] .hero-intro-motion {
         transform-origin: left center;
-        transform: translate3d(calc((1 - var(--about-enter)) * 64px), calc((1 - var(--about-enter)) * -120px), 0) scale(calc(.94 + var(--about-enter) * .06));
+        transform: translate3d(calc((1 - var(--about-enter)) * 40px), calc((1 - var(--about-enter)) * 28px), 0) scale(calc(.96 + var(--about-enter) * .04));
+        opacity: var(--about-enter);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     html:root { scroll-behavior: auto; }
     .hero-story *, .hero-story *::before, .hero-story *::after { scroll-behavior: auto; }
+}
+
+/* The career guide travels in a measured local corridor. A real header slot
+   reserves its landing; the same button keeps its caption and pointer tracking. */
+.journey-story { position: relative; }
+.journey-story #career-details .chapter-heading-content { transform: none; }
+.journey-heading-anchor { scroll-margin-top: 100px; }
+.journey-guide-slot { height: 48px; }
+.journey-guide-rail {
+    position: absolute;
+    top: var(--guide-start);
+    left: var(--guide-left);
+    height: var(--guide-height);
+    width: 48px;
+    pointer-events: none;
+    z-index: 30;
+    visibility: hidden;
+}
+.journey-story[data-connected] .journey-guide-rail { visibility: visible; }
+.journey-guide-sticky { width: 48px; height: 48px; pointer-events: auto; }
+.journey-story[data-connected="true"] .journey-guide-sticky {
+    position: sticky;
+    top: var(--guide-inset);
+    transform: translateX(calc(var(--guide-drift) * (1 - var(--guide-travel))));
+}
+.journey-story[data-connected="true"] .journey-intro { padding-top: calc(var(--journey-viewport) * .12); }
+.journey-story[data-connected="true"] .journey-heading-anchor {
+    display: grid;
+    grid-template-columns: minmax(96px, .3fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(2rem, 5vw, 5rem);
+    max-width: 56rem;
+    margin-inline: auto;
+    text-align: left;
+}
+.journey-story[data-connected="true"] .journey-guide-slot { margin-bottom: 0; }
+.journey-story[data-connected="true"] .journey-heading-motion p { margin-inline: 0; }
+.journey-story[data-connected="true"] .journey-guide-portrait {
+    transform-origin: center top;
+    transform: scale(calc(2.6 - var(--journey-progress) * 1.6));
+}
+.journey-story[data-connected="true"] .journey-heading-motion {
+    transform-origin: center top;
+    transform: translateY(calc((1 - var(--journey-progress)) * 64px)) scale(calc(.9 + var(--journey-progress) * .1));
+}
+.journey-story[data-connected="true"] #about-details .chapter-tail {
+    transform-origin: center top;
+    transform: translateY(calc(var(--journey-progress) * 16px)) scale(calc(1 - var(--journey-progress) * .08));
+}
+.journey-story[data-connected="true"] .chapter-divider > div {
+    transform: scaleX(calc(.15 + var(--journey-progress) * .85));
+}
+.journey-story[data-connected="true"] .chapter-divider > span {
+    transform: rotate(calc(var(--journey-progress) * 180deg));
 }

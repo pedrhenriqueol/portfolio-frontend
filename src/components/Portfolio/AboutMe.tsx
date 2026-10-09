@@ -949,6 +949,7 @@ export function AboutMe({ showIntro = true }: { showIntro?: boolean }) {
                     </div>
                 </motion.div>
 
+                <div data-journey-from aria-hidden="true" />
             </div>
 
             {/* Modal de Benchmark Interativo SQL */}

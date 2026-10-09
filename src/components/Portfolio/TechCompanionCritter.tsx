@@ -6,6 +6,7 @@ interface TechCompanionCritterProps {
     variant?: 'sentinel-timeline' | 'sentinel-contact' | 'inline';
     className?: string;
     captionPosition?: 'top' | 'bottom' | 'left' | 'right';
+    portraitClassName?: string;
 }
 
 const MESSAGES = [
@@ -35,6 +36,7 @@ export const TechCompanionCritter: React.FC<TechCompanionCritterProps> = memo(({
     variant = 'inline',
     className = '',
     captionPosition = 'top',
+    portraitClassName = '',
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -96,7 +98,7 @@ export const TechCompanionCritter: React.FC<TechCompanionCritterProps> = memo(({
                 rafRef.current = null;
                 if (!containerRef.current) return;
 
-                const rect = containerRef.current.getBoundingClientRect();
+                const rect = (containerRef.current.querySelector('button') || containerRef.current).getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
 
@@ -183,6 +185,7 @@ export const TechCompanionCritter: React.FC<TechCompanionCritterProps> = memo(({
             </AnimatePresence>
 
             {/* Droid Mascote Interativo */}
+            <div className={portraitClassName}>
             <motion.button
                 onClick={handleClick}
                 whileHover={{ scale: 1.1, rotate: [0, -3, 3, 0] }}
@@ -321,6 +324,7 @@ export const TechCompanionCritter: React.FC<TechCompanionCritterProps> = memo(({
                     <line x1="19" y1="27" x2="22" y2="27" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeLinecap="round" />
                 </svg>
             </motion.button>
+            </div>
         </div>
     );
 });

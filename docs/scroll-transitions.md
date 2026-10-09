@@ -6,8 +6,9 @@ A prioridade desta entrega é o desktop e a continuidade de composição inspira
 
 ## Comportamento
 
-- **Hero → Sobre:** o terminal ocupa uma única coluna que atravessa as duas composições. As duas colunas usam sticky nativo: a apresentação permanece durante o início da passagem, recua e sai enquanto Sobre entra. O mesmo terminal amplia até 108%, depois recua até 84% e desloca-se conforme o scroll. As colunas terminam antes do Bento Grid; não há terminal clonado, troca de montagem, captura de wheel ou palco fixo sobre a página. Os CTAs da apresentação saem da ordem de foco quando perdem legibilidade e voltam ao reverter o percurso.
-- **Sobre → Experiência → Habilidades → Projetos → Contato:** cada fronteira compartilha um progresso entre os últimos cards, a linha divisória existente e o cabeçalho seguinte. Os espaços entre as seções foram reduzidos. O formulário fica estável quando o cabeçalho do Contato chega à área de leitura.
+- **Hero → Sobre:** o terminal ocupa uma única coluna que atravessa as duas composições. As duas colunas usam sticky nativo: a apresentação permanece durante o início da passagem, recua e sai enquanto Sobre entra. A primeira composição usa a altura do conteúdo com uma base de 78% do viewport; Sobre ocupa uma segunda linha mais curta, aproximando sua entrada da posição anterior do nome. O mesmo terminal amplia até 108%, depois recua até 84% e desloca-se conforme o scroll. As colunas terminam antes do Bento Grid; não há terminal clonado, troca de montagem, captura de wheel ou palco fixo sobre a página. Os CTAs da apresentação saem da ordem de foco quando perdem legibilidade e voltam ao reverter o percurso.
+- **Sobre → Experiência:** o robô original surge durante a saída dos pilares, permanece numa rail sticky local, reduz de 260% a 100% e se desloca do centro para o lugar reservado ao lado do título da carreira. O cabeçalho e a divisória acompanham o mesmo progresso. O botão continua interativo, sem perder sua mensagem durante o percurso. A rail termina no cabeçalho, antes dos indicadores e da timeline existente.
+- **Experiência → Habilidades → Projetos → Contato:** cada fronteira compartilha um progresso entre os últimos cards, a linha divisória existente e o cabeçalho seguinte. O formulário fica estável quando o cabeçalho do Contato chega à área de leitura.
 - **Mobile, telas baixas e movimento reduzido:** o terminal e os textos ficam no fluxo normal. Não há distância adicional para uma animação desabilitada. A cena também é desativada se seu conteúdo não couber na altura disponível.
 - **Navegação:** a URL sem hash inicia na Home, com posicionamento instantâneo durante o preloader e restauração automática desativada antes de carregar a aplicação. Links diretos, incluindo `#projetos`, continuam abrindo sua seção. Pedro confirmou que o endereço salvo pelo navegador continha esse hash. A âncora de Sobre fica em um wrapper estável, separado do texto animado. TechChips usam uma única ação de foco/rolagem; o terminal mantém o foco durante a resposta, permitindo também Ctrl+C. No menu mobile, a rolagem começa após o fechamento; o retorno rápido ao topo cancela o temporizador que ocultava a Navbar. A Navbar oculta fica fora da ordem de foco. O ID duplicado de projetos foi separado em `projetos` e `projetos-corporativos`.
 - **Barra inferior:** a StatusBar de versão, horário e latência foi removida, junto com seu estado e callback de média. O painel de telemetria mantém seus resultados e controles próprios.
@@ -15,6 +16,7 @@ A prioridade desta entrega é o desktop e a continuidade de composição inspira
 ## Arquivos principais
 
 - `src/hooks/useHeroHandoff.ts`: mede a coluna, o terminal e o viewport, considerando o `zoom: 0.8` já existente. O percurso termina em `altura da coluna - altura do terminal - inset superior`. ResizeObserver e carregamento de fontes atualizam as medidas; o scroll apenas escreve o progresso, sem springs nem leituras de layout a cada frame.
+- `src/components/Portfolio/AboutExperienceStory.tsx` e `src/hooks/useJourneyHandoff.ts`: uma instância do guia, um marcador após os pilares e um slot estável no cabeçalho. A rail fica fora das seções animadas. O hook mede seu início, fim e deslocamento lateral e atualiza variáveis pelo scroll nativo; resize, fontes e mudanças de idioma recalculam a geometria. Em mobile, telas baixas ou movimento reduzido, o guia fica no slot e a composição usa o fluxo normal.
 - `src/components/Portfolio/Hero.tsx` e `AboutMe.tsx`: introdução compartilhada, uma instância do terminal e Bento completo no documento.
 - `src/components/Portfolio/Common/ScrollChapter.tsx`: progresso compartilhado entre capítulos e wrappers de cabeçalho. As raízes das seções não recebem transforms, preservando os modais fixos.
 - `src/components/Portfolio/scroll-transitions.css`: geometria, versões responsivas, movimento reduzido e estilos de passagem.
@@ -86,3 +88,27 @@ Para conferir a geometria com as fontes reais, o navegador de teste recebeu os a
 Nesta revisão, passaram: abertura sem hash e recarregamentos a partir de Projetos/Contato, carregamento com JavaScript atrasado, links diretos para Sobre/Projetos/Contato, quatro tamanhos desktop (1920×1080, 1844×900, 1440×900 e 1366×768), terminal persistente, percurso reverso, quatro fronteiras com progresso compartilhado, foco dos CTAs, mobile simplificado e movimento reduzido. Não houve erro JavaScript não tratado. Build e TypeScript dos módulos novos passaram; o lint mantém 43 erros e 6 avisos.
 
 O primeiro teste de hash reutilizava o mesmo documento e observou a rolagem suave antes de terminar; o teste correto usa navegação completa. O teste de retorno às fronteiras também foi ajustado para aguardar as medidas após trocar o viewport. A âncora de Sobre foi separada do filho animado, e os resultados finais foram conferidos após essas correções.
+
+## Continuidade de Sobre para Experiência — gravação de 22:05
+
+A nova gravação de 9,1 segundos foi acessível. Frames das duas passagens e da referência foram inspecionados. Na saída dos pilares, o cabeçalho de carreira surgia abaixo com um robô pequeno e sem elemento contínuo atravessando o intervalo. Esta revisão usa o mesmo robô como ligação entre as composições e encurta também a chegada de Sobre na passagem anterior.
+
+O link público `#experiencia` agora aponta para o wrapper estável do cabeçalho, após a distância de preparação da cena. A seção que contém os indicadores, a timeline e seu modal usa `career-details`. Assim, a navegação direta chega ao título com o guia já no seu lugar. Não foi adicionada outra timeline nem alterado o conteúdo dos marcos profissionais.
+
+Validação final nesta revisão, usando as fontes originais por interceptação somente no navegador de teste:
+
+| Verificação | Resultado |
+| --- | --- |
+| Build de produção | Aprovado; permanece o aviso de chunk acima de 700 kB. |
+| TypeScript de `useHeroHandoff`, `useJourneyHandoff` e `ScrollChapter` | Aprovado. |
+| Lint | Continua com 43 erros e 6 avisos preexistentes; não é um lint aprovado. |
+| Desktop 1920×1080, 1440×900, 1366×768 e 1024×768 | Cena ativa, pouso no slot, percurso reverso, terminal e robô persistentes; sem overflow horizontal. |
+| Idiomas PT, EN e ES | Cabeçalho e slot medidos novamente; pouso sem colisão. |
+| Interação do guia por teclado | Mensagem preservada durante a passagem. |
+| Mobile 390×844, tablet 820×1180, desktop baixo 1440×600 e movimento reduzido | Cena simplificada; robô no slot e conteúdo no fluxo normal. |
+| Carregamentos diretos `#sobre`, `#experiencia`, `#projetos` e `#contato` | Âncoras visíveis após o preloader e o carregamento das fontes. |
+| Fronteiras seguintes de Habilidades, Projetos e Contato | Progresso compartilhado chega aos cards anteriores, incluindo a nova composição que contém Experiência; reversão aprovada. |
+| Modais de Sobre e da carreira; wheel nativo com reversão | Aprovados; os dois modais continuam cobrindo o viewport. Uma gravação do percurso nativo foi gerada. |
+| Erros JavaScript não tratados | Nenhum registrado na rodada final. |
+
+As capturas foram revisadas em posições intermediárias e no cabeçalho final. A imersão percebida ainda deve ser conferida no navegador de Pedro; a automação não substitui o teste com seu touchpad e sua GPU.

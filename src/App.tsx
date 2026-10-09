@@ -5,8 +5,7 @@ import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
 import Navbar from './components/Portfolio/Navbar';
 import Hero from './components/Portfolio/Hero';
-import AboutMe from './components/Portfolio/AboutMe';
-import Experience from './components/Portfolio/Experience';
+import AboutExperienceStory from './components/Portfolio/AboutExperienceStory';
 import Skills from './components/Portfolio/Skills';
 import Projects from './components/Portfolio/Projects';
 import Contact from './components/Portfolio/Contact';
@@ -150,9 +149,8 @@ export default function App() {
                 <main className="relative min-h-screen bg-transparent text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
                     <ScrollChapter opening>
                         <Hero />
-                        <AboutMe showIntro={false} />
+                        <AboutExperienceStory experiences={EXPERIENCES} />
                     </ScrollChapter>
-                    <ScrollChapter><Experience experiences={EXPERIENCES} /></ScrollChapter>
                     <ScrollChapter><Skills skills={SKILLS} /></ScrollChapter>
                     <ScrollChapter><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
                     <ScrollChapter><Contact /></ScrollChapter>

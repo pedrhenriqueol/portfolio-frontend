@@ -158,9 +158,10 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
 
 interface ProfessionalJourneyTimelineProps {
     experiences?: any[];
+    guidedIntro?: boolean;
 }
 
-export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [] }) => {
+export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({ experiences = [], guidedIntro = false }) => {
     const { t, lang } = useLanguage();
     const sectionRef = useRef<HTMLElement>(null);
     const timelineTrackRef = useRef<HTMLDivElement>(null);
@@ -416,7 +417,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
 
     return (
         <section
-            id="experiencia"
+            id="career-details"
+            aria-labelledby="experience-heading"
             ref={sectionRef}
             className="py-24 md:py-36 bg-transparent relative overflow-hidden"
         >
@@ -424,28 +426,32 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
 
                 {/* ── Section Header com Easter Egg Sentinela 1 ── */}
                 <ChapterHeading className="relative text-center mb-14">
-                    <div className="flex justify-center mb-4">
-                        <TechCompanionCritter
-                            variant="sentinel-timeline"
-                            captionPosition="top"
-                            className="transition-transform duration-300 hover:scale-105"
-                        />
-                    </div>
+                    <div className="journey-intro">
+                        <div id="experiencia" className="journey-heading-anchor">
+                            <div data-journey-guide-slot className="journey-guide-slot flex justify-center mb-4">
+                                {!guidedIntro && <TechCompanionCritter
+                                    variant="sentinel-timeline"
+                                    captionPosition="top"
+                                    className="transition-transform duration-300 hover:scale-105"
+                                />}
+                            </div>
 
-                    <div>
-                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
-                            {lang === 'en'
-                                ? '// 03. CAREER & OPERATIONAL ENGINEERING'
-                                : lang === 'es'
-                                ? '// 03. TRAYECTORIA E INGENIERÍA OPERACIONAL'
-                                : '// 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
-                            {t('experience.title') || 'Trajetória Profissional'}
-                        </h2>
-                        <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
-                            {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
-                        </p>
+                            <div className="journey-heading-motion">
+                                <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                                    {lang === 'en'
+                                        ? '// 03. CAREER & OPERATIONAL ENGINEERING'
+                                        : lang === 'es'
+                                        ? '// 03. TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                        : '// 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
+                                </span>
+                                <h2 id="experience-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
+                                    {t('experience.title') || 'Trajetória Profissional'}
+                                </h2>
+                                <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                                    {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </ChapterHeading>
 
