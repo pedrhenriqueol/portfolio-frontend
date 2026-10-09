@@ -439,10 +439,10 @@ const itemVariants = {
     }
 };
 
-export function AboutIntro() {
+export function AboutIntro({ anchorId = 'sobre' }: { anchorId?: string | null } = {}) {
     const { t, lang } = useLanguage();
     return (
-        <header id="sobre" className="about-intro text-center lg:text-left">
+        <header id={anchorId ?? undefined} className="about-intro text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
                 <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase">

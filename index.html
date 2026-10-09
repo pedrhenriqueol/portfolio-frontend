@@ -6,6 +6,12 @@
     <meta name="theme-color" content="#05070a" />
     <meta http-equiv="x-dns-prefetch-control" content="on" />
 
+    <script>
+      // Start a new load at Home instead of restoring an old scroll position.
+      // Run before the app/assets load; direct section hashes are handled by App.
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    </script>
+
     <title>Pedro Henrique — Fullstack Developer Portfolio</title>
     <meta name="description" content="Pedro Henrique — Desenvolvedor Fullstack especializado em Delphi, PHP/Laravel, React, TypeScript e modernização de sistemas." />
     <meta name="author" content="Pedro Henrique" />

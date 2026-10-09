@@ -77,7 +77,7 @@ async function checkHealth(service) {
     }
 }
 
-export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) {
+export default function LiveTelemetryMesh({ isOpen, onClose }) {
     const { lang } = useLanguage();
     const [results, setResults] = useState(() =>
         Object.fromEntries(SERVICES.map(s => [s.id, { status: 'checking', latency: null, timestamp: null }]))
@@ -106,13 +106,6 @@ export default function LiveTelemetryMesh({ isOpen, onClose, onLatencyUpdate }) 
         const newResults = Object.fromEntries(checks);
         setResults(newResults);
         setIsChecking(false);
-
-        // Notifica a StatusBar com a média calculada
-        const latencies = Object.values(newResults).filter(r => r.latency !== null).map(r => r.latency);
-        if (latencies.length > 0 && onLatencyUpdate) {
-            const avg = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-            onLatencyUpdate(Math.round(avg));
-        }
     };
 
     // Health check inicial no mount

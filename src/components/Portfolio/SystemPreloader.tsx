@@ -25,7 +25,7 @@ export default function SystemPreloader({ onComplete }: SystemPreloaderProps) {
     // ── 1. Bloqueio Seguro de Rolagem no document.body ──
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            window.scrollTo(0, 0);
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         }
         const prevOverflow = document.body.style.overflow;
         const prevOverscroll = document.body.style.overscrollBehavior;

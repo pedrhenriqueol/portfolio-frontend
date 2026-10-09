@@ -310,7 +310,9 @@ export const Hero: React.FC<HeroProps> = () => {
                     </div>
 
                     <div className="hero-intro-cell">
-                        <div className="hero-intro-motion"><AboutIntro /></div>
+                        <div id="sobre" className="hero-intro-anchor about-intro">
+                            <div className="hero-intro-motion"><AboutIntro anchorId={null} /></div>
+                        </div>
                     </div>
                 </div>
             </div>

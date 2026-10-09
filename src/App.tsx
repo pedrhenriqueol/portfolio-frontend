@@ -12,7 +12,6 @@ import Projects from './components/Portfolio/Projects';
 import Contact from './components/Portfolio/Contact';
 import SoundEngine from './components/Portfolio/SoundEngine';
 import Dock from './components/Portfolio/Workstation/Dock';
-import StatusBar from './components/Portfolio/Workstation/StatusBar';
 import SystemPreloader from './components/Portfolio/SystemPreloader';
 import AmbientBackdrop from './components/Portfolio/AmbientBackdrop';
 import FixedBackdrop from './components/Portfolio/FixedBackdrop';
@@ -41,6 +40,11 @@ export default function App() {
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
     const handlePreloaderComplete = useCallback(() => {
+        // Reveal Home immediately, without CSS smooth scrolling or a stale
+        // browser-restored position. Explicit hash links are aligned below.
+        if (!window.location.hash) {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
         setIsLoaded(true);
     }, []);
 
@@ -72,7 +76,6 @@ export default function App() {
 
     // ── Workstation State ──
     const [telemetryOpen, setTelemetryOpen] = useState<boolean>(false);
-    const [avgLatency, setAvgLatency] = useState<number | null>(null);
     const [selectedProject, setSelectedProject] = useState<any>(null);
 
     const toggleTelemetry = useCallback(() => {
@@ -122,12 +125,10 @@ export default function App() {
                 onToggleTelemetry={toggleTelemetry}
                 isTelemetryOpen={telemetryOpen}
             />
-            <StatusBar avgLatency={avgLatency} />
             <Suspense fallback={null}>
                 <LiveTelemetryMesh
                     isOpen={telemetryOpen}
                     onClose={() => setTelemetryOpen(false)}
-                    onLatencyUpdate={setAvgLatency}
                 />
             </Suspense>
 
