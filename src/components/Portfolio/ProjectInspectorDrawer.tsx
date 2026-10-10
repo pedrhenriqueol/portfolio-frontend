@@ -1178,7 +1178,7 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 </nav>
 
                 {/* ── C. Conteúdo Técnico Estruturado da Aba Ativa ── */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+                <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
                     <AnimatePresence mode="wait">
                         {activeTab === 'overview' && (
                             <motion.div

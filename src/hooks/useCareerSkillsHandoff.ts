@@ -28,6 +28,7 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         const svg = root.querySelector<SVGSVGElement>('.career-skills-thread')!;
         const sourcePath = svg.querySelector<SVGPathElement>('[data-skills-source-thread]')!;
         const marker = svg.querySelector<SVGCircleElement>('[data-skills-source-marker]')!;
+        const headingBridge = svg.querySelector<SVGPathElement>('[data-skills-heading-bridge]')!;
         const guideBase = svg.querySelector<SVGPathElement>('[data-skills-guide-base]')!;
         const guideActive = svg.querySelector<SVGPathElement>('[data-skills-guide-active]')!;
         const rail = [...(root.closest('main')?.querySelectorAll<HTMLElement>('.career-remainder > .career-timeline-rail') || [])]
@@ -78,10 +79,15 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             motion.set(heading, 'opacity', String(reveal));
             motion.set(heading, 'transform', `translateY(${(1 - reveal) * 16}px)`);
             const half = width / 2;
-            // Both ends are native document positions. As the introduction
-            // pins, its local source moves up and its body converges below it.
+            // Sticky displacement is zero on approach, grows during the pin,
+            // then stays at travel after release. Subtract only that movement
+            // from the cached native rail endpoint, including on reverse scroll.
             const source = sourceY - progress * travel;
             writePath(sourcePath, `M ${sourceX} ${source} L ${half} 8`);
+            // Fill the empty introduction while its heading is hidden, then
+            // clear the bridge before it can intersect readable heading text.
+            writePath(headingBridge, `M ${half} 8 L ${half} ${guideTop}`);
+            motion.set(headingBridge, 'opacity', String(Math.max(0, 1 - reveal * 2)));
             const endY = height + (1 - progress) * travel - 12;
             const fork = clamp((progress - .12) / .72);
             const splitY = guideTop + Math.min(20, Math.max(0, (endY - guideTop) * .3));

@@ -641,7 +641,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         ══════════════════════════════════════════════════════════ */}
                     <div className="career-timeline-rail absolute left-1/2 -translate-x-1/2 top-4 bottom-4 w-[2px] hidden md:block pointer-events-none z-10">
                         {/* 1. Trilho Base Guia (Filamento escuro sutil de fundo) */}
-                        <div className="absolute inset-0 bg-white/10 rounded-full" />
+                        <div className="absolute inset-0 bg-white/20 rounded-full" />
 
                         {/* 2. Feixe Ativo Preenchido (Gradiente luminoso que desce suavemente) */}
                         <motion.div
@@ -663,7 +663,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         ══════════════════════════════════════════════════════════ */}
                     <div className="career-timeline-rail absolute left-4 sm:left-6 top-4 bottom-4 w-[2px] md:hidden pointer-events-none z-10">
                         {/* 1. Trilho Base Guia Mobile */}
-                        <div className="absolute inset-0 bg-white/10 rounded-full" />
+                        <div className="absolute inset-0 bg-white/20 rounded-full" />
 
                         {/* 2. Feixe Ativo Mobile */}
                         <motion.div

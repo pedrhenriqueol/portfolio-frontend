@@ -25,7 +25,7 @@ export default function CommandPalette() {
                 { id: 'nav-home',    icon: 'fas fa-home',        label: 'Home',            action: () => scrollTo('home') },
                 { id: 'nav-sobre',   icon: 'fas fa-user',        label: t('nav.sobre'),    action: () => scrollTo('sobre') },
                 { id: 'nav-exp',     icon: 'fas fa-briefcase',   label: t('nav.experiencia'), action: () => scrollTo('experiencia') },
-                { id: 'nav-skills',  icon: 'fas fa-code',        label: t('nav.conhecimentos'), action: () => scrollTo('conhecimentos') },
+                { id: 'nav-skills',  icon: 'fas fa-code',        label: t('nav.conhecimentos'), action: () => scrollTo('habilidades') },
                 { id: 'nav-proj',    icon: 'fas fa-folder',      label: t('nav.projetos'), action: () => scrollTo('projetos') },
                 { id: 'nav-contact', icon: 'fas fa-envelope',    label: t('nav.contato'),  action: () => scrollTo('contato') },
             ],
@@ -341,6 +341,7 @@ export default function CommandPalette() {
                             {/* Lista de Resultados */}
                             <div
                                 ref={listRef}
+                                data-lenis-prevent
                                 className="max-h-[360px] overflow-y-auto p-2 space-y-1 text-sm font-sans"
                             >
                                 {flat.length > 0 ? (

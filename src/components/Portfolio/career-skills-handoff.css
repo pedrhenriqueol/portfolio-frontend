@@ -28,7 +28,8 @@
         pointer-events: none;
         z-index: -1;
     }
-    .career-skills-thread [data-skills-source-thread] { stroke: rgb(255 255 255 / .24); stroke-width: 2px; }
+    .career-skills-thread [data-skills-source-thread],
+    .career-skills-thread [data-skills-heading-bridge] { stroke: rgb(255 255 255 / .24); stroke-width: 2px; }
     .career-skills-thread [data-skills-source-marker] { fill: #05070a; stroke: rgb(255 255 255 / .5); stroke-width: 2px; }
     .career-skills-thread [data-skills-guide-base] { stroke: rgb(255 255 255 / .12); stroke-width: 2px; }
     .career-skills-thread [data-skills-guide-active] { stroke: rgb(245 235 225 / .55); stroke-width: 2px; }

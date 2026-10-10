@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { getAudioContext, isMuted } from '../../lib/sound';
 
@@ -211,13 +211,17 @@ function SqlBenchmarkModal({
     };
 
     useEffect(() => {
+        if (!isOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
         };
-        if (isOpen) {
-            window.addEventListener('keydown', handleKeyDown);
-        }
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = previousOverflow;
+        };
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
@@ -429,7 +433,7 @@ const containerVariants = {
     }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20, filter: 'blur(6px)' },
     visible: {
         opacity: 1,

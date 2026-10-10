@@ -56,7 +56,7 @@ export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({
     return (
         <AnimatePresence>
             {isOpen && milestone && (
-                <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                <div data-lenis-prevent className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
                     {/* Backdrop com desfoque e escurecimento */}
                     <motion.div
                         initial={{ opacity: 0 }}

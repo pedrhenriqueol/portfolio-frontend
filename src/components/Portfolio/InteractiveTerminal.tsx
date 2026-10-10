@@ -876,6 +876,7 @@ export const InteractiveTerminal: React.FC = () => {
             {/* Área de Saída de Linhas com Conforto Tipográfico Generoso */}
             <div
                 ref={contentRef}
+                data-lenis-prevent
                 className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6 space-y-4 font-mono text-xs md:text-[13px] leading-relaxed relative scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]"
             >
                 {activeGame === 'snake' && <SnakeGame lang={lang} onExit={handleExitGame} />}

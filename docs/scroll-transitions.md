@@ -1,6 +1,14 @@
 # Transições de scroll
 
-A prioridade é o desktop e a continuidade de composição observada na referência. A implementação usa scroll nativo, sem capturar `wheel` e sem novas bibliotecas. O deployment da Vercel não foi verificado nesta revisão.
+A prioridade é o desktop e a continuidade de composição observada na referência. As cenas acompanham a posição real do documento. A roda no desktop é suavizada pelo Lenis já instalado no projeto; não há contêiner transformado substituindo o scroll da janela. O deployment da Vercel não foi verificado nesta revisão.
+
+## Rolagem
+
+`SmoothScrollProvider` aplica interpolação `lerp: 0.08` à roda em telas a partir de 1024 px, com ponteiro preciso e movimento reduzido desativado. Conserva a distância original do gesto (`wheelMultiplier: 1`). Mobile, toque, gestos horizontais e modificadores de zoom seguem o comportamento nativo. A preferência de movimento reduzido e o redimensionamento são aplicados sem recarregar a página.
+
+Teclado, cliques e mudanças de hash interrompem a inércia. Uma mudança nativa de posição durante a interpolação também cancela o movimento pendente, preservando navegação programática e interações com a scrollbar. O próximo gesto parte da posição real atual.
+
+O provedor acompanha os bloqueios de `overflow` do body para pausar durante modais e retomar ao fechar. Terminal, registro operacional, gaveta de projetos e lista da command palette têm regiões nativas marcadas com `data-lenis-prevent`, que também interrompem uma inércia anterior da página. O modal SQL passa a bloquear o scroll de fundo enquanto está aberto. A instância Lenis é destruída ao desativar a suavização; listeners, observer e instância são removidos ao desmontar o provedor.
 
 ## Composição atual
 
@@ -34,6 +42,8 @@ Existe uma única instância de Habilidades. A troca de modo preserva a seleçã
 
 Os centros dos cards são medidos pelas posições de layout, sem incorporar os transforms de saída para Projetos. Redimensionar nessa saída e retornar a Habilidades mantém as bifurcações alinhadas.
 
+Uma ponte ocupa o trecho do trilho reservado ao título enquanto ele está invisível. A ponte desaparece até a metade da revelação para não atravessar o texto legível. Isso elimina o espaço preto de aproximadamente 200 px observado no vídeo de 10 de outubro. A base da timeline mantém contraste suficiente abaixo do rastreador luminoso, evitando parecer interrompida na leitura de 2024.
+
 ### Demais seções e acessibilidade
 
 Habilidades → Projetos → Contato mantêm o progresso compartilhado entre os últimos cards, a divisória e o cabeçalho seguinte. O formulário permanece estável na área de leitura. As passagens específicas dessas duas fronteiras ficam para uma etapa posterior.
@@ -55,6 +65,7 @@ As âncoras `#sobre` e `#experiencia` são marcadores estacionários que levam �
 | `Common/ScrollChapter.tsx` | Fronteiras das seções seguintes. |
 | `Navbar.tsx`, `InteractiveTerminal.tsx` | Navegação por posição de leitura e retorno ao terminal expandido. |
 | `src/utils/sceneStyles.ts` | Escrita de estilos apenas quando o valor muda e limpeza das propriedades controladas pela cena. |
+| `src/components/providers/SmoothScrollProvider.tsx` | Suavização da roda desktop, cancelamento por navegação, bloqueios e fallback nativo. |
 
 Hooks ficam em `src/hooks`; os componentes e estilos acima ficam em `src/components/Portfolio`. O antigo `useJourneyHandoff` e sua rail de robô foram removidos.
 
@@ -84,6 +95,7 @@ O servidor da tarefa pertence ao ambiente de nuvem. Para testar no computador pe
 4. Siga até Habilidades, inverta o scroll e alterne Grade Técnica/Visualizador 3D. Redimensione a janela já em Projetos e volte para conferir os destinos da guia.
 5. Teste links diretos, Navbar, TechChips e os modais de Sobre/carreira.
 6. Repita em mobile, tela baixa e com movimento reduzido.
+7. Use a roda, inverta a direção durante a inércia, pressione Home e role novamente. Teste terminal, modais e navegação enquanto a página ainda está em movimento.
 
 A aprovação estética final permanece com Pedro. Chromium automatizado não substitui Opera, GPU e touchpad físicos.
 
@@ -105,6 +117,7 @@ Verificações isoladas das partículas confirmaram convergência com cursor par
 
 - Build de produção aprovado, agora sem o aviso de chunk acima de 700 kB após retirar a cena WebGL encoberta da montagem.
 - TypeScript dos hooks de cenas, dos componentes de composição e de `ScrollChapter` aprovado. O projeto não tem comando global de typecheck/tsconfig.
+- TypeScript do provedor, da conexão a Habilidades, de Sobre e dos componentes de carreira/gaveta aprovado com os tipos de Vite/Node e leitura dos módulos JS existentes. A declaração `Variants` em Sobre corrige a inferência da curva de easing, sem alterar a animação.
 - Lint: 42 erros e 6 avisos preexistentes; não é um lint aprovado. A contagem permaneceu igual à revisão anterior; o ESLint atual não cobre os arquivos TypeScript.
 - Chromium com fontes originais: cenas completas em 1440×900, 1366×768 e 1920×1080; percurso reverso, limites de leitura, indicadores e sessão única do terminal aprovados.
 - Roda nativa, parada e reversão; robô durante a entrada, TechChip → terminal expandido com foco e comando local aprovados.
@@ -113,6 +126,11 @@ Verificações isoladas das partículas confirmaram convergência com cursor par
 - Redimensionamento durante a saída de Habilidades para Projetos e retorno: centros das três bifurcações alinhados aos cards, com diferença inferior a 0,5 pixel físico nos tamanhos testados.
 - Composição de Sobre completamente visível e interativa no intervalo final de leitura; indicadores e marco de 2026 entram em etapas distintas. Cabeçalho e responsabilidades do cartão mantêm contato no desktop e nos fallbacks.
 - Link direto `#habilidades`, troca de modos/idiomas e retorno do fallback à cena desktop aprovados.
+- Ponte entre carreira e Habilidades: extremidades contínuas na aproximação, trecho fixo, soltura e reversão em 1440 e 1920 px. Ponte visível no espaço vazio e oculta quando o título fica legível; screenshots conferidos com os estilos originais.
+- Rolagem da roda: posições intermediárias, distância final preservada e reversão aprovadas. Home seguido de novo gesto, salto nativo durante a inércia e arraste real da scrollbar preservam a posição atual.
+- Navbar durante a reversão, chegada ao rodapé com o zoom existente, mudança de movimento reduzido e retorno de mobile ao desktop aprovados.
+- Terminal com conteúdo longo e limite inferior, modal SQL, registro operacional e navegação pela command palette aprovados com a suavização ativa.
+- Abertura direta em `#sobre`, `#habilidades` e `#contato` aprovada com a suavização ativa, sem erros JavaScript.
 - Links diretos `#terminal`, `#sobre`, `#experiencia`, `#projetos` e `#contato` aprovados. O desvio de Contato por imports tardios de Projetos foi reproduzido e corrigido.
 - Fluxo normal aprovado em 390×844, 820×1180, 1024×768, 1440×600 e 1440×900 com movimento reduzido. Conteúdo preservado e sem overflow horizontal.
 - Modais SQL e de registro operacional cobrem o viewport; fechamento e Escape do registro aprovados.
@@ -120,3 +138,5 @@ Verificações isoladas das partículas confirmaram convergência com cursor par
 - Nenhum erro JavaScript não tratado nas rodadas finais.
 
 A requisição a Google Fonts recebe HTTP 403 do proxy deste ambiente. A automação visual carregou os arquivos originais Newsreader/Outfit por interceptação apenas no navegador de teste. As URLs e dependências de produção foram preservadas. Ícones externos podem não carregar neste ambiente. Não houve envio real de formulário nem chamada remota Gemini.
+
+A verificação da mecânica da roda desativou apenas a pintura de canvas/filtros decorativos no navegador de teste para isolar a interpolação da renderização por software. As verificações visuais do trilho e dos controles usaram os estilos originais. Esses testes comprovam o comportamento dos gestos, não uma taxa de quadros em hardware físico.
