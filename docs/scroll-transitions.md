@@ -62,7 +62,9 @@ As âncoras `#sobre` e `#experiencia` são marcadores estacionários que levam �
 | `CareerEntranceScene.tsx`, `Common/CareerEntranceStage.tsx`, `useCareerEntrance.ts`, `career-entrance.css` | Passagem dos pilares para a carreira e acompanhamento da continuação. |
 | `ProfessionalJourneyTimeline.tsx` | Conteúdo único dos marcos e cartão completo de 2026 na cena inicial. |
 | `Skills.tsx`, `Common/CareerSkillsHandoff.tsx`, `useCareerSkillsHandoff.ts`, `career-skills-handoff.css` | Introdução de Habilidades conectada ao trilho da carreira, com corpo e modos preservados em fluxo. |
-| `Common/ScrollChapter.tsx` | Fronteiras das seções seguintes. |
+| `Common/ScrollChapter.tsx` | Fronteiras das seções seguintes, com posição pública do Lenis e transforms nos consumidores. |
+| `Projects/Cylindrical3DShowcase.tsx`, `Projects/CorporateProjectsShowcase.tsx` | Carrosséis DOM 3D com sombreamento por overlay e materiais sem filtros nos cards. |
+| `Contact.tsx` | Superfícies opacas e spotlight estático movido por RAF, com coordenadas corrigidas para CSS zoom. |
 | `Navbar.tsx`, `InteractiveTerminal.tsx` | Navegação por posição de leitura e retorno ao terminal expandido. |
 | `src/utils/sceneStyles.ts` | Escrita de estilos apenas quando o valor muda e limpeza das propriedades controladas pela cena. |
 | `src/components/providers/SmoothScrollProvider.tsx` | Suavização da roda desktop, cancelamento por navegação, bloqueios e fallback nativo. |
@@ -113,11 +115,35 @@ Os contadores abrangem as chamadas instrumentadas da página; não contam atribu
 
 Verificações isoladas das partículas confirmaram convergência com cursor parado, repouso sem redesenho, ausência de leitura de geometria por scroll e remoção dos listeners na desmontagem. Cinco combinações de resolução, zoom e DPR preservaram as coordenadas aparentes após a redução do backing store.
 
+## Otimização após Experiência — 10 de outubro de 2026
+
+O percurso Habilidades → destaque de projetos → projetos corporativos → Contato foi perfilado com os estilos originais e build de produção. O problema principal de CPU estava em `ScrollChapter`: variáveis CSS herdadas eram atualizadas nos capítulos inteiros. Outro callback lia `scrollY` logo depois, forçando recálculo síncrono de estilos. Na passagem por Habilidades, dez recálculos processaram 1036 elementos cada.
+
+Os transforms agora são escritos apenas no título, no conteúdo de saída e nos filhos da divisória. A posição vem do evento público do Lenis, evitando ler o documento entre escritas; o fallback nativo captura a posição no evento de scroll. Medição de geometria permanece reservada a montagem, redimensionamento e mudanças de layout. As fórmulas e o percurso reverso das transições foram preservados. Os dez recálculos de 1036 elementos desapareceram no perfil corrigido.
+
+Comparação de produção em 1440×900, com 18 passos de scroll por trecho, usando os mesmos assets/fontes e estilos completos:
+
+| Trecho | `UpdateLayoutTree` antes → depois | `Paint` antes → depois |
+| --- | ---: | ---: |
+| Entrada de Habilidades | 1039 → 51 ms | 20 → 6 ms |
+| Destaque de projetos | 100 → 63 ms | 17 → 5 ms |
+| Projetos corporativos | 62 → 82 ms | 6 → 4 ms |
+| Contato | 108 → 38 ms | 24 → 1 ms |
+
+Os tempos são acumulados do trace, não FPS. O ambiente tem renderização por software e variação entre rodadas; o aumento de recálculo no corporativo foi registrado, assim como a redução da pintura. A evidência mais estável é a eliminação dos dez recálculos amplos: no trace final de Habilidades, o maior recálculo envolveu 58 elementos. A percepção final de fluidez deve ser conferida no Opera/GPU de Pedro.
+
+Uma rodada adicional em Contato movimentou o cursor durante o mesmo percurso: `UpdateLayoutTree` passou de 222 para 80 ms; `Paint`, de 26 para 28 ms. O teste manteve as partículas ativas. A redução confirmada está no trabalho de estilos, sem atribuir ao spotlight a eliminação da pintura global.
+
+Nos dois carrosséis, filtros de brilho sobre cards grandes foram substituídos por overlays escuros, e o blur do fundo por materiais opacos. A sombra de chão usa gradiente estático; perspectiva, arraste, molas e cards laterais permanecem. Em Contato, os painéis não amostram mais o fundo animado. O spotlight mantém a textura estática e move somente sua própria camada, com eventos de mouse agrupados em um RAF e correção para o zoom CSS. Não há novo loop contínuo.
+
+O terminal apresenta orientação discreta em PT/EN/ES, com texto para cursor ou toque e descrição acessível vinculada ao histórico e ao campo de comando. A roda interna continua reservada ao histórico. A revisão também corrigiu a importação ausente de `MatrixRain`, que causava erro ao executar o comando existente.
+
 ## Validação funcional — 10 de outubro de 2026
 
 - Build de produção aprovado, agora sem o aviso de chunk acima de 700 kB após retirar a cena WebGL encoberta da montagem.
 - TypeScript dos hooks de cenas, dos componentes de composição e de `ScrollChapter` aprovado. O projeto não tem comando global de typecheck/tsconfig.
 - TypeScript do provedor, da conexão a Habilidades, de Sobre e dos componentes de carreira/gaveta aprovado com os tipos de Vite/Node e leitura dos módulos JS existentes. A declaração `Variants` em Sobre corrige a inferência da curva de easing, sem alterar a animação.
+- TypeScript de `ScrollChapter`, Contato e terminal aprovado nesta revisão. A checagem ampliada dos carrosséis aponta um erro preexistente de alias circular em `MagneticButton.tsx`, wrapper para a implementação JSX; esse wrapper não foi alterado.
 - Lint: 42 erros e 6 avisos preexistentes; não é um lint aprovado. A contagem permaneceu igual à revisão anterior; o ESLint atual não cobre os arquivos TypeScript.
 - Chromium com fontes originais: cenas completas em 1440×900, 1366×768 e 1920×1080; percurso reverso, limites de leitura, indicadores e sessão única do terminal aprovados.
 - Roda nativa, parada e reversão; robô durante a entrada, TechChip → terminal expandido com foco e comando local aprovados.
@@ -135,6 +161,9 @@ Verificações isoladas das partículas confirmaram convergência com cursor par
 - Fluxo normal aprovado em 390×844, 820×1180, 1024×768, 1440×600 e 1440×900 com movimento reduzido. Conteúdo preservado e sem overflow horizontal.
 - Modais SQL e de registro operacional cobrem o viewport; fechamento e Escape do registro aprovados.
 - Fronteiras Habilidades → Projetos e Projetos → Contato: progresso compartilhado e reversão aprovados.
+- Revisão de performance: transições preservadas em 1440 e 1920 px, setas/abas e drawer do destaque, alternância da tabela corporativa, histórico do terminal, comando Matrix e fechamento aprovados.
+- Spotlight de Contato alinhado ao cursor com zoom CSS 0.8 e 0.94, fade ao sair, cópia do e-mail e validação local do formulário aprovados. Movimento reduzido limpa os transforms; orientação visível em 390×844, sem overflow horizontal.
+- Contexto real de toque em 390×844: variante da orientação e fallback nativo aprovados. Roda Lenis atualiza os transforms dos capítulos; Home restaura a entrada. Nesta rodada, o CDN de ícones foi bloqueado apenas no navegador de teste para evitar espera externa; o código de produção permanece intacto.
 - Nenhum erro JavaScript não tratado nas rodadas finais.
 
 A requisição a Google Fonts recebe HTTP 403 do proxy deste ambiente. A automação visual carregou os arquivos originais Newsreader/Outfit por interceptação apenas no navegador de teste. As URLs e dependências de produção foram preservadas. Ícones externos podem não carregar neste ambiente. Não houve envio real de formulário nem chamada remota Gemini.

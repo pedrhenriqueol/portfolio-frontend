@@ -105,14 +105,10 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
         >
             {/* Card Tridimensional com Borda Luminescente e Profundidade Escura */}
             <div
-                style={{
-                    transform: 'translateZ(0)',
-                    willChange: 'transform',
-                }}
-                className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-all duration-300 transform-gpu ${
+                className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-[background-color,border-color,box-shadow] duration-300 ${
                     isCurrent
-                        ? 'bg-[#0C0F17]/95 border border-white/20 backdrop-blur-md brightness-100 pointer-events-auto'
-                        : 'bg-[#0d1117]/90 border border-white/5 brightness-[0.38] pointer-events-none'
+                        ? 'bg-[#0C0F17] border border-white/20 pointer-events-auto'
+                        : 'bg-[#0d1117] border border-white/5 pointer-events-none'
                 }`}
             >
                 {/* ── Lado Esquerdo: Imagem de Alta Fidelidade com Gradiente de Imersão ── */}
@@ -134,7 +130,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                     <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-70 pointer-events-none" />
 
                     {/* Badge de Categoria com Indicador Ativo */}
-                    <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-darker/95 border border-accent/40 backdrop-blur-md shadow-lg pointer-events-none">
+                    <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-darker border border-accent/40 shadow-lg pointer-events-none">
                         <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                         <span className="text-[10px] sm:text-[11px] font-mono font-bold text-accent">
                             {categoryBadge}
@@ -259,13 +255,20 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                         )}
                     </div>
                 </div>
+                {/* Match the former brightness attenuation with a simple overlay. */}
+                <div
+                    aria-hidden="true"
+                    className="absolute inset-0 z-40 rounded-2xl bg-black pointer-events-none transition-opacity duration-300"
+                    style={{ opacity: isCurrent ? 0 : .62 }}
+                />
             </div>
 
             {/* Sombra de Profundidade Projetada no Solo - estritamente no card ativo */}
             {isCurrent && (
                 <motion.div
-                    style={{ opacity: shadowOpacity }}
-                    className="absolute -bottom-6 left-12 right-12 h-6 bg-black/80 blur-xl rounded-full pointer-events-none"
+                    style={{ opacity: shadowOpacity, background: 'radial-gradient(ellipse at center, rgba(0,0,0,.68), transparent 70%)' }}
+                    className="absolute -bottom-12 left-12 right-12 h-16 rounded-full pointer-events-none"
+                    aria-hidden="true"
                 />
             )}
         </motion.div>

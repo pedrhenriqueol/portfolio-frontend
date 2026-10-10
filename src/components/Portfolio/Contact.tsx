@@ -1,11 +1,67 @@
 import { ChapterHeading } from './Common/ScrollChapter';
-import React, { useState, useCallback, useMemo, memo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
 const EMAIL_ADDRESS = 'pedrohc.forza@gmail.com';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Keep the spotlight texture static and move only its own layer once per frame.
+function ContactSurface({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    const surfaceRef = useRef<HTMLDivElement>(null);
+    const lightRef = useRef<HTMLDivElement>(null);
+    const pointerRef = useRef({ x: 0, y: 0 });
+    const frameRef = useRef<number | null>(null);
+
+    const cancelFrame = useCallback(() => {
+        if (frameRef.current !== null) {
+            cancelAnimationFrame(frameRef.current);
+            frameRef.current = null;
+        }
+    }, []);
+
+    useEffect(() => cancelFrame, [cancelFrame]);
+
+    const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        pointerRef.current = { x: event.clientX, y: event.clientY };
+        if (frameRef.current !== null) return;
+
+        frameRef.current = requestAnimationFrame(() => {
+            frameRef.current = null;
+            const surface = surfaceRef.current;
+            const light = lightRef.current;
+            if (!surface || !light) return;
+
+            const rect = surface.getBoundingClientRect();
+            if (!rect.width || !rect.height || !surface.offsetWidth || !surface.offsetHeight) return;
+            // Bounding rect uses viewport pixels; offset dimensions account for CSS zoom.
+            const x = (pointerRef.current.x - rect.left) * surface.offsetWidth / rect.width - surface.clientLeft;
+            const y = (pointerRef.current.y - rect.top) * surface.offsetHeight / rect.height - surface.clientTop;
+            light.style.transform = `translate3d(${x - 360}px, ${y - 360}px, 0)`;
+        });
+    }, []);
+
+    return (
+        <div
+            ref={surfaceRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={cancelFrame}
+            className={`bg-[#0b0d13] border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between relative overflow-hidden group/contact transition-colors duration-200 hover:border-white/[0.12] ${className}`}
+        >
+            <div
+                ref={lightRef}
+                aria-hidden="true"
+                className="pointer-events-none absolute left-0 top-0 h-[720px] w-[720px] opacity-0 transition-opacity duration-300 group-hover/contact:opacity-100 z-0"
+                style={{
+                    background: 'radial-gradient(circle 360px at center, rgba(255, 255, 255, 0.035), transparent 100%)',
+                    transform: 'translate3d(-1080px, -1080px, 0)',
+                }}
+            />
+            {children}
+        </div>
+    );
+}
 
 function Contact() {
     const { t, lang = 'pt' } = useLanguage();
@@ -36,13 +92,6 @@ function Contact() {
             href: 'https://www.instagram.com/pedrherg',
         },
     ], [lang]);
-
-    // Spotlight direto via DOM Custom Properties (Zero Re-renders de Estado)
-    const handleCardMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-    }, []);
 
     // Easter Egg sutil: detecta termos de contratação no assunto
     const isProposalMode = Boolean(
@@ -186,18 +235,7 @@ function Contact() {
                         transition={{ duration: 0.5 }}
                         className="lg:col-span-5 flex flex-col h-full"
                     >
-                        <div
-                            onMouseMove={handleCardMouseMove}
-                            style={{ transform: 'translateZ(0)' }}
-                            className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between space-y-6 relative overflow-hidden group will-change-transform transition-all duration-200 hover:border-white/[0.12]"
-                        >
-                            {/* Spotlight monocromático suave */}
-                            <div
-                                className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
-                                style={{
-                                    background: 'radial-gradient(600px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 255, 255, 0.035), transparent 60%)',
-                                }}
-                            />
+                        <ContactSurface className="space-y-6">
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans">
                                     {lang === 'en' ? 'Direct Channels' : lang === 'es' ? 'Canales Directos' : 'Canais diretos'}
@@ -283,7 +321,7 @@ function Contact() {
                                         : 'Normalmente respondo em menos de 24 horas.'}
                                 </span>
                             </div>
-                        </div>
+                        </ContactSurface>
                     </motion.div>
 
                     {/* ── Coluna Direita: Formulário de Contato ── */}
@@ -294,18 +332,7 @@ function Contact() {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="lg:col-span-7 flex flex-col h-full"
                     >
-                        <div
-                            onMouseMove={handleCardMouseMove}
-                            style={{ transform: 'translateZ(0)' }}
-                            className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between relative overflow-hidden group will-change-transform transition-all duration-200 hover:border-white/[0.12]"
-                        >
-                            {/* Spotlight monocromático suave */}
-                            <div
-                                className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
-                                style={{
-                                    background: 'radial-gradient(600px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 255, 255, 0.035), transparent 60%)',
-                                }}
-                            />
+                        <ContactSurface>
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
                                     {lang === 'en' ? 'Send a message' : lang === 'es' ? 'Enviar un mensaje' : 'Mande uma mensagem'}
@@ -448,7 +475,7 @@ function Contact() {
                                 </form>
                             </div>
 
-                        </div>
+                        </ContactSurface>
                     </motion.div>
 
                 </div>

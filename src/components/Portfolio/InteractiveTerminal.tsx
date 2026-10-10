@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useId, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import SnakeGame from './Terminal/games/SnakeGame';
 import BugHunterGame from './Terminal/games/BugHunterGame';
 import TriviaGame from './Terminal/games/TriviaGame';
 import AimTestGame from './Terminal/games/AimTestGame';
+import MatrixRain from './Terminal/effects/MatrixRain';
 import { ALL_CMD_STRINGS, getWelcomeLines, useTerminalCommands } from './Terminal/useTerminalCommands';
 import { matchLocalKnowledge } from './localKnowledgeBase';
 
@@ -359,6 +360,7 @@ function getSqlSimulationSteps(lang: string): SimulationStep[] {
 
 export const InteractiveTerminal: React.FC = () => {
     const { lang } = useLanguage();
+    const scrollHintId = useId();
     const [lines, setLines] = useState<TerminalLine[]>(() => getWelcomeLines(lang));
     const [input, setInput] = useState('');
     const [focused, setFocused] = useState(false);
@@ -873,10 +875,31 @@ export const InteractiveTerminal: React.FC = () => {
                 </div>
             </div>
 
+            <p
+                id={scrollHintId}
+                className="shrink-0 border-b border-white/[0.06] px-4 py-2 font-mono text-[10px] leading-relaxed text-neutral-400"
+            >
+                <span className="[@media(pointer:coarse)]:hidden">
+                    {lang === 'en'
+                        ? 'Scroll here for history. Move the cursor outside the terminal to scroll the page.'
+                        : lang === 'es'
+                        ? 'Desplázate aquí para ver el historial. Mueve el cursor fuera del terminal para recorrer la página.'
+                        : 'Role aqui para ver o histórico. Mova o cursor para fora do terminal para rolar a página.'}
+                </span>
+                <span className="hidden [@media(pointer:coarse)]:inline">
+                    {lang === 'en'
+                        ? 'Swipe here for history. Swipe outside the terminal to scroll the page.'
+                        : lang === 'es'
+                        ? 'Desliza aquí para ver el historial. Desliza fuera del terminal para recorrer la página.'
+                        : 'Deslize aqui para ver o histórico. Deslize fora do terminal para rolar a página.'}
+                </span>
+            </p>
+
             {/* Área de Saída de Linhas com Conforto Tipográfico Generoso */}
             <div
                 ref={contentRef}
                 data-lenis-prevent
+                aria-describedby={scrollHintId}
                 className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6 space-y-4 font-mono text-xs md:text-[13px] leading-relaxed relative scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]"
             >
                 {activeGame === 'snake' && <SnakeGame lang={lang} onExit={handleExitGame} />}
@@ -1051,6 +1074,7 @@ export const InteractiveTerminal: React.FC = () => {
                         spellCheck={false}
                         autoComplete="off"
                         aria-label={lang === 'en' ? 'Interactive terminal' : lang === 'es' ? 'Terminal interactivo' : 'Terminal interativo'}
+                        aria-describedby={scrollHintId}
                     />
                 </div>
 

@@ -9,8 +9,7 @@ interface UseSectionInViewOptions {
 /**
  * useSectionInView - Hook de controle de visibilidade com IntersectionObserver
  * 
- * - Desliga loops de renderização contínua (rAF), springs e listeners quando fora da tela.
- * - Reduz o consumo de CPU/GPU em repouso para 0%.
+ * - Expõe visibilidade; cada consumidor deve pausar seus loops e listeners.
  * - Suporta margem de antecipação (rootMargin) para pré-aquecer antes do usuário chegar.
  */
 export function useSectionInView(options: UseSectionInViewOptions = {}) {

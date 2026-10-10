@@ -16,14 +16,10 @@ main section[id] { scroll-margin-top: 100px; }
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
     .chapter-heading-content {
         transform-origin: center top;
-        transform: translateY(calc((1 - var(--chapter-enter, 1)) * 96px)) scale(calc(.90 + var(--chapter-enter, 1) * .10));
     }
     .chapter-tail {
         transform-origin: center top;
-        transform: translateY(calc(var(--chapter-exit, 0) * 32px)) scale(calc(1 - var(--chapter-exit, 0) * .075));
     }
-    .chapter-divider > div { transform: scaleX(calc(.15 + var(--chapter-enter, 1) * .85)); }
-    .chapter-divider > span { transform: rotate(calc(var(--chapter-enter, 1) * 180deg)); }
 }
 
 @media (min-width: 1024px) {
