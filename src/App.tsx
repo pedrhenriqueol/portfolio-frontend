@@ -157,7 +157,7 @@ export default function App() {
                     <ScrollChapter opening>
                         <AboutExperienceStory experiences={EXPERIENCES} />
                     </ScrollChapter>
-                    <ScrollChapter><Skills skills={SKILLS} /></ScrollChapter>
+                    <ScrollChapter opening><Skills skills={SKILLS} /></ScrollChapter>
                     <ScrollChapter><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
                     <ScrollChapter><Contact /></ScrollChapter>
                 </main>

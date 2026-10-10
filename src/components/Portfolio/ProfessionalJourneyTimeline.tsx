@@ -59,7 +59,6 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     techBadges,
     groups,
     lang,
-    headerOnly = false,
 }: {
     company: string;
     role: string;
@@ -68,7 +67,6 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     techBadges?: string[];
     groups?: { title: string; icon?: string; items: string[] }[];
     lang: string;
-    headerOnly?: boolean;
 }) {
     const cardRef = useRef<HTMLDivElement>(null);
     const rectRef = useRef<DOMRect | null>(null);
@@ -105,7 +103,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     };
 
     return (
-        <div style={{ perspective: 1000 }} className={headerOnly ? "w-full h-full" : "w-full"}>
+        <div style={{ perspective: 1000 }} className="w-full">
             <motion.div
                 ref={cardRef}
                 onMouseEnter={handleMouseEnter}
@@ -118,10 +116,10 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transform: 'translateZ(0)',
                 }}
                 data-cursor-card="true"
-                className={`bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 overflow-hidden group will-change-transform ${headerOnly ? "career-card-preview h-full" : ""}`}
+                className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 overflow-hidden group will-change-transform"
             >
                 {/* Cabeçalho do Card */}
-                <div className={`p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015] ${headerOnly ? "h-full flex flex-col justify-center" : ""}`}>
+                <div data-career-card-header className="p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015]">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-3">
                             <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
@@ -158,7 +156,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     )}
                 </div>
 
-                {!headerOnly && <TimelineResponsibilities groups={groups} />}
+                <TimelineResponsibilities groups={groups} />
             </motion.div>
         </div>
     );
@@ -511,10 +509,10 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 ${hasEntrance ? "items-stretch" : "items-center"}`}
+            className={`relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 ${hasEntrance ? "items-start" : "items-center"}`}
         >
             {/* Nó Central de Conexão do Marco 2026 (Desktop md+) */}
-            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 items-center justify-center z-30 pointer-events-none">
+            <div className="career-first-node hidden md:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 items-center justify-center z-30 pointer-events-none">
                 <motion.div
                     style={{
                         borderColor: node2026Border,
@@ -531,7 +529,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             </div>
 
             {/* Nó Lateral Mobile 2026 (< md) */}
-            <div className="md:hidden absolute -left-7 sm:-left-11 top-1/2 -translate-y-1/2 flex items-center justify-center z-30 pointer-events-none">
+            <div className="career-first-node md:hidden absolute -left-7 sm:-left-11 top-1/2 -translate-y-1/2 flex items-center justify-center z-30 pointer-events-none">
                 <motion.div
                     style={{
                         borderColor: node2026Border,
@@ -548,7 +546,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             </div>
 
             {/* Lado Esquerdo: Ano Escultural Monumental + Botão de Pasta Técnica */}
-            <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
+            <div data-career-first-meta className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                     <span>{lang === 'en' ? 'CURRENTLY // IN PRODUCTION' : lang === 'es' ? 'ACTUALMENTE // EN PRODUCCIÓN' : 'ATUALMENTE // EM PRODUÇÃO'}</span>
@@ -604,7 +602,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 <TimelineExperienceCard
                     company={seteExp.company}
                     role={seteExp.role}
-                    headerOnly={hasEntrance}
                     period={seteExp.period}
                     isCurrent={true}
                     techBadges={seteExp.techBadges}
@@ -682,14 +679,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             <div className="w-1 h-1 rounded-full bg-[#090b10]" />
                         </motion.div>
                     </div>
-
-                    {hasEntrance && (
-                        <div className="career-first-continuation grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-                            <div className="md:col-start-2 bg-[#0c0e14]/90 border border-white/[0.07] rounded-b-2xl overflow-hidden">
-                                <TimelineResponsibilities groups={seteExp.groups} />
-                            </div>
-                        </div>
-                    )}
 
                     {/* Grid / Itens da Timeline: 2026, 2025, 2024 */}
                     <div className={`space-y-24 md:space-y-36 pl-8 sm:pl-12 md:pl-0 ${hasEntrance ? "career-later-milestones" : ""}`}>

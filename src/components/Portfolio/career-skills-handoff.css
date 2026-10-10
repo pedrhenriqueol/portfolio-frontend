@@ -1,0 +1,35 @@
+.career-skills-section { padding-block: clamp(3rem, 6vw, 5.5rem); }
+.career-skills-handoff, .career-skills-intro-track, .career-skills-intro-frame { position: relative; }
+.career-skills-anchor { position: absolute; top: 0; left: 0; width: 1px; height: 1px; scroll-margin-top: 100px; pointer-events: none; }
+.career-skills-thread { display: none; }
+.career-skills-body { margin-top: 2.5rem; }
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .career-skills-handoff[data-connected="true"] .career-skills-intro-track {
+        height: calc(var(--skills-intro-height) + var(--skills-intro-travel));
+    }
+    .career-skills-handoff[data-connected="true"] .career-skills-intro-frame {
+        position: sticky;
+        top: var(--skills-intro-inset);
+        height: var(--skills-intro-height);
+        padding-top: 2rem;
+        isolation: isolate;
+    }
+    .career-skills-handoff[data-connected="true"] .career-skills-heading .chapter-heading-content { transform: none; }
+    .career-skills-handoff[data-connected="true"] .career-skills-heading[inert] { pointer-events: none; }
+    .career-skills-handoff[data-connected="true"] .career-skills-body { margin-top: 0; }
+    .career-skills-handoff[data-connected="true"] .career-skills-thread {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+        z-index: -1;
+    }
+    .career-skills-thread [data-skills-source-thread] { stroke: rgb(255 255 255 / .24); stroke-width: 2px; }
+    .career-skills-thread [data-skills-source-marker] { fill: #05070a; stroke: rgb(255 255 255 / .5); stroke-width: 2px; }
+    .career-skills-thread [data-skills-guide-base] { stroke: rgb(255 255 255 / .12); stroke-width: 2px; }
+    .career-skills-thread [data-skills-guide-active] { stroke: rgb(245 235 225 / .55); stroke-width: 2px; }
+}

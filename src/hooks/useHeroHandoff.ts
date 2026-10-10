@@ -49,13 +49,15 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
                 return;
             }
             const travel = smooth(phase(progress, .06, .48));
-            const exit = smooth(phase(progress, .08, .34));
-            const reveal = phase(progress, .4, .64);
-            const assemble = smooth(phase(progress, .66, .92));
+            // The profile takes over while the name fades; the completed
+            // dashboard keeps a short reading interval before the scene releases.
+            const exit = smooth(phase(progress, .08, .40));
+            const reveal = phase(progress, .32, .60);
+            const assemble = smooth(phase(progress, .64, .88));
             const terminalY = mix(homeTop, finalTop, assemble);
             const terminalHeight = mix(expandedHeight, collapsedHeight, assemble);
-            const credentialsReveal = phase(progress, .79, .94);
-            const metricsReveal = phase(progress, .9, 1);
+            const credentialsReveal = phase(progress, .73, .88);
+            const metricsReveal = phase(progress, .80, .90);
             motion.set(copy, 'transform', `translate3d(${px(exit * -32)}, 0, ${px(exit * -100)})`);
             motion.set(copy, 'opacity', String(1 - exit));
             motion.set(terminal, 'transform', `translate3d(${px(width * .54 * (1 - travel))}, ${px(terminalY)}, 0) rotateY(${(-8 * Math.sin(Math.PI * travel)).toFixed(3)}deg) scale(${(1 + .12 * Math.sin(Math.PI * travel)).toFixed(5)})`);
@@ -69,8 +71,8 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             motion.set(metrics, 'opacity', String(metricsReveal));
             setSceneInert(copy, exit > .85);
             setSceneInert(profile, reveal < .98);
-            setSceneInert(credentials, progress < .94);
-            setSceneInert(metrics, progress < .99);
+            setSceneInert(credentials, credentialsReveal < .98);
+            setSceneInert(metrics, metricsReveal < .98);
         };
         const onScroll = () => { if (!raf) raf = requestAnimationFrame(paint); };
         const measure = () => {

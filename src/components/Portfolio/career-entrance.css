@@ -9,11 +9,11 @@
 .career-scene-thread { display: none; }
 .career-first-track { position: relative; width: 100%; max-width: 64rem; margin-inline: auto; padding-block: 1.5rem 0; }
 .career-first-content { position: relative; }
+.career-scene-section .career-first-node { top: var(--career-first-center, 50%); }
 .career-first-native-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: rgb(255 255 255 / .1); pointer-events: none; }
 .career-scene-section .career-remainder { padding-top: 0; }
 .career-scene-section .career-remainder > .career-timeline-rail { top: 0; }
 .career-later-milestones { padding-top: 6rem; }
-.career-card-preview { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
 
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
     .career-entrance-track[data-scene="connected"] { height: calc(var(--career-frame-height) + var(--career-travel)); }
@@ -56,10 +56,8 @@
 @media (max-width: 767px) {
     .career-first-native-line { left: 1rem; transform: none; }
     .career-first-content { padding-left: 2rem; }
-    .career-first-continuation { padding-left: 2rem; }
 }
 @media (min-width: 640px) and (max-width: 767px) {
     .career-first-native-line { left: 1.5rem; }
     .career-first-content { padding-left: 3rem; }
-    .career-first-continuation { padding-left: 3rem; }
 }

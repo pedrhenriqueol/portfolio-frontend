@@ -1,6 +1,11 @@
 import { useLayoutEffect, type RefObject } from 'react';
 import { createSceneStyles, setSceneInert } from '../utils/sceneStyles';
 
+const phase = (value: number, from: number, to: number) => {
+    const p = Math.min(1, Math.max(0, (value - from) / (to - from)));
+    return p * p * (3 - 2 * p);
+};
+
 /** Coordinates one bounded native sticky scene, with stable native hash links. */
 export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress: (progress: number) => void) {
     useLayoutEffect(() => {
@@ -15,6 +20,8 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         const heading = root.querySelector<HTMLElement>('.career-heading')!;
         const summary = root.querySelector<HTMLElement>('.career-summary')!;
         const first = root.querySelector<HTMLElement>('[data-career-first-layout]')!;
+        const firstMeta = first.querySelector<HTMLElement>('[data-career-first-meta]')!;
+        const firstHeader = first.querySelector<HTMLElement>('[data-career-card-header]')!;
         const anchor = root.querySelector<HTMLElement>('.career-scene-anchor')!;
         const svg = root.querySelector<SVGSVGElement>('.career-scene-thread')!;
         const base = root.querySelector<SVGPathElement>('[data-career-thread-base]')!;
@@ -37,9 +44,9 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         let pending = 0;
         let disposed = false;
 
-        const layoutTop = (node: HTMLElement) => {
+        const incomingTop = (node: HTMLElement) => {
             let top = 0;
-            for (let current: HTMLElement | null = node; current && current !== frame; current = current.offsetParent as HTMLElement | null) top += current.offsetTop;
+            for (let current: HTMLElement | null = node; current && current !== incoming; current = current.offsetParent as HTMLElement | null) top += current.offsetTop;
             return top;
         };
         const paint = () => {
@@ -49,14 +56,15 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             if (progress === lastProgress) return;
             lastProgress = progress;
             root.dataset.sceneProgress = String(progress);
-            const outgoing = enabled ? Math.min(1, Math.max(0, (progress - .12) / .30)) : 0;
-            const entering = enabled ? Math.min(1, Math.max(0, (progress - .42) / .28)) : 1;
-            const headerEnter = enabled ? Math.min(1, Math.max(0, (progress - .18) / .25)) : 1;
-            const middleExit = enabled ? Math.min(1, progress / .18) : 0;
-            const spread = enabled ? Math.min(1, progress / .32) : 0;
+            const outgoing = enabled ? phase(progress, .08, .38) : 0;
+            const summaryEnter = enabled ? phase(progress, .38, .60) : 1;
+            const entering = enabled ? phase(progress, .44, .76) : 1;
+            const headerEnter = enabled ? phase(progress, .12, .40) : 1;
+            const middleExit = enabled ? phase(progress, 0, .18) : 0;
+            const spread = enabled ? phase(progress, .02, .34) : 0;
             if (enabled) {
                 motion.set(pillarsMotion, '--career-outgoing', String(outgoing));
-                motion.set(summary, '--career-entering', String(entering));
+                motion.set(summary, '--career-entering', String(summaryEnter));
                 motion.set(firstTrack, '--career-entering', String(entering));
                 motion.set(heading, '--career-header-enter', String(headerEnter));
                 if (middlePillar) motion.set(middlePillar, '--career-middle-exit', String(middleExit));
@@ -67,13 +75,13 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             setSceneInert(pillars, enabled && outgoing >= .94);
             if (middlePillar) setSceneInert(middlePillar, enabled && middleExit >= .94);
             setSceneInert(heading, enabled && headerEnter < .98);
-            setSceneInert(summary, enabled && entering < .98);
+            setSceneInert(summary, enabled && summaryEnter < .98);
             setSceneInert(first, enabled && entering < .98);
             if (enabled) {
                 const half = width / 2;
                 // The axis is vertical before the milestone becomes visible,
                 // so the connecting line never crosses its year or text.
-                const turn = Math.min(1, progress / .42);
+                const turn = phase(progress, 0, .44);
                 const startX = 24 + (half - 24) * turn;
                 const endX = width - 24 + (half - width + 24) * turn;
                 const startY = threadStart + (threadTop - threadStart) * turn;
@@ -101,16 +109,23 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             const contentHeight = incoming.offsetHeight;
             height = Math.max(contentHeight, pillars.offsetHeight);
             width = frame.offsetWidth;
+            const firstTop = incomingTop(first);
+            const firstLeadHeight = Math.max(firstMeta.offsetHeight, firstHeader.offsetHeight);
             // The laterals must leave the heading's column without leaving
             // the viewport. A cramped desktop keeps its readable native flow.
             const lateralRoom = (innerWidth / zoom - width) / 2 - 24;
-            enabled = media.matches && height + inset + 48 < viewport && lateralRoom >= width * .24;
+            // Pin the complete, continuous card. Only its identification needs
+            // to fit initially; the responsibilities remain attached below the
+            // fold and become readable through native scroll after release.
+            const openingHeight = Math.max(firstTop + firstLeadHeight, pillars.offsetHeight);
+            enabled = media.matches && openingHeight + inset + 48 < viewport && lateralRoom >= width * .24;
             root.dataset.scene = enabled ? 'connected' : 'flow';
-            travel = enabled ? viewport * .62 : 0;
+            travel = enabled ? viewport * .86 : 0;
             layout.set(root, '--career-frame-height', `${height}px`);
             layout.set(root, '--career-travel', `${travel}px`);
             layout.set(root, '--career-inset', `${inset}px`);
             layout.set(root, '--career-spread-distance', `${width * .24}px`);
+            layout.set(first, '--career-first-center', `${firstLeadHeight / 2}px`);
             // A stationary sibling represents the scroll position at which the
             // incoming composition is complete. It never inherits transforms.
             layout.set(anchor, 'top', `${enabled ? travel : incoming.offsetTop}px`);
@@ -119,9 +134,9 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             start = rootTop - inset * zoom;
             distance = Math.max(1, travel * zoom);
             if (enabled) {
-                threadStart = Math.min(height - 8, pillars.offsetHeight + 20);
-                threadTop = layoutTop(first);
-                threadCenter = threadTop + first.offsetHeight / 2;
+                threadStart = pillars.offsetHeight + 20;
+                threadTop = firstTop;
+                threadCenter = threadTop + firstLeadHeight / 2;
                 svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
             }
             lastProgress = NaN;
@@ -129,7 +144,7 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         };
         const onScroll = () => { if (!pending) pending = requestAnimationFrame(paint); };
         const observer = new ResizeObserver(measure);
-        [root, frame, incoming, pillars, first].forEach(node => observer.observe(node));
+        [root, frame, incoming, pillars, first, firstMeta, firstHeader].forEach(node => observer.observe(node));
         const main = root.closest('main');
         if (main) observer.observe(main);
         window.addEventListener('scroll', onScroll, { passive: true });

@@ -1,4 +1,5 @@
 import { ChapterHeading } from './Common/ScrollChapter';
+import CareerSkillsHandoff from './Common/CareerSkillsHandoff';
 import React, { useState, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SkillsOrbital3D, { TechItem } from './SkillsOrbital3D';
@@ -289,6 +290,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
 
     return (
         <motion.div
+            data-skill-card={card.id}
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -365,98 +367,103 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
         return BENTO_CARDS_I18N[lang] || BENTO_CARDS_I18N.pt;
     }, [lang]);
 
+    const heading = (
+        <ChapterHeading className="text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
+                    {lang === 'en' ? 'Stack & Skills' : lang === 'es' ? 'Stack y Habilidades' : 'Stack & Habilidades'}
+                </span>
+            </div>
+            <h2 id="skills-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
+                {lang === 'en' ? (
+                    <>Technical <span className="italic font-serif">specialization.</span></>
+                ) : lang === 'es' ? (
+                    <>Especialización <span className="italic font-serif">técnica.</span></>
+                ) : (
+                    <>Especialização <span className="italic font-serif">técnica.</span></>
+                )}
+            </h2>
+            <p className="text-neutral-400 max-w-2xl mx-auto font-sans text-sm sm:text-base leading-relaxed mb-6">
+                {lang === 'en'
+                    ? 'Proven competencies in legacy system reverse engineering, critical workflow QA, API architecture, and high-density industrial interfaces.'
+                    : lang === 'es'
+                    ? 'Competencias comprobadas en ingeniería inversa de sistemas heredados, aseguramiento de calidad en flujos críticos, arquitectura de APIs e interfaces industriales.'
+                    : 'Competências comprovadas em engenharia reversa de sistemas legados, garantia da qualidade em fluxos críticos, arquitetura de APIs e interfaces industriais de alta densidade.'}
+            </p>
+
+            {/* ── Seletor Minimalista de Modos (Grade Técnica vs 3D) ── */}
+            <div className="inline-flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-sm">
+                <button
+                    type="button"
+                    onClick={() => setViewMode('bento')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                        viewMode === 'bento'
+                            ? 'bg-white text-neutral-950 font-semibold shadow-sm'
+                            : 'text-neutral-400 hover:text-white'
+                    }`}
+                >
+                    {lang === 'en' ? 'Technical Grid' : lang === 'es' ? 'Cuadrícula Técnica' : 'Grade Técnica'}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setViewMode('3d')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                        viewMode === '3d'
+                            ? 'bg-white text-neutral-950 font-semibold shadow-sm'
+                            : 'text-neutral-400 hover:text-white'
+                    }`}
+                >
+                    {lang === 'en' ? '3D Visualizer' : lang === 'es' ? 'Visualizador 3D' : 'Visualizador 3D'}
+                </button>
+            </div>
+        </ChapterHeading>
+    );
+
     return (
-        <section id="habilidades" className="py-24 md:py-36 bg-transparent relative select-text">
+        <section aria-labelledby="skills-heading" className="career-skills-section bg-transparent relative select-text">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-                {/* ── Cabeçalho Limpo da Seção ── */}
-                <ChapterHeading className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                        <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
-                            {lang === 'en' ? 'Stack & Skills' : lang === 'es' ? 'Stack y Habilidades' : 'Stack & Habilidades'}
-                        </span>
-                    </div>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
-                        {lang === 'en' ? (
-                            <>Technical <span className="italic font-serif">specialization.</span></>
-                        ) : lang === 'es' ? (
-                            <>Especialización <span className="italic font-serif">técnica.</span></>
-                        ) : (
-                            <>Especialização <span className="italic font-serif">técnica.</span></>
-                        )}
-                    </h2>
-                    <p className="text-neutral-400 max-w-2xl mx-auto font-sans text-sm sm:text-base leading-relaxed mb-6">
-                        {lang === 'en'
-                            ? 'Proven competencies in legacy system reverse engineering, critical workflow QA, API architecture, and high-density industrial interfaces.'
-                            : lang === 'es'
-                            ? 'Competencias comprobadas en ingeniería inversa de sistemas heredados, aseguramiento de calidad en flujos críticos, arquitectura de APIs e interfaces industriales.'
-                            : 'Competências comprovadas em engenharia reversa de sistemas legados, garantia da qualidade em fluxos críticos, arquitetura de APIs e interfaces industriais de alta densidade.'}
-                    </p>
+                <CareerSkillsHandoff mode={viewMode} language={lang} heading={heading}>
 
-                    {/* ── Seletor Minimalista de Modos (Grade Técnica vs 3D) ── */}
-                    <div className="inline-flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-sm">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('bento')}
-                            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                                viewMode === 'bento'
-                                    ? 'bg-white text-neutral-950 font-semibold shadow-sm'
-                                    : 'text-neutral-400 hover:text-white'
-                            }`}
-                        >
-                            {lang === 'en' ? 'Technical Grid' : lang === 'es' ? 'Cuadrícula Técnica' : 'Grade Técnica'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('3d')}
-                            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                                viewMode === '3d'
-                                    ? 'bg-white text-neutral-950 font-semibold shadow-sm'
-                                    : 'text-neutral-400 hover:text-white'
-                            }`}
-                        >
-                            {lang === 'en' ? '3D Visualizer' : lang === 'es' ? 'Visualizador 3D' : 'Visualizador 3D'}
-                        </button>
+                    {/* ── Conteúdo Alternável com Cross-Fade Suave ── */}
+                    <div className="chapter-tail min-h-[480px] w-full">
+                        <AnimatePresence mode="wait">
+                            {viewMode === 'bento' ? (
+                                <motion.div
+                                    key="bento-view"
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -12 }}
+                                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                    className="w-full"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+                                        {bentoCards.map((card, cardIndex) => (
+                                            <BentoSkillCard
+                                                key={card.id}
+                                                card={card}
+                                                cardIndex={cardIndex}
+                                            />
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="3d-view"
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                    className="w-full flex justify-center"
+                                >
+                                    <SkillsOrbital3D skills={skills} active={viewMode === '3d'} />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                </ChapterHeading>
 
-                {/* ── Conteúdo Alternável com Cross-Fade Suave ── */}
-                <div className="chapter-tail min-h-[480px] w-full">
-                    <AnimatePresence mode="wait">
-                        {viewMode === 'bento' ? (
-                            <motion.div
-                                key="bento-view"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
-                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                                className="w-full"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
-                                    {bentoCards.map((card, cardIndex) => (
-                                        <BentoSkillCard
-                                            key={card.id}
-                                            card={card}
-                                            cardIndex={cardIndex}
-                                        />
-                                    ))}
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="3d-view"
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.98 }}
-                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                                className="w-full flex justify-center"
-                            >
-                                <SkillsOrbital3D skills={skills} active={viewMode === '3d'} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                </CareerSkillsHandoff>
 
             </div>
         </section>
