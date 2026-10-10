@@ -196,7 +196,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                 mass: 0.5,
             }}
             style={{ willChange: 'transform, opacity' }}
-            className="fixed top-0 left-0 right-0 w-full z-50 transform-gpu bg-[#05070a]/85 backdrop-blur-md border-b border-white/[0.06] transition-colors duration-300"
+            className="fixed top-0 left-0 right-0 w-full z-50 transform-gpu portfolio-navigation border-b border-white/[0.06] transition-colors duration-300"
         >
             {/* Linha sutil de progresso de rolagem no topo */}
             <div className="absolute top-0 left-0 right-0 h-[1.5px] z-10 bg-white/[0.03]">
@@ -217,11 +217,11 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                             e.preventDefault();
                             scrollTo('home');
                         }}
-                        className="group flex items-center select-none cursor-pointer focus-visible:outline-none"
+                        className="group flex items-center select-none cursor-pointer focus-visible:outline-2"
                         aria-label="Pedro Henrique - Início"
                     >
                         <span className="font-mono text-[18px] font-bold tracking-tight text-white group-hover:text-accent transition-colors">
-                            PH<span className="text-emerald-400 font-bold ml-0.5">.</span>
+                            PH<span className="text-accent font-bold ml-0.5">.</span>
                         </span>
                     </a>
 
@@ -236,7 +236,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                                     <button
                                         key={id}
                                         onClick={() => scrollTo(id)}
-                                        className={`relative text-[11px] tracking-[0.2em] uppercase font-sans font-semibold transition-colors duration-200 py-1 cursor-pointer focus-visible:outline-none ${
+                                        className={`relative text-[11px] tracking-[0.2em] uppercase font-sans font-semibold transition-colors duration-200 py-1 cursor-pointer focus-visible:outline-2 ${
                                             isActive ? 'text-white' : 'text-neutral-400 hover:text-white'
                                         }`}
                                         aria-current={isActive ? 'page' : undefined}
@@ -257,7 +257,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                         {/* Indicador de Status Ativo (● online) */}
                         <div className="hidden xl:inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px] tracking-wider uppercase select-none">
                             <span className="relative flex h-1.5 w-1.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-30" />
                                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
                             </span>
                             <span>online</span>
@@ -272,6 +272,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                                         key={item.code}
                                         type="button"
                                         onClick={() => setLang(item.code)}
+                                        aria-pressed={isSelected}
                                         className={`relative px-2.5 py-0.5 text-[10px] font-bold tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
                                             isSelected
                                                 ? 'text-black'
@@ -296,15 +297,16 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                             <button
                                 type="button"
                                 onClick={() => setPaletteMenuOpen(v => !v)}
-                                className={`w-8 h-8 rounded-full border transition-all duration-200 flex items-center justify-center cursor-pointer focus-visible:outline-none ${
+                                className={`w-8 h-8 rounded-full border transition-all duration-200 flex items-center justify-center cursor-pointer focus-visible:outline-2 ${
                                     paletteMenuOpen
                                         ? 'border-white/40 bg-white/10 text-white'
                                         : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-neutral-300 hover:text-white'
                                 }`}
                                 aria-label="Alterar paleta de cores"
+                                aria-expanded={paletteMenuOpen}
                                 title="Paleta de cores"
                             >
-                                <i className="fas fa-palette text-xs" />
+                                <i aria-hidden="true" className="fas fa-palette text-xs" />
                             </button>
 
                             {/* Dropdown com a lista de paletas do design system */}
@@ -315,11 +317,11 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -6, scale: 0.96 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-2 w-48 bg-[#090b10] border border-white/15 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50 backdrop-blur-md"
+                                        className="absolute right-0 mt-2 w-48 portfolio-surface border border-white/15 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.85)] p-1.5 z-50"
                                     >
                                         <div className="text-[9px] uppercase tracking-widest text-neutral-400 px-2.5 py-1.5 font-semibold border-b border-white/5 mb-1 flex items-center justify-between">
                                             <span>Paletas</span>
-                                            <i className="fas fa-swatchbook text-accent/80 text-[10px]" />
+                                            <i aria-hidden="true" className="fas fa-swatchbook text-accent/80 text-[10px]" />
                                         </div>
 
                                         {Object.entries(palettes).map(([id, p]) => {
@@ -359,7 +361,7 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
 
                         {/* Hamburger Button (Mobile) */}
                         <button
-                            className="md:hidden flex flex-col gap-[5px] p-2 group cursor-pointer focus-visible:outline-none"
+                            className="md:hidden flex flex-col gap-[5px] p-2 group cursor-pointer focus-visible:outline-2"
                             onClick={() => setMobileOpen(v => !v)}
                             aria-label="Abrir menu de navegação"
                         >

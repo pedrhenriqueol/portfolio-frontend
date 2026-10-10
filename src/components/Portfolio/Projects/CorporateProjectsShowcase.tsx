@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useVelocity, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, useVelocity, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Project, ProjectFilterType, ProjectViewMode } from '../../../types/project';
 import { projectCategory } from '../../../utils/projects';
 import { playTabSwitch, playMechanicalClick } from '../../../lib/sound';
@@ -38,6 +38,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
     lang,
 }: CylindricalCorporateCardProps) {
     const isCurrent = index === activeIndex;
+    const reducedMotion = useReducedMotion();
 
     // ── 1. Gestão Estrita de Z-Index & Empilhamento Espacial ──
     // O card central/ativo recebe prioridade z-index 50; os adjacentes decrescem
@@ -99,16 +100,17 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                 transformOrigin: '50% 50%',
             }}
             onClick={handleContainerClick}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[92vw] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[530px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[650px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
                 isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
             }`}
         >
             {/* Card Tridimensional com Borda Luminescente e Profundidade Escura */}
             <div
-                className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-[background-color,border-color,box-shadow] duration-300 ${
+                inert={!isCurrent}
+                className={`portfolio-surface portfolio-card-hover w-full h-full overflow-hidden flex flex-col md:flex-row relative group transition-colors duration-300 ${
                     isCurrent
-                        ? 'bg-[#0C0F17] border border-white/20 pointer-events-auto'
-                        : 'bg-[#0d1117] border border-white/5 pointer-events-none'
+                        ? 'border-white/20 pointer-events-auto'
+                        : 'border-white/5 pointer-events-none'
                 }`}
             >
                 {/* ── Lado Esquerdo: Imagem de Alta Fidelidade com Gradiente de Imersão ── */}
@@ -120,19 +122,19 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                         height={400}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover object-left-top transform group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
+                        className={`w-full h-full object-cover object-left-top transition-transform duration-500 ${reducedMotion ? "" : "group-hover:scale-[1.025]"}`}
                         onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.onerror = null;
                             target.src = '/dashboard_placeholder.png';
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-70 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-35 pointer-events-none" />
 
                     {/* Badge de Categoria com Indicador Ativo */}
-                    <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-darker border border-accent/40 shadow-lg pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                        <span className="text-[10px] sm:text-[11px] font-mono font-bold text-accent">
+                    <div className="portfolio-chip absolute top-4 left-4 z-10 flex items-center gap-2 bg-darker pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-accent" />
+                        <span className="text-[10px] font-mono text-accent">
                             {categoryBadge}
                         </span>
                     </div>
@@ -147,23 +149,23 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                 </div>
 
                 {/* ── Lado Direito: Especificações de Engenharia & Ações sem Conflito ── */}
-                <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden bg-[#0C0F17]">
+                <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden">
                     <div>
                         {/* Cabeçalho do Card: Identificador + Métrica Confiável */}
-                        <div className="flex items-center justify-between gap-3 mb-2.5">
-                            <span className="text-xs font-mono font-bold text-accent uppercase tracking-wider">
+                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-2.5">
+                            <span className="portfolio-eyebrow">
                                 {project.architectureDetails?.architectureType
                                     ? (lang === 'en' ? 'ENTERPRISE ARCHITECTURE' : lang === 'es' ? 'ARQUITECTURA EMPRESARIAL' : 'ARQUITETURA CORPORATIVA')
                                     : (lang === 'en' ? `# 0${index + 1}. ENTERPRISE SYSTEM` : lang === 'es' ? `# 0${index + 1}. SISTEMA EMPRESARIAL` : `# 0${index + 1}. SISTEMA EMPRESARIAL`)}
                             </span>
-                            <span className="text-[10px] sm:text-[11px] font-mono text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shrink-0 font-medium">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            <span className="portfolio-chip flex items-center gap-1.5 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-accent/70" />
                                 {highlightMetric}
                             </span>
                         </div>
 
                         {/* Título do Projeto */}
-                        <h3 className="text-2xl sm:text-3xl font-serif text-white font-bold tracking-tight mb-1.5 group-hover:text-accent transition-colors truncate">
+                        <h3 className="text-2xl sm:text-3xl font-serif text-primary font-normal tracking-tight leading-tight mb-2 truncate">
                             {project.title}
                         </h3>
 
@@ -182,7 +184,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                             {(project.tags || []).slice(0, 5).map((tech) => (
                                 <span
                                     key={tech}
-                                    className="text-[11px] font-mono text-white/90 bg-white/5 border border-white/10 px-2.5 py-1 rounded-md transition-colors hover:border-accent/40"
+                                    className="portfolio-chip"
                                 >
                                     {tech}
                                 </span>
@@ -206,9 +208,9 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                                 onSelect(project);
                             }}
                             data-cursor-morph="true"
-                            className="flex-1 min-w-[140px] py-3 px-4 bg-accent/20 border border-accent/40 hover:bg-accent hover:text-darker text-accent font-semibold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 relative z-30"
+                            className="portfolio-control flex-1 min-w-[140px] py-3 px-4 font-semibold text-xs transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative z-30"
                         >
-                            <i className="fas fa-microchip text-xs" />
+                            <i aria-hidden="true" className="fas fa-microchip text-xs" />
                             <span>{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
                         </button>
 
@@ -220,7 +222,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 data-cursor-morph="true"
-                                className="py-3 px-4 bg-dark/90 hover:bg-dark border border-white/15 hover:border-accent/50 text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 shadow-sm relative z-30 cursor-pointer"
+                                className="portfolio-control py-3 px-4 font-semibold text-xs transition-colors duration-200 flex items-center justify-center gap-2 relative z-30 cursor-pointer"
                                 title={lang === 'en' ? 'Source Code on GitHub' : lang === 'es' ? 'Código Fuente en GitHub' : 'Código-Fonte no GitHub'}
                                 aria-label={lang === 'en' ? `Source code of ${project.title} on GitHub` : lang === 'es' ? `Código fuente de ${project.title} en GitHub` : `Código-fonte de ${project.title} no GitHub`}
                             >
@@ -234,7 +236,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                                 className="py-3 px-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-400 font-mono text-xs rounded-xl flex items-center justify-center gap-1.5 select-none relative z-30"
                                 title={lang === 'en' ? 'Private Corporate Intellectual Property' : lang === 'es' ? 'Propiedad Intelectual Corporativa Privada' : 'Propriedade Intelectual Corporativa Privada'}
                             >
-                                <i className="fas fa-lock text-[10px]" />
+                                <i aria-hidden="true" className="fas fa-lock text-[10px]" />
                                 <span className="text-[11px] font-semibold">{lang === 'en' ? 'Private Corporate' : lang === 'es' ? 'Corporativo Privado' : 'Corporativo Privado'}</span>
                             </div>
                         )}
@@ -247,10 +249,10 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 data-cursor-morph="true"
-                                className="p-3 bg-accent hover:bg-accent-hover text-darker font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center shrink-0 shadow-md active:scale-95 relative z-30 cursor-pointer"
+                                className="p-3 bg-accent hover:bg-accent-hover text-darker font-bold text-xs rounded-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent transition-colors duration-200 flex items-center justify-center shrink-0 shadow-md relative z-30 cursor-pointer"
                                 title={lang === 'en' ? 'Access Online Demo' : lang === 'es' ? 'Acceder a Demostración Online' : 'Acessar Demonstração Online'}
                             >
-                                <i className="fas fa-external-link-alt text-xs" />
+                                <i aria-hidden="true" className="fas fa-external-link-alt text-xs" />
                             </a>
                         )}
                     </div>
@@ -321,7 +323,7 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
         >
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-black/60 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="portfolio-icon overflow-hidden shrink-0 flex items-center justify-center">
                         <img
                             src={img}
                             alt={project.title}
@@ -349,7 +351,7 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
 
             <td className="py-3.5 px-4 text-gray-300">
                 <div className="flex items-center gap-1.5">
-                    <i className="fas fa-sitemap text-accent/80 text-[10px]" />
+                    <i aria-hidden="true" className="fas fa-sitemap text-accent/80 text-[10px]" />
                     <span>{getProjectArchitecture(project)}</span>
                 </div>
             </td>
@@ -359,7 +361,7 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
                     {(project.tags || []).slice(0, 3).map((tag, tIdx) => (
                         <span
                             key={tIdx}
-                            className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-primary/80"
+                            className="portfolio-chip"
                         >
                             {tag}
                         </span>
@@ -373,7 +375,7 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
             </td>
 
             <td className="py-3.5 px-4">
-                <span className="px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px]">
+                <span className="portfolio-chip">
                     {getProjectDatabase(project)}
                 </span>
             </td>
@@ -388,9 +390,9 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
                 <button
                     onClick={handleInspect}
                     data-cursor-morph="true"
-                    className="px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 text-accent hover:bg-accent hover:text-darker text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                    className="portfolio-control px-3 py-1.5 text-xs cursor-pointer inline-flex items-center gap-1.5"
                 >
-                    <i className="fas fa-microchip text-[10px]" />
+                    <i aria-hidden="true" className="fas fa-microchip text-[10px]" />
                     <span>{lang === 'en' ? 'Inspect' : lang === 'es' ? 'Inspeccionar' : 'Inspecionar'}</span>
                 </button>
             </td>
@@ -408,6 +410,7 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
     t,
     lang = 'pt',
 }: CorporateProjectsShowcaseProps) {
+    const reducedMotion = useReducedMotion();
     const [activeFilter, setActiveFilter] = useState<ProjectFilterType>('all');
     const [viewMode, setViewMode] = useState<ProjectViewMode>('grid');
     const [activeIndex, setActiveIndex] = useState(0);
@@ -584,7 +587,7 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                 <div className="relative max-w-full w-full sm:w-auto overflow-hidden">
                     <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-dark to-transparent z-10 sm:hidden" />
                     <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-dark to-transparent z-10 sm:hidden" />
-                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 px-1 bg-black/40 border border-white/10 rounded-2xl p-1.5 backdrop-blur-md">
+                    <div className="portfolio-segmented flex items-center gap-1.5 overflow-x-auto scrollbar-none">
                         {FILTERS.map((f) => {
                             const isActive = activeFilter === f.id;
                             return (
@@ -599,7 +602,7 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                                     {isActive && (
                                         <motion.div
                                             layoutId="activeCorporateCategoryTab"
-                                            className="absolute inset-0 bg-accent/20 border border-accent/50 rounded-xl shadow-[0_0_15px_rgba(255,108,55,0.25)]"
+                                            className="absolute inset-0 bg-accent/10 border border-accent/25 rounded-[10px]"
                                             transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                                         />
                                     )}
@@ -612,21 +615,22 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
 
                 {/* Alternador de Modo: Esteira Cilíndrica 3D vs Tabela Densa de Especificações */}
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-xl p-1 backdrop-blur-md">
+                    <div className="portfolio-segmented flex items-center gap-1">
                         <button
                             onClick={() => {
                                 playMechanicalClick();
                                 setViewMode('grid');
                             }}
                             data-cursor-morph="true"
+                            aria-pressed={viewMode === 'grid'}
                             title={lang === 'en' ? '3D Cylindrical Stage Mode' : lang === 'es' ? 'Modo Escenario Cilíndrico 3D' : 'Modo Esteira Cilíndrica 3D'}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                            className={`portfolio-control px-3 py-1.5 text-xs font-mono flex items-center gap-1.5 cursor-pointer ${
                                 viewMode === 'grid'
-                                    ? 'bg-accent text-darker font-bold shadow-xs'
+                                    ? 'font-bold'
                                     : 'text-primary/70 hover:text-white'
                             }`}
                         >
-                            <i className="fas fa-cube text-[10px]" />
+                            <i aria-hidden="true" className="fas fa-cube text-[10px]" />
                             <span>{lang === 'en' ? '3D Stage' : lang === 'es' ? 'Escenario 3D' : 'Esteira 3D'}</span>
                         </button>
                         <button
@@ -635,14 +639,15 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                                 setViewMode('table');
                             }}
                             data-cursor-morph="true"
+                            aria-pressed={viewMode === 'table'}
                             title={lang === 'en' ? 'Engineering Specs Table Mode' : lang === 'es' ? 'Modo Tabla de Especificaciones' : 'Modo Tabela de Especificações de Engenharia'}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                            className={`portfolio-control px-3 py-1.5 text-xs font-mono flex items-center gap-1.5 cursor-pointer ${
                                 viewMode === 'table'
-                                    ? 'bg-accent text-darker font-bold shadow-xs'
+                                    ? 'font-bold'
                                     : 'text-primary/70 hover:text-white'
                             }`}
                         >
-                            <i className="fas fa-table-list text-[10px]" />
+                            <i aria-hidden="true" className="fas fa-table-list text-[10px]" />
                             <span>{lang === 'en' ? 'Specs Table' : lang === 'es' ? 'Tabla Técnica' : 'Tabela Densa'}</span>
                         </button>
                     </div>
@@ -652,7 +657,7 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
             {/* Contador Informativo e Status da Esteira */}
             <div className="flex items-center justify-between text-xs font-mono text-primary/60 border-b border-white/5 pb-2">
                 <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                     <span>
                         {filteredProjects.length}{' '}
                         {lang === 'en'
@@ -670,16 +675,16 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                 {viewMode === 'grid' ? (
                     <motion.div
                         key="corporate-cylindrical-view"
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                        exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
+                        transition={{ duration: reducedMotion ? 0 : .65, ease: [.22, 1, .36, 1] }}
                         className="relative w-full overflow-hidden py-4 sm:py-6"
                     >
                         {/* ── Palco 3D Tridimensional com Curvatura Cilíndrica e Perspectiva ── */}
                         <div
                             onPointerDown={handlePointerDown}
-                            className="relative w-full h-[560px] sm:h-[530px] md:h-[510px] cursor-grab active:cursor-grabbing select-none"
+                            className="relative w-full h-[690px] sm:h-[530px] md:h-[510px] cursor-grab active:cursor-grabbing select-none"
                             style={{
                                 perspective: '1200px',
                                 perspectiveOrigin: '50% 50%',
@@ -722,7 +727,7 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                                             key={`pill-${p.id}`}
                                             onClick={() => navigateTo(idx)}
                                             data-cursor-morph="true"
-                                            className={`transition-all duration-300 rounded-full cursor-pointer ${
+                                            className={`transition-colors duration-300 rounded-full cursor-pointer ${
                                                 isCurrent
                                                     ? 'w-8 h-2 bg-accent shadow-[0_0_12px_rgba(255,108,55,0.6)]'
                                                     : 'w-2 h-2 bg-white/20 hover:bg-white/40'
@@ -739,11 +744,11 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                                 <button
                                     onClick={handlePrev}
                                     data-cursor-morph="true"
-                                    className="w-10 h-10 rounded-xl bg-black/60 border border-white/15 hover:border-accent/60 text-white hover:text-accent flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-lg backdrop-blur-md"
+                                    className="portfolio-control w-10 h-10 flex items-center justify-center transition-colors cursor-pointer"
                                     title="Projeto Anterior (Seta Esquerda)"
                                     aria-label="Projeto Anterior"
                                 >
-                                    <i className="fas fa-chevron-left text-xs" />
+                                    <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
                                 </button>
                                 <span className="font-mono text-xs text-primary/70 px-1">
                                     <strong className="text-white font-bold">{activeIndex + 1}</strong>
@@ -753,11 +758,11 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                                 <button
                                     onClick={handleNext}
                                     data-cursor-morph="true"
-                                    className="w-10 h-10 rounded-xl bg-black/60 border border-white/15 hover:border-accent/60 text-white hover:text-accent flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-lg backdrop-blur-md"
+                                    className="portfolio-control w-10 h-10 flex items-center justify-center transition-colors cursor-pointer"
                                     title="Próximo Projeto (Seta Direita)"
                                     aria-label="Próximo Projeto"
                                 >
-                                    <i className="fas fa-chevron-right text-xs" />
+                                    <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
                                 </button>
                             </div>
                         </div>
@@ -766,11 +771,11 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                     /* ── Tabela Densa de Engenharia & Especificações ── */
                     <motion.div
                         key="corporate-table-view"
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                        className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-md overflow-hidden shadow-2xl"
+                        exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
+                        transition={{ duration: reducedMotion ? 0 : .65, ease: [.22, 1, .36, 1] }}
+                        className="portfolio-surface overflow-hidden"
                     >
                         <div className="overflow-x-auto scrollbar-thin">
                             <table className="w-full text-left text-xs font-mono border-collapse">

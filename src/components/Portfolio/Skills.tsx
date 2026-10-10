@@ -1,7 +1,7 @@
 import { ChapterHeading } from './Common/ScrollChapter';
 import CareerSkillsHandoff from './Common/CareerSkillsHandoff';
 import React, { useState, memo, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import SkillsOrbital3D, { TechItem } from './SkillsOrbital3D';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -286,17 +286,17 @@ const BentoSkillCard = memo(function BentoSkillCard({
     card: TechnicalCard;
     cardIndex: number;
 }) {
+    const reducedMotion = useReducedMotion();
     const isSpanned = card.id === 'frontend-modern';
 
     return (
         <motion.div
             data-skill-card={card.id}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: reducedMotion ? 0 : 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: cardIndex * 0.05 }}
-            style={{ transform: 'translateZ(0)' }}
-            className={`bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl p-5 md:p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] will-change-transform ${
+            transition={{ duration: reducedMotion ? 0.15 : 0.65, delay: reducedMotion ? 0 : cardIndex * 0.07, ease: [0.22, 1, 0.36, 1] }}
+            className={`portfolio-surface portfolio-card-hover p-5 md:p-6 ${
                 card.colSpan
             }`}
         >
@@ -304,14 +304,14 @@ const BentoSkillCard = memo(function BentoSkillCard({
                 {/* Cabeçalho do Card (Sem Truncate) */}
                 <div className="flex items-center justify-between gap-3 mb-5 pb-3.5 border-b border-white/[0.05]">
                     <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
-                            <i className={`${card.icon} text-xs`} />
+                        <div className="portfolio-icon flex items-center justify-center shrink-0">
+                            <i aria-hidden="true" className={`${card.icon} text-xs`} />
                         </div>
                         <h3 className="font-sans text-sm md:text-[15px] font-semibold text-white whitespace-normal">
                             {card.title}
                         </h3>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-neutral-400 border border-white/[0.08] shrink-0 whitespace-nowrap">
+                    <span className="portfolio-chip shrink-0 whitespace-nowrap">
                         {card.badge}
                     </span>
                 </div>
@@ -331,7 +331,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
                                 <span className="font-mono text-xs font-semibold text-white block mb-1">
                                     {item.name}
                                 </span>
-                                <p className="text-[12px] text-neutral-400 font-sans leading-relaxed">
+                                <p className="text-[13px] sm:text-sm text-neutral-400 font-sans leading-relaxed">
                                     {item.desc}
                                 </p>
                             </div>
@@ -347,7 +347,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
                                 <span className="font-mono text-xs font-semibold text-white block mb-1">
                                     {item.name}
                                 </span>
-                                <p className="text-[12px] text-neutral-400 font-sans leading-relaxed">
+                                <p className="text-[13px] sm:text-sm text-neutral-400 font-sans leading-relaxed">
                                     {item.desc}
                                 </p>
                             </div>
@@ -361,6 +361,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
 
 export function Skills({ skills = [] }: { skills?: TechItem[] }) {
     const { lang = 'pt' } = useLanguage();
+    const reducedMotion = useReducedMotion();
     const [viewMode, setViewMode] = useState<'bento' | '3d'>('bento');
 
     const bentoCards = useMemo(() => {
@@ -369,13 +370,10 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
 
     const heading = (
         <ChapterHeading className="text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
-                    {lang === 'en' ? 'Stack & Skills' : lang === 'es' ? 'Stack y Habilidades' : 'Stack & Habilidades'}
+                <span className="portfolio-eyebrow">
+                    {lang === 'en' ? '// 03. Stack & Skills' : lang === 'es' ? '// 03. Stack y Habilidades' : '// 03. Stack & Habilidades'}
                 </span>
-            </div>
-            <h2 id="skills-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
+            <h2 id="skills-heading" className="portfolio-title mb-3">
                 {lang === 'en' ? (
                     <>Technical <span className="italic font-serif">specialization.</span></>
                 ) : lang === 'es' ? (
@@ -384,7 +382,7 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
                     <>Especialização <span className="italic font-serif">técnica.</span></>
                 )}
             </h2>
-            <p className="text-neutral-400 max-w-2xl mx-auto font-sans text-sm sm:text-base leading-relaxed mb-6">
+            <p className="portfolio-lede max-w-2xl mx-auto mb-6">
                 {lang === 'en'
                     ? 'Proven competencies in legacy system reverse engineering, critical workflow QA, API architecture, and high-density industrial interfaces.'
                     : lang === 'es'
@@ -393,13 +391,14 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
             </p>
 
             {/* ── Seletor Minimalista de Modos (Grade Técnica vs 3D) ── */}
-            <div className="inline-flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-sm">
+            <div className="portfolio-segmented inline-flex items-center p-1">
                 <button
                     type="button"
                     onClick={() => setViewMode('bento')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    aria-pressed={viewMode === 'bento'}
+                    className={`portfolio-control px-3.5 py-1.5 text-xs font-mono cursor-pointer ${
                         viewMode === 'bento'
-                            ? 'bg-white text-neutral-950 font-semibold shadow-sm'
+                            ? 'font-semibold'
                             : 'text-neutral-400 hover:text-white'
                     }`}
                 >
@@ -408,9 +407,10 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
                 <button
                     type="button"
                     onClick={() => setViewMode('3d')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    aria-pressed={viewMode === '3d'}
+                    className={`portfolio-control px-3.5 py-1.5 text-xs font-mono cursor-pointer ${
                         viewMode === '3d'
-                            ? 'bg-white text-neutral-950 font-semibold shadow-sm'
+                            ? 'font-semibold'
                             : 'text-neutral-400 hover:text-white'
                     }`}
                 >
@@ -432,10 +432,10 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
                             {viewMode === 'bento' ? (
                                 <motion.div
                                     key="bento-view"
-                                    initial={{ opacity: 0, y: 12 }}
+                                    initial={reducedMotion ? false : { opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -12 }}
-                                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                    exit={{ opacity: 0, y: reducedMotion ? 0 : -12 }}
+                                    transition={{ duration: reducedMotion ? 0 : .65, ease: [.22, 1, .36, 1] }}
                                     className="w-full"
                                 >
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
@@ -451,10 +451,10 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
                             ) : (
                                 <motion.div
                                     key="3d-view"
-                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    initial={reducedMotion ? false : { opacity: 0, scale: 0.98 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.98 }}
-                                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                    exit={{ opacity: 0, scale: reducedMotion ? 1 : 0.98 }}
+                                    transition={{ duration: reducedMotion ? 0 : .65, ease: [.22, 1, .36, 1] }}
                                     className="w-full flex justify-center"
                                 >
                                     <SkillsOrbital3D skills={skills} active={viewMode === '3d'} />

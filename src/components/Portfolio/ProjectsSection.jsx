@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import ProjectInspectorDrawer from './ProjectInspectorDrawer';
 import ModalErrorBoundary from './Common/ModalErrorBoundary';
+import Reveal from './Common/Reveal';
 import CorporateProjectsShowcase from './Projects/CorporateProjectsShowcase';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -34,35 +35,29 @@ export default function ProjectsSection({ projects }) {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header Camada 2: Projetos Corporativos & Soluções */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-80px' }}
-                    transition={{ duration: 0.7 }}
-                    className="text-center mb-10"
-                >
-                    <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                <Reveal className="mb-10">
+                    <span className="portfolio-eyebrow mb-3 block">
                         {lang === 'en'
-                            ? '// 05. ENTERPRISE REPOSITORY & SOLUTIONS'
+                            ? '// 04.02. ENTERPRISE REPOSITORY & SOLUTIONS'
                             : lang === 'es'
-                            ? '// 05. REPOSITORIO CORPORATIVO Y SOLUCIONES'
-                            : '// 05. REPOSITÓRIO CORPORATIVO & SOLUÇÕES'}
+                            ? '// 04.02. REPOSITORIO CORPORATIVO Y SOLUCIONES'
+                            : '// 04.02. REPOSITÓRIO CORPORATIVO & SOLUÇÕES'}
                     </span>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
+                    <h2 className="portfolio-title mb-4">
                         {lang === 'en'
                             ? 'Enterprise Systems & Utilities'
                             : lang === 'es'
                             ? 'Sistemas Empresariales y Utilidades'
                             : 'Projetos Corporativos & Soluções'}
                     </h2>
-                    <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                    <p className="portfolio-lede max-w-2xl">
                         {lang === 'en'
                             ? 'ERP administration, legacy desktop migration, fiscal compliance, and software engineering tools.'
                             : lang === 'es'
                             ? 'Sistemas de gestión empresarial (ERP/POS), modernización de sistemas legacy, módulos fiscales y utilidades.'
                             : 'Sistemas de gestão empresarial (ERP/PDV), modernização de legados, módulos fiscais e utilitários.'}
                     </p>
-                </motion.div>
+                </Reveal>
 
                 {/* Esteira Cilíndrica 3D com Rotação Espacial e Filtros com layoutId */}
                 <div className="chapter-tail">

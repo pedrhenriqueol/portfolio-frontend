@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
-import { TypeAnimation } from 'react-type-animation';
+import { motion, useReducedMotion } from 'framer-motion';
 import MagneticButton from './MagneticButton';
 import { useLanguage } from '../../context/LanguageContext';
 import { AboutIntro, type AboutSceneContent } from './AboutMe';
@@ -9,10 +8,11 @@ import './scroll-transitions.css';
 
 const InteractiveTerminal = lazy(() => import('./InteractiveTerminal'));
 
-export type HeroProps = Pick<AboutSceneContent, 'profile' | 'credentials' | 'metrics'>;
+export type HeroProps = Pick<AboutSceneContent, 'profile' | 'credentials' | 'metrics'> & { isLoaded?: boolean };
 
-export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => {
+export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics, isLoaded = true }) => {
     const { t, lang } = useLanguage();
+    const reduceMotion = useReducedMotion();
     const sectionRef = useRef<HTMLElement | null>(null);
     useHeroHandoff(sectionRef);
     const textRef = useRef<HTMLDivElement | null>(null);
@@ -25,6 +25,7 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
 
     // Parallax sob demanda — otimizado por requestAnimationFrame
     useEffect(() => {
+        if (reduceMotion || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
         const lerp = (a: number, b: number, factor: number) => a + (b - a) * factor;
 
         const tick = () => {
@@ -115,8 +116,10 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                 rafRef.current = null;
             }
             isRunningRef.current = false;
+            textRef.current?.style.removeProperty('transform');
+            termRef.current?.style.removeProperty('transform');
         };
-    }, []);
+    }, [reduceMotion]);
 
     return (
         <section
@@ -124,30 +127,7 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
             ref={sectionRef}
             className="hero-story relative bg-transparent"
         >
-            {/* Background blobs com máscara gradual de desvanecimento na base */}
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
-                <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-cyan-500/[0.03] blur-[120px] rounded-full transform-gpu" />
-                <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-emerald-500/[0.02] blur-[120px] rounded-full transform-gpu" />
-            </div>
-
-            {/* Floating particles aceleradas por GPU com máscara de fade */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]">
-                {[0, 1, 2].map((i) => (
-                    <div
-                        key={i}
-                        className="absolute rounded-full bg-white/[0.06] pointer-events-none transform-gpu"
-                        style={{
-                            width: 8 + i * 5,
-                            height: 8 + i * 5,
-                            left: `${12 + i * 18}%`,
-                            top: `${22 + (i % 3) * 22}%`,
-                            animation: `float-particle ${3.5 + i * 0.6}s ease-in-out infinite`,
-                            animationDelay: `${i * 0.8}s`,
-                            willChange: 'transform, opacity',
-                        }}
-                    />
-                ))}
-            </div>
+            <div aria-hidden="true" className="hero-ambient absolute inset-0 z-0 pointer-events-none" />
 
             {/* Conteúdo Principal */}
             <div className="hero-stage relative z-10 w-full">
@@ -158,13 +138,13 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                     <div className="hero-copy-motion">
                     {/* Text Container com entrada cinemática limpa (5 colunas) */}
                     <motion.div
-                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+                        animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: reduceMotion ? 0 : 20 }}
+                        transition={{ duration: reduceMotion ? 0 : .75, ease: [.22, 1, .36, 1] }}
                         className="lg:col-span-5 text-center lg:text-left space-y-6 min-h-[420px] sm:min-h-[460px] flex flex-col justify-center"
                     >
                         <div ref={textRef} className="w-full space-y-6">
-                            <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block">
+                            <span className="portfolio-eyebrow">
                                 {lang === 'en'
                                     ? '// 00. SOFTWARE ENGINEERING & QA'
                                     : lang === 'es'
@@ -172,17 +152,19 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                                     : '// 00. ENGENHARIA DE SOFTWARE & QA'}
                             </span>
 
-                            {/* Altura mínima fixada para evitar Layout Shift (CLS) no TypeAnimation */}
+                            {/* Stable identity; each line enters once, without a blinking loop. */}
                             <div className="min-h-[96px] sm:min-h-[130px] md:min-h-[160px] flex items-center">
                                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-white tracking-tight leading-none">
-                                    <TypeAnimation
-                                        sequence={['PEDRO\nHENRIQUE', 8000, 'PEDRO\nHENRIQUE', 1000]}
-                                        wrapper="span"
-                                        cursor={true}
-                                        repeat={Infinity}
-                                        style={{ whiteSpace: 'pre-line' }}
-                                        className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-400 inline-block font-serif"
-                                    />
+                                    {['PEDRO', 'HENRIQUE'].map((line, index) => (
+                                        <span key={line} className="hero-name-line block overflow-hidden">
+                                            <motion.span
+                                                className="block"
+                                                initial={reduceMotion ? false : { y: '100%' }}
+                                                animate={{ y: isLoaded || reduceMotion ? 0 : '100%' }}
+                                                transition={{ duration: reduceMotion ? 0 : .9, delay: reduceMotion ? 0 : .1 + index * .12, ease: [.22, 1, .36, 1] }}
+                                            >{line}</motion.span>
+                                        </span>
+                                    ))}
                                 </h1>
                             </div>
 
@@ -190,7 +172,7 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                                 {t('hero.developer')} <span className="text-white italic font-serif">{t('hero.role')}</span>
                             </h3>
 
-                            <p className="text-neutral-400 max-w-lg mx-auto lg:mx-0 text-base sm:text-lg leading-relaxed min-h-[72px]">
+                            <p className="portfolio-lede max-w-lg mx-auto lg:mx-0 min-h-[72px]">
                                 {t('hero.description')}{' '}
                                 <strong className="text-white font-medium">Delphi (Desktop/UniGui)</strong>,{' '}
                                 <strong className="text-white font-medium">PHP/Laravel</strong>
@@ -204,7 +186,7 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                                     <a
                                         href="#projetos"
                                         data-cursor-morph="true"
-                                        className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-mono text-xs font-semibold tracking-tight transition-all active:scale-[0.98] shadow-sm inline-flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden"
+                                        className="portfolio-button portfolio-button-primary font-mono font-semibold inline-flex items-center justify-center cursor-pointer"
                                     >
                                         {t('hero.verProjetos')}
                                     </a>
@@ -218,9 +200,9 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                                         rel="noopener noreferrer"
                                         download="curriculo_pedro_henrique.pdf"
                                         data-cursor-morph="true"
-                                        className="px-5 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.15] text-neutral-200 font-mono text-xs font-medium transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-hidden"
+                                        className="portfolio-button font-mono font-medium inline-flex items-center justify-center gap-2 cursor-pointer"
                                     >
-                                        <i className="fas fa-file-pdf text-neutral-400" />
+                                        <i aria-hidden="true" className="fas fa-file-pdf text-neutral-400" />
                                         {t('hero.downloadCV') || 'Download CV'}
                                     </a>
                                 </MagneticButton>
@@ -256,7 +238,7 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 data-cursor-morph="true"
-                                                className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] text-neutral-300 hover:text-white transition-all inline-flex items-center justify-center active:scale-[0.98] cursor-pointer focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-hidden"
+                                                className="portfolio-control w-11 h-11 inline-flex items-center justify-center cursor-pointer"
                                                 aria-label={s.label}
                                             >
                                                 {s.icon}
@@ -265,6 +247,10 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                                     ))}
                                 </div>
                             </div>
+                            <a href="#sobre" className="hero-scroll-cue mx-auto lg:mx-0 w-fit">
+                                {lang === 'en' ? 'Scroll to explore' : lang === 'es' ? 'Desplázate para explorar' : 'Role para explorar'}
+                                <span aria-hidden="true">↓</span>
+                            </a>
                         </div>
                     </motion.div>
 
@@ -276,14 +262,13 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics }) => 
                     <div className="hero-terminal-motion">
                     {/* Terminal interativo com Lazy Loading & Suspense (7 colunas) */}
                     <motion.div
-                        initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                        initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+                        animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: reduceMotion ? 0 : 20 }}
+                        transition={{ duration: reduceMotion ? 0 : .75, ease: [.22, 1, .36, 1], delay: reduceMotion ? 0 : .2 }}
                         className="lg:col-span-7 flex justify-center lg:justify-end w-full"
                     >
                         <div ref={termRef} className="w-full flex justify-center lg:justify-end">
                             <div id="terminal" className="relative w-full max-w-xl xl:max-w-2xl">
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/[0.03] blur-[100px] rounded-full pointer-events-none" />
                                 <Suspense fallback={
                                     <div className="w-full h-[500px] md:h-[540px] rounded-2xl bg-[#080a0f]/90 border border-white/10 p-6 flex flex-col justify-between animate-pulse">
                                         <div className="flex items-center gap-2 pb-3 border-b border-white/5">

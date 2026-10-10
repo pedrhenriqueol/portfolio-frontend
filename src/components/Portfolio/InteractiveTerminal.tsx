@@ -825,9 +825,8 @@ export const InteractiveTerminal: React.FC = () => {
     return (
         <div
             data-no-morph="true"
-            style={{ transform: 'translateZ(0)' }}
-            className={`relative w-full max-w-xl xl:max-w-2xl h-[500px] md:h-[540px] flex flex-col bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] overflow-hidden transition-all duration-300 will-change-transform ${
-                focused ? 'border-cyan-500/40 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.12)]' : 'hover:border-white/15'
+            className={`portfolio-surface relative w-full max-w-xl xl:max-w-2xl h-[500px] md:h-[540px] flex flex-col overflow-hidden transition-colors duration-300 ${
+                focused ? 'ring-1 ring-accent/40' : 'portfolio-card-hover'
             }`}
             onClick={() => inputRef.current?.focus({ preventScroll: true })}
         >
@@ -963,7 +962,7 @@ export const InteractiveTerminal: React.FC = () => {
                     whileTap={{ scale: 0.95 }}
                     disabled={isStreaming}
                     onClick={() => handleRunCommand('sql')}
-                    className="px-2.5 py-0.5 rounded bg-white/[0.03] hover:bg-cyan-500/10 border border-white/[0.06] hover:border-cyan-500/30 text-[11px] font-mono text-neutral-400 hover:text-cyan-300 transition-all cursor-pointer disabled:opacity-50"
+                    className="portfolio-chip hover:border-accent/40 hover:text-secondary transition-colors cursor-pointer disabled:opacity-50"
                 >
                     $ sql
                 </motion.button>

@@ -1,6 +1,7 @@
+import Reveal from '../Common/Reveal';
 import { ChapterHeading } from '../Common/ScrollChapter';
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, useVelocity, useReducedMotion } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
 import { playMechanicalClick, playTabSwitch } from '../../../lib/sound';
 import useSectionInView from '../../../hooks/useSectionInView';
@@ -172,6 +173,7 @@ const CylindricalCard = memo(function CylindricalCard({
     lang = 'pt',
 }: CylindricalCardProps) {
     const isCurrent = index === activeIndex;
+    const reducedMotion = useReducedMotion();
 
     // ── 1. Gestão Estrita de Z-Index & Empilhamento ──
     // Card ativo tem prioridade máxima (50) para nunca sofrer interceptação de cards laterais
@@ -210,16 +212,17 @@ const CylindricalCard = memo(function CylindricalCard({
                 transformOrigin: '50% 50%',
             }}
             onClick={handleCardContainerClick}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[92vw] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[520px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[650px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
                 isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
             }`}
         >
             {/* Card Tridimensional Principal em Escala Monumental */}
             <div
-                className={`w-full h-full rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative group transition-[background-color,border-color,box-shadow] duration-300 ${
+                inert={!isCurrent}
+                className={`portfolio-surface portfolio-card-hover w-full h-full overflow-hidden flex flex-col md:flex-row relative group transition-colors duration-300 ${
                     isCurrent
-                        ? 'bg-[#0C0F17] border border-white/[0.08] border-t-white/20 pointer-events-auto shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]'
-                        : 'bg-[#0d1117] border border-white/5 pointer-events-none'
+                        ? 'border-white/20 pointer-events-auto'
+                        : 'border-white/5 pointer-events-none'
                 }`}
             >
                 {/* ── Lado Esquerdo: Área Visual e Preview Nítido ── */}
@@ -231,40 +234,40 @@ const CylindricalCard = memo(function CylindricalCard({
                         height={400}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover object-left-top transform group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-100"
+                        className={`w-full h-full object-cover object-left-top transition-transform duration-500 ${reducedMotion ? "" : "group-hover:scale-[1.025]"}`}
                         onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.onerror = null;
                             target.src = '/dashboard_placeholder.png';
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-60 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-35 pointer-events-none" />
                     
                     {/* Badge de Categoria com Indicador de Status ao Vivo */}
-                    <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-darker border border-accent/40 shadow-lg pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[10px] sm:text-[11px] font-mono font-bold text-accent">
+                    <div className="portfolio-chip absolute top-4 left-4 z-10 flex items-center gap-2 bg-darker pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-accent/70" />
+                        <span className="text-[10px] font-mono text-accent">
                             {project.badge}
                         </span>
                     </div>
                 </div>
 
                 {/* ── Lado Direito: Especificações Técnicas e Anatomia Integrada ── */}
-                <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden bg-[#0C0F17]">
+                <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden">
                     <div>
                         {/* Cabeçalho Interno: Tag de Passo + Indicador de Confiabilidade */}
-                        <div className="flex items-center justify-between gap-3 mb-2.5">
-                            <span className="text-xs font-mono font-bold text-accent uppercase tracking-wider">
+                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-2.5">
+                            <span className="portfolio-eyebrow">
                                 {project.stepLabel}
                             </span>
-                            <span className="text-[10px] sm:text-[11px] font-mono text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shrink-0 font-medium">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            <span className="portfolio-chip flex items-center gap-1.5 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-accent/70" />
                                 {project.stat}
                             </span>
                         </div>
 
                         {/* Título do Sistema */}
-                        <h3 className="text-2xl sm:text-3xl font-serif text-white font-bold tracking-tight mb-1.5 group-hover:text-accent transition-colors truncate">
+                        <h3 className="text-2xl sm:text-3xl font-serif text-primary font-normal tracking-tight leading-tight mb-2 truncate">
                             {project.title}
                         </h3>
 
@@ -283,7 +286,7 @@ const CylindricalCard = memo(function CylindricalCard({
                             {project.techs.map((tech) => (
                                 <span
                                     key={tech}
-                                    className="text-[11px] font-mono text-neutral-200 bg-white/[0.06] border border-white/[0.12] px-2.5 py-1 rounded-md transition-colors hover:border-accent/40"
+                                    className="portfolio-chip"
                                 >
                                     {tech}
                                 </span>
@@ -301,9 +304,9 @@ const CylindricalCard = memo(function CylindricalCard({
                                 onSelect(project);
                             }}
                             data-cursor-morph="true"
-                            className="flex-1 min-w-[135px] py-3 px-4 bg-accent/20 border border-accent/40 hover:bg-accent hover:text-darker text-accent font-semibold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 relative z-30"
+                            className="portfolio-control flex-1 min-w-[135px] py-3 px-4 font-semibold text-xs transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative z-30"
                         >
-                            <i className="fas fa-microchip text-xs" />
+                            <i aria-hidden="true" className="fas fa-microchip text-xs" />
                             <span>{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
                         </button>
                         
@@ -314,10 +317,10 @@ const CylindricalCard = memo(function CylindricalCard({
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="flex-1 min-w-[155px] py-3 px-4 bg-accent hover:bg-accent-hover text-darker font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md active:scale-95 relative z-30 cursor-pointer"
+                            className="portfolio-button portfolio-button-primary flex-1 min-w-[155px] font-semibold flex items-center justify-center gap-1.5 shadow-md relative z-30 cursor-pointer"
                         >
                             <span>{lang === 'en' ? 'Live Demo' : lang === 'es' ? 'Demostración en Vivo' : 'Acessar Demonstração'}</span>
-                            <i className="fas fa-external-link-alt text-[9px]" />
+                            <i aria-hidden="true" className="fas fa-external-link-alt text-[9px]" />
                         </a>
 
                         {/* Botão de Repositório GitHub */}
@@ -327,7 +330,7 @@ const CylindricalCard = memo(function CylindricalCard({
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="p-3 bg-dark/90 hover:bg-dark border border-white/15 hover:border-accent/50 text-primary hover:text-white rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center shrink-0 shadow-sm relative z-30 cursor-pointer"
+                            className="portfolio-control p-3 flex items-center justify-center shrink-0 relative z-30 cursor-pointer"
                             title={lang === 'en' ? 'Source Code on GitHub' : lang === 'es' ? 'Código Fuente en GitHub' : 'Código-Fonte no GitHub'}
                             aria-label={lang === 'en' ? `${project.title} source code on GitHub` : `Código-fonte de ${project.title} no GitHub`}
                         >
@@ -513,7 +516,6 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             tabIndex={0}
             onKeyDown={handleKeyDown}
             style={{
-                transform: 'translateZ(0)',
                 isolation: 'isolate',
                 transformStyle: 'preserve-3d',
             }}
@@ -528,23 +530,24 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                 
                 {/* ── Header da Seção com Tipografia Nítida & Subtítulo Sóbrio ── */}
                 <ChapterHeading className="mb-8">
+                <Reveal>
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase block mb-2">
+                        <span className="portfolio-eyebrow block mb-3">
                             {lang === 'en'
-                                ? '// 02. SYSTEMS ARCHITECTURE & 3D PROJECTS'
+                                ? '// 04. SYSTEMS ARCHITECTURE & 3D PROJECTS'
                                 : lang === 'es'
-                                ? '// 02. ARQUITECTURA DE SISTEMAS Y PROYECTOS 3D'
-                                : '// 02. ARQUITETURA DE SISTEMAS & PROJETOS 3D'}
+                                ? '// 04. ARQUITECTURA DE SISTEMAS Y PROYECTOS 3D'
+                                : '// 04. ARQUITETURA DE SISTEMAS & PROJETOS 3D'}
                         </span>
-                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white font-serif">
+                        <h2 className="portfolio-title">
                             {lang === 'en'
                                 ? 'Production Systems & Architectures'
                                 : lang === 'es'
                                 ? 'Sistemas y Arquitecturas en Producción'
                                 : 'Sistemas & Arquiteturas em Produção'}
                         </h2>
-                        <p className="text-gray-300 text-sm sm:text-base max-w-2xl mt-2.5 font-sans leading-relaxed">
+                        <p className="portfolio-lede max-w-2xl mt-4">
                             {lang === 'en'
                                 ? 'Mission-critical enterprise systems engineered for high concurrency, accounting idempotency, and predictive telemetry.'
                                 : lang === 'es'
@@ -556,7 +559,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                     {/* Controles de Navegação & Dica de Arraste */}
                     <div className="flex items-center gap-4 shrink-0">
                         <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-primary/70 bg-darker/90 px-3.5 py-1.5 rounded-full border border-white/10 pointer-events-none">
-                            <i className="fas fa-arrows-alt-h text-accent text-xs" />
+                            <i aria-hidden="true" className="fas fa-arrows-alt-h text-accent text-xs" />
                             <span>
                                 {lang === 'en'
                                     ? 'Drag to rotate 3D carousel'
@@ -572,25 +575,26 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                                 onClick={handlePrev}
                                 aria-label={lang === 'en' ? 'Previous Project' : 'Projeto Anterior'}
                                 data-cursor-morph="true"
-                                className="w-10 h-10 rounded-xl bg-dark/90 border border-white/15 text-primary hover:text-white hover:border-accent/50 transition-colors shadow-sm active:scale-95"
+                                className="portfolio-control w-10 h-10 transition-colors"
                             >
-                                <i className="fas fa-chevron-left text-xs" />
+                                <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
                             </MagneticButton>
                             <MagneticButton
                                 onClick={handleNext}
                                 aria-label={lang === 'en' ? 'Next Project' : 'Próximo Projeto'}
                                 data-cursor-morph="true"
-                                className="w-10 h-10 rounded-xl bg-dark/90 border border-white/15 text-primary hover:text-white hover:border-accent/50 transition-colors shadow-sm active:scale-95"
+                                className="portfolio-control w-10 h-10 transition-colors"
                             >
-                                <i className="fas fa-chevron-right text-xs" />
+                                <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
                             </MagneticButton>
                         </div>
                     </div>
                 </div>
+                </Reveal>
                 </ChapterHeading>
 
                 {/* ── Seletor de Abas Superior Sincronizado com layoutId ── */}
-                <div className="flex items-center gap-2.5 mb-10 overflow-x-auto scrollbar-none py-1">
+                <div className="portfolio-segmented flex items-center gap-2 mb-10 overflow-x-auto scrollbar-none w-fit max-w-full">
                     {flagshipItems.map((item, idx) => {
                         const isActive = idx === activeIndex;
                         return (
@@ -598,20 +602,21 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                                 key={item.id}
                                 onClick={() => navigateTo(idx)}
                                 data-cursor-morph="true"
+                                aria-pressed={isActive}
                                 className={`relative px-4 py-2.5 rounded-xl text-xs font-mono transition-colors flex items-center gap-2.5 cursor-pointer shrink-0 border ${
                                     isActive
-                                        ? 'text-accent font-bold border-accent/60'
+                                        ? 'text-secondary font-bold border-accent/60'
                                         : 'text-primary/70 border-white/10 hover:text-white hover:border-white/20'
                                 }`}
                             >
                                 {isActive && (
                                     <motion.div
                                         layoutId="monumentalPillActive"
-                                        className="absolute inset-0 bg-accent/15 rounded-xl border border-accent shadow-[0_0_15px_rgba(217,119,87,0.25)]"
+                                        className="absolute inset-0 bg-accent/10 rounded-[10px] border border-accent/25"
                                         transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                                     />
                                 )}
-                                <span className={`relative z-10 w-2 h-2 rounded-full ${isActive ? 'bg-accent animate-pulse' : 'bg-white/25'}`} />
+                                <span className={`relative z-10 w-2 h-2 rounded-full ${isActive ? 'bg-accent' : 'bg-white/25'}`} />
                                 <span className="relative z-10">{item.stepLabel}</span>
                             </button>
                         );
@@ -619,6 +624,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                 </div>
 
                 {/* ── Viewport da Esteira Cilíndrica 3D em Escala Monumental ── */}
+                <Reveal delay={.08}>
                 <div
                     ref={containerRef}
                     onPointerDown={handlePointerDown}
@@ -628,7 +634,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                         isolation: 'isolate',
                         transformStyle: 'preserve-3d',
                     }}
-                    className="w-full max-w-6xl mx-auto min-h-[520px] sm:min-h-[550px] lg:min-h-[620px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
+                    className="w-full max-w-6xl mx-auto min-h-[690px] sm:min-h-[550px] lg:min-h-[620px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
                 >
                     {/* Track central 3D com Velocity Skew nos eixos Z e X */}
                     <motion.div
@@ -637,7 +643,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                             skewX: velocitySkewX,
                             transformStyle: 'preserve-3d',
                         }}
-                        className="relative w-full h-full min-h-[480px] sm:min-h-[500px] lg:min-h-[520px] will-change-transform"
+                        className="relative w-full h-full min-h-[650px] sm:min-h-[500px] lg:min-h-[520px] will-change-transform"
                     >
                         {flagshipItems.map((project, idx) => (
                             <CylindricalCard
@@ -654,14 +660,20 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                     </motion.div>
                 </div>
 
+                </Reveal>
+
+                <div className="mt-6 h-px w-full bg-white/10" aria-hidden="true">
+                    <div className="h-full w-full origin-left bg-accent/50 transition-transform duration-300 motion-reduce:transition-none" style={{ transform: `scaleX(${(activeIndex + 1) / totalSlides})` }} />
+                </div>
+
                 {/* Footer Minimalista de Status */}
-                <div className="mt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-primary/50 gap-2 border-t border-white/5 pt-4">
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-primary/60 gap-2">
                     <span>
                         {lang === 'en'
-                            ? '3D Cylindrical Projection • Native Vector DOM • 1400px Perspective'
+                            ? 'Explore the selected project or use the arrows to continue'
                             : lang === 'es'
-                            ? 'Proyección Cilíndrica 3D • DOM Nativo Vectorial • Perspectiva 1400px'
-                            : 'Projeção Cilíndrica 3D • DOM Nativo Vetorial • Perspectiva 1400px'}
+                            ? 'Explora el proyecto seleccionado o usa las flechas para continuar'
+                            : 'Explore o projeto selecionado ou use as setas para continuar'}
                     </span>
                     <span>
                         {lang === 'en'

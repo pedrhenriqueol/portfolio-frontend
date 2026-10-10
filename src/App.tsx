@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useState, useCallback, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import InteractiveParticleField from './components/Portfolio/InteractiveParticleField';
 import CustomCursor from './components/Portfolio/CustomCursor';
 import ClickSparks from './components/Portfolio/ClickSparks';
@@ -104,6 +104,7 @@ export default function App() {
     }, []);
 
     return (
+        <MotionConfig reducedMotion="user">
         <div
             className="min-h-screen bg-[#05070a] text-white font-sans selection:bg-white selection:text-black relative"
             style={{ overflowX: 'clip' }}
@@ -155,7 +156,7 @@ export default function App() {
             >
                 <main className="relative min-h-screen bg-transparent text-neutral-100 overflow-x-clip selection:bg-white/20 selection:text-white">
                     <ScrollChapter opening>
-                        <AboutExperienceStory experiences={EXPERIENCES} />
+                        <AboutExperienceStory experiences={EXPERIENCES} isLoaded={isLoaded} />
                     </ScrollChapter>
                     <ScrollChapter opening><Skills skills={SKILLS} /></ScrollChapter>
                     <ScrollChapter><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
@@ -183,5 +184,6 @@ export default function App() {
                 </ModalErrorBoundary>
             </Suspense>
         </div>
+        </MotionConfig>
     );
 }

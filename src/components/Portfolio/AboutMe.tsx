@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { getAudioContext, isMuted } from '../../lib/sound';
 
@@ -117,7 +118,7 @@ const BentoCard = memo(function BentoCard({
             onMouseMove={handleMouseMove}
             onClick={onClick}
             style={{ transform: 'translateZ(0)' }}
-            className={`bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] relative overflow-hidden group transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 will-change-transform ${className}`}
+            className={`portfolio-surface portfolio-card-hover relative overflow-hidden group ${className}`}
         >
             {/* Spotlight monocromático ultra-suave via CSS Custom Properties */}
             <div
@@ -183,6 +184,8 @@ function SqlBenchmarkModal({
     onClose: () => void;
     lang: string;
 }) {
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
     const [isReplaying, setIsReplaying] = useState(false);
     const [replayProgress, setReplayProgress] = useState(100);
 
@@ -213,38 +216,60 @@ function SqlBenchmarkModal({
     useEffect(() => {
         if (!isOpen) return;
         const previousOverflow = document.body.style.overflow;
+        const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         document.body.style.overflow = 'hidden';
+        closeButtonRef.current?.focus({ preventScroll: true });
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            const controls = [...(dialogRef.current?.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            ) || [])].filter(element => element.getClientRects().length > 0);
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (!first || !last) { e.preventDefault(); return; }
+            const active = document.activeElement;
+            if (!dialogRef.current?.contains(active) || (e.shiftKey ? active === first : active === last)) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = previousOverflow;
+            if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
         };
     }, [isOpen, onClose]);
 
-    if (!isOpen) return null;
-
-    return (
+    return createPortal(
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                {/* Backdrop escurecido com blur */}
+            {isOpen && <motion.div key="sql-benchmark-overlay" data-lenis-prevent
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+                {/* Backdrop escurecido */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                    className="absolute inset-0 bg-black/80"
                 />
 
                 {/* Janela de Terminal / Drawer sóbrio */}
                 <motion.div
+                    ref={dialogRef}
+                    role="dialog" aria-modal="true" aria-labelledby="sql-benchmark-title"
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                    className="relative z-10 w-full max-w-2xl bg-[#080a0f] border border-white/[0.09] rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.95)] overflow-hidden font-mono text-xs"
+                    className="relative z-10 w-full max-w-2xl portfolio-surface shadow-[0_25px_70px_rgba(0,0,0,0.95)] overflow-hidden font-mono text-xs"
                 >
                     {/* Topbar da janela */}
                     <div className="h-10 px-4 bg-white/[0.02] border-b border-white/[0.06] flex items-center justify-between select-none">
@@ -252,11 +277,14 @@ function SqlBenchmarkModal({
                             <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 cursor-pointer" onClick={onClose} />
                             <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                            <span className="ml-2 text-neutral-400 font-medium text-[11px]">
+                            <span id="sql-benchmark-title" className="ml-2 text-neutral-400 font-medium text-[11px]">
                                 sql-profiler.exe • Execution Plan Benchmark
                             </span>
                         </div>
                         <button
+                            ref={closeButtonRef}
+                            type="button"
+                            aria-label={lang === 'en' ? 'Close benchmark' : lang === 'es' ? 'Cerrar demostración' : 'Fechar demonstração'}
                             onClick={onClose}
                             className="text-neutral-400 hover:text-white transition-colors text-xs px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
                         >
@@ -387,7 +415,7 @@ function SqlBenchmarkModal({
                                 </div>
                                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-emerald-400 transition-all duration-75"
+                                        className="h-full bg-emerald-400 transition-[width] duration-75"
                                         style={{ width: `${replayProgress}%` }}
                                     />
                                 </div>
@@ -400,7 +428,7 @@ function SqlBenchmarkModal({
                                 type="button"
                                 disabled={isReplaying}
                                 onClick={runBenchmarkSimulation}
-                                className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.15] text-neutral-200 font-medium transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.15] portfolio-control text-neutral-200 font-medium transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
                             >
                                 <span className="text-emerald-400">⚡</span>
                                 <span>
@@ -419,8 +447,9 @@ function SqlBenchmarkModal({
                         </div>
                     </div>
                 </motion.div>
-            </div>
-        </AnimatePresence>
+            </motion.div>}
+        </AnimatePresence>,
+        document.body,
     );
 }
 
@@ -429,17 +458,16 @@ const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
-        transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+        transition: { staggerChildren: 0.07, delayChildren: 0.1 }
     }
 };
 
 const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20, filter: 'blur(6px)' },
+    hidden: { opacity: 0, y: 20 },
     visible: {
         opacity: 1,
         y: 0,
-        filter: 'blur(0px)',
-        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+        transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] }
     }
 };
 
@@ -447,20 +475,17 @@ export function AboutIntro({ anchorId = 'sobre' }: { anchorId?: string | null } 
     const { t, lang } = useLanguage();
     return (
         <header id={anchorId ?? undefined} className="about-intro text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
-                <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase">
+            <span className="portfolio-eyebrow">
                     {lang === 'en'
                         ? '// 01. BIOGRAPHY & TECHNICAL GUIDELINES'
                         : lang === 'es'
                         ? '// 01. BIOGRAFÍA Y DIRECTRICES TÉCNICAS'
                         : '// 01. BIOGRAFIA & DIRETRIZES TÉCNICAS'}
-                </span>
-            </div>
-            <h2 id="about-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
+            </span>
+            <h2 id="about-heading" className="portfolio-title mb-3">
                 {t('about.title')}
             </h2>
-            <p className="text-neutral-400 max-w-2xl font-sans text-sm sm:text-base leading-relaxed">
+            <p className="portfolio-lede max-w-2xl">
                 {t('about.subtitle') || 'Engenharia de software focada em modernização, alta disponibilidade e impacto real em produção.'}
             </p>
         </header>
@@ -479,6 +504,11 @@ export function AboutMe({ showIntro = true, renderLayout }: {
     renderLayout?: (content: AboutSceneContent) => React.ReactNode;
 }) {
     const { t, lang } = useLanguage();
+
+    const reducedMotion = useReducedMotion();
+    const cardVariants: Variants = reducedMotion
+        ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
+        : itemVariants;
 
     const [isSectionVisible, setIsSectionVisible] = useState(false);
     const [isClockFlipped, setIsClockFlipped] = useState(false);
@@ -673,7 +703,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
     ];
 
     const profile = (
-        <motion.div variants={itemVariants} data-about-profile className="h-full">
+        <motion.div variants={cardVariants} data-about-profile className="h-full">
             <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -686,7 +716,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
                         <button
                             type="button"
                             onClick={handleBadgeClick}
-                            className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full font-mono text-[11px] transition-all duration-200 cursor-pointer select-none ${
+                            className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full font-mono text-[11px] transition-colors duration-200 cursor-pointer select-none ${
                                 tacticalMode
                                     ? 'bg-cyan-500/10 border border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
                                     : 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 hover:border-emerald-500/40'
@@ -770,7 +800,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
         <div className="about-credentials-grid grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             {/* Card Educação */}
-            <motion.div variants={itemVariants} className="flex-1">
+            <motion.div variants={cardVariants} className="flex-1">
                 <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-3">
                         <span className="flex items-center gap-2 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest font-mono">
@@ -793,7 +823,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
             </motion.div>
 
             {/* Card Hora Local (Flip 3D) */}
-            <motion.div variants={itemVariants} className="flex-1">
+            <motion.div variants={cardVariants} className="flex-1">
                 <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
                     <div className="relative w-full h-full min-h-[120px] [perspective:1000px]">
                         <div
@@ -884,11 +914,11 @@ export function AboutMe({ showIntro = true, renderLayout }: {
             {aboutMetrics.map((m, idx) => (
                 <motion.div
                     key={idx}
-                    variants={itemVariants}
-                    className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
+                    variants={cardVariants}
+                    className="portfolio-surface portfolio-card-hover flex items-center gap-3.5 p-4"
                 >
                     {/* Box do Ícone */}
-                    <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
+                    <div className="portfolio-icon flex items-center justify-center shrink-0">
                         <i className={`${m.icon} text-sm`} />
                     </div>
                     {/* Texto da Métrica */}
@@ -908,16 +938,16 @@ export function AboutMe({ showIntro = true, renderLayout }: {
     const pillars = (
         <div className="chapter-tail grid grid-cols-1 md:grid-cols-3 gap-5">
             {pillarDefinitions.map((p, idx) => (
-                <motion.div key={idx} variants={itemVariants} className="h-full">
+                <motion.div key={idx} variants={cardVariants} className="h-full">
                     <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
                         <div>
-                            <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-3 text-neutral-300">
+                            <div className="portfolio-icon flex items-center justify-center mb-3">
                                 <i className={`${p.icon} text-xs`} />
                             </div>
                             <h4 className="text-base font-semibold text-white font-serif mb-1.5">
                                 {p.title}
                             </h4>
-                            <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mb-4">
+                            <p className="text-neutral-400 text-[13px] sm:text-sm leading-relaxed mb-4">
                                 {p.desc}
                             </p>
                         </div>
@@ -929,7 +959,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
                                     key={tIdx}
                                     type="button"
                                     onClick={() => handleTechChipClick(tag)}
-                                    className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none cursor-pointer flex items-center gap-1 active:scale-95"
+                                    className="portfolio-chip portfolio-control select-none cursor-pointer flex items-center gap-1"
                                     title={
                                         lang === 'en'
                                             ? `Query Terminal about ${tag}`

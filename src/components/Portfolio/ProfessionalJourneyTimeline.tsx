@@ -32,13 +32,13 @@ function TimelineResponsibilities({ groups }: { groups?: { title: string; icon?:
         <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
             {groups.map((group, gIdx) => (
                 <div key={gIdx} className="space-y-2.5">
-                    <div className="flex items-center gap-2 text-accent font-semibold text-xs tracking-wider uppercase font-sans">
+                    <div className="flex items-center gap-2 text-secondary font-semibold text-xs tracking-wider uppercase font-sans">
                         <i className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
                         <span>{group.title}</span>
                     </div>
                     <ul className="space-y-2">
                         {group.items && group.items.map((item, iIdx) => (
-                            <li key={iIdx} className="text-gray-300 text-xs sm:text-sm leading-relaxed flex items-start gap-2">
+                            <li key={iIdx} className="text-neutral-300 text-[13px] sm:text-sm leading-relaxed flex items-start gap-2">
                                 <span className="text-accent mt-1.5 text-[8px] shrink-0">•</span>
                                 <span><HighlightedText text={item} /></span>
                             </li>
@@ -116,7 +116,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                     transform: 'translateZ(0)',
                 }}
                 data-cursor-card="true"
-                className="bg-[#0c0e14]/90 backdrop-blur-sm border border-white/[0.07] rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0e14]/95 overflow-hidden group will-change-transform"
+                className="portfolio-surface portfolio-card-hover overflow-hidden group"
             >
                 {/* Cabeçalho do Card */}
                 <div data-career-card-header className="p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015]">
@@ -132,7 +132,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                                 </span>
                             )}
                         </div>
-                        <span className="text-xs font-mono text-primary/70 bg-white/[0.03] px-3 py-1 rounded-md border border-white/[0.08] self-start sm:self-auto">
+                        <span className="portfolio-chip self-start sm:self-auto">
                             {period}
                         </span>
                     </div>
@@ -147,7 +147,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                             {techBadges.map((badge, bIdx) => (
                                 <span
                                     key={bIdx}
-                                    className="px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/[0.07] text-neutral-300 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.14] font-mono text-[11px] transition-colors select-none"
+                                    className="portfolio-chip select-none"
                                 >
                                     {badge}
                                 </span>
@@ -452,17 +452,17 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                     </div>
 
                     <div className="journey-heading-motion">
-                        <span className="font-mono text-[11px] tracking-[0.25em] text-neutral-400 uppercase mb-2 block">
+                        <span className="portfolio-eyebrow mb-2 block">
                             {lang === 'en'
-                                ? '// 03. CAREER & OPERATIONAL ENGINEERING'
+                                ? '// 02. CAREER & OPERATIONAL ENGINEERING'
                                 : lang === 'es'
-                                ? '// 03. TRAYECTORIA E INGENIERÍA OPERACIONAL'
-                                : '// 03. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
+                                ? '// 02. TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                : '// 02. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
                         </span>
-                        <h2 id="experience-heading" className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-4">
+                        <h2 id="experience-heading" className="portfolio-title mb-4">
                             {t('experience.title') || 'Trajetória Profissional'}
                         </h2>
-                        <p className="text-gray-300 max-w-2xl mx-auto font-sans text-sm sm:text-base">
+                        <p className="portfolio-lede max-w-2xl mx-auto">
                             {t('experience.subtitle') || 'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
                         </p>
                     </div>
@@ -483,7 +483,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 <div
                     key={idx}
                     data-cursor-card="true"
-                    className="flex items-center gap-3.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] hover:bg-white/[0.04] transition-all"
+                    className="portfolio-surface portfolio-card-hover flex items-center gap-3.5 p-4"
                 >
                     {/* Box do Ícone */}
                     <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
@@ -576,7 +576,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 <button type="button" aria-label={ARCHIVES['2026'].archiveTitle}
                     onClick={() => setSelectedArchive(ARCHIVES['2026'])}
                     data-cursor-morph="true"
-                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-[border-color,transform] duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
                 >
                     <img
                         src={ARCHIVES['2026'].image}
@@ -778,7 +778,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 <div
                                     onClick={() => setSelectedArchive(ARCHIVES['2025'])}
                                     data-cursor-morph="true"
-                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-[border-color,transform] duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
                                 >
                                     <img
                                         src={ARCHIVES['2025'].image}
@@ -787,7 +787,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                         loading="lazy"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40 backdrop-blur-sm">
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40">
                                         DELPHI 11 + UNIGUI + LARAVEL
                                     </div>
                                     <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
@@ -880,7 +880,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 <div
                                     onClick={() => setSelectedArchive(ARCHIVES['2024'])}
                                     data-cursor-morph="true"
-                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-all duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-[border-color,transform] duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
                                 >
                                     <img
                                         src={ARCHIVES['2024'].image}
@@ -889,7 +889,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                         loading="lazy"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40 backdrop-blur-sm">
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40">
                                         {lang === 'en' ? 'EEEP TECHNICAL COHORT // 2024' : 'TURMA TÉCNICA EEEP // 2024'}
                                     </div>
                                     <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">

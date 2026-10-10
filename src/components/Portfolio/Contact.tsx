@@ -1,6 +1,7 @@
 import { ChapterHeading } from './Common/ScrollChapter';
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import Reveal from './Common/Reveal';
 import { useLanguage } from '../../context/LanguageContext';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
@@ -9,6 +10,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Keep the spotlight texture static and move only its own layer once per frame.
 function ContactSurface({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    const reduceMotion = useReducedMotion();
     const surfaceRef = useRef<HTMLDivElement>(null);
     const lightRef = useRef<HTMLDivElement>(null);
     const pointerRef = useRef({ x: 0, y: 0 });
@@ -24,6 +26,7 @@ function ContactSurface({ children, className = '' }: { children: React.ReactNod
     useEffect(() => cancelFrame, [cancelFrame]);
 
     const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        if (reduceMotion) return;
         pointerRef.current = { x: event.clientX, y: event.clientY };
         if (frameRef.current !== null) return;
 
@@ -40,21 +43,21 @@ function ContactSurface({ children, className = '' }: { children: React.ReactNod
             const y = (pointerRef.current.y - rect.top) * surface.offsetHeight / rect.height - surface.clientTop;
             light.style.transform = `translate3d(${x - 360}px, ${y - 360}px, 0)`;
         });
-    }, []);
+    }, [reduceMotion]);
 
     return (
         <div
             ref={surfaceRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={cancelFrame}
-            className={`bg-[#0b0d13] border border-white/[0.07] rounded-2xl p-6 md:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] h-full flex flex-col justify-between relative overflow-hidden group/contact transition-colors duration-200 hover:border-white/[0.12] ${className}`}
+            className={`portfolio-surface portfolio-card-hover p-6 md:p-8 h-full flex flex-col justify-between relative overflow-hidden group/contact ${className}`}
         >
             <div
                 ref={lightRef}
                 aria-hidden="true"
                 className="pointer-events-none absolute left-0 top-0 h-[720px] w-[720px] opacity-0 transition-opacity duration-300 group-hover/contact:opacity-100 z-0"
                 style={{
-                    background: 'radial-gradient(circle 360px at center, rgba(255, 255, 255, 0.035), transparent 100%)',
+                    background: 'radial-gradient(circle 360px at center, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 100%)',
                     transform: 'translate3d(-1080px, -1080px, 0)',
                 }}
             />
@@ -206,18 +209,13 @@ function Contact() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                 {/* ── Cabeçalho Limpo da Seção ── */}
-                <ChapterHeading className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span className="text-[11px] tracking-wider text-neutral-400 uppercase font-mono">
-                            {t('contact.tag') || (lang === 'en' ? 'Contact' : 'Contato')}
-                        </span>
-                    </div>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white mb-3">
+                <ChapterHeading className="text-center mb-14">
+                    <span className="portfolio-eyebrow">// 05. {t('contact.tag') || (lang === 'en' ? 'Contact' : 'Contato')}</span>
+                    <h2 className="portfolio-title">
                         {t('contact.title1') || (lang === 'en' ? "Let's " : "Vamos ")}
                         <span className="italic font-serif">{t('contact.title2') || (lang === 'en' ? "talk?" : "conversar?")}</span>
                     </h2>
-                    <p className="text-neutral-400 max-w-xl mx-auto font-sans text-sm sm:text-base leading-relaxed">
+                    <p className="portfolio-lede max-w-xl mx-auto">
                         {t('contact.subtitle') || (lang === 'en'
                             ? "I am open to new opportunities, collaborations, or discussing software engineering."
                             : "Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.")}
@@ -228,11 +226,7 @@ function Contact() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
                     {/* ── Coluna Esquerda: Canais Diretos (5 Colunas) ── */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
+                    <Reveal
                         className="lg:col-span-5 flex flex-col h-full"
                     >
                         <ContactSurface className="space-y-6">
@@ -240,7 +234,7 @@ function Contact() {
                                 <h3 className="text-lg font-semibold text-white font-sans">
                                     {lang === 'en' ? 'Direct Channels' : lang === 'es' ? 'Canales Directos' : 'Canais diretos'}
                                 </h3>
-                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mt-1.5 mb-6">
+                                <p className="text-neutral-400 text-sm leading-relaxed mt-1.5 mb-6">
                                     {t('contact.directMessage') || (lang === 'en'
                                         ? "Prefer to get straight to the point? Feel free to reach out via any channel below."
                                         : "Sinta-se à vontade para me mandar uma mensagem por aqui ou pelos canais abaixo.")}
@@ -248,14 +242,14 @@ function Contact() {
 
                                 <div className="space-y-3">
                                     {/* Cartão de E-mail com Botão Copiar */}
-                                    <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] flex items-center justify-between gap-3 transition-all">
+                                    <div className="portfolio-channel p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
-                                                <i className="fas fa-envelope text-sm" />
+                                            <div className="portfolio-icon shrink-0">
+                                                <i aria-hidden="true" className="fas fa-envelope text-sm" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-xs font-medium text-white">{lang === 'en' ? 'Email' : 'E-mail'}</p>
-                                                <p className="text-[12px] text-neutral-400 truncate" title={EMAIL_ADDRESS}>
+                                                <p className="text-sm font-medium text-white">{lang === 'en' ? 'Email' : 'E-mail'}</p>
+                                                <p className="text-[13px] text-neutral-400 truncate" title={EMAIL_ADDRESS}>
                                                     {EMAIL_ADDRESS}
                                                 </p>
                                             </div>
@@ -264,19 +258,19 @@ function Contact() {
                                         <button
                                             type="button"
                                             onClick={handleCopyEmail}
-                                            className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.16] text-[11px] font-sans text-neutral-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+                                            className="portfolio-control px-2.5 py-1.5 text-[11px] font-sans flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
                                             title={lang === 'en' ? 'Copy email address' : 'Copiar endereço de e-mail'}
                                         >
                                             {copiedEmail ? (
                                                 <>
-                                                    <i className="fas fa-check text-emerald-400 text-[10px]" />
+                                                    <i aria-hidden="true" className="fas fa-check text-emerald-400 text-[10px]" />
                                                     <span className="text-emerald-400 font-medium">
                                                         {lang === 'en' ? 'Copied!' : 'Copiado!'}
                                                     </span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <i className="fas fa-copy text-[10px]" />
+                                                    <i aria-hidden="true" className="fas fa-copy text-[10px]" />
                                                     <span>{lang === 'en' ? 'Copy' : 'Copiar'}</span>
                                                 </>
                                             )}
@@ -290,22 +284,22 @@ function Contact() {
                                             href={href}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="p-3.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] hover:border-white/[0.12] flex items-center justify-between transition-all group cursor-pointer select-none"
+                                            className="portfolio-channel p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between group cursor-pointer select-none"
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-neutral-300 group-hover:text-white shrink-0 transition-colors">
-                                                    <i className={`${icon} text-sm`} />
+                                                <div className="portfolio-icon group-hover:text-white shrink-0 transition-colors">
+                                                    <i aria-hidden="true" className={`${icon} text-sm`} />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-medium text-white group-hover:text-white transition-colors">
+                                                    <p className="text-sm font-medium text-white group-hover:text-white transition-colors">
                                                         {label}
                                                     </p>
-                                                    <p className="text-[12px] text-neutral-400 truncate">
+                                                    <p className="text-[13px] text-neutral-400 truncate">
                                                         {subtitle}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <i className="fas fa-arrow-right text-neutral-600 group-hover:text-neutral-300 text-xs transition-all duration-200 group-hover:translate-x-1" />
+                                            <i aria-hidden="true" className="channel-arrow fas fa-arrow-right text-neutral-500 text-xs" />
                                         </a>
                                     ))}
                                 </div>
@@ -313,7 +307,7 @@ function Contact() {
 
                             {/* Rodapé humano da coluna esquerda */}
                             <div className="pt-4 border-t border-white/[0.05]">
-                                <span className="text-[12px] text-neutral-400">
+                                <span className="text-[13px] text-neutral-400">
                                     {lang === 'en'
                                         ? 'Usually reply in less than 24 hours.'
                                         : lang === 'es'
@@ -322,14 +316,11 @@ function Contact() {
                                 </span>
                             </div>
                         </ContactSurface>
-                    </motion.div>
+                    </Reveal>
 
                     {/* ── Coluna Direita: Formulário de Contato ── */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
+                    <Reveal
+                        delay={.1}
                         className="lg:col-span-7 flex flex-col h-full"
                     >
                         <ContactSurface>
@@ -337,7 +328,7 @@ function Contact() {
                                 <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
                                     {lang === 'en' ? 'Send a message' : lang === 'es' ? 'Enviar un mensaje' : 'Mande uma mensagem'}
                                 </h3>
-                                <p className="text-neutral-400 text-xs sm:text-[13px] leading-relaxed mb-6">
+                                <p className="text-neutral-400 text-sm leading-relaxed mb-6">
                                     {lang === 'en'
                                         ? 'Fill in the fields below and I will get back to you as soon as possible.'
                                         : lang === 'es'
@@ -354,7 +345,7 @@ function Contact() {
                                             exit={{ opacity: 0, y: -6 }}
                                             className="mb-5 bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 px-4 py-3 rounded-xl flex items-center gap-2.5 text-xs sm:text-sm"
                                         >
-                                            <i className="fas fa-check-circle text-emerald-400 text-sm shrink-0" />
+                                            <i aria-hidden="true" className="fas fa-check-circle text-emerald-400 text-sm shrink-0" />
                                             <span>
                                                 {t('contact.successMsg') || (lang === 'en'
                                                     ? 'Message sent successfully! I will reach out soon.'
@@ -370,33 +361,37 @@ function Contact() {
                                         
                                         {/* Nome */}
                                         <div className="space-y-1.5">
-                                            <label className="block text-xs font-medium text-neutral-300">
+                                            <label htmlFor="contact-name" className="block text-xs font-medium text-neutral-300">
                                                 {t('contact.labelName') || (lang === 'en' ? 'Name' : 'Nome')}
                                             </label>
                                             <input
                                                 type="text"
+                                                id="contact-name"
                                                 name="name"
+                                                autoComplete="name"
                                                 value={data.name}
                                                 onChange={handleChange}
                                                 disabled={processing}
                                                 placeholder={lang === 'en' ? 'Your name' : 'Como posso te chamar?'}
-                                                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
+                                                className="portfolio-field w-full px-4 py-3 placeholder:text-neutral-500 text-sm"
                                             />
                                         </div>
 
                                         {/* E-mail */}
                                         <div className="space-y-1.5">
-                                            <label className="block text-xs font-medium text-neutral-300">
+                                            <label htmlFor="contact-email" className="block text-xs font-medium text-neutral-300">
                                                 {t('contact.labelEmail') || (lang === 'en' ? 'Email' : 'E-mail')}
                                             </label>
                                             <input
                                                 type="email"
+                                                id="contact-email"
                                                 name="email"
+                                                autoComplete="email"
                                                 value={data.email}
                                                 onChange={handleChange}
                                                 disabled={processing}
                                                 placeholder={lang === 'en' ? 'your.email@company.com' : 'seu.email@exemplo.com'}
-                                                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
+                                                className="portfolio-field w-full px-4 py-3 placeholder:text-neutral-500 text-sm"
                                             />
                                         </div>
 
@@ -404,33 +399,35 @@ function Contact() {
 
                                     {/* Assunto */}
                                     <div className="space-y-1.5">
-                                        <label className="block text-xs font-medium text-neutral-300">
+                                        <label htmlFor="contact-subject" className="block text-xs font-medium text-neutral-300">
                                             {t('contact.labelSubject') || (lang === 'en' ? 'Subject' : 'Assunto')}
                                         </label>
                                         <input
                                             type="text"
+                                            id="contact-subject"
                                             name="subject"
                                             value={data.subject}
                                             onChange={handleChange}
                                             disabled={processing}
                                             placeholder={t('contact.formSubjectPlaceholder') || (lang === 'en' ? 'Opportunity, project or collaboration' : 'Sobre uma oportunidade, projeto ou conversa')}
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all"
+                                            className="portfolio-field w-full px-4 py-3 placeholder:text-neutral-500 text-sm"
                                         />
                                     </div>
 
                                     {/* Mensagem */}
                                     <div className="space-y-1.5">
-                                        <label className="block text-xs font-medium text-neutral-300">
+                                        <label htmlFor="contact-message" className="block text-xs font-medium text-neutral-300">
                                             {t('contact.labelMessage') || (lang === 'en' ? 'Message' : 'Mensagem')}
                                         </label>
                                         <textarea
+                                            id="contact-message"
                                             name="message"
                                             rows={4}
                                             value={data.message}
                                             onChange={handleChange}
                                             disabled={processing}
                                             placeholder={t('contact.formMessagePlaceholder') || (lang === 'en' ? 'Write your message here...' : 'Escreva sua mensagem aqui...')}
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.08] focus:border-white/25 focus:bg-white/[0.04] focus:outline-none text-neutral-200 placeholder:text-neutral-500 text-xs sm:text-sm transition-all resize-none"
+                                            className="portfolio-field w-full px-4 py-3 placeholder:text-neutral-500 text-sm resize-none"
                                         />
                                     </div>
 
@@ -440,11 +437,11 @@ function Contact() {
                                             <button
                                                 type="submit"
                                                 disabled={processing}
-                                                className="inline-flex items-center justify-center gap-2 bg-white text-neutral-900 hover:bg-neutral-200 font-medium text-xs px-5 py-2.5 rounded-xl transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                                                className="portfolio-button portfolio-button-primary inline-flex items-center justify-center gap-2 font-medium disabled:opacity-50 cursor-pointer"
                                             >
                                                 {processing ? (
                                                     <>
-                                                        <i className="fas fa-circle-notch fa-spin text-xs" />
+                                                        <i aria-hidden="true" className="fas fa-circle-notch fa-spin text-xs" />
                                                         <span>{t('contact.btnSending') || (lang === 'en' ? 'Sending...' : 'Enviando...')}</span>
                                                     </>
                                                 ) : (
@@ -467,7 +464,7 @@ function Contact() {
 
                                         {/* Mensagem de Erro Discreta (apenas se houver erro ao submeter) */}
                                         {errorMessage && (
-                                            <p className="text-xs text-rose-400/90 font-sans">
+                                            <p role="alert" className="text-xs text-rose-400/90 font-sans">
                                                 {errorMessage}
                                             </p>
                                         )}
@@ -476,7 +473,7 @@ function Contact() {
                             </div>
 
                         </ContactSurface>
-                    </motion.div>
+                    </Reveal>
 
                 </div>
 

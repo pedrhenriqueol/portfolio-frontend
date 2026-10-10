@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, memo } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { playMechanicalClick } from '../../lib/sound';
 
 /**
@@ -27,6 +27,7 @@ const MagneticButton = memo(function MagneticButton({
 }) {
     const ref = useRef(null);
     const rectRef = useRef(null);
+    const reduceMotion = useReducedMotion();
 
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -43,7 +44,7 @@ const MagneticButton = memo(function MagneticButton({
     }, []);
 
     const handleMouseMove = useCallback((e) => {
-        if (!rectRef.current) return;
+        if (reduceMotion || !rectRef.current) return;
         const rect = rectRef.current;
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -60,7 +61,7 @@ const MagneticButton = memo(function MagneticButton({
             x.set(0);
             y.set(0);
         }
-    }, [distance, strength, x, y]);
+    }, [distance, strength, x, y, reduceMotion]);
 
     const handleMouseLeave = useCallback(() => {
         rectRef.current = null;
@@ -90,9 +91,9 @@ const MagneticButton = memo(function MagneticButton({
             onMouseEnter={handleMouseEnter}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            whileTap={{ scale: 0.97 }}
-            style={{ x: springX, y: springY }}
-            className={`inline-flex items-center justify-center cursor-pointer will-change-transform ${className}`}
+            whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+            style={reduceMotion ? undefined : { x: springX, y: springY }}
+            className={`inline-flex items-center justify-center cursor-pointer ${className}`}
             {...props}
         >
             {children}

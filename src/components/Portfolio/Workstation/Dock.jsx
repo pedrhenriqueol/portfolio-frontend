@@ -13,7 +13,7 @@ function DockTooltip({ label, shortcut, visible }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.9 }}
                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-darker/95 border border-white/15 text-[10px] font-mono text-primary px-2.5 py-1 rounded-lg shadow-xl backdrop-blur-md pointer-events-none z-50"
+                    className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap portfolio-toolbar border border-white/15 text-[10px] font-mono text-primary px-2.5 py-1 rounded-lg shadow-xl  pointer-events-none z-50"
                 >
                     <span>{label}</span>
                     {shortcut && <span className="ml-1.5 text-accent/80">{shortcut}</span>}
@@ -196,7 +196,7 @@ export default function Dock({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transform: 'translateZ(0)' }}
-                className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[9980] items-center gap-1.5 px-4 py-2 bg-[#0c0e14]/90 border border-white/10 rounded-full backdrop-blur-sm shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+                className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[9980] items-center gap-1.5 px-4 py-2 portfolio-toolbar border border-white/10 rounded-full  shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
             >
                 {dockItems.map((item, idx) => (
                     <DockButton
@@ -235,7 +235,7 @@ export default function Dock({
                                         <Tag
                                             {...linkProps}
                                             onClick={!isLink ? () => { handleClick(item.id); setMobileExpanded(false); } : undefined}
-                                            className="flex items-center gap-2 px-3.5 py-2 bg-darker/95 border border-white/15 rounded-xl backdrop-blur-sm text-primary text-xs shadow-lg cursor-pointer"
+                                            className="flex items-center gap-2 px-3.5 py-2 portfolio-toolbar border border-white/15 rounded-xl  text-primary text-xs shadow-lg cursor-pointer"
                                         >
                                             <i className={`${item.icon} text-accent w-4`} />
                                             <span>{item.labelKey}</span>
