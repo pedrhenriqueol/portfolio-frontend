@@ -160,7 +160,7 @@ export default function App() {
                     </ScrollChapter>
                     <ScrollChapter opening><Skills skills={SKILLS} /></ScrollChapter>
                     <ScrollChapter opening><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
-                    <ScrollChapter><Contact /></ScrollChapter>
+                    <ScrollChapter opening><Contact /></ScrollChapter>
                 </main>
 
                 <footer className="bg-transparent py-12 text-center text-gray-500 text-sm lg:pb-14">

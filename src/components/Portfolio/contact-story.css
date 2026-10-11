@@ -1,0 +1,19 @@
+.contact-story { position: relative; padding-block: 6rem 5rem; }
+.contact-story-frame { position: relative; }
+.contact-story-content { position: relative; }
+.contact-story-anchor { position: absolute; width: 1px; height: 1px; left: 0; scroll-margin-top: 100px; pointer-events: none; }
+.contact-story-heading { position: relative; z-index: 2; text-align: center; margin-bottom: 3.5rem; transform-origin: center top; }
+.contact-story-heading .portfolio-eyebrow { display: block; margin-bottom: 1rem; }
+.contact-story-channels, .contact-story-form { position: relative; z-index: 2; transform-origin: center top; }
+.contact-story-thread { display: none; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: var(--color-accent, #d9d3c3); }
+.contact-story-thread path { stroke: currentColor; stroke-width: 1; stroke-dasharray: 1; }
+.contact-story-cue { display: none; position: absolute; left: 50%; top: calc(50% + 6rem); translate: -50% 0; z-index: 3; white-space: nowrap; }
+.contact-story-cue button { font: 11px ui-monospace, monospace; color: var(--portfolio-muted); padding: .8rem 1rem; border-bottom: 1px solid var(--portfolio-line); cursor: pointer; transition: color .25s; }
+.contact-story-cue button:hover { color: var(--portfolio-ink); }
+.contact-story-cue:focus-within button { background: var(--color-dark, #07090d); border-radius: .5rem; }
+@media (min-width: 1024px) {
+    .contact-story[data-connected="true"] { padding-block: 0; height: calc(var(--contact-frame-height) + var(--contact-run)); }
+    .contact-story[data-connected="true"] .contact-story-frame { position: sticky; top: 100px; height: var(--contact-frame-height); padding-top: var(--contact-content-top); }
+    .contact-story[data-connected="true"] .contact-story-cue,
+    .contact-story[data-connected="true"] .contact-story-thread { display: block; }
+}

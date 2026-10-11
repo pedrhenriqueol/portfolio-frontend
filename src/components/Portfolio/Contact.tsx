@@ -1,8 +1,9 @@
-import { ChapterHeading } from './Common/ScrollChapter';
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Reveal from './Common/Reveal';
 import { useLanguage } from '../../context/LanguageContext';
+import { useContactStory } from '../../hooks/useContactStory';
+import './contact-story.css';
 
 const FORM_ENDPOINT = 'https://formsubmit.co/ajax/pedrohc.forza@gmail.com';
 const EMAIL_ADDRESS = 'pedrohc.forza@gmail.com';
@@ -68,6 +69,8 @@ function ContactSurface({ children, className = '' }: { children: React.ReactNod
 
 function Contact() {
     const { t, lang = 'pt' } = useLanguage();
+    const storyRef = useRef<HTMLElement>(null);
+    const openConversation = useContactStory(storyRef, lang);
 
     const [data, setData] = useState({ name: '', email: '', subject: '', message: '' });
     const [processing, setProcessing] = useState(false);
@@ -205,13 +208,18 @@ function Contact() {
     };
 
     return (
-        <section id="contato" className="py-24 md:py-32 bg-transparent relative select-text">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <section ref={storyRef} tabIndex={-1} aria-labelledby="contact-title" className="contact-story bg-transparent select-text outline-hidden">
+            <div id="contato" className="contact-story-anchor" aria-hidden="true" />
+            <div className="contact-story-frame">
+            <div className="contact-story-content max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <svg className="contact-story-thread" aria-hidden="true" focusable="false">
+                    <path data-contact-thread pathLength="1" fill="none" />
+                </svg>
 
                 {/* ── Cabeçalho Limpo da Seção ── */}
-                <ChapterHeading className="text-center mb-14">
+                <div className="contact-story-heading">
                     <span className="portfolio-eyebrow">// 05. {t('contact.tag') || (lang === 'en' ? 'Contact' : 'Contato')}</span>
-                    <h2 className="portfolio-title">
+                    <h2 id="contact-title" className="portfolio-title">
                         {t('contact.title1') || (lang === 'en' ? "Let's " : "Vamos ")}
                         <span className="italic font-serif">{t('contact.title2') || (lang === 'en' ? "talk?" : "conversar?")}</span>
                     </h2>
@@ -220,15 +228,14 @@ function Contact() {
                             ? "I am open to new opportunities, collaborations, or discussing software engineering."
                             : "Estou aberto a novas oportunidades, colaborações ou apenas uma boa conversa sobre tecnologia.")}
                     </p>
-                </ChapterHeading>
+                </div>
 
                 {/* ── Grid Principal de Dois Cartões (Alinhados e Limpos) ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
                     {/* ── Coluna Esquerda: Canais Diretos (5 Colunas) ── */}
-                    <Reveal
-                        className="lg:col-span-5 flex flex-col h-full"
-                    >
+                    <div className="contact-story-channels lg:col-span-5 flex flex-col h-full">
+                    <Reveal className="h-full">
                         <ContactSurface className="space-y-6">
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans">
@@ -317,12 +324,11 @@ function Contact() {
                             </div>
                         </ContactSurface>
                     </Reveal>
+                    </div>
 
                     {/* ── Coluna Direita: Formulário de Contato ── */}
-                    <Reveal
-                        delay={.1}
-                        className="lg:col-span-7 flex flex-col h-full"
-                    >
+                    <div className="contact-story-form lg:col-span-7 flex flex-col h-full">
+                    <Reveal delay={.1} className="h-full">
                         <ContactSurface>
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
@@ -474,9 +480,17 @@ function Contact() {
 
                         </ContactSurface>
                     </Reveal>
+                    </div>
 
                 </div>
 
+            </div>
+            <div className="contact-story-cue">
+                <button type="button" onClick={openConversation}>
+                    {lang === 'en' ? 'Start a conversation' : lang === 'es' ? 'Iniciar una conversación' : 'Iniciar uma conversa'}
+                    <span aria-hidden="true"> ↓</span>
+                </button>
+            </div>
             </div>
         </section>
     );

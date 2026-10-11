@@ -1,11 +1,16 @@
 import { useSyncExternalStore } from 'react';
 
 let active = false;
+const owners = new Set<string>();
 const listeners = new Set<() => void>();
 
-export function setProjectFocus(next: boolean): void {
-    if (active === next) return;
-    active = next;
+/** Adjacent scenes can overlap without restoring ambient UI prematurely. */
+export function setProjectFocus(next: boolean, owner = 'projects'): void {
+    if (next) owners.add(owner);
+    else owners.delete(owner);
+    const focused = owners.size > 0;
+    if (active === focused) return;
+    active = focused;
     listeners.forEach(listener => listener());
 }
 
