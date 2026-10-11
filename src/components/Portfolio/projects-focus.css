@@ -1,4 +1,5 @@
 .project-focus-track { position: relative; isolation: isolate; }
+.project-collection-source { width: 100%; }
 .project-focus-frame { padding-block: 4rem; overflow: clip; }
 .project-focus-layout { width: min(100%, 1480px); margin-inline: auto; padding-inline: 2rem; }
 /* Keep reading/navigation above the gallery's composited card surfaces. */

@@ -35,7 +35,7 @@ export const Projects: React.FC<ProjectsProps> = ({ projects = [], onSelectProje
             </Suspense>
 
             {/* Transição Óptica Modular */}
-            <SectionDivider marker="+" />
+            <SectionDivider className="project-collection-divider" marker="+" />
 
             {/* Camada 2: Repositório Corporativo & Soluções (Grid com Filtros Dinâmicos) */}
             <Suspense fallback={<SectionSkeleton />}>

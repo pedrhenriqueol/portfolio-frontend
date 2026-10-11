@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import Reveal from './Common/Reveal';
 import { useLanguage } from '../../context/LanguageContext';
 import { useContactStory } from '../../hooks/useContactStory';
 import './contact-story.css';
@@ -51,7 +50,7 @@ function ContactSurface({ children, className = '' }: { children: React.ReactNod
             ref={surfaceRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={cancelFrame}
-            className={`portfolio-surface portfolio-card-hover p-6 md:p-8 h-full flex flex-col justify-between relative overflow-hidden group/contact ${className}`}
+            className={`contact-surface portfolio-surface portfolio-card-hover p-6 md:p-8 h-full flex flex-col justify-between relative overflow-hidden group/contact ${className}`}
         >
             <div
                 ref={lightRef}
@@ -214,6 +213,7 @@ function Contact() {
             <div className="contact-story-content max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <svg className="contact-story-thread" aria-hidden="true" focusable="false">
                     <path data-contact-thread pathLength="1" fill="none" />
+                    <circle data-contact-traveller r="3" />
                 </svg>
 
                 {/* ── Cabeçalho Limpo da Seção ── */}
@@ -235,7 +235,7 @@ function Contact() {
 
                     {/* ── Coluna Esquerda: Canais Diretos (5 Colunas) ── */}
                     <div className="contact-story-channels lg:col-span-5 flex flex-col h-full">
-                    <Reveal className="h-full">
+                    <div className="h-full">
                         <ContactSurface className="space-y-6">
                             <div className="relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans">
@@ -323,14 +323,21 @@ function Contact() {
                                 </span>
                             </div>
                         </ContactSurface>
-                    </Reveal>
+                    </div>
                     </div>
 
                     {/* ── Coluna Direita: Formulário de Contato ── */}
                     <div className="contact-story-form lg:col-span-7 flex flex-col h-full">
-                    <Reveal delay={.1} className="h-full">
+                        <div className="contact-message-preview" aria-hidden="true">
+                            <svg viewBox="0 0 600 560" preserveAspectRatio="none" focusable="false">
+                                <path className="contact-envelope-back" d="M 0 560 L 244 264 M 600 560 L 356 264" fill="none" />
+                                <path data-contact-flap className="contact-envelope-flap" d="M 0 0 L 300 300 L 600 0 Z" />
+                            </svg>
+                            <span className="contact-message-seal">PH<span>.</span></span>
+                        </div>
+                    <div className="h-full">
                         <ContactSurface>
-                            <div className="relative z-10">
+                            <div className="contact-form-body relative z-10">
                                 <h3 className="text-lg font-semibold text-white font-sans mb-1.5">
                                     {lang === 'en' ? 'Send a message' : lang === 'es' ? 'Enviar un mensaje' : 'Mande uma mensagem'}
                                 </h3>
@@ -479,7 +486,7 @@ function Contact() {
                             </div>
 
                         </ContactSurface>
-                    </Reveal>
+                    </div>
                     </div>
 
                 </div>

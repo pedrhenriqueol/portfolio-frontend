@@ -1,0 +1,28 @@
+.project-collection-track, .project-collection-frame { position: relative; }
+.project-collection-anchor { position: absolute; top: 0; left: 0; width: 1px; height: 1px; scroll-margin-top: 100px; pointer-events: none; }
+.project-collection-source { width: 100%; min-width: 0; transform-origin: center center; }
+.project-collection-arrival { transform-origin: center top; }
+.corporate-arrival-inspector { pointer-events: auto; }
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .corporate-arrival[data-collection-connected="true"] {
+        margin-top: calc(-1 * var(--collection-overlap, 0px));
+        padding-top: 0;
+        /* The transparent incoming track must not cover the outgoing controls.
+           Its visible layer and the independent fixed inspector opt back in. */
+        pointer-events: none;
+    }
+    .corporate-arrival[data-collection-connected="true"] .project-collection-track {
+        height: calc(var(--collection-height) + var(--collection-run));
+    }
+    .corporate-arrival[data-collection-connected="true"] .project-collection-frame {
+        position: sticky;
+        top: var(--collection-inset);
+        z-index: 3;
+        /* Native content can be taller than the viewport. After the brief pin,
+           it releases in full, with no clipping or internal scrolling. */
+        overflow: visible;
+    }
+    .corporate-arrival[data-collection-connected="true"] .project-collection-arrival:not([inert]) { pointer-events: auto; }
+    .project-collection-arrival[inert] { pointer-events: none; }
+}

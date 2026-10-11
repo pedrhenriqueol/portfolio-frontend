@@ -1,13 +1,21 @@
 .contact-story { position: relative; padding-block: 6rem 5rem; }
-.contact-story-frame { position: relative; }
-.contact-story-content { position: relative; }
+.contact-story-frame, .contact-story-content { position: relative; }
 .contact-story-anchor { position: absolute; width: 1px; height: 1px; left: 0; scroll-margin-top: 100px; pointer-events: none; }
-.contact-story-heading { position: relative; z-index: 2; text-align: center; margin-bottom: 3.5rem; transform-origin: center top; }
+.contact-story-heading { position: relative; z-index: 2; text-align: center; margin-bottom: 3.5rem; }
+.contact-story-heading .portfolio-title { transform-origin: center; }
 .contact-story-heading .portfolio-eyebrow { display: block; margin-bottom: 1rem; }
-.contact-story-channels, .contact-story-form { position: relative; z-index: 2; transform-origin: center top; }
+.contact-story-channels, .contact-story-form { position: relative; z-index: 2; }
+.contact-story-form { transform-origin: center; }
 .contact-story-thread { display: none; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: var(--color-accent, #d9d3c3); }
 .contact-story-thread path { stroke: currentColor; stroke-width: 1; stroke-dasharray: 1; }
-.contact-story-cue { display: none; position: absolute; left: 50%; top: calc(50% + 6rem); translate: -50% 0; z-index: 3; white-space: nowrap; }
+.contact-story-thread circle { fill: currentColor; }
+.contact-message-preview { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.contact-message-preview svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.contact-envelope-back { stroke: rgb(255 255 255 / .2); stroke-width: 2; }
+.contact-envelope-flap { fill: color-mix(in srgb, var(--color-accent, #d9d3c3) 7%, transparent); stroke: color-mix(in srgb, var(--color-accent, #d9d3c3) 42%, transparent); stroke-width: 2; transform-origin: center top; }
+.contact-message-seal { position: absolute; left: 50%; top: 51%; translate: -50% -50%; font: 80px var(--font-serif); line-height: 1; letter-spacing: -.06em; color: var(--portfolio-ink); }
+.contact-message-seal > span { color: var(--color-accent, #d9d3c3); }
+.contact-story-cue { display: none; position: absolute; left: 50%; translate: -50% 0; z-index: 4; white-space: nowrap; }
 .contact-story-cue button { font: 11px ui-monospace, monospace; color: var(--portfolio-muted); padding: .8rem 1rem; border-bottom: 1px solid var(--portfolio-line); cursor: pointer; transition: color .25s; }
 .contact-story-cue button:hover { color: var(--portfolio-ink); }
 .contact-story-cue:focus-within button { background: var(--color-dark, #07090d); border-radius: .5rem; }
@@ -15,5 +23,9 @@
     .contact-story[data-connected="true"] { padding-block: 0; height: calc(var(--contact-frame-height) + var(--contact-run)); }
     .contact-story[data-connected="true"] .contact-story-frame { position: sticky; top: 100px; height: var(--contact-frame-height); padding-top: var(--contact-content-top); }
     .contact-story[data-connected="true"] .contact-story-cue,
-    .contact-story[data-connected="true"] .contact-story-thread { display: block; }
+    .contact-story[data-connected="true"] .contact-story-thread,
+    .contact-story[data-connected="true"] .contact-message-preview { display: block; }
+    .contact-story[data-connected="true"] .contact-story-form .contact-surface { border-radius: 1.375rem; border-color: color-mix(in srgb, var(--color-accent, #d9d3c3) 24%, transparent); box-shadow: 0 24px 72px rgb(0 0 0 / .18); }
+    .contact-story[data-connected="true"] .contact-story-channels .contact-surface { background: transparent; border-color: transparent; padding-inline: 1rem; }
+    .contact-story[data-connected="true"] .contact-story-channels .portfolio-channel { background: transparent; border-color: transparent; border-bottom-color: var(--portfolio-line); border-radius: 0; padding-inline: 0; }
 }

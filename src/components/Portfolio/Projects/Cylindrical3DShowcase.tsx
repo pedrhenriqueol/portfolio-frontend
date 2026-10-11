@@ -540,6 +540,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             className="project-focus-track bg-transparent focus:outline-none"
         >
             <div className="project-focus-frame">
+            <div className="project-collection-source">
             <div className="project-focus-layout">
                 <header className="project-focus-header">
                     <div>
@@ -600,6 +601,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                         ? (lang === 'en' ? 'Scroll to explore · or use the arrows' : lang === 'es' ? 'Desplázate para explorar · o usa las flechas' : 'Role para explorar · ou use as setas')
                         : (lang === 'en' ? 'Drag to explore · or use the arrows' : lang === 'es' ? 'Arrastra para explorar · o usa las flechas' : 'Arraste para explorar · ou use as setas')}
                 </p>
+            </div>
             </div>
             </div>
         </section>
