@@ -19,9 +19,9 @@ A comparação visual não permite medir com precisão easing, hover ou FPS do s
 
 Home, Sobre, Experiência, Habilidades, Projetos e Contato compartilham essa linguagem. A sequência dos capítulos passa a ser `00 → 01 → 02 → 03 → 04 / 04.02 → 05`. Os dois grupos de projetos usam a mesma hierarquia editorial. O rodapé técnico dos destaques dá lugar a orientação de navegação, contador e barra de progresso.
 
-O nome entra em duas linhas após a liberação do preloader. Entradas de conteúdo usam opacidade e pequenos deslocamentos, normalmente em 650 ms, com stagger curto. `Common/Reveal.tsx` executa a entrada uma vez e revela também ao receber foco. O palco dos destaques tem uma camada de entrada separada dos transforms dos cards. Screenshots têm zoom de hover discreto; links de contato deslocam apenas sua seta.
+O nome entra em duas linhas após a liberação do preloader. Entradas de conteúdo usam opacidade e pequenos deslocamentos, normalmente em 650 ms, com stagger curto. `Common/Reveal.tsx` executa a entrada uma vez e revela também ao receber foco. O palco dos destaques tem uma camada de entrada separada dos transforms dos cards; sua apresentação em foco está descrita abaixo. Screenshots têm zoom de hover discreto; links de contato deslocam apenas sua seta.
 
-`ChapterHeading` conecta a entrada dos destaques ao capítulo anterior. Os hooks de cenas continuam medindo a geometria e escrevendo transforms em seus consumidores; nenhuma variável de scroll nova é herdada por uma seção inteira. A barra dos destaques usa `scaleX`. Foram removidos os grandes blobs com blur da Home e os backdrops do terminal, Navbar e Dock.
+A passagem Habilidades → Projetos agora pertence a `useProjectPresentation`, evitando duas cenas escrevendo nos mesmos elementos. Os hooks de cenas continuam medindo a geometria e escrevendo transforms em seus consumidores; nenhuma variável de scroll nova é herdada por uma seção inteira. A barra dos destaques usa `scaleX`. Foram removidos os grandes blobs com blur da Home e os backdrops do terminal, Navbar e Dock.
 
 As novas entradas e o parallax da Home respeitam movimento reduzido. `MotionConfig` aplica a preferência às animações Framer Motion; as cenas medidas conservam seus próprios fallbacks. As interações existentes, incluindo a timeline e os carrosséis DOM 3D, continuam disponíveis.
 

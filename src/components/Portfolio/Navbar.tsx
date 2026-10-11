@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useProjectFocus } from '../../context/ProjectFocusContext';
 import MobileMenu from './NavBar/MobileMenu';
 
 export interface NavbarProps {
@@ -21,6 +22,7 @@ export interface NavbarProps {
  * 6. Responsividade: menu deslizante para dispositivos móveis
  */
 export default function Navbar({ isLoaded = true }: NavbarProps) {
+    const projectFocus = useProjectFocus();
     const { lang, setLang, t } = useLanguage();
     const { palette, palettes, setPalette } = useTheme();
 
@@ -186,9 +188,9 @@ export default function Navbar({ isLoaded = true }: NavbarProps) {
 
     return (
         <motion.header
-            inert={!isLoaded || !visible}
+            inert={!isLoaded || (!visible && !projectFocus)}
             initial={{ y: -12, opacity: 0 }}
-            animate={isLoaded ? (visible ? { y: 0, opacity: 1 } : { y: -80, opacity: 0 }) : { y: -12, opacity: 0 }}
+            animate={isLoaded ? ((visible || projectFocus) ? { y: 0, opacity: 1 } : { y: -80, opacity: 0 }) : { y: -12, opacity: 0 }}
             transition={{
                 type: 'spring',
                 stiffness: 260,

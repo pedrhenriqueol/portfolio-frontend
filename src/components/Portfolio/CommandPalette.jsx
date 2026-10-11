@@ -1,5 +1,6 @@
+import { useProjectFocus } from '../../context/ProjectFocusContext';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -9,6 +10,10 @@ const scrollTo = (id) => {
 };
 
 export default function CommandPalette() {
+    const projectFocus = useProjectFocus();
+    const reducedMotion = useReducedMotion();
+    const [launcherFocused, setLauncherFocused] = useState(false);
+    const launcherHidden = projectFocus && !launcherFocused;
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState(0);
@@ -270,6 +275,12 @@ export default function CommandPalette() {
         <>
             {/* Botão de Dica Flutuante Desktop */}
             <button
+                inert={launcherHidden}
+                onFocus={() => setLauncherFocused(true)}
+                onBlur={() => setLauncherFocused(false)}
+                style={{ opacity: launcherHidden ? 0 : 1, pointerEvents: launcherHidden ? 'none' : undefined,
+                    translate: launcherHidden ? '0 8px' : '0 0',
+                    transition: reducedMotion ? 'none' : 'opacity 450ms ease, translate 450ms ease' }}
                 onClick={() => setOpen(true)}
                 className="hidden lg:flex fixed bottom-6 right-6 z-[9990] items-center gap-2 bg-darker/90 border border-primary/25 text-primary text-[11px] tracking-widest uppercase px-4 py-2.5 rounded-full backdrop-blur-sm shadow-xl hover:border-accent/50 hover:text-accent transition-all duration-200 group cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-hidden"
                 aria-label="Abrir command palette"

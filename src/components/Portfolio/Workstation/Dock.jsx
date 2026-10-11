@@ -1,5 +1,6 @@
+import { useProjectFocus } from '../../../context/ProjectFocusContext';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 import { useLanguage } from '../../../context/LanguageContext';
 import { isMuted, toggleMute, playMechanicalClick } from '../../../lib/sound';
@@ -76,6 +77,10 @@ export default function Dock({
     onToggleTelemetry, 
     isTelemetryOpen 
 }) {
+    const projectFocus = useProjectFocus();
+    const reducedMotion = useReducedMotion();
+    const [launcherFocused, setLauncherFocused] = useState(false);
+    const hidden = projectFocus && !launcherFocused;
     const { palette, setPalette, palettes } = useTheme();
     const { lang } = useLanguage();
     const [mobileExpanded, setMobileExpanded] = useState(false);
@@ -191,12 +196,23 @@ export default function Dock({
     return (
         <>
             {/* ── Desktop Dock (Fixed bottom-center) ── */}
+            <div
+                inert={hidden}
+                onFocusCapture={() => setLauncherFocused(true)}
+                onBlurCapture={event => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) setLauncherFocused(false);
+                }}
+                className="hidden lg:block fixed bottom-6 left-1/2 z-[9980]"
+                style={{ opacity: hidden ? 0 : 1, pointerEvents: hidden ? 'none' : undefined,
+                    translate: hidden ? '-50% 8px' : '-50% 0',
+                    transition: reducedMotion ? 'none' : 'opacity 450ms ease, translate 450ms ease' }}
+            >
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transform: 'translateZ(0)' }}
-                className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[9980] items-center gap-1.5 px-4 py-2 portfolio-toolbar border border-white/10 rounded-full  shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+                className="flex items-center gap-1.5 px-4 py-2 portfolio-toolbar border border-white/10 rounded-full  shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
             >
                 {dockItems.map((item, idx) => (
                     <DockButton
@@ -207,6 +223,7 @@ export default function Dock({
                     />
                 ))}
             </motion.div>
+            </div>
 
             {/* ── Mobile Floating Action Button ── */}
             <div className="lg:hidden fixed bottom-5 right-5 z-[9980]">

@@ -1,5 +1,5 @@
-import Reveal from '../Common/Reveal';
-import { ChapterHeading } from '../Common/ScrollChapter';
+import { useProjectPresentation } from '../../../hooks/useProjectPresentation';
+import '../projects-focus.css';
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useVelocity, useReducedMotion } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
@@ -156,6 +156,7 @@ interface CylindricalCardProps {
     smoothProgress: any;
     onSelect: (project: FlagshipProject) => void;
     onCardFocus: (index: number) => void;
+    presenting: boolean;
     lang?: string;
 }
 
@@ -170,10 +171,18 @@ const CylindricalCard = memo(function CylindricalCard({
     smoothProgress,
     onSelect,
     onCardFocus,
+    presenting,
     lang = 'pt',
 }: CylindricalCardProps) {
     const isCurrent = index === activeIndex;
     const reducedMotion = useReducedMotion();
+    const cardRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        // Keep keyboard navigation in the gallery when wheel movement retires a card.
+        if (!isCurrent && cardRef.current?.contains(document.activeElement)) {
+            cardRef.current.closest<HTMLElement>('section')?.focus({ preventScroll: true });
+        }
+    }, [isCurrent]);
 
     // ── 1. Gestão Estrita de Z-Index & Empilhamento ──
     // Card ativo tem prioridade máxima (50) para nunca sofrer interceptação de cards laterais
@@ -202,22 +211,23 @@ const CylindricalCard = memo(function CylindricalCard({
         <motion.div
             style={{
                 translateX,
-                rotateY,
-                translateZ,
-                scale,
-                opacity,
+                rotateY: presenting ? 0 : rotateY,
+                translateZ: presenting ? 0 : translateZ,
+                scale: presenting ? 1 : scale,
+                opacity: presenting ? 1 : opacity,
                 zIndex,
                 isolation: 'isolate',
-                transformStyle: 'preserve-3d',
+                transformStyle: presenting ? 'flat' : 'preserve-3d',
                 transformOrigin: '50% 50%',
             }}
             onClick={handleCardContainerClick}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[650px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
+            className={`project-focus-card absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[650px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
                 isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
             }`}
         >
             {/* Card Tridimensional Principal em Escala Monumental */}
             <div
+                ref={cardRef}
                 inert={!isCurrent}
                 className={`portfolio-surface portfolio-card-hover w-full h-full overflow-hidden flex flex-col md:flex-row relative group transition-colors duration-300 ${
                     isCurrent
@@ -371,6 +381,7 @@ interface Cylindrical3DShowcaseProps {
  */
 export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }: Cylindrical3DShowcaseProps) {
     const { lang = 'pt' } = useLanguage();
+    const reducedMotion = useReducedMotion();
     const flagshipItems = FLAGSHIP_CONFIGS_I18N[lang] || FLAGSHIP_CONFIGS;
     const [activeIndex, setActiveIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -383,6 +394,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
         damping: 26,
         mass: 0.5,
     });
+    const cardProgress = reducedMotion ? progress : smoothProgress;
 
     // Velocity Skew nos eixos Z e X (inclinação orgânica proporcional à velocidade do arraste)
     const progressVelocity = useVelocity(smoothProgress);
@@ -396,30 +408,37 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     const startProgressRef = useRef(0);
     const lastXRef = useRef(0);
     const lastTimeRef = useRef(0);
-    const velocityTrackerRef = useRef(0);
-    const animationFrameRef = useRef<number | null>(null);
     const velocityRef = useRef(0);
 
     const totalSlides = flagshipItems.length;
+    const { presenting, navigatePresentation } = useProjectPresentation(sectionRef, progress, isDraggingRef, totalSlides, lang);
+    const countProgress = useTransform(cardProgress, (value: number) => (value + 1) / totalSlides);
 
     // Atualiza o estado visual do índice ativo conforme o progresso da mola (apenas quando visível)
     useEffect(() => {
         if (!isInView) return;
-        const unsubscribe = smoothProgress.on('change', (v: number) => {
+        const unsubscribe = cardProgress.on('change', (v: number) => {
             const rounded = Math.round(v);
             if (rounded >= 0 && rounded < totalSlides && rounded !== activeIndex) {
                 setActiveIndex(rounded);
             }
         });
         return () => unsubscribe();
-    }, [smoothProgress, activeIndex, totalSlides, isInView]);
+    }, [cardProgress, activeIndex, totalSlides, isInView]);
 
     const navigateTo = useCallback((targetIndex: number) => {
         const clamped = Math.max(0, Math.min(totalSlides - 1, targetIndex));
-        progress.set(clamped);
-        setActiveIndex(clamped);
+        if (!navigatePresentation(clamped)) {
+            progress.set(clamped);
+            setActiveIndex(clamped);
+        }
         playTabSwitch();
-    }, [progress, totalSlides]);
+    }, [progress, totalSlides, navigatePresentation]);
+
+    const handleCardFocus = useCallback((index: number) => {
+        // A drag can end over the retiring card; its synthetic click must not undo the snap.
+        if (!hasDraggedRef.current) navigateTo(index);
+    }, [navigateTo]);
 
     const handlePrev = useCallback(() => {
         const current = Math.round(progress.get());
@@ -436,6 +455,8 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     // ── Gestão de Arraste com Inércia & Momentum (Desativada quando fora do viewport) ──
     const handlePointerDown = (e: React.PointerEvent) => {
         if (!isInView) return;
+        hasDraggedRef.current = false;
+        if ((e.target as HTMLElement).closest('button, a, input')) return;
         if (e.button !== undefined && e.button !== 0) return;
         isDraggingRef.current = true;
         hasDraggedRef.current = false;
@@ -486,9 +507,7 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
         let targetIndex = Math.round(currentP - v * 0.22);
         targetIndex = Math.max(0, Math.min(totalSlides - 1, targetIndex));
 
-        progress.set(targetIndex);
-        setActiveIndex(targetIndex);
-        playTabSwitch();
+        navigateTo(targetIndex);
     };
 
     const handleInspect = (config: FlagshipProject) => {
@@ -503,8 +522,10 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
     // Navegação por teclado acessível
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowLeft') {
+            e.preventDefault();
             handlePrev();
         } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
             handleNext();
         }
     };
@@ -514,175 +535,72 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             ref={sectionRef}
             id="projetos-destaque"
             tabIndex={0}
+            aria-labelledby="featured-projects-heading"
             onKeyDown={handleKeyDown}
-            style={{
-                isolation: 'isolate',
-                transformStyle: 'preserve-3d',
-            }}
-            className="py-24 md:py-36 bg-transparent relative overflow-hidden focus:outline-none"
+            className="project-focus-track bg-transparent focus:outline-none"
         >
-
-            {/* Iluminação de fundo cinemática — disco volumétrico de profundidade sem cortes */}
-            <div className="absolute inset-0 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 50%, rgba(255, 255, 255, 0.08) 0%, rgba(217, 119, 87, 0.05) 35%, transparent 70%)' }} />
-            <div className="absolute inset-0 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse 85% 65% at 50% 50%, rgba(56, 189, 248, 0.05) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 75%)' }} />
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                
-                {/* ── Header da Seção com Tipografia Nítida & Subtítulo Sóbrio ── */}
-                <ChapterHeading className="mb-8">
-                <Reveal>
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="project-focus-frame">
+            <div className="project-focus-layout">
+                <header className="project-focus-header">
                     <div>
-                        <span className="portfolio-eyebrow block mb-3">
-                            {lang === 'en'
-                                ? '// 04. SYSTEMS ARCHITECTURE & 3D PROJECTS'
-                                : lang === 'es'
-                                ? '// 04. ARQUITECTURA DE SISTEMAS Y PROYECTOS 3D'
-                                : '// 04. ARQUITETURA DE SISTEMAS & PROJETOS 3D'}
+                        <span className="portfolio-eyebrow">
+                            {lang === 'en' ? '// 04. SELECTED WORK' : lang === 'es' ? '// 04. PROYECTOS SELECCIONADOS' : '// 04. PROJETOS SELECIONADOS'}
                         </span>
-                        <h2 className="portfolio-title">
-                            {lang === 'en'
-                                ? 'Production Systems & Architectures'
-                                : lang === 'es'
-                                ? 'Sistemas y Arquitecturas en Producción'
-                                : 'Sistemas & Arquiteturas em Produção'}
+                        <h2 id="featured-projects-heading" className="portfolio-title">
+                            {lang === 'en' ? <>Featured <em>projects.</em></> : lang === 'es' ? <>Proyectos <em>destacados.</em></> : <>Projetos em <em>destaque.</em></>}
                         </h2>
-                        <p className="portfolio-lede max-w-2xl mt-4">
-                            {lang === 'en'
-                                ? 'Mission-critical enterprise systems engineered for high concurrency, accounting idempotency, and predictive telemetry.'
-                                : lang === 'es'
-                                ? 'Sistemas corporativos de misión crítica desarrollados con enfoque en concurrencia, idempotencia contable y telemetría predictiva.'
-                                : 'Sistemas corporativos de missão crítica desenvolvidos com foco em concorrência, idempotência contábil e telemetria preditiva.'}
-                        </p>
                     </div>
-
-                    {/* Controles de Navegação & Dica de Arraste */}
-                    <div className="flex items-center gap-4 shrink-0">
-                        <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-primary/70 bg-darker/90 px-3.5 py-1.5 rounded-full border border-white/10 pointer-events-none">
-                            <i aria-hidden="true" className="fas fa-arrows-alt-h text-accent text-xs" />
-                            <span>
-                                {lang === 'en'
-                                    ? 'Drag to rotate 3D carousel'
-                                    : lang === 'es'
-                                    ? 'Arrastra para girar el carrusel 3D'
-                                    : 'Arraste para girar a esteira 3D'}
-                            </span>
-                        </div>
-
-                        {/* Botões Magnéticos de Navegação */}
-                        <div className="flex items-center gap-2">
-                            <MagneticButton
-                                onClick={handlePrev}
-                                aria-label={lang === 'en' ? 'Previous Project' : 'Projeto Anterior'}
-                                data-cursor-morph="true"
-                                className="portfolio-control w-10 h-10 transition-colors"
-                            >
-                                <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
-                            </MagneticButton>
-                            <MagneticButton
-                                onClick={handleNext}
-                                aria-label={lang === 'en' ? 'Next Project' : 'Próximo Projeto'}
-                                data-cursor-morph="true"
-                                className="portfolio-control w-10 h-10 transition-colors"
-                            >
-                                <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
-                            </MagneticButton>
-                        </div>
+                    <div className="project-focus-count" aria-label={lang === 'en' ? 'Current project' : lang === 'es' ? 'Proyecto actual' : 'Projeto atual'}>
+                        <span aria-live="polite"><strong>{String(activeIndex + 1).padStart(2, '0')}</strong> / {String(totalSlides).padStart(2, '0')}</span>
+                        <div aria-hidden="true"><motion.div style={{ scaleX: countProgress }} /></div>
                     </div>
-                </div>
-                </Reveal>
-                </ChapterHeading>
+                </header>
 
-                {/* ── Seletor de Abas Superior Sincronizado com layoutId ── */}
-                <div className="portfolio-segmented flex items-center gap-2 mb-10 overflow-x-auto scrollbar-none w-fit max-w-full">
-                    {flagshipItems.map((item, idx) => {
-                        const isActive = idx === activeIndex;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => navigateTo(idx)}
-                                data-cursor-morph="true"
-                                aria-pressed={isActive}
-                                className={`relative px-4 py-2.5 rounded-xl text-xs font-mono transition-colors flex items-center gap-2.5 cursor-pointer shrink-0 border ${
-                                    isActive
-                                        ? 'text-secondary font-bold border-accent/60'
-                                        : 'text-primary/70 border-white/10 hover:text-white hover:border-white/20'
-                                }`}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="monumentalPillActive"
-                                        className="absolute inset-0 bg-accent/10 rounded-[10px] border border-accent/25"
-                                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                                    />
-                                )}
-                                <span className={`relative z-10 w-2 h-2 rounded-full ${isActive ? 'bg-accent' : 'bg-white/25'}`} />
-                                <span className="relative z-10">{item.stepLabel}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* ── Viewport da Esteira Cilíndrica 3D em Escala Monumental ── */}
-                <Reveal delay={.08}>
+                <div className="project-focus-gallery">
                 <div
                     ref={containerRef}
                     onPointerDown={handlePointerDown}
-                    style={{
-                        perspective: '1400px',
-                        perspectiveOrigin: '50% 50%',
-                        isolation: 'isolate',
-                        transformStyle: 'preserve-3d',
-                    }}
-                    className="w-full max-w-6xl mx-auto min-h-[690px] sm:min-h-[550px] lg:min-h-[620px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
+                    style={{ perspective: presenting ? undefined : '1400px', perspectiveOrigin: '50% 50%', isolation: 'isolate', transformStyle: presenting ? 'flat' : 'preserve-3d' }}
+                    className="project-focus-stage w-full mx-auto min-h-[690px] sm:min-h-[550px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
                 >
-                    {/* Track central 3D com Velocity Skew nos eixos Z e X */}
                     <motion.div
-                        style={{
-                            rotateZ: velocityRotateZ,
-                            skewX: velocitySkewX,
-                            transformStyle: 'preserve-3d',
-                        }}
-                        className="relative w-full h-full min-h-[650px] sm:min-h-[500px] lg:min-h-[520px] will-change-transform"
+                        style={{ rotateZ: presenting || reducedMotion ? 0 : velocityRotateZ, skewX: presenting || reducedMotion ? 0 : velocitySkewX, transformStyle: presenting ? 'flat' : 'preserve-3d' }}
+                        className="relative w-full h-full min-h-[650px] sm:min-h-[500px] lg:min-h-[520px]"
                     >
                         {flagshipItems.map((project, idx) => (
-                            <CylindricalCard
-                                key={project.id}
-                                project={project}
-                                index={idx}
-                                activeIndex={activeIndex}
-                                smoothProgress={smoothProgress}
-                                onSelect={handleInspect}
-                                onCardFocus={navigateTo}
-                                lang={lang}
-                            />
+                            <CylindricalCard key={project.id} project={project} index={idx} activeIndex={activeIndex}
+                                smoothProgress={cardProgress} onSelect={handleInspect} onCardFocus={handleCardFocus} lang={lang} presenting={presenting} />
                         ))}
                     </motion.div>
                 </div>
-
-                </Reveal>
-
-                <div className="mt-6 h-px w-full bg-white/10" aria-hidden="true">
-                    <div className="h-full w-full origin-left bg-accent/50 transition-transform duration-300 motion-reduce:transition-none" style={{ transform: `scaleX(${(activeIndex + 1) / totalSlides})` }} />
                 </div>
 
-                {/* Footer Minimalista de Status */}
-                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-primary/60 gap-2">
-                    <span>
-                        {lang === 'en'
-                            ? 'Explore the selected project or use the arrows to continue'
-                            : lang === 'es'
-                            ? 'Explora el proyecto seleccionado o usa las flechas para continuar'
-                            : 'Explore o projeto selecionado ou use as setas para continuar'}
-                    </span>
-                    <span>
-                        {lang === 'en'
-                            ? `Continuous navigation by drag, tabs & keyboard • ${activeIndex + 1} of ${totalSlides}`
-                            : lang === 'es'
-                            ? `Navegación continua por arrastre, pestañas y teclado • ${activeIndex + 1} de ${totalSlides}`
-                            : `Navegação contínua por arraste, abas e teclado • ${activeIndex + 1} de ${totalSlides}`}
-                    </span>
+                <div className="project-focus-controls">
+                    <div className="project-focus-tabs scrollbar-none" aria-label={lang === 'en' ? 'Featured projects' : lang === 'es' ? 'Proyectos destacados' : 'Projetos em destaque'}>
+                        {flagshipItems.map((item, idx) => (
+                            <button key={item.id} onClick={() => navigateTo(idx)} aria-pressed={idx === activeIndex}
+                                className="project-focus-tab cursor-pointer" data-cursor-morph="true">
+                                {item.stepLabel}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <MagneticButton onClick={handlePrev} aria-label={lang === 'en' ? 'Previous Project' : lang === 'es' ? 'Proyecto anterior' : 'Projeto Anterior'}
+                            data-cursor-morph="true" className="portfolio-control w-10 h-10 transition-colors">
+                            <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
+                        </MagneticButton>
+                        <MagneticButton onClick={handleNext} aria-label={lang === 'en' ? 'Next Project' : lang === 'es' ? 'Siguiente proyecto' : 'Próximo Projeto'}
+                            data-cursor-morph="true" className="portfolio-control w-10 h-10 transition-colors">
+                            <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
+                        </MagneticButton>
+                    </div>
                 </div>
+                <p className="project-focus-cue">
+                    {presenting
+                        ? (lang === 'en' ? 'Scroll to explore · or use the arrows' : lang === 'es' ? 'Desplázate para explorar · o usa las flechas' : 'Role para explorar · ou use as setas')
+                        : (lang === 'en' ? 'Drag to explore · or use the arrows' : lang === 'es' ? 'Arrastra para explorar · o usa las flechas' : 'Arraste para explorar · ou use as setas')}
+                </p>
+            </div>
             </div>
         </section>
     );

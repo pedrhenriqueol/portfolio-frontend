@@ -159,7 +159,7 @@ export default function App() {
                         <AboutExperienceStory experiences={EXPERIENCES} isLoaded={isLoaded} />
                     </ScrollChapter>
                     <ScrollChapter opening><Skills skills={SKILLS} /></ScrollChapter>
-                    <ScrollChapter><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
+                    <ScrollChapter opening><Projects projects={PROJECTS} onSelectProject={setSelectedProject} /></ScrollChapter>
                     <ScrollChapter><Contact /></ScrollChapter>
                 </main>
 

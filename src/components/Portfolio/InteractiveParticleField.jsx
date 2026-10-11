@@ -1,3 +1,5 @@
+import { useProjectFocus } from '../../context/ProjectFocusContext';
+import { useReducedMotion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
 /**
@@ -11,6 +13,14 @@ import { useEffect, useRef } from 'react';
  */
 export default function InteractiveParticleField() {
     const canvasRef = useRef(null);
+    const projectFocus = useProjectFocus();
+    const reducedMotion = useReducedMotion();
+    const focusRef = useRef(projectFocus);
+    const syncFocusRef = useRef(null);
+    useEffect(() => {
+        focusRef.current = projectFocus;
+        syncFocusRef.current?.();
+    }, [projectFocus]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -117,12 +127,13 @@ export default function InteractiveParticleField() {
                 isSleeping = false;
                 idleFrames = 0;
             }
-            if (!animationFrameId && isDocVisible) {
+            if (!animationFrameId && isDocVisible && !focusRef.current) {
                 animationFrameId = requestAnimationFrame(render);
             }
         };
 
         const handleMouseMove = (e) => {
+            if (focusRef.current || !isDocVisible) return;
             if (!cachedRect || cachedRect.width === 0) {
                 updateRect();
             }
@@ -157,6 +168,7 @@ export default function InteractiveParticleField() {
         };
 
         const handleMouseLeave = () => {
+            if (focusRef.current || !isDocVisible) return;
             mouse.x = -1000;
             mouse.y = -1000;
             mouse.speed = 0;
@@ -166,11 +178,8 @@ export default function InteractiveParticleField() {
 
         const handleVisibilityChange = () => {
             isDocVisible = !document.hidden;
-            if (isDocVisible) {
-                wakeUp();
-                if (!animationFrameId) {
-                    animationFrameId = requestAnimationFrame(render);
-                }
+            if (isDocVisible && !focusRef.current) {
+                syncFocusRef.current?.();
             } else if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
@@ -178,7 +187,7 @@ export default function InteractiveParticleField() {
         };
 
         const render = () => {
-            if (!isDocVisible) {
+            if (!isDocVisible || focusRef.current) {
                 animationFrameId = null;
                 return;
             }
@@ -291,7 +300,18 @@ export default function InteractiveParticleField() {
             animationFrameId = requestAnimationFrame(render);
         };
 
+        let resizePending = false;
+        syncFocusRef.current = () => {
+            if (focusRef.current) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            } else if (isDocVisible) {
+                if (resizePending) { handleResize(); resizePending = false; }
+                wakeUp();
+            }
+        };
         const handleWindowResize = () => {
+            if (focusRef.current || !isDocVisible) { resizePending = true; return; }
             handleResize();
             wakeUp();
         };
@@ -306,6 +326,7 @@ export default function InteractiveParticleField() {
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
+            syncFocusRef.current = null;
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             window.removeEventListener('resize', handleWindowResize);
             window.removeEventListener('mousemove', handleMouseMove);
@@ -318,6 +339,8 @@ export default function InteractiveParticleField() {
         <canvas
             ref={canvasRef}
             aria-hidden="true"
+            style={{ opacity: projectFocus ? 0 : 1,
+                transition: reducedMotion ? 'none' : 'opacity 450ms ease' }}
             className="fixed top-0 left-0 pointer-events-none z-0 will-change-transform"
         />
     );
