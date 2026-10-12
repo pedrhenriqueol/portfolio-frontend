@@ -103,11 +103,32 @@ export interface ProjectDetails {
     architecture?: ArchitectureLayer[];
 }
 
+export interface ProjectArtworkText {
+    pt: string;
+    en: string;
+    es: string;
+}
+
+export interface ProjectArtworkNode {
+    label: ProjectArtworkText;
+    technology: string;
+}
+
+/** A schematic representation of the documented architecture, never a product screenshot. */
+export interface ProjectArchitecturePreview {
+    kind: 'architecture';
+    composition: 'stack' | 'branch' | 'migration' | 'pipeline' | 'request' | 'entropy';
+    title: ProjectArtworkText;
+    caption: string;
+    nodes: ProjectArtworkNode[];
+}
+
 export interface Project {
     id: string | number;
     title: string;
     description?: string;
     image_url?: string;
+    preview?: ProjectArchitecturePreview;
     repo_link?: string | null;
     demo_link?: string | null;
     tags?: string[];

@@ -1,0 +1,12 @@
+.project-catalogue-visual { background: var(--portfolio-surface); }
+.project-catalogue-copy { font-family: var(--font-sans); }
+.project-catalogue-category { display: block; margin-bottom: 1rem; color: var(--portfolio-muted); font-size: .75rem; line-height: 1.5; }
+.project-catalogue-title { margin: 0 0 1rem; color: var(--portfolio-ink); font: 400 clamp(1.65rem, 2.1vw, 2rem)/1.1 var(--font-serif); letter-spacing: -.025em; text-wrap: balance; }
+.project-catalogue-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; margin: 0 0 1.25rem; color: var(--portfolio-muted); font-size: .9375rem; line-height: 1.7; }
+.project-catalogue-stack { color: color-mix(in srgb, var(--color-accent) 28%, var(--portfolio-muted)); font-size: .75rem; line-height: 1.6; }
+.project-catalogue-private { color: var(--portfolio-muted); font: 400 .75rem/1.5 var(--font-sans); }
+@media (max-width: 767px) {
+    .project-catalogue-category { margin-bottom: .65rem; }
+    .project-catalogue-title { margin-bottom: .75rem; }
+    .project-catalogue-description { font-size: .875rem; margin-bottom: .85rem; }
+}

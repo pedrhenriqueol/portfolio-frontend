@@ -1,5 +1,9 @@
-import React, { useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
+import JourneyMigrationDiagram from './JourneyMigrationDiagram';
+import './journey-record.css';
 
 export interface JourneyMilestoneArchive {
     id: string;
@@ -7,18 +11,15 @@ export interface JourneyMilestoneArchive {
     company: string;
     role: string;
     archiveTitle: string;
-    archiveSubtitle: string;
-    image: string;
-    badge: string;
+    image?: string;
+    media?: 'process';
+    mediaCaption: string;
     date: string;
     location: string;
     description: string;
-    telemetry: {
-        label: string;
-        value: string;
-        highlight?: boolean;
-    }[];
-    tags: string[];
+    contributions: string[];
+    results: { label: string; value: string }[];
+    technologies: string[];
 }
 
 interface JourneyPhotoModalProps {
@@ -27,177 +28,158 @@ interface JourneyPhotoModalProps {
     milestone: JourneyMilestoneArchive | null;
 }
 
-export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({
-    isOpen,
-    onClose,
-    milestone,
-}) => {
-    // Tecla ESC para fechar
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+const COPY = {
+    pt: { journey: 'Trajetória', close: 'Fechar registro', content: 'Conteúdo do registro', context: 'Contexto', contributions: 'Minha contribuição', education: 'Aprendizado na prática', results: 'Resultados', technologies: 'Ferramentas e tecnologias' },
+    en: { journey: 'Journey', close: 'Close record', content: 'Record content', context: 'Context', contributions: 'My contribution', education: 'Hands-on learning', results: 'Results', technologies: 'Tools and technologies' },
+    es: { journey: 'Trayectoria', close: 'Cerrar registro', content: 'Contenido del registro', context: 'Contexto', contributions: 'Mi contribución', education: 'Aprendizaje práctico', results: 'Resultados', technologies: 'Herramientas y tecnologías' },
+};
+
+/** A single reading surface; the timeline remains stationary behind its portal. */
+function JourneyArchiveDialog({ milestone, onClose }: { milestone: JourneyMilestoneArchive; onClose: () => void }) {
+    const { lang } = useLanguage();
+    const copy = COPY[lang as keyof typeof COPY] || COPY.pt;
+    const reducedMotion = useReducedMotion();
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLElement>(null);
+    const closeRef = useRef<HTMLButtonElement>(null);
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
+    const titleId = `${milestone.id}-title`;
+    const descriptionId = `${milestone.id}-description`;
 
     useEffect(() => {
-        if (isOpen) {
-            window.addEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const overflow = document.body.style.overflow;
+        const paddingRight = document.body.style.paddingRight;
+        const scrollbar = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+        const zoom = Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+        const inertSiblings = Array.from(document.body.children)
+            .filter((node): node is HTMLElement => node instanceof HTMLElement && node !== overlayRef.current)
+            .map(node => ({ node, inert: node.inert }));
 
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = '';
+        inertSiblings.forEach(({ node }) => { node.inert = true; });
+        if (scrollbar) document.body.style.paddingRight = `${Number.parseFloat(getComputedStyle(document.body).paddingRight) + scrollbar / zoom}px`;
+        document.body.style.overflow = 'hidden';
+        closeRef.current?.focus({ preventScroll: true });
+
+        const focusable = () => Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])') || [])
+            .filter(node => !node.hasAttribute('disabled') && !node.closest('[inert]') && node.getClientRects().length > 0);
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                onCloseRef.current();
+            } else if (event.key === 'Tab') {
+                const items = focusable();
+                const first = items[0];
+                const last = items[items.length - 1];
+                if (!first) {
+                    event.preventDefault();
+                    dialogRef.current?.focus({ preventScroll: true });
+                } else if (event.shiftKey && (document.activeElement === first || !dialogRef.current?.contains(document.activeElement))) {
+                    event.preventDefault();
+                    last.focus({ preventScroll: true });
+                } else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current?.contains(document.activeElement))) {
+                    event.preventDefault();
+                    first.focus({ preventScroll: true });
+                }
+            }
         };
-    }, [isOpen, handleKeyDown]);
+        const handleFocus = (event: FocusEvent) => {
+            if (event.target instanceof Node && !dialogRef.current?.contains(event.target)) closeRef.current?.focus({ preventScroll: true });
+        };
+        document.addEventListener('keydown', handleKeyDown, true);
+        document.addEventListener('focusin', handleFocus);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown, true);
+            document.removeEventListener('focusin', handleFocus);
+            inertSiblings.forEach(({ node, inert }) => { node.inert = inert; });
+            document.body.style.overflow = overflow;
+            document.body.style.paddingRight = paddingRight;
+            if (previousFocus?.isConnected && !previousFocus.closest('[inert]')) previousFocus.focus({ preventScroll: true });
+        };
+    }, []);
 
     return (
-        <AnimatePresence>
-            {isOpen && milestone && (
-                <div data-lenis-prevent className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                    {/* Backdrop com desfoque e escurecimento */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-black/85 backdrop-blur-md cursor-pointer"
-                    />
+        <motion.div
+            ref={overlayRef}
+            data-lenis-prevent
+            className="journey-record-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : .2 }}
+            onClick={event => { if (event.target === event.currentTarget) onClose(); }}
+        >
+            <motion.article
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={descriptionId}
+                tabIndex={-1}
+                className="journey-record"
+                initial={reducedMotion ? false : { opacity: 0, y: 24, scale: .98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                transition={{ duration: reducedMotion ? 0 : .3, ease: [.22, 1, .36, 1] }}
+            >
+                <header className="journey-record-header">
+                    <span className="journey-record-eyebrow">{copy.journey} <span aria-hidden="true">/</span> {milestone.year}</span>
+                    <button ref={closeRef} type="button" onClick={onClose} className="journey-record-close" aria-label={copy.close}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+                    </button>
+                </header>
 
-                    {/* Janela Modal estilo Arquivo Técnico */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.94, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.96, y: 15 }}
-                        transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-                        className="relative z-10 w-full max-w-4xl bg-gradient-to-b from-white/[0.05] via-darker/95 to-darker/95 border border-white/[0.08] border-t-white/20 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden my-auto backdrop-blur-sm"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Barra Superior da Janela */}
-                        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-white/10 bg-white/[0.02]">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
-                                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block" />
-                                    <span className="w-2.5 h-2.5 rounded-full bg-green-500/80 inline-block" />
-                                </div>
-                                <span className="h-4 w-[1px] bg-white/10 mx-1" />
-                                <div className="flex items-center gap-2 text-xs font-mono text-gray-300">
-                                    <i className="fas fa-folder-open text-accent" />
-                                    <span className="font-semibold text-white tracking-wide">
-                                        ARCHIVE // {milestone.year}
-                                    </span>
-                                    <span className="text-gray-500 hidden sm:inline">— {milestone.archiveTitle}</span>
-                                </div>
-                            </div>
+                <div className="journey-record-body" data-lenis-prevent role="region" aria-label={copy.content} tabIndex={0}>
+                    <div className="journey-record-intro">
+                        <p className="journey-record-company">{milestone.company}</p>
+                        <h2 id={titleId}>{milestone.role}</h2>
+                        <p className="journey-record-meta"><span>{milestone.date}</span><span>{milestone.location}</span></p>
+                    </div>
 
-                            {/* Botão Fechar com Atalho ESC */}
-                            <div className="flex items-center gap-2">
-                                <span className="hidden sm:inline text-[10px] font-mono text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                                    ESC
-                                </span>
-                                <button
-                                    onClick={onClose}
-                                    className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                                    aria-label="Fechar Arquivo"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
+                    <figure className={`journey-record-media${milestone.media === 'process' ? ' journey-record-media-process' : ''}`}>
+                        {milestone.media === 'process'
+                            ? <JourneyMigrationDiagram language={lang} />
+                            : <img src={milestone.image} alt={milestone.mediaCaption} className="journey-record-image" />}
+                        <figcaption>{milestone.mediaCaption}</figcaption>
+                    </figure>
+
+                    <div className="journey-record-context">
+                        <div>
+                            <h3>{copy.context}</h3>
+                            <p id={descriptionId}>{milestone.description}</p>
                         </div>
-
-                        {/* Corpo do Arquivo: Imagem / Snapshot + Telemetria */}
-                        <div className="p-5 sm:p-7 space-y-6 max-h-[80vh] overflow-y-auto">
-                            {/* Snapshot Visual com Moldura Técnica */}
-                            <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/50 shadow-inner group">
-                                <img
-                                    src={milestone.image}
-                                    alt={milestone.archiveTitle}
-                                    className="w-full h-64 sm:h-96 object-cover object-top transition-transform duration-500 group-hover:scale-[1.01]"
-                                    loading="lazy"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-
-                                {/* Badge Flutuante no Snapshot */}
-                                <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-                                    <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-darker/90 text-secondary border border-accent/40 backdrop-blur-md">
-                                        {milestone.badge}
-                                    </span>
-                                    <div className="flex items-center gap-2 text-[11px] font-mono text-gray-300 bg-darker/90 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
-                                        <i className="fas fa-calendar-alt text-accent" />
-                                        <span>{milestone.date}</span>
-                                        <span className="text-gray-500">•</span>
-                                        <i className="fas fa-map-marker-alt text-accent" />
-                                        <span>{milestone.location}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Informações Executivas do Marco */}
-                            <div>
-                                <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
-                                    <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
-                                        {milestone.archiveSubtitle}
-                                    </h3>
-                                    <span className="text-xs font-mono text-accent">
-                                        {milestone.company}
-                                    </span>
-                                </div>
-                                <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-sans">
-                                    {milestone.description}
-                                </p>
-                            </div>
-
-                            {/* Faixa de Telemetria Operacional */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                                {milestone.telemetry.map((item, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="p-3 rounded-xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/[0.08] border-t-white/15 hover:border-white/20 transition-colors shadow-sm"
-                                    >
-                                        <div className="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1">
-                                            {item.label}
-                                        </div>
-                                        <div className={`text-base sm:text-lg font-mono font-bold ${item.highlight ? 'text-secondary' : 'text-white'}`}>
-                                            {item.value}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Tags Técnicas de Validação */}
-                            <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
-                                {milestone.tags.map((tag, tIdx) => (
-                                    <span
-                                        key={tIdx}
-                                        className="text-xs font-mono px-3 py-1 rounded-md bg-white/[0.06] border border-white/[0.12] text-neutral-200"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
+                        <div>
+                            <h3>{milestone.year === '2024' ? copy.education : copy.contributions}</h3>
+                            <ul>{milestone.contributions.map(item => <li key={item}>{item}</li>)}</ul>
                         </div>
+                    </div>
 
-                        {/* Rodapé com Fechamento Rápido */}
-                        <div className="px-5 sm:px-7 py-4 border-t border-white/10 bg-white/[0.01] flex items-center justify-between text-xs font-mono text-neutral-400">
-                            <span>SISTEMA DE ARQUIVOS // REGISTRO TÉCNICO AUTÊNTICO</span>
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer font-sans text-xs font-medium"
-                            >
-                                Fechar Registro
-                            </button>
-                        </div>
-                    </motion.div>
+                    {milestone.results.length > 0 && (
+                        <section className="journey-record-results" aria-label={copy.results}>
+                            <h3>{copy.results}</h3>
+                            <dl>{milestone.results.map(item => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
+                        </section>
+                    )}
+
+                    <div className="journey-record-tools"><h3>{copy.technologies}</h3><p>{milestone.technologies.join(' · ')}</p></div>
                 </div>
-            )}
-        </AnimatePresence>
+            </motion.article>
+        </motion.div>
     );
-};
+}
+
+export const JourneyPhotoModal: React.FC<JourneyPhotoModalProps> = ({ isOpen, onClose, milestone }) => createPortal(
+    <AnimatePresence>
+        {isOpen && milestone && <JourneyArchiveDialog key={milestone.id} milestone={milestone} onClose={onClose} />}
+    </AnimatePresence>,
+    document.body,
+);
 
 export default JourneyPhotoModal;

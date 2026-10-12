@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { playTabSwitch, playMechanicalClick } from '../../lib/sound';
 import { Project, ApiContractData, TestOpsData } from '../../types/project';
+import './project-inspector.css';
 
 interface ProjectInspectorDrawerProps {
     project: Project;
@@ -869,6 +871,15 @@ class PasswordEngine:
 
 function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProps) {
     const { lang } = useLanguage();
+    const reducedMotion = useReducedMotion();
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const closeRef = useRef<HTMLButtonElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const runnerTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+    const dialogId = useId();
+    const tr = (pt: string, en: string, es = pt) => lang === 'en' ? en : lang === 'es' ? es : pt;
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [selectedEndpointIndex, setSelectedEndpointIndex] = useState(0);
 
@@ -914,20 +925,20 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
     // Construção estritamente dinâmica das abas (elimina 100% de abas vazias no DOM)
     const availableTabs = useMemo(() => {
         const tabs: Array<{ id: 'overview' | 'architecture' | 'contracts' | 'engineering'; label: string; icon: string }> = [
-            { id: 'overview', label: lang === 'en' ? 'Overview & Scope' : 'Visão Geral & Escopo', icon: 'fas fa-layer-group' },
+            { id: 'overview', label: lang === 'en' ? 'Overview' : lang === 'es' ? 'Resumen' : 'Resumo', icon: 'fas fa-layer-group' },
         ];
 
         // Aba de Arquitetura só é exibida se houver dados reais a apresentar
         if (hasArchitectureData) {
-            tabs.push({ id: 'architecture', label: lang === 'en' ? 'Architecture & Engineering' : 'Arquitetura & Engenharia', icon: 'fas fa-shield-alt' });
+            tabs.push({ id: 'architecture', label: lang === 'en' ? 'Architecture' : lang === 'es' ? 'Arquitectura' : 'Arquitetura', icon: 'fas fa-shield-alt' });
         }
 
         if (hasContracts) {
-            tabs.push({ id: 'contracts', label: lang === 'en' ? 'API Contracts' : 'Contratos de API', icon: 'fas fa-file-contract' });
+            tabs.push({ id: 'contracts', label: 'API', icon: 'fas fa-file-contract' });
         }
 
         if (hasEngineeringTests) {
-            tabs.push({ id: 'engineering', label: lang === 'en' ? 'Engineering & Tests' : 'Engenharia & Testes', icon: 'fas fa-vial' });
+            tabs.push({ id: 'engineering', label: lang === 'en' ? 'Tests' : lang === 'es' ? 'Pruebas' : 'Testes', icon: 'fas fa-vial' });
         }
 
         return tabs;
@@ -968,28 +979,31 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
     const showToast = useCallback((msg: string) => {
         playMechanicalClick();
         setToastMessage(msg);
-        setTimeout(() => setToastMessage(null), 2500);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setToastMessage(null), 2500);
     }, []);
 
     const copyToClipboard = useCallback((text: string, label: string) => {
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(text);
-            showToast(`${label} copiado com sucesso!`);
+            navigator.clipboard.writeText(text)
+                .then(() => showToast(lang === 'en' ? `${label} copied.` : lang === 'es' ? `${label} copiado.` : `${label} copiado.`))
+                .catch(() => showToast(lang === 'en' ? 'Clipboard is unavailable.' : lang === 'es' ? 'No se pudo copiar.' : 'Não foi possível copiar.'));
         }
-    }, [showToast]);
+    }, [showToast, lang]);
 
     // Copiar cURL da rota ativa
     const copyCurlCommand = useCallback(() => {
         if (!activeEndpoint) return;
         const headersStr = (activeEndpoint.headers || [])
-            .map((h: any) => `-H "${h.name}: ${h.value}"`)
+            .map(h => `-H "${h.name}: ${h.value}"`)
             .join(' ');
         const bodyStr = activeEndpoint.method !== 'GET' && activeEndpoint.requestBody && activeEndpoint.requestBody !== '{}'
             ? `-d '${activeEndpoint.requestBody.replace(/\n/g, '')}'`
             : '';
-        const curl = `curl -X ${activeEndpoint.method} "https://api.pedrohenrique.dev${activeEndpoint.route}" ${headersStr} ${bodyStr}`.trim();
+        const baseUrl = specs.apiContracts?.baseUrl?.replace(/\/$/, '') || '${BASE_URL}';
+        const curl = `curl -X ${activeEndpoint.method} "${baseUrl}${activeEndpoint.route}" ${headersStr} ${bodyStr}`.trim();
         copyToClipboard(curl, 'Comando cURL');
-    }, [activeEndpoint, copyToClipboard]);
+    }, [activeEndpoint, copyToClipboard, specs.apiContracts?.baseUrl]);
 
     // Disparar execução da bateria de testes com FSM determinística
     const runAssertionsSimulation = useCallback(() => {
@@ -1000,31 +1014,57 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
 
         let step = 0;
         const total = specs.engineeringTests.assertions.length;
-        const interval = setInterval(() => {
+        runnerTimer.current = setInterval(() => {
             step++;
             if (step < total) {
                 setActiveAssertionIndex(step);
             } else {
-                clearInterval(interval);
+                if (runnerTimer.current) clearInterval(runnerTimer.current);
+                runnerTimer.current = null;
                 setActiveAssertionIndex(null);
                 setRunnerState('COMPLETED');
-                showToast(lang === 'en' ? 'Assertion battery executed with 100% success!' : lang === 'es' ? '¡Batería de aserciones ejecutada con 100% de éxito!' : 'Bateria de asserções executada com 100% de sucesso!');
+                showToast(lang === 'en' ? 'Local demonstration completed.' : lang === 'es' ? 'Demostración local finalizada.' : 'Demonstração local concluída.');
             }
         }, 420);
     }, [runnerState, specs.engineeringTests, showToast, lang]);
 
-    // Navegação por teclado: ESC para fechar, setas para alternar estritamente entre as abas disponíveis
+    // Keep focus inside the dialog. Arrow navigation belongs to the tab list;
+    // code selection and other controls retain their usual keyboard behavior.
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             if (e.key === 'Escape') {
                 e.preventDefault();
+                e.stopPropagation();
                 onClose();
-            } else if (e.key === 'ArrowRight') {
+                return;
+            }
+            if (e.key === 'Tab') {
+                const controls = [...(dialogRef.current?.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
+                ) || [])].filter(node => node.tabIndex >= 0 && !node.closest('[inert]') && node.getClientRects().length > 0);
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                const active = document.activeElement;
+                if (!first || !last) { e.preventDefault(); return; }
+                if (!dialogRef.current?.contains(active) || (e.shiftKey ? active === first : active === last)) {
+                    e.preventDefault();
+                    (e.shiftKey ? last : first).focus();
+                }
+                return;
+            }
+            if (!(document.activeElement instanceof HTMLElement) || !document.activeElement.closest('[role="tablist"]')) return;
+            if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 playTabSwitch();
                 setActiveTab(curr => {
                     const idx = availableTabs.findIndex(t => t.id === curr);
                     const nextIdx = (idx + 1) % availableTabs.length;
+                    dialogRef.current?.querySelector<HTMLButtonElement>(`[data-inspector-tab="${availableTabs[nextIdx].id}"]`)?.focus();
                     return availableTabs[nextIdx].id;
                 });
             } else if (e.key === 'ArrowLeft') {
@@ -1033,648 +1073,258 @@ function ProjectInspectorDrawer({ project, onClose }: ProjectInspectorDrawerProp
                 setActiveTab(curr => {
                     const idx = availableTabs.findIndex(t => t.id === curr);
                     const prevIdx = (idx - 1 + availableTabs.length) % availableTabs.length;
+                    dialogRef.current?.querySelector<HTMLButtonElement>(`[data-inspector-tab="${availableTabs[prevIdx].id}"]`)?.focus();
                     return availableTabs[prevIdx].id;
                 });
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener('keydown', handleKeyDown, true);
+        return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [onClose, availableTabs]);
 
     // Bloqueio de scroll no body durante a exibição da gaveta
     useEffect(() => {
         const originalOverflow = document.body.style.overflow;
+        const originalPadding = document.body.style.paddingRight;
+        const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const scrollbar = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+        const zoom = Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+        const inertSiblings = Array.from(document.body.children)
+            .filter((node): node is HTMLElement => node instanceof HTMLElement && node !== overlayRef.current)
+            .map(node => ({ node, inert: node.inert }));
+        inertSiblings.forEach(({ node }) => { node.inert = true; });
+        if (scrollbar) document.body.style.paddingRight = `${Number.parseFloat(getComputedStyle(document.body).paddingRight) + scrollbar / zoom}px`;
         document.body.style.overflow = 'hidden';
+        closeRef.current?.focus({ preventScroll: true });
+        const handleFocus = (event: FocusEvent) => {
+            if (event.target instanceof Node && !dialogRef.current?.contains(event.target)) closeRef.current?.focus({ preventScroll: true });
+        };
+        document.addEventListener('focusin', handleFocus);
         return () => {
+            document.removeEventListener('focusin', handleFocus);
+            inertSiblings.forEach(({ node, inert }) => { node.inert = inert; });
             document.body.style.overflow = originalOverflow;
+            document.body.style.paddingRight = originalPadding;
+            if (toastTimer.current) clearTimeout(toastTimer.current);
+            if (runnerTimer.current) clearInterval(runnerTimer.current);
+            if (previousFocus?.isConnected && !previousFocus.closest('[inert]')) previousFocus.focus({ preventScroll: true });
         };
     }, []);
 
-    return (
-        <motion.div
-            key={`inspector-backdrop-${project.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[99998] bg-black/60 backdrop-blur-sm"
-            role="dialog"
-            aria-modal="true"
-        >
-            {/* Toast de Feedback Flutuante */}
-            <AnimatePresence mode="wait">
-                {toastMessage && (
-                    <motion.div
-                        key="inspector-toast"
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="fixed top-6 right-6 z-[100000] bg-darker/95 border border-accent/40 text-secondary text-xs font-mono px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-sm flex items-center gap-2"
-                    >
-                        <i className="fas fa-check-circle text-emerald-400 text-sm" />
-                        <span>{toastMessage}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+    useEffect(() => { if (contentRef.current) contentRef.current.scrollTop = 0; }, [activeTab]);
 
-            {/* Console Lateral DevTools (Linear & Stripe Inspired) */}
-            <motion.div
-                key={`inspector-drawer-${project.id}`}
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                onClick={(e) => e.stopPropagation()}
-                className="fixed top-0 right-0 bottom-0 z-[99999] w-full max-w-2xl bg-[#090b10] border-l border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden will-change-transform"
-            >
-                {/* ── A. Cabeçalho Fixo do Console de Engenharia ── */}
-                <header className="shrink-0 border-b border-white/10 bg-[#0c0e14]/95 backdrop-blur-sm px-6 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-                            <i className={`${specs.ecosystemIcon} text-accent text-sm`} />
-                        </div>
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <h2 className="text-base font-bold text-white tracking-tight truncate">
-                                    {project.title}
-                                </h2>
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span>{lang === 'en' ? specs.version.replace('Produção', 'Production') : specs.version}</span>
-                                </span>
-                            </div>
-                            <p className="text-xs text-primary/60 truncate font-mono">
-                                {lang === 'en' && specs.domain === 'Logística Portuária & ZPEs' ? 'Port Logistics & FTZ' : specs.domain}
-                            </p>
-                        </div>
+    const description = project.details?.fullDescription || project.description;
+    const layers = specs.layers?.length ? specs.layers : project.details?.architecture || [];
+    const panelMotion = { initial: { opacity: 0, y: reducedMotion ? 0 : 8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0 }, transition: { duration: reducedMotion ? 0 : .18 } };
+
+    return createPortal(
+        <motion.div key={`inspector-backdrop-${project.id}`} ref={overlayRef} data-lenis-prevent
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : .2 }} onClick={event => { if (event.target === event.currentTarget) onClose(); }} className="project-inspector-overlay">
+            <motion.div key={`inspector-drawer-${project.id}`} ref={dialogRef}
+                role="dialog" aria-modal="true" aria-labelledby={`${dialogId}-title`}
+                initial={{ x: reducedMotion ? 0 : 64, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+                exit={{ x: reducedMotion ? 0 : 48, opacity: 0 }} transition={{ duration: reducedMotion ? 0 : .3, ease: [.22, 1, .36, 1] }}
+                onClick={e => e.stopPropagation()} className="project-inspector">
+                <header className="inspector-header">
+                    <div>
+                        <span className="inspector-eyebrow">{tr('Estudo de projeto', 'Project case study', 'Estudio de proyecto')}</span>
+                        <h2 id={`${dialogId}-title`}>{project.title}</h2>
                     </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                        {/* Botão Copiar cURL condicional à presença real de contratos de API */}
-                        {hasContracts && activeEndpoint ? (
-                            <button
-                                onClick={copyCurlCommand}
-                                data-cursor-morph="true"
-                                title={lang === 'en' ? 'Copy test cURL command' : 'Copiar comando cURL de teste'}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-primary/80 hover:text-white text-xs font-mono transition-colors cursor-pointer"
-                            >
-                                <i className="fas fa-terminal text-[10px] text-accent" />
-                                <span className="hidden sm:inline">{lang === 'en' ? 'Copy cURL' : 'Copiar cURL'}</span>
-                            </button>
-                        ) : (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-primary/70 text-[10px] font-mono select-none">
-                                <i className="fas fa-shield-alt text-accent text-[9px]" />
-                                <span>{lang === 'en' ? 'Enterprise System' : lang === 'es' ? 'Sistema Corporativo' : 'Sistema Corporativo'}</span>
-                            </div>
-                        )}
-
-                        {/* Botão Fechar com Atalho ESC Visível */}
-                        <button
-                            onClick={onClose}
-                            data-cursor-morph="true"
-                            aria-label={lang === 'en' ? 'Close Details Drawer' : 'Fechar Gaveta de Detalhes'}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                            <i className="fas fa-times text-xs" />
-                            <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/40 border border-white/10 text-primary/60">
-                                ESC
-                            </kbd>
-                        </button>
-                    </div>
+                    <button ref={closeRef} type="button" onClick={onClose} className="inspector-close"
+                        aria-label={tr('Fechar detalhes', 'Close details', 'Cerrar detalles')} data-cursor-morph="true">
+                        <i className="fas fa-times" aria-hidden="true" /><kbd>Esc</kbd>
+                    </button>
                 </header>
 
-                {/* ── B. Navegação de Abas Dinâmica com layoutId ── */}
-                <nav className="shrink-0 border-b border-white/10 bg-[#090b10]/80 px-6 py-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
-                    {availableTabs.map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => {
-                                    playTabSwitch();
-                                    setActiveTab(tab.id);
-                                }}
-                                data-cursor-morph="true"
-                                className={`relative px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer shrink-0 ${
-                                    isActive
-                                        ? 'text-white font-bold'
-                                        : 'text-primary/70 hover:text-white hover:bg-white/5'
-                                }`}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeDrawerTab"
-                                        className="absolute inset-0 bg-accent/20 border border-accent/40 rounded-xl"
-                                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                                    />
-                                )}
-                                <i className={`${tab.icon} relative z-10 text-xs ${isActive ? 'text-accent' : 'text-primary/50'}`} />
-                                <span className="relative z-10">{tab.label}</span>
-                            </button>
-                        );
-                    })}
+                <nav className="inspector-tabs" role="tablist" aria-label={tr('Detalhes do projeto', 'Project details', 'Detalles del proyecto')}>
+                    {availableTabs.map(tab => <button key={tab.id} type="button" role="tab"
+                        id={`${dialogId}-tab-${tab.id}`} aria-controls={`${dialogId}-panel-${tab.id}`}
+                        aria-selected={activeTab === tab.id} tabIndex={activeTab === tab.id ? 0 : -1}
+                        data-inspector-tab={tab.id} data-cursor-morph="true"
+                        onClick={() => { playTabSwitch(); setActiveTab(tab.id); }}>{tab.label}</button>)}
                 </nav>
 
-                {/* ── C. Conteúdo Técnico Estruturado da Aba Ativa ── */}
-                <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+                <div ref={contentRef} className="inspector-scroll" data-lenis-prevent role="region"
+                    aria-label={tr('Conteúdo do projeto', 'Project content', 'Contenido del proyecto')} tabIndex={0}>
                     <AnimatePresence mode="wait">
-                        {activeTab === 'overview' && (
-                            <motion.div
-                                key="tab-overview"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                className="space-y-6"
-                            >
-                                {/* Cartão de Contexto de Engenharia (Grid 2x2) */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
-                                        <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-network-wired text-accent" />
-                                            <span>{lang === 'en' ? 'Domain' : 'Domínio'}</span>
-                                        </div>
-                                        <div className="text-xs sm:text-sm font-semibold text-white">
-                                            {specs.domain}
-                                        </div>
-                                    </div>
+                        {activeTab === 'overview' && <motion.div key="overview" {...panelMotion} role="tabpanel"
+                            id={`${dialogId}-panel-overview`} aria-labelledby={`${dialogId}-tab-overview`} className="inspector-panel">
+                            {description && <section className="inspector-context">
+                                <h3>{tr('O projeto', 'The project', 'El proyecto')}</h3>
+                                <p>{description}</p>
+                            </section>}
 
-                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
-                                        <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-sitemap text-accent" />
-                                            <span>{lang === 'en' ? 'Architectural Pattern' : lang === 'es' ? 'Patrón Arquitectural' : 'Padrão Arquitetural'}</span>
-                                        </div>
-                                        <div className="text-xs sm:text-sm font-semibold text-white truncate">
-                                            {specs.architectureType}
-                                        </div>
-                                    </div>
+                            {Boolean(project.details?.metrics?.length) && <section>
+                                <h3>{tr('Resultados e características', 'Outcomes & characteristics', 'Resultados y características')}</h3>
+                                <dl className="inspector-outcomes">
+                                    {project.details!.metrics!.map((metric, index) => <div key={index}>
+                                        {typeof metric !== 'string' && metric.label && <dt>{metric.label}</dt>}
+                                        <dd>{typeof metric === 'string' ? metric : metric.value}</dd>
+                                    </div>)}
+                                </dl>
+                            </section>}
 
-                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
-                                        <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-database text-accent" />
-                                            <span>{lang === 'en' ? 'Persistence / Database' : lang === 'es' ? 'Persistencia / Base de Datos' : 'Persistência / Banco'}</span>
-                                        </div>
-                                        <div className="text-xs sm:text-sm font-semibold text-white truncate">
-                                            {specs.database}
-                                        </div>
-                                    </div>
+                            {Boolean(project.details?.highlights?.length) && <section>
+                                <h3>{tr('O que foi desenvolvido', 'What was built', 'Qué se desarrolló')}</h3>
+                                <ul className="inspector-highlights">{project.details!.highlights!.map((item, index) => <li key={index}>{item}</li>)}</ul>
+                            </section>}
 
-                                    <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)] hover:border-white/20 transition-all duration-300">
-                                        <div className="text-[10px] font-mono text-primary/60 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                            <i className="fas fa-chart-line text-accent" />
-                                            <span>{lang === 'en' ? 'Scale & Volume' : lang === 'es' ? 'Escala y Volumen' : 'Escala & Volume'}</span>
-                                        </div>
-                                        <div className="text-xs sm:text-sm font-semibold text-white">
-                                            {specs.volume}
-                                        </div>
-                                    </div>
+                            {(project.details?.challenge || project.details?.solution) && <details className="inspector-disclosure">
+                                <summary>{tr('Desafio e abordagem', 'Challenge & approach', 'Desafío y enfoque')}</summary>
+                                <div className="inspector-disclosure-content">
+                                    {project.details.challenge && <div><h4>{tr('Desafio', 'Challenge', 'Desafío')}</h4><p>{project.details.challenge}</p></div>}
+                                    {project.details.solution && <div><h4>{tr('Abordagem', 'Approach', 'Enfoque')}</h4><p>{project.details.solution}</p></div>}
                                 </div>
+                            </details>}
 
-                                {/* Desafios Técnicos & Decisões de Engenharia */}
-                                {specs.challenges && specs.challenges.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-tools text-xs" />
-                                            <span>{lang === 'en' ? 'Critical Challenges & Engineering Solutions' : lang === 'es' ? 'Desafíos Críticos y Soluciones Aplicadas' : 'Desafios Críticos & Soluções Aplicadas'}</span>
-                                        </h3>
-                                        <div className="space-y-3">
-                                            {specs.challenges.map((ch, idx) => (
-                                                <div key={idx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 space-y-2 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <p className="text-xs text-gray-300 font-sans leading-relaxed">
-                                                            <strong className="text-white">{lang === 'en' ? 'Problem:' : 'Problema:'}</strong> {ch.problem}
-                                                        </p>
-                                                        <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-accent/15 text-accent border border-accent/30">
-                                                            {ch.impactChip}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-emerald-300/90 font-mono leading-relaxed pl-3 border-l-2 border-emerald-500/40">
-                                                        ↳ <strong className="text-emerald-400">{lang === 'en' ? 'Solution:' : lang === 'es' ? 'Solución:' : 'Solução:'}</strong> {ch.solution}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
+                            {Boolean(specs.challenges?.length) && <section>
+                                <h3>{tr('Decisões técnicas', 'Technical decisions', 'Decisiones técnicas')}</h3>
+                                <div className="inspector-decisions">{specs.challenges!.map((challenge, index) => <details key={index} className="inspector-disclosure">
+                                    <summary>{challenge.impactChip}</summary>
+                                    <div className="inspector-disclosure-content">
+                                        <div><h4>{tr('Problema', 'Problem', 'Problema')}</h4><p>{challenge.problem}</p></div>
+                                        <div><h4>{tr('Solução', 'Solution', 'Solución')}</h4><p>{challenge.solution}</p></div>
                                     </div>
-                                )}
+                                </details>)}</div>
+                            </section>}
 
-                                {/* Stack Técnica Consolidada */}
-                                {project.tags && project.tags.length > 0 && (
-                                    <div className="space-y-2.5">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-layer-group text-xs" />
-                                            <span>{lang === 'en' ? 'Validated Tech Stack & Tools' : lang === 'es' ? 'Tecnologías y Herramientas Validadas' : 'Tecnologias & Ferramentas Validadas'}</span>
-                                        </h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {project.tags.map((tag, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="px-3 py-1 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs font-mono text-neutral-200"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
+                            {Boolean(project.tags?.length) && <section className="inspector-stack">
+                                <h4>{tr('Tecnologias utilizadas', 'Technologies used', 'Tecnologías utilizadas')}</h4>
+                                <p>{project.tags!.join(' · ')}</p>
+                            </section>}
+                        </motion.div>}
+
+                        {activeTab === 'architecture' && hasArchitectureData && <motion.div key="architecture" {...panelMotion} role="tabpanel"
+                            id={`${dialogId}-panel-architecture`} aria-labelledby={`${dialogId}-tab-architecture`} className="inspector-panel">
+                            <section>
+                                <h3>{tr('Como o sistema foi estruturado', 'How the system is structured', 'Cómo se estructuró el sistema')}</h3>
+                                <dl className="inspector-facts">
+                                    <div><dt>{tr('Arquitetura', 'Architecture', 'Arquitectura')}</dt><dd>{specs.architectureType}</dd></div>
+                                    <div><dt>{tr('Persistência', 'Persistence', 'Persistencia')}</dt><dd>{specs.database}</dd></div>
+                                    <div><dt>{tr('Escala', 'Scale', 'Escala')}</dt><dd>{specs.volume}</dd></div>
+                                    <div><dt>{tr('Domínio', 'Domain', 'Dominio')}</dt><dd>{specs.domain}</dd></div>
+                                </dl>
+                            </section>
+                            {layers.length > 0 && <section>
+                                <h3>{tr('Camadas e responsabilidades', 'Layers & responsibilities', 'Capas y responsabilidades')}</h3>
+                                <ol className="inspector-layers">{layers.map((layer, index) => <li key={index}>
+                                    <span className="inspector-layer-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                                    <div><h4>{layer.layer}</h4><span className="inspector-technology">{layer.tech}</span><p>{layer.role}</p></div>
+                                </li>)}</ol>
+                            </section>}
+                            {Boolean(specs.concurrencyTable?.length) && <section>
+                                <h3>{tr('Concorrência e resiliência', 'Concurrency & resilience', 'Concurrencia y resiliencia')}</h3>
+                                <div className="inspector-decisions">{specs.concurrencyTable!.map((row, index) => <details key={index} className="inspector-disclosure">
+                                    <summary>{row.lockMechanism}</summary>
+                                    <div className="inspector-disclosure-content">
+                                        <div><h4>{tr('Tratamento de exceções', 'Exception handling', 'Gestión de excepciones')}</h4><p>{row.exceptionHandling}</p></div>
+                                        <div><h4>{tr('Garantia', 'Guarantee', 'Garantía')}</h4><p>{row.acidGuarantee}</p></div>
                                     </div>
-                                )}
-                            </motion.div>
-                        )}
-
-                        {activeTab === 'architecture' && hasArchitectureData && (
-                            <motion.div
-                                key="tab-architecture"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                className="space-y-6"
-                            >
-                                {/* Camadas de Arquitetura do Projeto (se declaradas) */}
-                                {((specs.layers && specs.layers.length > 0) || (project.details?.architecture && project.details.architecture.length > 0)) && (
-                                    <div className="space-y-3">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-sitemap text-xs" />
-                                            <span>{lang === 'en' ? 'Software Architecture Layers' : lang === 'es' ? 'Capas de la Arquitectura de Software' : 'Camadas da Arquitetura de Software'}</span>
-                                        </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {(specs.layers || project.details?.architecture || []).map((layer, lIdx) => (
-                                                <div key={lIdx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                                    <div className="flex items-center justify-between text-xs font-mono">
-                                                        <span className="text-accent font-bold">{layer.layer}</span>
-                                                        <span className="text-primary/60 text-[10px] truncate max-w-[150px]">{layer.tech}</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-300 font-sans leading-relaxed">
-                                                        {layer.role}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Trecho de Código Central (Code Snippet) */}
-                                {specs.codeSnippet && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                                <i className="fas fa-code text-xs" />
-                                                <span>{lang === 'en' ? 'Core Implementation Pattern' : lang === 'es' ? 'Patrón de Implementación en el Core' : 'Padrão de Implementação no Core'}</span>
-                                            </h3>
-                                            <button
-                                                onClick={() => copyToClipboard(specs.codeSnippet || '', 'Código-fonte')}
-                                                data-cursor-morph="true"
-                                                className="text-[10px] font-mono text-primary/70 hover:text-white flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 cursor-pointer"
-                                            >
-                                                <i className="fas fa-copy text-[9px]" />
-                                                <span>{lang === 'en' ? 'Copy Code' : lang === 'es' ? 'Copiar Código' : 'Copiar Código'}</span>
-                                            </button>
-                                        </div>
-                                        <div className="rounded-xl border border-white/10 bg-black/60 p-4 font-mono text-xs overflow-x-auto text-gray-300 leading-relaxed shadow-inner">
-                                            <pre><code>{specs.codeSnippet}</code></pre>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Matriz de Resiliência & Concorrência ACID */}
-                                {specs.concurrencyTable && specs.concurrencyTable.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-shield-halved text-xs" />
-                                            <span>{lang === 'en' ? 'Resilience & Concurrency Mechanisms' : lang === 'es' ? 'Mecanismos de Resiliencia y Concurrencia' : 'Mecanismos de Resiliência & Concorrência'}</span>
-                                        </h3>
-                                        <div className="rounded-xl border border-white/10 overflow-hidden">
-                                            <table className="w-full text-left text-xs font-mono border-collapse">
-                                                <thead>
-                                                    <tr className="border-b border-white/10 bg-white/[0.03] text-[10px] uppercase tracking-wider text-primary/60">
-                                                        <th className="py-2.5 px-3.5">{lang === 'en' ? 'Mechanism / Lock' : lang === 'es' ? 'Mecanismo / Bloqueo' : 'Mecanismo / Trava'}</th>
-                                                        <th className="py-2.5 px-3.5">{lang === 'en' ? 'Exception Handling' : lang === 'es' ? 'Manejo de Excepciones' : 'Tratamento de Exceção'}</th>
-                                                        <th className="py-2.5 px-3.5">{lang === 'en' ? 'ACID Guarantee' : lang === 'es' ? 'Garantía ACID' : 'Garantia ACID'}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-white/5">
-                                                    {specs.concurrencyTable.map((row, idx) => (
-                                                        <tr key={idx} className="hover:bg-white/[0.01]">
-                                                            <td className="py-3 px-3.5 font-bold text-accent">{row.lockMechanism}</td>
-                                                            <td className="py-3 px-3.5 text-gray-300">{row.exceptionHandling}</td>
-                                                            <td className="py-3 px-3.5 text-emerald-400">{row.acidGuarantee}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-
-                        {activeTab === 'contracts' && hasContracts && activeEndpoint && (
-                            <motion.div
-                                key="tab-contracts"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                className="space-y-6"
-                            >
-                                {/* Seletor de Endpoints da API */}
-                                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
-                                    {(specs.apiContracts?.endpoints || []).map((ep, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => {
-                                                playMechanicalClick();
-                                                setSelectedEndpointIndex(idx);
-                                            }}
-                                            data-cursor-morph="true"
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-2 border transition-all cursor-pointer shrink-0 ${
-                                                selectedEndpointIndex === idx
-                                                    ? 'bg-accent/20 border-accent/60 text-white font-bold'
-                                                    : 'bg-white/5 border-white/10 text-primary/70 hover:text-white'
-                                            }`}
-                                        >
-                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                                ep.method === 'POST' ? 'bg-amber-500/20 text-amber-300' :
-                                                ep.method === 'PATCH' ? 'bg-sky-500/20 text-sky-300' :
-                                                'bg-emerald-500/20 text-emerald-300'
-                                            }`}>
-                                                {ep.method}
-                                            </span>
-                                            <span>{ep.route}</span>
-                                        </button>
-                                    ))}
+                                </details>)}</div>
+                            </section>}
+                            {specs.codeSnippet && <details className="inspector-disclosure inspector-code-disclosure">
+                                <summary>{tr('Ver implementação central', 'View core implementation', 'Ver implementación central')}</summary>
+                                <div className="inspector-disclosure-content">
+                                    <button type="button" className="inspector-button" data-cursor-morph="true"
+                                        onClick={() => copyToClipboard(specs.codeSnippet || '', tr('Código', 'Code', 'Código'))}>
+                                        <i className="fas fa-copy" aria-hidden="true" />{tr('Copiar código', 'Copy code', 'Copiar código')}
+                                    </button>
+                                    <pre className="inspector-code"><code>{specs.codeSnippet}</code></pre>
                                 </div>
+                            </details>}
+                            <p className="inspector-footnote">{specs.version.replace('Produção', tr('Produção', 'Production', 'Producción'))}</p>
+                        </motion.div>}
 
-                                {/* Detalhes do Endpoint Selecionado */}
-                                <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-4 space-y-4 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                    <div className="flex items-center justify-between flex-wrap gap-2">
-                                        <div className="flex items-center gap-2 font-mono text-xs">
-                                            <span className="font-bold text-accent">{activeEndpoint.method}</span>
-                                            <span className="text-white font-bold">{activeEndpoint.route}</span>
-                                        </div>
-                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                            Latência: {activeEndpoint.latency || '12ms'}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-300 font-sans">{activeEndpoint.description}</p>
-
-                                    {/* Headers Obrigatórios */}
-                                    {activeEndpoint.headers && activeEndpoint.headers.length > 0 && (
-                                        <div className="space-y-1.5">
-                                            <div className="text-[10px] font-mono uppercase tracking-wider text-primary/60">
-                                                Headers Auditados:
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
-                                                {activeEndpoint.headers.map((h, hIdx) => (
-                                                    <div key={hIdx} className="p-2 rounded bg-black/40 border border-white/5">
-                                                        <div className="text-accent font-bold">{h.name}</div>
-                                                        <div className="text-primary/70 text-[11px] truncate">{h.value}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Payload JSON de Requisição */}
-                                    {activeEndpoint.requestBody && activeEndpoint.requestBody !== '{}' && (
-                                        <div className="space-y-1.5">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-mono uppercase tracking-wider text-primary/60">
-                                                    Request Body (JSON Schema):
-                                                </span>
-                                                <button
-                                                    onClick={() => copyToClipboard(activeEndpoint.requestBody || '', 'Payload JSON')}
-                                                    className="text-[10px] font-mono text-primary/70 hover:text-white flex items-center gap-1 cursor-pointer"
-                                                >
-                                                    <i className="fas fa-copy text-[9px]" />
-                                                    <span>Copiar Payload</span>
-                                                </button>
-                                            </div>
-                                            <div className="rounded-xl border border-white/10 bg-black/60 p-3 font-mono text-xs overflow-x-auto text-emerald-300">
-                                                <pre><code>{activeEndpoint.requestBody}</code></pre>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Payload JSON de Resposta */}
-                                    {activeEndpoint.responseBody && (
-                                        <div className="space-y-1.5">
-                                            <div className="text-[10px] font-mono uppercase tracking-wider text-primary/60">
-                                                Response Body ({activeEndpoint.status}):
-                                            </div>
-                                            <div className="rounded-xl border border-white/10 bg-black/60 p-3 font-mono text-xs overflow-x-auto text-sky-300">
-                                                <pre><code>{activeEndpoint.responseBody}</code></pre>
-                                            </div>
-                                        </div>
-                                    )}
+                        {activeTab === 'contracts' && hasContracts && activeEndpoint && <motion.div key="contracts" {...panelMotion} role="tabpanel"
+                            id={`${dialogId}-panel-contracts`} aria-labelledby={`${dialogId}-tab-contracts`} className="inspector-panel">
+                            <section>
+                                <h3>{tr('Contrato de integração', 'Integration contract', 'Contrato de integración')}</h3>
+                                <p className="inspector-intro">{tr('Selecione uma rota para consultar o formato da requisição e da resposta.', 'Select a route to inspect its request and response formats.', 'Selecciona una ruta para consultar los formatos de solicitud y respuesta.')}</p>
+                                <div className="inspector-endpoints" aria-label={tr('Rotas disponíveis', 'Available routes', 'Rutas disponibles')}>
+                                    {specs.apiContracts!.endpoints.map((endpoint, index) => <button key={index} type="button"
+                                        aria-pressed={selectedEndpointIndex === index} data-cursor-morph="true"
+                                        onClick={() => { playTabSwitch(); setSelectedEndpointIndex(index); }}>
+                                        <span>{endpoint.method}</span><code>{endpoint.route}</code>
+                                    </button>)}
                                 </div>
-                            </motion.div>
-                        )}
-
-                        {activeTab === 'engineering' && hasEngineeringTests && specs.engineeringTests && (
-                            <motion.div
-                                key="tab-engineering"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                className="space-y-6"
-                            >
-                                {/* Painel de Telemetria com Barras de Progresso & Percentis NIST */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-tachometer-alt text-xs" />
-                                            <span>{lang === 'en' ? 'Audited SLA & Latency Percentiles (NIST)' : lang === 'es' ? 'SLA Auditado y Percentiles de Latencia (NIST)' : 'SLA Auditado & Percentis de Latência (NIST)'}</span>
-                                        </h3>
-                                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
-                                            {specs.engineeringTests.uptime || '99.9%'} Uptime
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                            <div className="flex items-center justify-between text-xs font-mono">
-                                                <span className="text-emerald-400 font-bold">p50</span>
-                                                <span className="text-white font-bold">{currentPercentiles.p50}ms</span>
-                                            </div>
-                                            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                                <div
-                                                    className="h-full bg-emerald-400 rounded-full transition-all duration-300"
-                                                    style={{ width: `${Math.min(100, currentPercentiles.p50 * 2)}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-[10px] font-mono text-primary/50">{lang === 'en' ? 'Median latency' : lang === 'es' ? 'Mediana de latencia' : 'Mediana de latência'}</span>
-                                        </div>
-
-                                        <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                            <div className="flex items-center justify-between text-xs font-mono">
-                                                <span className="text-sky-400 font-bold">p95</span>
-                                                <span className="text-white font-bold">{currentPercentiles.p95}ms</span>
-                                            </div>
-                                            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                                <div
-                                                    className="h-full bg-sky-400 rounded-full transition-all duration-300"
-                                                    style={{ width: `${Math.min(100, currentPercentiles.p95 * 1.5)}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-[10px] font-mono text-primary/50">{lang === 'en' ? '95% of requests' : lang === 'es' ? '95% de las peticiones' : '95% das requisições'}</span>
-                                        </div>
-
-                                        <div className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 space-y-1.5 transition-all shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                            <div className="flex items-center justify-between text-xs font-mono">
-                                                <span className="text-amber-400 font-bold">p99</span>
-                                                <span className="text-white font-bold">{currentPercentiles.p99}ms</span>
-                                            </div>
-                                            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                                <div
-                                                    className="h-full bg-amber-400 rounded-full transition-all duration-300"
-                                                    style={{ width: `${Math.min(100, currentPercentiles.p99 * 0.8)}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-[10px] font-mono text-primary/50">{lang === 'en' ? 'Critical latency tail' : lang === 'es' ? 'Cola crítica de latencia' : 'Cauda crítica de latência'}</span>
-                                        </div>
-                                    </div>
+                                <p className="inspector-route-description">{activeEndpoint.description}</p>
+                                <div className="inspector-route-meta"><span>{activeEndpoint.status}</span>{activeEndpoint.latency && <span>{activeEndpoint.latency}</span>}</div>
+                                <div className="inspector-api-action">
+                                    <button type="button" onClick={copyCurlCommand} className="inspector-button" data-cursor-morph="true">
+                                        <i className="fas fa-copy" aria-hidden="true" />{tr('Copiar cURL', 'Copy cURL', 'Copiar cURL')}
+                                    </button>
+                                    <p className="inspector-footnote">{specs.apiContracts?.baseUrl
+                                        ? tr('Exemplo de requisição para o endereço configurado.', 'Request example for the configured address.', 'Ejemplo de solicitud para la dirección configurada.')
+                                        : tr('Defina BASE_URL com o endereço da sua API antes de usar o exemplo.', 'Set BASE_URL to your API address before using the example.', 'Define BASE_URL con la dirección de tu API antes de usar el ejemplo.')}</p>
                                 </div>
-
-                                {/* Bateria de Asserções Executadas com Runner FSM Interativo */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                            <i className="fas fa-check-double text-xs" />
-                                            <span>{lang === 'en' ? 'Automated Assertion Battery' : lang === 'es' ? 'Batería de Aserciones Automatizadas' : 'Bateria de Asserções Automatizadas'}</span>
-                                        </h3>
-                                        <button
-                                            onClick={runAssertionsSimulation}
-                                            disabled={runnerState === 'RUNNING'}
-                                            data-cursor-morph="true"
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
-                                                runnerState === 'RUNNING'
-                                                    ? 'bg-accent/20 border-accent text-accent animate-pulse'
-                                                    : runnerState === 'COMPLETED'
-                                                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30'
-                                                    : 'bg-white/5 border-white/15 text-white hover:bg-accent/15 hover:border-accent/40'
-                                            }`}
-                                        >
-                                            <i className={`fas ${
-                                                runnerState === 'RUNNING'
-                                                    ? 'fa-circle-notch fa-spin text-accent'
-                                                    : runnerState === 'COMPLETED'
-                                                    ? 'fa-check text-emerald-400'
-                                                    : 'fa-play text-accent'
-                                            } text-[10px]`} />
-                                            <span>
-                                                {runnerState === 'RUNNING'
-                                                    ? (lang === 'en' ? 'Testing...' : lang === 'es' ? 'Probando...' : 'Testando...')
-                                                    : runnerState === 'COMPLETED'
-                                                    ? (lang === 'en' ? 'Rerun Tests' : lang === 'es' ? 'Reejecutar Pruebas' : 'Re-executar Testes')
-                                                    : (lang === 'en' ? 'Run Battery' : lang === 'es' ? 'Ejecutar Batería' : 'Executar Bateria')}
-                                            </span>
-                                        </button>
-                                    </div>
-
-                                    <div className="rounded-xl border border-white/10 overflow-hidden font-mono text-xs">
-                                        {specs.engineeringTests.assertions.map((as, idx) => {
-                                            const isRunningThis = activeAssertionIndex === idx;
-                                            const isDone = runnerState === 'COMPLETED' || (activeAssertionIndex !== null && activeAssertionIndex > idx);
-
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    className={`p-3 border-b border-white/5 last:border-0 flex items-center justify-between gap-3 transition-colors ${
-                                                        isRunningThis
-                                                            ? 'bg-accent/10 border-accent/30'
-                                                            : 'bg-white/[0.01]'
-                                                    }`}
-                                                >
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
-                                                                isRunningThis
-                                                                    ? 'bg-accent/20 text-accent border-accent/40 animate-pulse'
-                                                                    : isDone
-                                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
-                                                                    : 'bg-white/5 text-gray-400 border-white/10'
-                                                            }`}>
-                                                                {isRunningThis ? 'EXECUTING' : as.status}
-                                                            </span>
-                                                            <span className="text-white font-semibold truncate">{as.name}</span>
-                                                        </div>
-                                                        <p className="text-[11px] text-gray-400 mt-0.5">{as.details}</p>
-                                                    </div>
-                                                    <span className="text-primary/60 text-[11px] shrink-0">{as.latency}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                            </section>
+                            {Boolean(activeEndpoint.headers?.length) && <section>
+                                <h4>{tr('Cabeçalhos', 'Headers', 'Cabeceras')}</h4>
+                                <dl className="inspector-api-headers">{activeEndpoint.headers!.map((header, index) => <div key={index}>
+                                    <dt><code>{header.name}</code>{header.desc && <span>{header.desc}</span>}</dt><dd><code>{header.value}</code></dd>
+                                </div>)}</dl>
+                            </section>}
+                            {activeEndpoint.requestBody && activeEndpoint.requestBody !== '{}' && <section>
+                                <div className="inspector-section-action"><h4>{tr('Corpo da requisição', 'Request body', 'Cuerpo de solicitud')}</h4>
+                                    <button type="button" className="inspector-text-button" data-cursor-morph="true"
+                                        onClick={() => copyToClipboard(activeEndpoint.requestBody || '', 'JSON')}>{tr('Copiar JSON', 'Copy JSON', 'Copiar JSON')}</button>
                                 </div>
+                                <pre className="inspector-code"><code>{activeEndpoint.requestBody}</code></pre>
+                            </section>}
+                            {activeEndpoint.responseBody && <section>
+                                <h4>{tr('Corpo da resposta', 'Response body', 'Cuerpo de respuesta')}</h4>
+                                <pre className="inspector-code"><code>{activeEndpoint.responseBody}</code></pre>
+                            </section>}
+                        </motion.div>}
 
-                                {/* Laboratório de Caos (Chaos Engineering) com Toggle de Injeção ao Vivo */}
-                                {specs.engineeringTests.chaosLab && specs.engineeringTests.chaosLab.length > 0 && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-2">
-                                                <i className="fas fa-biohazard text-xs" />
-                                                <span>{lang === 'en' ? 'Chaos Engineering Lab Results' : lang === 'es' ? 'Resultados del Chaos Engineering Lab' : 'Resultados do Chaos Engineering Lab'}</span>
-                                            </h3>
-                                            <button
-                                                onClick={() => {
-                                                    playMechanicalClick();
-                                                    setChaosActive(curr => !curr);
-                                                    showToast(!chaosActive
-                                                        ? (lang === 'en' ? 'Stress injection active (+150ms jitter)' : 'Injeção de estresse ativada (+150ms jitter)')
-                                                        : (lang === 'en' ? 'Chaos injection disabled' : 'Injeção de caos desativada'));
-                                                }}
-                                                data-cursor-morph="true"
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 border transition-all cursor-pointer ${
-                                                    chaosActive
-                                                        ? 'bg-red-500/20 border-red-500/50 text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
-                                                        : 'bg-white/5 border-white/15 text-primary/80 hover:text-white hover:bg-white/10'
-                                                }`}
-                                            >
-                                                <i className={`fas fa-bolt text-[10px] ${chaosActive ? 'text-red-400 animate-bounce' : 'text-amber-400'}`} />
-                                                <span>
-                                                    {chaosActive
-                                                        ? (lang === 'en' ? 'Chaos Injection Active' : lang === 'es' ? 'Inyección de Caos Activa' : 'Injeção de Caos Ativa')
-                                                        : (lang === 'en' ? 'Simulate Chaos Injection' : lang === 'es' ? 'Simular Inyección de Caos' : 'Simular Injeção de Caos')}
-                                                </span>
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-2.5">
-                                            {specs.engineeringTests.chaosLab.map((ch, idx) => (
-                                                <div key={idx} className="bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent border border-white/[0.08] border-t-white/20 rounded-xl p-3.5 font-sans space-y-1 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.5)]">
-                                                    <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
-                                                        <i className="fas fa-bolt text-[10px]" />
-                                                        <span>{ch.scenario}</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-300 font-mono pl-4 leading-relaxed">
-                                                        ↳ {ch.outcome}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
+                        {activeTab === 'engineering' && hasEngineeringTests && specs.engineeringTests && <motion.div key="engineering" {...panelMotion} role="tabpanel"
+                            id={`${dialogId}-panel-engineering`} aria-labelledby={`${dialogId}-tab-engineering`} className="inspector-panel">
+                            <section>
+                                <h3>{tr('Qualidade e desempenho', 'Quality & performance', 'Calidad y rendimiento')}</h3>
+                                <p className="inspector-intro">{tr('Os controles abaixo reproduzem cenários localmente para explicar o comportamento do sistema. Não executam uma auditoria nem enviam requisições ao projeto.', 'The controls below replay local scenarios to explain system behavior. They do not run an audit or send requests to the project.', 'Los controles reproducen escenarios locales para explicar el sistema. No realizan una auditoría ni envían solicitudes al proyecto.')}</p>
+                                <div className="inspector-section-action"><h4>{tr('Percentis de latência · NIST', 'Latency percentiles · NIST', 'Percentiles de latencia · NIST')}</h4>
+                                    {specs.engineeringTests.uptime && <span className="inspector-footnote">{specs.engineeringTests.uptime} uptime</span>}
+                                </div>
+                                <dl className="inspector-percentiles">{(['p50', 'p95', 'p99'] as const).map((percentile, index) => <div key={percentile}>
+                                    <dt>{percentile}</dt><dd>{currentPercentiles[percentile]}<span>ms</span></dd>
+                                    <span className="inspector-percentile-note">{[tr('Mediana', 'Median', 'Mediana'), tr('95% das requisições', '95% of requests', '95% de solicitudes'), tr('Cauda de latência', 'Latency tail', 'Cola de latencia')][index]}</span>
+                                </div>)}</dl>
+                                {specs.engineeringTests.coverage !== undefined && <p className="inspector-footnote">{tr('Cobertura informada', 'Reported coverage', 'Cobertura informada')}: {specs.engineeringTests.coverage}%</p>}
+                            </section>
+                            <section>
+                                <div className="inspector-section-action"><h3>{tr('Cenários de teste', 'Test scenarios', 'Escenarios de prueba')}</h3>
+                                    <button type="button" onClick={runAssertionsSimulation} disabled={runnerState === 'RUNNING'} className="inspector-button" data-cursor-morph="true">
+                                        <i className={`fas ${runnerState === 'RUNNING' ? 'fa-circle-notch fa-spin' : 'fa-play'}`} aria-hidden="true" />
+                                        {runnerState === 'RUNNING' ? tr('Demonstrando…', 'Replaying…', 'Reproduciendo…') : runnerState === 'COMPLETED' ? tr('Repetir demonstração', 'Replay demonstration', 'Repetir demostración') : tr('Executar demonstração', 'Run demonstration', 'Ejecutar demostración')}
+                                    </button>
+                                </div>
+                                <ul className="inspector-tests" aria-live="polite">{specs.engineeringTests.assertions.map((assertion, index) => <li key={index} data-running={activeAssertionIndex === index}>
+                                    <div><h4>{assertion.name}</h4><p>{assertion.details}</p></div>
+                                    <div className="inspector-test-status"><span>{activeAssertionIndex === index ? tr('Em demonstração', 'Replaying', 'Reproduciendo') : assertion.status}</span><span>{assertion.latency}</span></div>
+                                </li>)}</ul>
+                            </section>
+                            {Boolean(specs.engineeringTests.chaosLab?.length) && <section>
+                                <div className="inspector-section-action"><h3>{tr('Comportamento sob falhas', 'Behavior under failure', 'Comportamiento ante fallos')}</h3>
+                                    <button type="button" aria-pressed={chaosActive} className="inspector-button" data-cursor-morph="true"
+                                        onClick={() => { playMechanicalClick(); setChaosActive(current => !current); }}>
+                                        <i className="fas fa-bolt" aria-hidden="true" />{chaosActive ? tr('Encerrar simulação', 'End simulation', 'Finalizar simulación') : tr('Simular injeção de caos', 'Simulate chaos injection', 'Simular inyección de caos')}
+                                    </button>
+                                </div>
+                                <p className="inspector-footnote" aria-live="polite">{chaosActive ? tr('Simulação ativa: os percentis acima refletem a latência adicional do cenário.', 'Simulation active: the percentiles above reflect additional scenario latency.', 'Simulación activa: los percentiles reflejan la latencia adicional del escenario.') : tr('Ative para comparar o efeito de latência nos percentis.', 'Enable to compare the effect of latency on percentiles.', 'Activa para comparar el efecto de latencia en los percentiles.')}</p>
+                                <ul className="inspector-failures">{specs.engineeringTests.chaosLab.map((scenario, index) => <li key={index}>
+                                    <h4>{scenario.scenario}</h4><p>{scenario.outcome}</p>
+                                </li>)}</ul>
+                            </section>}
+                        </motion.div>}
                     </AnimatePresence>
                 </div>
-
-                {/* ── D. Rodapé do Console com Atalhos e Informações de Build ── */}
-                <footer className="shrink-0 border-t border-white/10 bg-[#090b10]/95 px-6 py-3 flex items-center justify-between text-[11px] font-mono text-primary/60">
-                    <div className="flex items-center gap-4">
-                        <span>{lang === 'en' ? '← → switch tabs' : lang === 'es' ? '← → cambiar pestañas' : '← → alternar abas'}</span>
-                        <span>{lang === 'en' ? 'ESC close' : lang === 'es' ? 'ESC cerrar' : 'ESC fechar'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-accent/80">DevTools v2.4.0</span>
-                        <span>•</span>
-                        <span>TypeScript Strict</span>
-                    </div>
-                </footer>
+                <AnimatePresence>{toastMessage && <motion.div key="toast" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    transition={{ duration: reducedMotion ? 0 : .15 }} role="status" className="inspector-toast"><i className="fas fa-check" aria-hidden="true" />{toastMessage}</motion.div>}</AnimatePresence>
             </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body,
     );
 }
 

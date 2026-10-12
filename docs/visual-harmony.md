@@ -49,3 +49,23 @@ Comparação indicativa em Chromium headless, a 1440 × 900, num percurso de 6 s
 O recálculo de estilos caiu aproximadamente 27%; os novos reveals aumentam a atividade de script. É uma amostra única, com distâncias ligeiramente diferentes devido ao layout e sem a GPU do computador do visitante. Não representa uma garantia de 60 FPS nem uma comparação estatística de desempenho.
 
 Fontes Newsreader, Outfit e ícones Font Awesome foram fornecidos como fixtures locais apenas no navegador de teste, porque os CDNs externos não estavam acessíveis no ambiente. Os arquivos e URLs de produção foram preservados. Não foram enviados formulários reais; o deployment não foi verificado.
+
+## Cards e detalhes dos projetos / registros de experiência
+
+A revisão dos detalhes deixa a informação principal em uma superfície de leitura, com títulos serifados e texto corrido na mesma família do portfólio. O Inspector tem um painel mais amplo, cabeçalho conciso e abas Resumo, Arquitetura, API e Testes; somente abas com conteúdo são apresentadas. O Resumo reúne contexto, resultados/características e entregas. Desafio, decisões e implementação usam disclosures, evitando exibir blocos de código e todos os pormenores na primeira leitura. A API mantém seleção de rota e cópia de JSON/cURL; o exemplo usa `BASE_URL`, sem sugerir um domínio de API publicado. Os controles de testes são identificados como demonstrações locais.
+
+Os registros de experiência passam a apresentar empresa, função, período/local, mídia, contexto, contribuição, resultados e ferramentas. Foram retirados os adornos de janela, hashtags e rótulos repetidos. A foto da turma de 2024 e as capturas do ePita de 2026 continuam como imagens reais, com `object-fit: contain` no modal. O registro de 2025 utiliza uma síntese técnica identificada: modernização Delphi/VCL → UniGui e desenvolvimento React/TypeScript ↔ Laravel, com otimização de consultas SQL.
+
+As seis capas corporativas usam diagramas locais de arquitetura, com conteúdo compartilhado entre os dados canônicos e PT/EN/ES. Os cards exibem título completo, descrição curta, tecnologias e ações; a tabela usa ícones para esses projetos. As capturas reais dos três destaques foram preservadas. Os antigos assets de IA permanecem no disco, mas deixaram de ser usados nestes componentes. Não foram adicionadas dependências ou animações contínuas.
+
+Os dois modais usam portal no `document.body`, fundo `inert` com restauração, foco inicial, contenção de Tab, Escape, bloqueio da rolagem da página e retorno ao botão de origem. O conteúdo é focável para rolagem por teclado; sua roda/gesto é isolado da rolagem suave da página. O Inspector fica acima da Navbar mesmo quando aberto no capítulo corporativo. As animações respeitam movimento reduzido. Os hooks e a geometria das transições desktop aprovadas não foram alterados. No mobile, a altura dos cards corporativos e de seu palco foi reduzida para acompanhar a apresentação mais concisa, preservando as ações.
+
+Validação desta revisão:
+
+- Build Vite e TypeScript focal dos componentes alterados passaram. O lint do arquivo de traduções passou; o lint global mantém 42 erros e 5 avisos preexistentes e não cobre TSX.
+- Chromium/Playwright a 1920 × 1080: seis cards corporativos, seus detalhes/arquitetura/cópia de código, tabela sem imagens artificiais; três destaques com capturas preservadas, seleção de API, cópia JSON/cURL, demonstração de testes e simulação de falhas. Foco/Tab/Escape/restauração, camada acima da Navbar e rolagem interna verificados.
+- A 320 e 390 px, os seis cards mantêm diagramas e ações dentro dos limites; Inspector sem overflow horizontal, leitura por PageDown e reset da rolagem ao trocar aba. A 1440 px, movimento reduzido e as variantes EN/ES foram verificados.
+- Os três registros da experiência passaram em desktop, 390 e 320 px: mídia correta, limites do modal, contenção de foco, PageDown/roda, bloqueio/restauração da rolagem, Escape e retorno à miniatura. Fechamento pelo fundo, espanhol e movimento reduzido passaram.
+- Percurso completo/reverso, modal SQL, carrosséis/filtros/tabela, validação local do formulário, clipboard, paletas e idiomas passaram, sem erros de página. Foram mantidas as fixtures de fontes/ícones somente no navegador de teste; não houve submissão real de formulário ou chamada aos exemplos de API.
+
+A verificação de atalhos encontrou a command palette abrindo por trás do modal com Ctrl/Cmd+K. Os dois diálogos agora interceptam esse atalho enquanto estão abertos, mantendo o foco e o bloqueio de rolagem sob um único modal; o atalho global volta a funcionar após o fechamento.

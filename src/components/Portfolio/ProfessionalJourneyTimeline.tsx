@@ -5,6 +5,7 @@ import React, { useRef, useState, useMemo, useCallback, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import JourneyPhotoModal, { JourneyMilestoneArchive } from './JourneyPhotoModal';
+import JourneyMigrationDiagram from './JourneyMigrationDiagram';
 import TechCompanionCritter from './TechCompanionCritter';
 
 /** Faz highlight de métricas numéricas e termos técnicos-chave no texto */
@@ -259,82 +260,106 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         },
     ];
 
-    // Registros fotográficos e operacionais associados a cada marco temporal
+    // Real records and an authored technical summary for the work without photography.
     const ARCHIVES: Record<string, JourneyMilestoneArchive> = useMemo(() => ({
         '2026': {
             id: 'archive-2026',
             year: '2026',
-            company: 'SETE Tecnologia // ZPE Porto Logistics',
-            role: lang === 'en' ? 'QA Analyst & Software Testing' : lang === 'es' ? 'Analista de QA y Pruebas de Software' : 'Analista de QA & Testes de Software',
-            archiveTitle: lang === 'en' ? 'FTZ Port Logistics // ePita QA Core' : 'ZPE Logística Portuária // ePita QA Core',
-            archiveSubtitle: lang === 'en' ? 'Testing & Validation Environment for Mission-Critical Systems' : 'Ambiente de Testes & Validação de Sistemas de Missão Crítica',
+            company: 'SETE Tecnologia',
+            role: lang === 'en' ? 'Quality assurance & software testing' : lang === 'es' ? 'Calidad y pruebas de software' : 'Qualidade de software & testes',
+            archiveTitle: lang === 'en' ? 'View the ePita quality assurance record' : lang === 'es' ? 'Ver el registro de calidad ePita' : 'Ver registro de qualidade do ePita',
             image: '/projects/epta_qa_split_2026.png',
-            badge: lang === 'en' ? 'AUDITED TESTING' : lang === 'es' ? 'PRUEBAS HOMOLOGADAS' : 'TESTES HOMOLOGADOS',
-            date: lang === 'en' ? 'Jun 2026 — Present' : 'Jun 2026 — Presente',
-            location: lang === 'en' ? 'Fortaleza, CE // Remote & Hybrid' : 'Fortaleza, CE // Remoto & Híbrido',
-            description:
-                lang === 'en'
-                    ? 'Operational quality assurance environment for customs and port logistics systems (ePita). Execution of comprehensive functional and regression test suites in Postman, strict business rule mapping in FTZs, and consistency auditing across mission-critical SQL Server queries.'
-                    : lang === 'es'
-                    ? 'Ambiente operacional de aseguramiento de calidad para sistemas aduaneros y logísticos portuarios (ePita). Ejecución de suites completas de pruebas funcionales y de regresión en Postman, mapeo estricto de reglas de negocio en ZPEs y auditoría de consistencia en consultas SQL Server.'
-                    : 'Ambiente operacional de garantia de qualidade para sistemas alfandegários e logísticos portuários (ePita). Execução de suites completas de testes funcionais e regressivos no Postman, mapeamento estrito de regras de negócio em ZPEs e auditoria de consistência em queries SQL Server de alta criticidade.',
-            telemetry: [
-                { label: lang === 'en' ? 'Bug Reduction' : 'Redução de Bugs', value: lang === 'en' ? '25% Fewer Regressions' : '25% Menos Regressões', highlight: true },
-                { label: lang === 'en' ? 'Audited Endpoints' : 'Endpoints Auditados', value: '100+ Endpoints' },
-                { label: lang === 'en' ? 'Validated Queries' : 'Queries Validadas', value: lang === 'en' ? '<50ms Avg Time' : '<50ms Tempo Médio' },
-                { label: lang === 'en' ? 'Methodology' : 'Metodologia', value: 'Scrum / Kanban' },
+            mediaCaption: lang === 'en' ? 'ePita — login, registration approval and access monitoring screens.' : lang === 'es' ? 'ePita — pantallas de acceso, aprobación de registros y seguimiento de accesos.' : 'ePita — telas de acesso, aprovação de cadastros e acompanhamento de acessos.',
+            date: lang === 'en' ? 'Jun 2026 — Present' : lang === 'es' ? 'Jun 2026 — Presente' : 'Jun 2026 — Presente',
+            location: lang === 'en' ? 'Fortaleza, CE · Remote / hybrid' : lang === 'es' ? 'Fortaleza, CE · Remoto / híbrido' : 'Fortaleza, CE · Remoto / híbrido',
+            description: lang === 'en'
+                ? 'Quality assurance for ePita customs and port logistics systems, with a focus on operational rules, integrations and data consistency.'
+                : lang === 'es'
+                ? 'Aseguramiento de calidad en sistemas aduaneros y logísticos portuarios ePita, con foco en reglas operacionales, integraciones y consistencia de datos.'
+                : 'Garantia de qualidade em sistemas alfandegários e logísticos portuários ePita, com foco em regras operacionais, integrações e consistência de dados.',
+            contributions: lang === 'en' ? [
+                'Map business rules and requirements with operational teams.',
+                'Execute functional, regression and API integration tests with Postman.',
+                'Validate transactions and investigate data consistency in SQL Server.',
+            ] : lang === 'es' ? [
+                'Mapear reglas de negocio y requisitos con los equipos operacionales.',
+                'Ejecutar pruebas funcionales, de regresión e integración de APIs con Postman.',
+                'Validar transacciones e investigar la consistencia de datos en SQL Server.',
+            ] : [
+                'Mapear regras de negócio e requisitos com as equipes operacionais.',
+                'Executar testes funcionais, regressivos e de integração de APIs com Postman.',
+                'Validar transações e investigar a consistência de dados em SQL Server.',
             ],
-            tags: ['#QA-ENGINEERING', '#SQL-SERVER', '#POSTMAN', '#TEST-REGRESSIVO', '#SCRUM-KANBAN'],
+            results: [
+                { label: lang === 'en' ? 'Fewer regressions' : lang === 'es' ? 'Menos regresiones' : 'Menos regressões', value: '25%' },
+                { label: lang === 'en' ? 'Audited endpoints' : lang === 'es' ? 'Endpoints auditados' : 'Endpoints auditados', value: '100+' },
+            ],
+            technologies: ['Postman', 'SQL Server', 'APIs REST', 'Scrum / Kanban'],
         },
         '2025': {
             id: 'archive-2025',
             year: '2025',
-            company: 'Qualisoft Sistemas // ERP & Fiscal Solutions',
-            role: lang === 'en' ? 'Full Stack Developer (React / TypeScript / PHP / Delphi / SQL)' : 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL)',
-            archiveTitle: lang === 'en' ? 'Full Stack Development & Modernization // React + TypeScript + Delphi 11 + Laravel' : 'Desenvolvimento Full Stack & Modernização // React + TypeScript + Delphi 11 + Laravel',
-            archiveSubtitle: lang === 'en' ? 'Hands-on Production Implementation of TypeScript/React and Laravel APIs' : 'Aprendizado e Implementação em Produção de TypeScript/React e APIs Laravel',
-            image: '/unigui_migration_mockup.jpg',
-            badge: lang === 'en' ? 'MODERNIZATION COMPLETE' : lang === 'es' ? 'MODERNIZACIÓN CONCLUIDA' : 'MODERNIZAÇÃO CONCLUÍDA',
-            date: lang === 'en' ? 'Aug 2025 — Jun 2026' : 'Ago 2025 — Jun 2026',
+            company: 'Qualisoft Sistemas',
+            role: lang === 'en' ? 'Full stack development & legacy modernization' : lang === 'es' ? 'Desarrollo full stack & modernización de legados' : 'Desenvolvimento full stack & modernização de legados',
+            archiveTitle: lang === 'en' ? 'View the Qualisoft development record' : lang === 'es' ? 'Ver el registro de desarrollo Qualisoft' : 'Ver registro de desenvolvimento na Qualisoft',
+            media: 'process',
+            mediaCaption: lang === 'en' ? 'Technical summary of my work. The diagram represents the workstreams; it is not a product screenshot.' : lang === 'es' ? 'Síntesis técnica de mi trabajo. El diagrama representa los frentes de desarrollo; no es una captura del producto.' : 'Síntese técnica da minha atuação. O diagrama representa as frentes de trabalho, sem reproduzir uma tela do produto.',
+            date: lang === 'en' ? 'Aug 2025 — Jun 2026' : lang === 'es' ? 'Ago 2025 — Jun 2026' : 'Ago 2025 — Jun 2026',
             location: 'Fortaleza, CE',
-            description:
-                lang === 'en'
-                    ? 'Full Stack developer role where I learned and deployed TypeScript and React for management web interfaces, built robust RESTful APIs in PHP with Laravel, and modernized legacy ERP systems from Delphi VCL to Delphi 11 with UniGui. Deep refactoring of SQL Server/MySQL queries reducing report runtimes from 2s to <500ms.'
-                    : lang === 'es'
-                    ? 'Desempeño como desarrollador Full Stack, implementando en producción TypeScript y React para interfaces de gestión, APIs RESTful robustas en PHP con Laravel y modernización de ERP heredado en Delphi 11 con UniGui. Refactorización profunda de consultas SQL Server/MySQL reduciendo de 2s a <500ms.'
-                    : 'Atuação como desenvolvedor Full Stack, ambiente no qual aprendi e implementei em produção TypeScript e React para interfaces de retaguarda, APIs RESTful robustas em PHP com Laravel e modernização de ERP legado em Delphi 11 com UniGui. Refatoração profunda de consultas SQL Server/MySQL com redução de 2s para <500ms via índices compostos.',
-            telemetry: [
-                { label: lang === 'en' ? 'Query Tuning' : 'Otimização Queries', value: lang === 'en' ? '4× Faster' : '4× Mais Rápido', highlight: true },
-                { label: lang === 'en' ? 'Response Time' : 'Tempo de Resposta', value: lang === 'en' ? '<500ms (was 2s)' : '<500ms (antes 2s)' },
-                { label: lang === 'en' ? 'Active Users' : 'Usuários Ativos', value: lang === 'en' ? '100+ Daily' : '100+ Diários' },
-                { label: lang === 'en' ? 'Architecture' : 'Arquitetura', value: 'React + TS + Laravel + UniGui' },
+            description: lang === 'en'
+                ? 'Development of ERP management interfaces and APIs, alongside the modernization of a Delphi desktop application for the web.'
+                : lang === 'es'
+                ? 'Desarrollo de interfaces de gestión y APIs para ERP, junto con la modernización de una aplicación Delphi de escritorio para la web.'
+                : 'Desenvolvimento de interfaces de gestão e APIs para ERP, junto à modernização de uma aplicação Delphi desktop para a web.',
+            contributions: lang === 'en' ? [
+                'Build management interfaces with React and TypeScript, integrated with Laravel REST APIs.',
+                'Contribute to the modernization of Delphi/VCL systems with Delphi 11 and UniGui.',
+                'Refactor SQL Server/MySQL queries and indexes to improve report response times.',
+            ] : lang === 'es' ? [
+                'Desarrollar interfaces de gestión con React y TypeScript, integradas con APIs REST Laravel.',
+                'Participar en la modernización de sistemas Delphi/VCL con Delphi 11 y UniGui.',
+                'Refactorizar consultas e índices SQL Server/MySQL para mejorar el tiempo de los informes.',
+            ] : [
+                'Desenvolver interfaces de retaguarda com React e TypeScript, integradas a APIs REST Laravel.',
+                'Participar da modernização de sistemas Delphi/VCL com Delphi 11 e UniGui.',
+                'Refatorar consultas e índices SQL Server/MySQL para melhorar a resposta dos relatórios.',
             ],
-            tags: ['#LEGACY-MODERNIZATION', '#DELPHI-11', '#LARAVEL-PHP', '#REACT-TS', '#SQL-SERVER'],
+            results: [
+                { label: lang === 'en' ? 'Queries, previously 2s' : lang === 'es' ? 'Consultas, antes 2s' : 'Consultas, antes 2s', value: '<500ms' },
+                { label: lang === 'en' ? 'Daily ERP users' : lang === 'es' ? 'Usuarios diarios del ERP' : 'Usuários diários no ERP', value: '100+' },
+            ],
+            technologies: ['React', 'TypeScript', 'PHP / Laravel', 'Delphi 11', 'UniGui', 'SQL Server', 'MySQL'],
         },
         '2024': {
             id: 'archive-2024',
             year: '2024',
             company: 'EEEP Luiza de Teodoro Vieira',
-            role: lang === 'en' ? 'Integrated High School & Technical IT Diploma' : 'Ensino Médio Integrado ao Técnico em Informática',
-            archiveTitle: lang === 'en' ? 'Technical Education // EEEP Luiza de Teodoro Vieira' : 'Formação Técnica // EEEP Luiza de Teodoro Vieira',
-            archiveSubtitle: lang === 'en' ? 'Integrated High School & Technical IT Diploma (2023 — 2025)' : 'Ensino Médio Integrado ao Técnico em Informática (2023 — 2025)',
+            role: lang === 'en' ? 'High school & technical education in IT' : lang === 'es' ? 'Bachillerato & formación técnica en informática' : 'Ensino médio & formação técnica em informática',
+            archiveTitle: lang === 'en' ? 'View the EEEP technical class record' : lang === 'es' ? 'Ver el registro de la clase técnica EEEP' : 'Ver registro da turma técnica EEEP',
             image: '/projects/eeep_turma_2024.jpg',
-            badge: lang === 'en' ? 'TECHNICAL COHORT // EEEP LUIZA DE TEODORO VIEIRA' : 'TURMA TÉCNICA // EEEP LUIZA DE TEODORO VIEIRA',
-            date: lang === 'en' ? 'Jan 2023 — Dec 2025' : 'Jan 2023 — Dez 2025',
+            mediaCaption: lang === 'en' ? 'Technical IT class at EEEP Luiza de Teodoro Vieira, photographed in 2024.' : lang === 'es' ? 'Clase técnica de informática de EEEP Luiza de Teodoro Vieira, fotografiada en 2024.' : 'Turma técnica em informática da EEEP Luiza de Teodoro Vieira, fotografada em 2024.',
+            date: lang === 'en' ? 'Jan 2023 — Dec 2025' : lang === 'es' ? 'Ene 2023 — Dic 2025' : 'Jan 2023 — Dez 2025',
             location: 'Pacatuba, CE',
-            description:
-                lang === 'en'
-                    ? 'Official class photo of the Integrated High School & Technical IT Diploma cohort at EEEP Luiza de Teodoro Vieira. Rigorous formative cycle with deep hands-on learning in algorithmic logic, data structures, OOP with Python and Java, web development (HTML5, CSS3, JavaScript), UI/UX design fundamentals, and robotics projects.'
-                    : lang === 'es'
-                    ? 'Registro fotográfico oficial de la promoción de Bachillerato Técnico en Informática de EEEP Luiza de Teodoro Vieira. Período formativo con aprendizaje práctico en lógica algorítmica, estructuras de datos, POO con Python y Java, desarrollo web (HTML5, CSS3, JavaScript), fundamentos de UI/UX y proyectos de robótica.'
-                    : 'Registro fotográfico oficial da turma de Ensino Médio Integrado ao Técnico em Informática da EEEP Luiza de Teodoro Vieira. Período formativo com aprendizado prático e aprofundado em lógica de programação, estruturas de dados, algoritmos, orientação a objetos com Python e Java, desenvolvimento web (HTML5, CSS3, JavaScript), fundamentos de UI/UX Design e projetos integradores de robótica.',
-            telemetry: [
-                { label: lang === 'en' ? 'Technical Degree' : 'Formação Técnica', value: lang === 'en' ? 'Full-Time IT' : 'Informática Integral', highlight: true },
-                { label: lang === 'en' ? 'Classroom & Labs' : 'Turma & Laboratório', value: 'EEEP Luiza de Teodoro' },
-                { label: lang === 'en' ? 'Core Languages' : 'Linguagens Base', value: 'Python & Java' },
-                { label: lang === 'en' ? 'Cycle' : 'Ciclo Formativo', value: lang === 'en' ? '2023 — 2025 (Graduated)' : '2023 — 2025 (Concluído)' },
+            description: lang === 'en'
+                ? 'Integrated high school and technical IT education, completed in 2025. The programme combined programming fundamentals with practical web, design and robotics projects.'
+                : lang === 'es'
+                ? 'Bachillerato integrado con formación técnica en informática, concluido en 2025. La formación combinó fundamentos de programación con proyectos prácticos de web, diseño y robótica.'
+                : 'Ensino médio integrado à formação técnica em informática, concluído em 2025. A formação combinou fundamentos de programação com projetos práticos de web, design e robótica.',
+            contributions: lang === 'en' ? [
+                'Practice algorithms, data structures and object-oriented programming with Python and Java.',
+                'Build web interfaces with HTML, CSS and JavaScript.',
+                'Explore UI/UX design and robotics through integrated projects.',
+            ] : lang === 'es' ? [
+                'Practicar algoritmos, estructuras de datos y programación orientada a objetos con Python y Java.',
+                'Construir interfaces web con HTML, CSS y JavaScript.',
+                'Explorar diseño UI/UX y robótica en proyectos integradores.',
+            ] : [
+                'Praticar algoritmos, estruturas de dados e orientação a objetos com Python e Java.',
+                'Construir interfaces web com HTML, CSS e JavaScript.',
+                'Explorar UI/UX Design e robótica em projetos integradores.',
             ],
-            tags: ['#EEEP-LUIZA-TEODORO', '#TURMA-TECNICA', '#ENSINO-MEDIO', '#PYTHON', '#JAVA', '#HTML-CSS-JS', '#ROBOTICA'],
+            results: [],
+            technologies: ['Python', 'Java', 'HTML', 'CSS', 'JavaScript', 'UI/UX', lang === 'en' ? 'Robotics' : lang === 'es' ? 'Robótica' : 'Robótica'],
         },
     }), [lang]);
 
@@ -572,28 +597,16 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         : 'Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.'}
                 </p>
 
-                {/* Card de Snapshot Interativo: Registro Operacional */}
                 <button type="button" aria-label={ARCHIVES['2026'].archiveTitle}
                     onClick={() => setSelectedArchive(ARCHIVES['2026'])}
                     data-cursor-morph="true"
-                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-[border-color,transform] duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                    className="journey-record-thumbnail"
                 >
-                    <img
-                        src={ARCHIVES['2026'].image}
-                        alt={ARCHIVES['2026'].archiveTitle}
-                        className="w-full h-full object-cover object-left-top group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
-                        <span className="font-semibold text-white flex items-center gap-1.5">
-                            <span>🗂️</span>
-                            <span>{lang === 'en' ? 'Operational Record' : 'Registro Operacional'}</span>
-                        </span>
-                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
-                        </span>
-                    </div>
+                    <img src={ARCHIVES['2026'].image} alt="" loading="lazy" />
+                    <span className="journey-record-thumbnail-caption">
+                        <span>{lang === 'en' ? 'Quality assurance record' : lang === 'es' ? 'Registro de calidad' : 'Registro de qualidade'}</span>
+                        <span aria-hidden="true">↗</span>
+                    </span>
                 </button>
             </div>
 
@@ -774,32 +787,17 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                         : 'Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para <500ms.'}
                                 </p>
 
-                                {/* Card de Snapshot Interativo: Arquivo de Desenvolvimento */}
-                                <div
+                                <button type="button" aria-label={ARCHIVES['2025'].archiveTitle}
                                     onClick={() => setSelectedArchive(ARCHIVES['2025'])}
                                     data-cursor-morph="true"
-                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-[border-color,transform] duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                                    className="journey-record-thumbnail"
                                 >
-                                    <img
-                                        src={ARCHIVES['2025'].image}
-                                        alt={ARCHIVES['2025'].archiveTitle}
-                                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40">
-                                        DELPHI 11 + UNIGUI + LARAVEL
-                                    </div>
-                                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
-                                        <span className="font-semibold text-white flex items-center gap-1.5">
-                                            <span>🗂️</span>
-                                            <span>{lang === 'en' ? 'Development Archive' : lang === 'es' ? 'Archivo de Desarrollo' : 'Arquivo de Desenvolvimento'}</span>
-                                        </span>
-                                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
-                                        </span>
-                                    </div>
-                                </div>
+                                    <JourneyMigrationDiagram language={lang} compact />
+                                    <span className="journey-record-thumbnail-caption">
+                                        <span>{lang === 'en' ? 'Development record' : lang === 'es' ? 'Registro de desarrollo' : 'Registro de desenvolvimento'}</span>
+                                        <span aria-hidden="true">↗</span>
+                                    </span>
+                                </button>
                             </div>
                         </motion.div>
 
@@ -876,32 +874,17 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                         : 'Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.'}
                                 </p>
 
-                                {/* Card de Snapshot Interativo: Foto Oficial da Turma Técnica EEEP */}
-                                <div
+                                <button type="button" aria-label={ARCHIVES['2024'].archiveTitle}
                                     onClick={() => setSelectedArchive(ARCHIVES['2024'])}
                                     data-cursor-morph="true"
-                                    className="relative w-full max-w-[290px] h-32 rounded-xl overflow-hidden border border-white/15 hover:border-accent/60 transition-[border-color,transform] duration-300 shadow-xl cursor-pointer group active:scale-95 text-left"
+                                    className="journey-record-thumbnail"
                                 >
-                                    <img
-                                        src={ARCHIVES['2024'].image}
-                                        alt={ARCHIVES['2024'].archiveTitle}
-                                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-darker/90 text-secondary border border-accent/40">
-                                        {lang === 'en' ? 'EEEP TECHNICAL COHORT // 2024' : 'TURMA TÉCNICA EEEP // 2024'}
-                                    </div>
-                                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-gray-200">
-                                        <span className="font-semibold text-white flex items-center gap-1.5">
-                                            <span>🗂️</span>
-                                            <span>{lang === 'en' ? 'Technical Record // EEEP' : lang === 'es' ? 'Registro Técnico // EEEP' : 'Registro Técnico // EEEP'}</span>
-                                        </span>
-                                        <span className="text-accent group-hover:translate-x-0.5 transition-transform text-[10px] font-bold">
-                                            {lang === 'en' ? 'View ↗' : 'Ver ↗'}
-                                        </span>
-                                    </div>
-                                </div>
+                                    <img src={ARCHIVES['2024'].image} alt="" loading="lazy" />
+                                    <span className="journey-record-thumbnail-caption">
+                                        <span>{lang === 'en' ? 'Technical IT class' : lang === 'es' ? 'Clase técnica en informática' : 'Turma técnica em informática'}</span>
+                                        <span aria-hidden="true">↗</span>
+                                    </span>
+                                </button>
                             </div>
 
                             {/* Lado Direito: Card do Técnico em Informática EEEP */}

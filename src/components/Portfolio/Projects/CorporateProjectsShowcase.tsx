@@ -4,6 +4,8 @@ import { Project, ProjectFilterType, ProjectViewMode } from '../../../types/proj
 import { projectCategory } from '../../../utils/projects';
 import { playTabSwitch, playMechanicalClick } from '../../../lib/sound';
 import useSectionInView from '../../../hooks/useSectionInView';
+import ProjectArtwork from './ProjectArtwork';
+import '../project-cards.css';
 
 interface CorporateProjectsShowcaseProps {
     projects: Project[];
@@ -16,7 +18,6 @@ interface CylindricalCorporateCardProps {
     project: Project;
     index: number;
     activeIndex: number;
-    totalInView: number;
     smoothProgress: any;
     onSelect: (project: Project) => void;
     onCardFocus: (index: number) => void;
@@ -31,7 +32,6 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
     project,
     index,
     activeIndex,
-    totalInView,
     smoothProgress,
     onSelect,
     onCardFocus,
@@ -65,6 +65,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
 
     const cat = projectCategory(project);
     const imageUrl = project.image_url || project.image || '/dashboard_placeholder.png';
+    const hasArtwork = project.preview?.kind === 'architecture';
 
     // Badge de Categoria Formatado
     const categoryBadge = useMemo(() => {
@@ -73,18 +74,6 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
         if (cat === 'backend') return lang === 'en' ? 'Back-End & Utilities' : lang === 'es' ? 'Back-End y Utilidades' : 'Back-End & Utilitários';
         return lang === 'en' ? 'Software Engineering' : lang === 'es' ? 'Ingeniería de Software' : 'Engenharia de Software';
     }, [cat, lang]);
-
-    // Métrica de Destaque
-    const highlightMetric = useMemo(() => {
-        if (project.details?.metrics?.[0]) {
-            const m = project.details.metrics[0];
-            return typeof m === 'object' && m.value ? m.value : String(m);
-        }
-        if (project.architectureDetails?.volume) {
-            return project.architectureDetails.volume;
-        }
-        return lang === 'en' ? 'Stable Production' : lang === 'es' ? 'Producción Estable' : 'Produção Estável';
-    }, [project, lang]);
 
     return (
         <motion.div
@@ -100,7 +89,7 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                 transformOrigin: '50% 50%',
             }}
             onClick={handleContainerClick}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[650px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[550px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
                 isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
             }`}
         >
@@ -113,88 +102,37 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                         : 'border-white/5 pointer-events-none'
                 }`}
             >
-                {/* ── Lado Esquerdo: Imagem de Alta Fidelidade com Gradiente de Imersão ── */}
-                <div className="w-full md:w-[46%] h-48 sm:h-56 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-white/10 shrink-0 pointer-events-none">
-                    <img
-                        src={imageUrl}
-                        alt={project.title}
-                        width={640}
-                        height={400}
-                        loading="lazy"
-                        decoding="async"
-                        className={`w-full h-full object-cover object-left-top transition-transform duration-500 ${reducedMotion ? "" : "group-hover:scale-[1.025]"}`}
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = '/dashboard_placeholder.png';
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-35 pointer-events-none" />
-
-                    {/* Badge de Categoria com Indicador Ativo */}
-                    <div className="portfolio-chip absolute top-4 left-4 z-10 flex items-center gap-2 bg-darker pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-accent" />
-                        <span className="text-[10px] font-mono text-accent">
-                            {categoryBadge}
-                        </span>
-                    </div>
-
-                    {/* Número do Slide no Showcase */}
-                    <div className="absolute bottom-4 left-4 z-10 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 border border-white/10 text-[10px] font-mono text-primary/70 pointer-events-none">
-                        <span>#</span>
-                        <span className="text-white font-bold">{String(index + 1).padStart(2, '0')}</span>
-                        <span>/</span>
-                        <span>{String(totalInView).padStart(2, '0')}</span>
-                    </div>
+                <div className="project-catalogue-visual w-full md:w-[46%] h-48 sm:h-56 md:h-full relative overflow-hidden border-b md:border-b-0 md:border-r border-white/10 shrink-0 pointer-events-none">
+                    {hasArtwork ? (
+                        <ProjectArtwork project={project} language={lang} />
+                    ) : (
+                        <img
+                            src={imageUrl}
+                            alt={project.title}
+                            width={640}
+                            height={400}
+                            loading="lazy"
+                            decoding="async"
+                            className={`w-full h-full object-cover object-left-top transition-transform duration-500 ${reducedMotion ? '' : 'group-hover:scale-[1.025]'}`}
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null;
+                                target.src = '/dashboard_placeholder.png';
+                            }}
+                        />
+                    )}
                 </div>
 
-                {/* ── Lado Direito: Especificações de Engenharia & Ações sem Conflito ── */}
-                <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden">
+                <div className="project-catalogue-copy p-6 sm:p-7 md:p-8 flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                        {/* Cabeçalho do Card: Identificador + Métrica Confiável */}
-                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-2.5">
-                            <span className="portfolio-eyebrow">
-                                {project.architectureDetails?.architectureType
-                                    ? (lang === 'en' ? 'ENTERPRISE ARCHITECTURE' : lang === 'es' ? 'ARQUITECTURA EMPRESARIAL' : 'ARQUITETURA CORPORATIVA')
-                                    : (lang === 'en' ? `# 0${index + 1}. ENTERPRISE SYSTEM` : lang === 'es' ? `# 0${index + 1}. SISTEMA EMPRESARIAL` : `# 0${index + 1}. SISTEMA EMPRESARIAL`)}
-                            </span>
-                            <span className="portfolio-chip flex items-center gap-1.5 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent/70" />
-                                {highlightMetric}
-                            </span>
-                        </div>
-
-                        {/* Título do Projeto */}
-                        <h3 className="text-2xl sm:text-3xl font-serif text-primary font-normal tracking-tight leading-tight mb-2 truncate">
-                            {project.title}
-                        </h3>
-
-                        {/* Subtítulo / Tagline Arquitetural */}
-                        <p className="text-primary/90 text-xs sm:text-sm font-sans font-medium mb-3">
-                            {project.details?.subtitle || project.description || (lang === 'en' ? 'Enterprise solution focused on resilience and integrity.' : lang === 'es' ? 'Solución empresarial orientada a la resiliencia e integridad.' : 'Solução corporativa orientada a resiliência e integridade.')}
+                        <span className="project-catalogue-category">{categoryBadge}</span>
+                        <h3 className="project-catalogue-title">{project.title}</h3>
+                        <p className="project-catalogue-description">
+                            {project.description || project.details?.fullDescription}
                         </p>
-
-                        {/* Descrição Detalhada */}
-                        <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-4 font-sans line-clamp-3 md:line-clamp-4">
-                            {project.details?.fullDescription || project.description}
+                        <p className="project-catalogue-stack">
+                            {(project.tags || []).slice(0, 4).join(' · ')}
                         </p>
-
-                        {/* Badges de Stack Técnica */}
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                            {(project.tags || []).slice(0, 5).map((tech) => (
-                                <span
-                                    key={tech}
-                                    className="portfolio-chip"
-                                >
-                                    {tech}
-                                </span>
-                            ))}
-                            {(project.tags || []).length > 5 && (
-                                <span className="text-[10px] font-mono text-primary/60 self-center px-1">
-                                    +{(project.tags || []).length - 5}
-                                </span>
-                            )}
-                        </div>
                     </div>
 
                     {/* ── Rodapé Integrado: Ações Diretas com z-index e pointer-events calibrados ── */}
@@ -233,11 +171,11 @@ const CylindricalCorporateCard = memo(function CylindricalCorporateCard({
                             </a>
                         ) : (
                             <div
-                                className="py-3 px-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-400 font-mono text-xs rounded-xl flex items-center justify-center gap-1.5 select-none relative z-30"
+                                className="project-catalogue-private inline-flex items-center gap-1.5 select-none relative z-30"
                                 title={lang === 'en' ? 'Private Corporate Intellectual Property' : lang === 'es' ? 'Propiedad Intelectual Corporativa Privada' : 'Propriedade Intelectual Corporativa Privada'}
                             >
                                 <i aria-hidden="true" className="fas fa-lock text-[10px]" />
-                                <span className="text-[11px] font-semibold">{lang === 'en' ? 'Private Corporate' : lang === 'es' ? 'Corporativo Privado' : 'Corporativo Privado'}</span>
+                                <span>{lang === 'en' ? 'Private source' : lang === 'es' ? 'Código privado' : 'Código privado'}</span>
                             </div>
                         )}
 
@@ -324,19 +262,11 @@ const CorporateTableRow = memo(function CorporateTableRow({ project, onSelectPro
             <td className="py-3.5 px-4">
                 <div className="flex items-center gap-3">
                     <div className="portfolio-icon overflow-hidden shrink-0 flex items-center justify-center">
-                        <img
-                            src={img}
-                            alt={project.title}
-                            width={36}
-                            height={36}
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full h-full object-cover"
-                            onError={(e: any) => {
-                                e.target.onerror = null;
-                                e.target.src = '/dashboard_placeholder.png';
-                            }}
-                        />
+                        {project.preview?.kind === 'architecture' ? (
+                            <i aria-hidden="true" className={project.architectureDetails?.ecosystemIcon || (cat === 'desktop' ? 'fas fa-desktop' : cat === 'backend' ? 'fas fa-code' : 'fas fa-layer-group')} />
+                        ) : (
+                            <img src={img} alt="" width={36} height={36} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                        )}
                     </div>
                     <div>
                         <div className="font-bold text-white group-hover:text-accent transition-colors">
@@ -684,7 +614,7 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                         {/* ── Palco 3D Tridimensional com Curvatura Cilíndrica e Perspectiva ── */}
                         <div
                             onPointerDown={handlePointerDown}
-                            className="relative w-full h-[690px] sm:h-[530px] md:h-[510px] cursor-grab active:cursor-grabbing select-none"
+                            className="relative w-full h-[590px] sm:h-[530px] md:h-[510px] cursor-grab active:cursor-grabbing select-none"
                             style={{
                                 perspective: '1200px',
                                 perspectiveOrigin: '50% 50%',
@@ -706,7 +636,6 @@ const CorporateProjectsShowcase = memo(function CorporateProjectsShowcase({
                                         project={project}
                                         index={index}
                                         activeIndex={activeIndex}
-                                        totalInView={totalSlides}
                                         smoothProgress={smoothProgress}
                                         onSelect={onSelectProject}
                                         onCardFocus={navigateTo}
