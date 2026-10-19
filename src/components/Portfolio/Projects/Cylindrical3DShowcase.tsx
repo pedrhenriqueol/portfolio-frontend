@@ -195,8 +195,9 @@ const CylindricalCard = memo(function CylindricalCard({
     const rotateY = useTransform(smoothProgress, (p: number) => `${(index - p) * -24}deg`);
     // Recuo em Z: 0px no ativo, -220px nos laterais
     const translateZ = useTransform(smoothProgress, (p: number) => `${-Math.abs(index - p) * 220}px`);
-    // Escala: 1.0 no ativo, 0.86 nos adjacentes
+    // Escala: 1.0 no ativo, 0.86 nos adjacentes (0.935 no modo presenting plano para hierarquia óptica)
     const scale = useTransform(smoothProgress, (p: number) => Math.max(0.86, 1 - Math.abs(index - p) * 0.14));
+    const presentingScale = useTransform(smoothProgress, (p: number) => Math.max(0.935, 1 - Math.abs(index - p) * 0.065));
     // Opacidade: 1.0 no ativo, 0.40 nos adjacentes
     const opacity = useTransform(smoothProgress, (p: number) => Math.max(0.2, 1 - Math.abs(index - p) * 0.6));
     const shadowOpacity = useTransform(smoothProgress, (p: number) => Math.max(0, 0.85 - Math.abs(index - p) * 0.45));
@@ -213,7 +214,7 @@ const CylindricalCard = memo(function CylindricalCard({
                 translateX,
                 rotateY: presenting ? 0 : rotateY,
                 translateZ: presenting ? 0 : translateZ,
-                scale: presenting ? 1 : scale,
+                scale: presenting ? presentingScale : scale,
                 opacity: presenting ? 1 : opacity,
                 zIndex,
                 isolation: 'isolate',

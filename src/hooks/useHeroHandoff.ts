@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
+import { useLenis } from '../components/providers/SmoothScrollProvider';
 import { createSceneStyles, setSceneInert } from '../utils/sceneStyles';
 
 const phase = (value: number, from: number, to: number) => Math.min(1, Math.max(0, (value - from) / (to - from)));
@@ -9,6 +10,8 @@ const px = (value: number) => `${value.toFixed(3)}px`;
 /** One native sticky composition. Scroll writes only to the moving layers;
  * only the contained terminal body needs layout while its height folds. */
 export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
+    const lenis = useLenis();
+
     useLayoutEffect(() => {
         const root = ref.current;
         if (!root) return;
@@ -33,13 +36,14 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
         let profileTop = 0;
         let finalTop = 0;
         let collapsedHeight = 340;
+        let scrollPosition = lenis ? lenis.scroll : window.scrollY;
         let lastProgress = NaN;
         const expandedHeight = 540;
 
         const paint = () => {
             raf = 0;
             if (disposed) return;
-            const progress = enabled ? phase(scrollY, start, start + distance) : 0;
+            const progress = enabled ? phase(scrollPosition, start, start + distance) : 0;
             if (progress === lastProgress) return;
             lastProgress = progress;
             root.dataset.sceneProgress = String(progress);
@@ -48,36 +52,39 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
                 [copy, profile, credentials, metrics].forEach(node => setSceneInert(node, false));
                 return;
             }
-            const travel = smooth(phase(progress, .06, .48));
+            const travel = smooth(phase(progress, .04, .46));
             // The profile takes over while the name fades; the completed
-            // dashboard keeps a short reading interval before the scene releases.
-            const exit = smooth(phase(progress, .08, .40));
-            const reveal = phase(progress, .32, .60);
-            const assemble = smooth(phase(progress, .64, .88));
+            // dashboard keeps a comfortable reading interval before release.
+            const exit = smooth(phase(progress, .06, .36));
+            const reveal = smooth(phase(progress, .28, .60));
+            const assemble = smooth(phase(progress, .54, .86));
             const terminalY = mix(homeTop, finalTop, assemble);
             const terminalHeight = mix(expandedHeight, collapsedHeight, assemble);
-            const credentialsReveal = phase(progress, .73, .88);
-            const metricsReveal = phase(progress, .80, .90);
-            motion.set(copy, 'transform', `translate3d(${px(exit * -32)}, 0, ${px(exit * -100)})`);
+            const credentialsReveal = smooth(phase(progress, .68, .86));
+            const metricsReveal = smooth(phase(progress, .76, .90));
+            motion.set(copy, 'transform', `translate3d(${px(exit * -28)}, ${px(exit * -8)}, ${px(exit * -80)}) scale(${(1 - exit * .04).toFixed(4)})`);
             motion.set(copy, 'opacity', String(1 - exit));
-            motion.set(terminal, 'transform', `translate3d(${px(width * .54 * (1 - travel))}, ${px(terminalY)}, 0) rotateY(${(-8 * Math.sin(Math.PI * travel)).toFixed(3)}deg) scale(${(1 + .12 * Math.sin(Math.PI * travel)).toFixed(5)})`);
+            motion.set(terminal, 'transform', `translate3d(${px(width * .54 * (1 - travel))}, ${px(terminalY)}, 0) rotateY(${(-6.5 * Math.sin(Math.PI * travel)).toFixed(3)}deg) scale(${(1 + .085 * Math.sin(Math.PI * travel)).toFixed(5)})`);
             motion.set(terminalBox, '--terminal-height', px(terminalHeight));
-            motion.set(profile, 'transform', `translate3d(${px((1 - reveal) * 48)}, ${px(mix(profileTop, finalTop, assemble))}, 0)`);
+            motion.set(profile, 'transform', `translate3d(${px((1 - reveal) * 36)}, ${px(mix(profileTop, finalTop, assemble))}, 0)`);
             motion.set(profile, 'clip-path', `inset(0 0 ${((1 - reveal) * 100).toFixed(3)}% 0)`);
-            motion.set(profile, 'opacity', String(Math.min(1, reveal * 3)));
-            motion.set(credentials, 'transform', `translate3d(0, ${px(terminalY + terminalHeight + 24 + (1 - credentialsReveal) * 20)}, 0)`);
+            motion.set(profile, 'opacity', String(Math.min(1, reveal * 2.2)));
+            motion.set(credentials, 'transform', `translate3d(0, ${px(terminalY + terminalHeight + 24 + (1 - credentialsReveal) * 18)}, 0)`);
             motion.set(credentials, 'opacity', String(credentialsReveal));
-            motion.set(metrics, 'transform', `translate3d(0, ${px((1 - metricsReveal) * 20)}, 0)`);
+            motion.set(metrics, 'transform', `translate3d(0, ${px((1 - metricsReveal) * 18)}, 0)`);
             motion.set(metrics, 'opacity', String(metricsReveal));
             setSceneInert(copy, exit > .85);
             setSceneInert(profile, reveal < .98);
             setSceneInert(credentials, credentialsReveal < .98);
             setSceneInert(metrics, metricsReveal < .98);
         };
-        const onScroll = () => { if (!raf) raf = requestAnimationFrame(paint); };
+        const schedulePaint = () => { if (!raf) raf = requestAnimationFrame(paint); };
+        const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
+        const onLenisScroll = (instance: { scroll: number }) => { scrollPosition = instance.scroll; schedulePaint(); };
         const measure = () => {
             if (disposed) return;
             cancelAnimationFrame(raf);
+            raf = 0;
             const rect = root.getBoundingClientRect();
             const zoom = rect.width / root.offsetWidth || 1;
             const viewport = innerHeight / zoom;
@@ -100,7 +107,8 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             layout.set(root, '--scene-run', px(enabled ? run : 0));
             layout.set(root, '--copy-y', px(Math.max(96, (viewport - copy.offsetHeight) / 2)));
             layout.set(root, '--metrics-y', px(finalTop + finalHeight - metricsHeight));
-            start = rect.top + scrollY;
+            scrollPosition = lenis ? lenis.scroll : window.scrollY;
+            start = rect.top + window.scrollY;
             distance = run * zoom;
             const anchorTop = enabled ? run : (profile.getBoundingClientRect().top - root.getBoundingClientRect().top) / zoom - 100;
             layout.set(anchor, 'top', px(Math.max(0, anchorTop)));
@@ -110,7 +118,8 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
         };
         const observer = new ResizeObserver(measure);
         [frame, copy, profile, credentials, metrics].forEach(node => observer.observe(node));
-        window.addEventListener('scroll', onScroll, { passive: true });
+        if (lenis) lenis.on('scroll', onLenisScroll);
+        else window.addEventListener('scroll', onNativeScroll, { passive: true });
         window.addEventListener('resize', measure);
         media.addEventListener('change', measure);
         document.fonts.ready.then(measure);
@@ -119,7 +128,8 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             disposed = true;
             cancelAnimationFrame(raf);
             observer.disconnect();
-            window.removeEventListener('scroll', onScroll);
+            if (lenis) lenis.off('scroll', onLenisScroll);
+            else window.removeEventListener('scroll', onNativeScroll);
             window.removeEventListener('resize', measure);
             media.removeEventListener('change', measure);
             motion.clear();
@@ -129,5 +139,5 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             delete anchor.dataset.navAt;
             [copy, profile, credentials, metrics].forEach(node => setSceneInert(node, false));
         };
-    }, [ref]);
+    }, [ref, lenis]);
 }

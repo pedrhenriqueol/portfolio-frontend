@@ -1,7 +1,9 @@
 import { useLayoutEffect, type RefObject } from 'react';
+import { useLenis } from '../components/providers/SmoothScrollProvider';
 import { createSceneStyles, setSceneInert } from '../utils/sceneStyles';
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
+const smooth = (value: number) => value * value * (3 - 2 * value);
 
 const layoutLeft = (node: HTMLElement, root: HTMLElement) => {
     let left = 0;
@@ -17,6 +19,8 @@ const layoutLeft = (node: HTMLElement, root: HTMLElement) => {
 
 /** One bounded introduction connects the real career rail to either skills view. */
 export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode: 'bento' | '3d', language: string) {
+    const lenis = useLenis();
+
     useLayoutEffect(() => {
         const root = ref.current;
         if (!root) return;
@@ -48,6 +52,7 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         let sourceY = 0;
         let guideTop = 0;
         let targets: number[] = [];
+        let scrollPosition = lenis ? lenis.scroll : window.scrollY;
         let lastState = '';
         let pending = 0;
         let measurePending = 0;
@@ -61,11 +66,11 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         const paint = () => {
             pending = 0;
             if (disposed) return;
-            const progress = enabled ? clamp((scrollY - start) / distance) : 1;
+            const progress = enabled ? clamp((scrollPosition - start) / distance) : 1;
             // The heading finishes its entrance before it pins, so the pin
             // never opens on an empty viewport or hides readable controls.
             const reveal = enabled && !heading.contains(document.activeElement)
-                ? clamp((scrollY - start + revealDistance) / revealDistance) : 1;
+                ? smooth(clamp((scrollPosition - start + revealDistance) / revealDistance)) : 1;
             const state = `${progress}:${reveal}`;
             if (state === lastState) return;
             lastState = state;
@@ -77,7 +82,7 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
                 return;
             }
             motion.set(heading, 'opacity', String(reveal));
-            motion.set(heading, 'transform', `translateY(${(1 - reveal) * 16}px)`);
+            motion.set(heading, 'transform', `translateY(${(1 - reveal) * 20}px)`);
             const half = width / 2;
             // Sticky displacement is zero on approach, grows during the pin,
             // then stays at travel after release. Subtract only that movement
@@ -87,18 +92,22 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             // Fill the empty introduction while its heading is hidden, then
             // clear the bridge before it can intersect readable heading text.
             writePath(headingBridge, `M ${half} 8 L ${half} ${guideTop}`);
-            motion.set(headingBridge, 'opacity', String(Math.max(0, 1 - reveal * 2)));
-            const endY = height + (1 - progress) * travel - 12;
-            const fork = clamp((progress - .12) / .72);
-            const splitY = guideTop + Math.min(20, Math.max(0, (endY - guideTop) * .3));
+            motion.set(headingBridge, 'opacity', String(Math.max(0, 1 - reveal * 2.1)));
+            const endY = height + (1 - progress) * travel - 8;
+            const fork = smooth(clamp((progress - .08) / .76));
+            const splitY = guideTop + Math.min(22, Math.max(0, (endY - guideTop) * .25));
+            const midY = splitY + (endY - splitY) * .54;
             const guide = targets.map(target => {
                 const x = half + (target - half) * fork;
-                return `M ${half} ${guideTop} L ${half} ${splitY} Q ${half} ${endY} ${x} ${endY}`;
+                return `M ${half} ${guideTop} L ${half} ${splitY} C ${half} ${midY}, ${x} ${midY}, ${x} ${endY}`;
             }).join(' ');
             writePath(guideBase, guide);
             writePath(guideActive, guide);
-            motion.set(guideActive, 'opacity', String(.35 + fork * .65));
+            motion.set(guideActive, 'opacity', String(.38 + fork * .62));
         };
+        const schedulePaint = () => { if (!disposed && !pending) pending = requestAnimationFrame(paint); };
+        const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
+        const onLenisScroll = (instance: { scroll: number }) => { scrollPosition = instance.scroll; schedulePaint(); };
         const measure = () => {
             measurePending = 0;
             if (disposed) return;
@@ -109,27 +118,29 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             const viewport = innerHeight / zoom;
             const inset = Math.max(100, viewport * .09);
             width = frame.offsetWidth;
-            height = heading.offsetHeight + 32 + 56;
+            const forkRoom = 84;
+            height = heading.offsetHeight + 24 + forkRoom;
             enabled = media.matches && !!rail && height + inset + 48 < viewport;
             root.dataset.connected = String(enabled);
             // Only the introduction owns extra travel; neither selected view
             // has to fit the viewport, and mode changes preserve its instance.
-            travel = enabled ? viewport * .32 : 0;
+            travel = enabled ? viewport * .30 : 0;
             layout.set(root, '--skills-intro-height', `${height}px`);
             layout.set(root, '--skills-intro-travel', `${travel}px`);
             layout.set(root, '--skills-intro-inset', `${inset}px`);
             layout.set(anchor, 'top', `${travel}px`);
             layout.set(anchor, 'scroll-margin-top', `${enabled ? inset : 100}px`);
+            scrollPosition = lenis ? lenis.scroll : window.scrollY;
             const trackRect = track.getBoundingClientRect();
-            const trackTop = trackRect.top + scrollY;
+            const trackTop = trackRect.top + window.scrollY;
             start = trackTop - inset * zoom;
             distance = Math.max(1, travel * zoom);
-            revealDistance = innerHeight * .24;
+            revealDistance = innerHeight * .38;
             if (enabled && rail) {
                 const railRect = rail.getBoundingClientRect();
                 sourceX = (railRect.left + railRect.width / 2 - trackRect.left) / zoom;
-                sourceY = (railRect.bottom + scrollY - trackTop) / zoom;
-                guideTop = height - 56 + 12;
+                sourceY = (railRect.bottom + window.scrollY - trackTop) / zoom;
+                guideTop = height - forkRoom + 12;
                 const cards = [...body.querySelectorAll<HTMLElement>('[data-skill-card]')].slice(0, 3);
                 // Cache native layout centers: the chapter's outgoing scale
                 // can be active when resize or lazy content triggers a measure.
@@ -145,7 +156,6 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             lastState = '';
             paint();
         };
-        const schedulePaint = () => { if (!disposed && !pending) pending = requestAnimationFrame(paint); };
         const scheduleMeasure = () => { if (!disposed && !measurePending) measurePending = requestAnimationFrame(measure); };
         const observer = new ResizeObserver(scheduleMeasure);
         [root, heading, body, ...(rail ? [rail] : [])].forEach(node => observer.observe(node));
@@ -153,7 +163,8 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         if (main) observer.observe(main);
         const mutations = new MutationObserver(scheduleMeasure);
         mutations.observe(body, { childList: true, subtree: true });
-        window.addEventListener('scroll', schedulePaint, { passive: true });
+        if (lenis) lenis.on('scroll', onLenisScroll);
+        else window.addEventListener('scroll', onNativeScroll, { passive: true });
         window.addEventListener('resize', scheduleMeasure);
         root.addEventListener('focusin', schedulePaint);
         root.addEventListener('focusout', schedulePaint);
@@ -166,7 +177,8 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             cancelAnimationFrame(measurePending);
             observer.disconnect();
             mutations.disconnect();
-            window.removeEventListener('scroll', schedulePaint);
+            if (lenis) lenis.off('scroll', onLenisScroll);
+            else window.removeEventListener('scroll', onNativeScroll);
             window.removeEventListener('resize', scheduleMeasure);
             root.removeEventListener('focusin', schedulePaint);
             root.removeEventListener('focusout', schedulePaint);
@@ -178,5 +190,5 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             motion.clear();
             layout.clear();
         };
-    }, [ref, mode, language]);
+    }, [ref, mode, language, lenis]);
 }

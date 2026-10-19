@@ -15,8 +15,8 @@
 
 @media (min-width: 1024px) {
     /* The preceding divider already separates the showcases. Keep this arrival
-       close to it rather than adding another empty scroll segment. */
-    .corporate-arrival { padding-top: clamp(1.5rem, 3vw, 2.5rem); }
+       close to it while leaving generous breathing room before Contact below. */
+    .corporate-arrival { padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(6.5rem, 12vh, 9rem); }
     .corporate-arrival-count { padding-left: 2rem; border-left: 1px solid rgb(255 255 255 / .1); }
 }
 

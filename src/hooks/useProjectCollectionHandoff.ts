@@ -49,9 +49,9 @@ export function useProjectCollectionHandoff(ref: RefObject<HTMLElement | null>, 
             frame = 0;
             if (disposed || !enabled || !source) return;
             const progress = clamp((scrollPosition - start) / distance);
-            const retire = smooth(phase(progress, .015, .30));
-            const appear = smooth(phase(progress, .14, .42));
-            const enter = smooth(phase(progress, 0, .75));
+            const retire = smooth(phase(progress, .02, .38));
+            const appear = smooth(phase(progress, .18, .52));
+            const enter = smooth(phase(progress, .02, .78));
             // A disappearing collection retires focus to its stationary section,
             // without moving the document or trapping keyboard navigation.
             if (retire > .86 && source.contains(document.activeElement)) sourceRoot?.focus({ preventScroll: true });
@@ -62,9 +62,9 @@ export function useProjectCollectionHandoff(ref: RefObject<HTMLElement | null>, 
             lastProgress = progress;
             root.dataset.collectionProgress = progress.toFixed(4);
             motion.set(source, 'opacity', (1 - retire).toFixed(5));
-            motion.set(source, 'transform', retire === 0 ? 'none' : `perspective(1400px) translate3d(${px(-width * .32 * retire)}, ${px(-viewport * .025 * retire)}, 0) rotateY(${(-6 * retire).toFixed(4)}deg) scale(${(1 - .23 * retire).toFixed(5)})`);
+            motion.set(source, 'transform', retire === 0 ? 'none' : `perspective(1400px) translate3d(${px(-width * .28 * retire)}, ${px(-viewport * .02 * retire)}, 0) rotateY(${(-5 * retire).toFixed(4)}deg) scale(${(1 - .18 * retire).toFixed(5)})`);
             motion.set(arrival, 'opacity', appear.toFixed(5));
-            motion.set(arrival, 'transform', enter === 1 ? 'none' : `perspective(1400px) translate3d(${px(width * .52 * (1 - enter))}, ${px(viewport * .1 * (1 - enter))}, 0) rotateY(${(10 * (1 - enter)).toFixed(4)}deg) scale(${(.86 + .14 * enter).toFixed(5)})`);
+            motion.set(arrival, 'transform', enter === 1 ? 'none' : `perspective(1400px) translate3d(${px(width * .44 * (1 - enter))}, ${px(viewport * .08 * (1 - enter))}, 0) rotateY(${(8 * (1 - enter)).toFixed(4)}deg) scale(${(.88 + .12 * enter).toFixed(5)})`);
         };
         const schedulePaint = () => { if (!disposed && !frame) frame = requestAnimationFrame(paint); };
         const scheduleMeasure = () => { if (!disposed && !measureFrame) measureFrame = requestAnimationFrame(measure); };

@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
+import { useLenis } from '../components/providers/SmoothScrollProvider';
 import { createSceneStyles, setSceneInert } from '../utils/sceneStyles';
 
 const phase = (value: number, from: number, to: number) => {
@@ -8,6 +9,8 @@ const phase = (value: number, from: number, to: number) => {
 
 /** Coordinates one bounded native sticky scene, with stable native hash links. */
 export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress: (progress: number) => void) {
+    const lenis = useLenis();
+
     useLayoutEffect(() => {
         const root = ref.current;
         if (!root) return;
@@ -37,6 +40,7 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         let threadStart = 0;
         let threadTop = 0;
         let threadCenter = 0;
+        let scrollPosition = lenis ? lenis.scroll : window.scrollY;
         let lastProgress = NaN;
         let lastPath = "";
         const layout = createSceneStyles();
@@ -52,16 +56,18 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         const paint = () => {
             pending = 0;
             if (disposed) return;
-            const progress = enabled ? Math.min(1, Math.max(0, (scrollY - start) / distance)) : 1;
+            const progress = enabled ? Math.min(1, Math.max(0, (scrollPosition - start) / distance)) : 1;
             if (progress === lastProgress) return;
             lastProgress = progress;
             root.dataset.sceneProgress = String(progress);
-            const outgoing = enabled ? phase(progress, .08, .38) : 0;
-            const summaryEnter = enabled ? phase(progress, .38, .60) : 1;
-            const entering = enabled ? phase(progress, .44, .76) : 1;
-            const headerEnter = enabled ? phase(progress, .12, .40) : 1;
-            const middleExit = enabled ? phase(progress, 0, .18) : 0;
-            const spread = enabled ? phase(progress, .02, .34) : 0;
+            // Clear the center pillar and spread laterals before the career
+            // heading rises, preventing ghost overlap in the upper band.
+            const outgoing = enabled ? phase(progress, .02, .28) : 0;
+            const middleExit = enabled ? phase(progress, 0, .16) : 0;
+            const spread = enabled ? phase(progress, 0, .28) : 0;
+            const headerEnter = enabled ? phase(progress, .22, .48) : 1;
+            const summaryEnter = enabled ? phase(progress, .36, .60) : 1;
+            const entering = enabled ? phase(progress, .44, .78) : 1;
             if (enabled) {
                 motion.set(pillarsMotion, '--career-outgoing', String(outgoing));
                 motion.set(summary, '--career-entering', String(summaryEnter));
@@ -79,9 +85,9 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             setSceneInert(first, enabled && entering < .98);
             if (enabled) {
                 const half = width / 2;
-                // The axis is vertical before the milestone becomes visible,
+                // The axis aligns vertically before the milestone becomes visible,
                 // so the connecting line never crosses its year or text.
-                const turn = phase(progress, 0, .44);
+                const turn = phase(progress, .04, .44);
                 const startX = 24 + (half - 24) * turn;
                 const endX = width - 24 + (half - width + 24) * turn;
                 const startY = threadStart + (threadTop - threadStart) * turn;
@@ -100,9 +106,13 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             }
             onProgress(progress);
         };
+        const schedulePaint = () => { if (!pending) pending = requestAnimationFrame(paint); };
+        const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
+        const onLenisScroll = (instance: { scroll: number }) => { scrollPosition = instance.scroll; schedulePaint(); };
         const measure = () => {
             if (disposed) return;
             cancelAnimationFrame(pending);
+            pending = 0;
             const zoom = root.getBoundingClientRect().width / root.offsetWidth || 1;
             const viewport = innerHeight / zoom;
             const inset = Math.max(100, viewport * .09);
@@ -130,7 +140,8 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             // incoming composition is complete. It never inherits transforms.
             layout.set(anchor, 'top', `${enabled ? travel : incoming.offsetTop}px`);
             layout.set(anchor, 'scroll-margin-top', `${enabled ? inset : 100}px`);
-            const rootTop = root.getBoundingClientRect().top + scrollY;
+            scrollPosition = lenis ? lenis.scroll : window.scrollY;
+            const rootTop = root.getBoundingClientRect().top + window.scrollY;
             start = rootTop - inset * zoom;
             distance = Math.max(1, travel * zoom);
             if (enabled) {
@@ -142,12 +153,12 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             lastProgress = NaN;
             paint();
         };
-        const onScroll = () => { if (!pending) pending = requestAnimationFrame(paint); };
         const observer = new ResizeObserver(measure);
         [root, frame, incoming, pillars, first, firstMeta, firstHeader].forEach(node => observer.observe(node));
         const main = root.closest('main');
         if (main) observer.observe(main);
-        window.addEventListener('scroll', onScroll, { passive: true });
+        if (lenis) lenis.on('scroll', onLenisScroll);
+        else window.addEventListener('scroll', onNativeScroll, { passive: true });
         window.addEventListener('resize', measure);
         media.addEventListener('change', measure);
         document.fonts.ready.then(measure);
@@ -156,7 +167,8 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             disposed = true;
             cancelAnimationFrame(pending);
             observer.disconnect();
-            window.removeEventListener('scroll', onScroll);
+            if (lenis) lenis.off('scroll', onLenisScroll);
+            else window.removeEventListener('scroll', onNativeScroll);
             window.removeEventListener('resize', measure);
             media.removeEventListener('change', measure);
             delete root.dataset.scene;
@@ -166,12 +178,14 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             motion.clear();
             layout.clear();
         };
-    }, [ref, onProgress]);
+    }, [ref, onProgress, lenis]);
 }
 
 /** The continuing tracker follows the reading line in viewport pixels, even
  * with the site's CSS zoom. Milestone positions come from their real layout. */
 export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: boolean, onProgress: (progress: number, station2025: number, station2024: number) => void) {
+    const lenis = useLenis();
+
     useLayoutEffect(() => {
         const root = ref.current;
         if (!root || !enabled) return;
@@ -179,24 +193,30 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
         let start = 0;
         let distance = 1;
         let stations = [.25, .75];
+        let scrollPosition = lenis ? lenis.scroll : window.scrollY;
         let lastProgress = NaN;
         let frame = 0;
         let disposed = false;
         const paint = () => {
             frame = 0;
             if (disposed) return;
-            const progress = Math.min(1, Math.max(0, (scrollY - start) / distance));
+            const progress = Math.min(1, Math.max(0, (scrollPosition - start) / distance));
             if (progress === lastProgress) return;
             lastProgress = progress;
             onProgress(progress, stations[0], stations[1]);
         };
+        const schedulePaint = () => { if (!frame) frame = requestAnimationFrame(paint); };
+        const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
+        const onLenisScroll = (instance: { scroll: number }) => { scrollPosition = instance.scroll; schedulePaint(); };
         const measure = () => {
             if (disposed) return;
             cancelAnimationFrame(frame);
+            frame = 0;
             const rect = root.getBoundingClientRect();
             const zoom = rect.width / root.offsetWidth || 1;
             const lineHeight = Math.max(1, root.offsetHeight - 16);
-            start = rect.top + scrollY - innerHeight * .55;
+            scrollPosition = lenis ? lenis.scroll : window.scrollY;
+            start = rect.top + window.scrollY - innerHeight * .55;
             distance = lineHeight * zoom;
             stations = rows.map(row => {
                 let top = 0;
@@ -206,12 +226,12 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
             lastProgress = NaN;
             paint();
         };
-        const scroll = () => { if (!frame) frame = requestAnimationFrame(paint); };
         const observer = new ResizeObserver(measure);
         [root, ...rows].forEach(node => observer.observe(node));
         const main = root.closest('main');
         if (main) observer.observe(main);
-        window.addEventListener('scroll', scroll, { passive: true });
+        if (lenis) lenis.on('scroll', onLenisScroll);
+        else window.addEventListener('scroll', onNativeScroll, { passive: true });
         window.addEventListener('resize', measure);
         document.fonts.ready.then(measure);
         measure();
@@ -219,8 +239,9 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
             disposed = true;
             cancelAnimationFrame(frame);
             observer.disconnect();
-            window.removeEventListener('scroll', scroll);
+            if (lenis) lenis.off('scroll', onLenisScroll);
+            else window.removeEventListener('scroll', onNativeScroll);
             window.removeEventListener('resize', measure);
         };
-    }, [ref, enabled, onProgress]);
+    }, [ref, enabled, onProgress, lenis]);
 }
