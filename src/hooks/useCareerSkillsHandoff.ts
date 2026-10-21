@@ -32,11 +32,9 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         const svg = root.querySelector<SVGSVGElement>('.career-skills-thread')!;
         const sourcePath = svg.querySelector<SVGPathElement>('[data-skills-source-thread]')!;
         const marker = svg.querySelector<SVGCircleElement>('[data-skills-source-marker]')!;
-        const sourceHalo = svg.querySelector<SVGCircleElement>('[data-skills-source-halo]');
         const headingBridge = svg.querySelector<SVGPathElement>('[data-skills-heading-bridge]')!;
         const guideBase = svg.querySelector<SVGPathElement>('[data-skills-guide-base]')!;
         const guideActive = svg.querySelector<SVGPathElement>('[data-skills-guide-active]')!;
-        const forkOrbs = [...svg.querySelectorAll<SVGCircleElement>('[data-skills-fork-orb]')];
         const rail = [...(root.closest('main')?.querySelectorAll<HTMLElement>('.career-remainder > .career-timeline-rail') || [])]
             .find(node => node.classList.contains('md:block'));
         const media = matchMedia('(min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference)');
@@ -106,20 +104,6 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             writePath(guideBase, guide);
             writePath(guideActive, guide);
             motion.set(guideActive, 'opacity', String(.38 + fork * .62));
-
-            // Proposta C: Orbs luminosos na extremidade dos fios bifurcados rumo aos cards de Habilidades
-            const orbY = guideTop + (endY - guideTop) * (.25 + fork * .75);
-            const orbOpacity = fork > 0.02 ? Math.min(1, fork * 2.4) : 0;
-            forkOrbs.forEach((orbNode, idx) => {
-                if (idx < targets.length) {
-                    const targetX = half + (targets[idx] - half) * fork;
-                    orbNode.setAttribute('cx', targetX.toFixed(2));
-                    orbNode.setAttribute('cy', orbY.toFixed(2));
-                    motion.set(orbNode, 'opacity', String(orbOpacity));
-                } else {
-                    motion.set(orbNode, 'opacity', '0');
-                }
-            });
         };
         const schedulePaint = () => { if (!disposed && !pending) pending = requestAnimationFrame(paint); };
         const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
@@ -168,10 +152,6 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
                 svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
                 marker.setAttribute('cx', String(width / 2));
                 marker.setAttribute('cy', '8');
-                if (sourceHalo) {
-                    sourceHalo.setAttribute('cx', String(width / 2));
-                    sourceHalo.setAttribute('cy', '8');
-                }
             }
             lastState = '';
             paint();

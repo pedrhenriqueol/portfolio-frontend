@@ -29,8 +29,6 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
         const svg = root.querySelector<SVGSVGElement>('.career-scene-thread')!;
         const base = root.querySelector<SVGPathElement>('[data-career-thread-base]')!;
         const active = root.querySelector<SVGPathElement>('[data-career-thread-active]')!;
-        const orb = root.querySelector<SVGCircleElement>('[data-career-thread-orb]');
-        const halo = root.querySelector<SVGCircleElement>('[data-career-thread-halo]');
         const middlePillar = pillars.querySelector<HTMLElement>('.chapter-tail > :nth-child(2)');
         const media = matchMedia('(min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference)');
         let enabled = false;
@@ -105,20 +103,6 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
                     lastPath = path;
                 }
                 motion.set(active, 'stroke-dashoffset', String(1 - turn));
-
-                // Proposta C: Coordenada exata B(t) na ponta da curva de Bézier quadrática para o Orb Luminoso
-                if (orb && halo) {
-                    const u = 1 - turn;
-                    const orbX = u * u * startX + 2 * u * turn * half + turn * turn * endX;
-                    const orbY = u * u * startY + 2 * u * turn * middleY + turn * turn * endY;
-                    const orbOpacity = turn > 0.01 ? Math.min(1, turn * 3.2) : 0;
-                    orb.setAttribute('cx', orbX.toFixed(2));
-                    orb.setAttribute('cy', orbY.toFixed(2));
-                    halo.setAttribute('cx', orbX.toFixed(2));
-                    halo.setAttribute('cy', orbY.toFixed(2));
-                    motion.set(orb, 'opacity', String(orbOpacity));
-                    motion.set(halo, 'opacity', String(orbOpacity * 0.28));
-                }
             }
             onProgress(progress);
         };

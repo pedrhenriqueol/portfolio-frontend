@@ -8,12 +8,10 @@ import { playMechanicalClick } from '../../lib/sound';
 
 interface TechnicalCard {
     id: string;
-    code: string;
     title: string;
     badge: string;
     icon: string;
     colSpan: string;
-    tools: string[];
     items: {
         name: string;
         desc: string;
@@ -24,12 +22,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
     pt: [
         {
             id: 'qa-validation',
-            code: '// 01. QA-CORE',
             title: 'Garantia da Qualidade (QA)',
             badge: 'Ambientes Críticos',
             icon: 'fas fa-shield-halved',
             colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
-            tools: ['Postman', 'JSON Schema', 'SQL Audit', 'Regression Suite', 'ZPE / Aduana'],
             items: [
                 {
                     name: 'Testes de API & Contratos',
@@ -47,12 +43,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'legacy-delphi',
-            code: '// 02. VCL-WEB',
             title: 'Engenharia de Sistemas Delphi',
             badge: 'Modernização & VCL',
             icon: 'fas fa-server',
             colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
-            tools: ['Delphi 11', 'UniGui Web', 'Object Pascal', 'ACBr Fiscal', 'VCL 64-bit'],
             items: [
                 {
                     name: 'Migração Web (UniGui)',
@@ -70,12 +64,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'backend-db',
-            code: '// 03. DATA-API',
             title: 'Backend & Bancos de Dados',
             badge: 'Alta Performance',
             icon: 'fas fa-database',
             colSpan: 'md:col-span-2 lg:col-span-4 flex flex-col justify-between',
-            tools: ['SQL Server', 'PostgreSQL', 'Laravel', 'Index Seek', 'ACID Transactions'],
             items: [
                 {
                     name: 'APIs RESTful em Laravel',
@@ -93,12 +85,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'frontend-modern',
-            code: '// 04. UI-ARCH',
             title: 'Frontend Moderno & Interfaces Industriais',
             badge: 'UI Engenharia',
             icon: 'fab fa-react',
             colSpan: 'col-span-1 md:col-span-2 lg:col-span-12',
-            tools: ['React 19', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Zero CLS', 'GPU Compositor'],
             items: [
                 {
                     name: 'React 19 & TypeScript',
@@ -118,12 +108,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
     en: [
         {
             id: 'qa-validation',
-            code: '// 01. QA-CORE',
             title: 'Quality Assurance (QA)',
             badge: 'Mission-Critical',
             icon: 'fas fa-shield-halved',
             colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
-            tools: ['Postman', 'JSON Schema', 'SQL Audit', 'Regression Suite', 'FTZ / Customs'],
             items: [
                 {
                     name: 'API & Contract Testing',
@@ -141,12 +129,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'legacy-delphi',
-            code: '// 02. VCL-WEB',
             title: 'Delphi Systems Engineering',
             badge: 'Modernization & VCL',
             icon: 'fas fa-server',
             colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
-            tools: ['Delphi 11', 'UniGui Web', 'Object Pascal', 'ACBr Tax', 'VCL 64-bit'],
             items: [
                 {
                     name: 'Web Migration (UniGui)',
@@ -164,12 +150,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'backend-db',
-            code: '// 03. DATA-API',
             title: 'Backend & Databases',
             badge: 'High Performance',
             icon: 'fas fa-database',
             colSpan: 'md:col-span-2 lg:col-span-4 flex flex-col justify-between',
-            tools: ['SQL Server', 'PostgreSQL', 'Laravel', 'Index Seek', 'ACID Transactions'],
             items: [
                 {
                     name: 'RESTful APIs in Laravel',
@@ -187,12 +171,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'frontend-modern',
-            code: '// 04. UI-ARCH',
             title: 'Modern Frontend & Industrial UI',
             badge: 'UI Engineering',
             icon: 'fab fa-react',
             colSpan: 'col-span-1 md:col-span-2 lg:col-span-12',
-            tools: ['React 19', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Zero CLS', 'GPU Compositor'],
             items: [
                 {
                     name: 'React 19 & TypeScript',
@@ -212,12 +194,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
     es: [
         {
             id: 'qa-validation',
-            code: '// 01. QA-CORE',
             title: 'Aseguramiento de Calidad (QA)',
             badge: 'Entornos Críticos',
             icon: 'fas fa-shield-halved',
             colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
-            tools: ['Postman', 'JSON Schema', 'Auditoría SQL', 'Suite Regresiva', 'ZPE / Aduanas'],
             items: [
                 {
                     name: 'Pruebas de API y Contratos',
@@ -235,12 +215,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'legacy-delphi',
-            code: '// 02. VCL-WEB',
             title: 'Ingeniería de Sistemas Delphi',
             badge: 'Modernización y VCL',
             icon: 'fas fa-server',
             colSpan: 'md:col-span-1 lg:col-span-4 flex flex-col justify-between',
-            tools: ['Delphi 11', 'UniGui Web', 'Object Pascal', 'ACBr Fiscal', 'VCL 64-bit'],
             items: [
                 {
                     name: 'Migración Web (UniGui)',
@@ -258,12 +236,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'backend-db',
-            code: '// 03. DATA-API',
             title: 'Backend y Bases de Datos',
             badge: 'Alto Rendimiento',
             icon: 'fas fa-database',
             colSpan: 'md:col-span-2 lg:col-span-4 flex flex-col justify-between',
-            tools: ['SQL Server', 'PostgreSQL', 'Laravel', 'Index Seek', 'Transacciones ACID'],
             items: [
                 {
                     name: 'APIs RESTful en Laravel',
@@ -281,12 +257,10 @@ const BENTO_CARDS_I18N: Record<string, TechnicalCard[]> = {
         },
         {
             id: 'frontend-modern',
-            code: '// 04. UI-ARCH',
             title: 'Frontend Moderno e Interfaces Industriales',
             badge: 'Ingeniería de UI',
             icon: 'fab fa-react',
             colSpan: 'col-span-1 md:col-span-2 lg:col-span-12',
-            tools: ['React 19', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Zero CLS', 'GPU Compositor'],
             items: [
                 {
                     name: 'React 19 y TypeScript',
@@ -342,18 +316,6 @@ const BentoSkillCard = memo(function BentoSkillCard({
         setIsExpanded(prev => !prev);
     }, []);
 
-    const handleToolClick = useCallback((tool: string) => {
-        playMechanicalClick();
-        const query = lang === 'en'
-            ? `What is your practical experience with ${tool}?`
-            : lang === 'es'
-            ? `¿Cuál es tu experiencia práctica con ${tool}?`
-            : `Qual a sua experiência prática com ${tool}?`;
-        window.dispatchEvent(new CustomEvent('focus-terminal', {
-            detail: { command: query },
-        }));
-    }, [lang]);
-
     return (
         <motion.div
             ref={cardRef}
@@ -381,20 +343,15 @@ const BentoSkillCard = memo(function BentoSkillCard({
 
             <div className="portfolio-hud-body h-full flex flex-col justify-between">
                 <div>
-                    {/* Cabeçalho do Card com Código Técnico, Badge Tracejado e Toggle Quadrado [v]/[^] */}
-                    <div className="flex items-start justify-between gap-3 mb-4 pb-3.5 border-b border-dashed border-white/[0.12]">
+                    {/* Cabeçalho do Card com Badge Tracejado e Toggle Quadrado [v]/[^] */}
+                    <div className="flex items-center justify-between gap-3 mb-4 pb-3.5 border-b border-dashed border-white/[0.12]">
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="portfolio-icon flex items-center justify-center shrink-0">
                                 <i aria-hidden="true" className={`${card.icon} text-xs`} />
                             </div>
-                            <div className="min-w-0">
-                                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent block">
-                                    {card.code}
-                                </span>
-                                <h3 className="font-serif text-base md:text-[17px] font-semibold text-white whitespace-normal leading-snug">
-                                    {card.title}
-                                </h3>
-                            </div>
+                            <h3 className="font-serif text-base md:text-[17px] font-semibold text-white whitespace-normal leading-snug">
+                                {card.title}
+                            </h3>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
@@ -429,7 +386,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
 
                     {/* Itens Internos (High Data-Density com recolhimento suave das descrições) */}
                     {isSpanned ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {card.items.map((item, idx) => (
                                 <div
                                     key={item.name}
@@ -460,7 +417,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
                             ))}
                         </div>
                     ) : (
-                        <div className="space-y-3 mb-4">
+                        <div className="space-y-3">
                             {card.items.map((item) => (
                                 <div
                                     key={item.name}
@@ -488,29 +445,6 @@ const BentoSkillCard = memo(function BentoSkillCard({
                         </div>
                     )}
                 </div>
-
-                {/* Rodapé Técnico com Divisória Tracejada (├ ┤) e Chips Tracejados */}
-                <div className="portfolio-hud-divider pt-3 mt-auto">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {card.tools.map((tool) => (
-                            <button
-                                key={tool}
-                                type="button"
-                                onClick={() => handleToolClick(tool)}
-                                className="portfolio-chip-dashed cursor-pointer select-none"
-                                title={
-                                    lang === 'en'
-                                        ? `Ask Terminal about ${tool}`
-                                        : lang === 'es'
-                                        ? `Consultar en la Terminal sobre ${tool}`
-                                        : `Consultar no Terminal sobre ${tool}`
-                                }
-                            >
-                                {tool}
-                            </button>
-                        ))}
-                    </div>
-                </div>
             </div>
         </motion.div>
     );
@@ -528,7 +462,7 @@ export function Skills({ skills = [] }: { skills?: TechItem[] }) {
     const heading = (
         <ChapterHeading className="text-center">
                 <span className="portfolio-eyebrow">
-                    {lang === 'en' ? '// 03. Stack & Skills' : lang === 'es' ? '// 03. Stack y Habilidades' : '// 03. Stack & Habilidades'}
+                    {lang === 'en' ? 'Stack & Skills' : lang === 'es' ? 'Stack y Habilidades' : 'Stack & Habilidades'}
                 </span>
             <h2 id="skills-heading" className="portfolio-title mb-3">
                 {lang === 'en' ? (

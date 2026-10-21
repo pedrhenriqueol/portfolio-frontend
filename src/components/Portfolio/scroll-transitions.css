@@ -13,36 +13,6 @@ main section[id] { scroll-margin-top: 100px; }
 .scroll-chapter > #projetos { padding-block: 0; }
 .scroll-chapter > #projetos > section:first-child { padding-top: 5.5rem; }
 
-/* ── Proposta B: Halo Elíptico de Palco (Spotlight de Piso sob o Terminal) ── */
-.hero-terminal-floor-halo {
-    position: absolute;
-    left: -8%;
-    right: -8%;
-    bottom: -36px;
-    height: 76px;
-    pointer-events: none;
-    z-index: -1;
-    opacity: calc(0.28 + var(--terminal-stage-glow, 0) * 0.72);
-    transform: translate3d(0, 0, 0) scaleX(calc(0.88 + var(--terminal-stage-glow, 0) * 0.16)) scaleY(calc(0.82 + var(--terminal-stage-glow, 0) * 0.18));
-    background: radial-gradient(
-        ellipse 52% 48% at 50% 54%,
-        color-mix(in srgb, var(--color-accent) 44%, var(--color-secondary) 20%) 0%,
-        color-mix(in srgb, var(--color-accent) 18%, transparent) 46%,
-        transparent 76%
-    );
-}
-.hero-terminal-floor-halo::after {
-    content: '';
-    position: absolute;
-    left: 14%;
-    right: 14%;
-    top: 22px;
-    bottom: 14px;
-    border-radius: 9999px;
-    border: 1px dashed color-mix(in srgb, var(--color-accent) 40%, rgba(255, 255, 255, 0.14));
-    opacity: calc(0.18 + var(--terminal-stage-glow, 0) * 0.58);
-}
-
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
     .chapter-heading-content {
         transform-origin: center top;

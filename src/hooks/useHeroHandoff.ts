@@ -62,14 +62,11 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             const terminalHeight = mix(expandedHeight, collapsedHeight, assemble);
             const credentialsReveal = smooth(phase(progress, .66, .86));
             const metricsReveal = smooth(phase(progress, .74, .90));
-            // Intensidade do halo elíptico de palco sob o Terminal ao pousar em "Sobre Mim"
-            const stageGlow = smooth(phase(progress, .18, .58));
 
             motion.set(copy, 'transform', `translate3d(${px(exit * -28)}, ${px(exit * -8)}, ${px(exit * -80)}) scale(${(1 - exit * .04).toFixed(4)})`);
             motion.set(copy, 'opacity', String(1 - exit));
             motion.set(terminal, 'transform', `translate3d(${px(width * .54 * (1 - travel))}, ${px(terminalY)}, 0) rotateY(${(-6.5 * Math.sin(Math.PI * travel)).toFixed(3)}deg) scale(${(1 + .085 * Math.sin(Math.PI * travel)).toFixed(5)})`);
             motion.set(terminalBox, '--terminal-height', px(terminalHeight));
-            motion.set(terminalBox, '--terminal-stage-glow', stageGlow.toFixed(4));
 
             // Proposta B: Varredura progressiva com Feather Mask (borda de penumbra suave de cima para baixo)
             motion.set(profile, 'transform', `translate3d(${px((1 - reveal) * 28)}, ${px(mix(profileTop, finalTop, assemble) + (1 - reveal) * 14)}, 0)`);

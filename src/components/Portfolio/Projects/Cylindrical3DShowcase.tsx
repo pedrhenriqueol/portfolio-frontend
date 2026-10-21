@@ -32,7 +32,7 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
         id: 101,
         title: 'PayStream Gateway',
         tagline: 'Motor Transacional de Pagamentos & Split de Liquidação',
-        stepLabel: '# 01. Motor Transacional',
+        stepLabel: 'Motor Transacional',
         badge: 'Fintech de Alta Concorrência',
         stat: 'Idempotência Atômica',
         metrics: [
@@ -49,7 +49,7 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
         id: 102,
         title: 'PortLog OS',
         tagline: 'Operações Portuárias & Telemetria Industrial',
-        stepLabel: '# 02. Operações Portuárias',
+        stepLabel: 'Operações Portuárias',
         badge: 'Logística Portuária & ZPEs',
         stat: '100% FSM Válida',
         metrics: [
@@ -66,7 +66,7 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
         id: 103,
         title: 'SPECTR TestOps',
         tagline: 'Engenharia de Qualidade & Resiliência de APIs',
-        stepLabel: '# 03. Engenharia de Qualidade',
+        stepLabel: 'Engenharia de Qualidade',
         badge: 'Observabilidade & TestOps',
         stat: 'NIST Nearest Rank Math',
         metrics: [
@@ -88,7 +88,7 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             id: 101,
             title: 'PayStream Gateway',
             tagline: 'Transactional Payment Engine & Settlement Split',
-            stepLabel: '# 01. Transaction Engine',
+            stepLabel: 'Transaction Engine',
             badge: 'High-Concurrency Fintech',
             stat: 'Atomic Idempotency',
             metrics: [
@@ -105,7 +105,7 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             id: 102,
             title: 'PortLog OS',
             tagline: 'Port Operations & Industrial Telemetry',
-            stepLabel: '# 02. Port Operations',
+            stepLabel: 'Port Operations',
             badge: 'Port Logistics & FTZ',
             stat: '100% Valid FSM',
             metrics: [
@@ -122,7 +122,7 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             id: 103,
             title: 'SPECTR TestOps',
             tagline: 'API Quality Engineering & Resilience Platform',
-            stepLabel: '# 03. Quality Engineering',
+            stepLabel: 'Quality Engineering',
             badge: 'Observability & TestOps',
             stat: 'NIST Nearest Rank Math',
             metrics: [
@@ -141,7 +141,7 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             id: 101,
             title: 'PayStream Gateway',
             tagline: 'Motor Transaccional de Pagos y Split de Liquidación',
-            stepLabel: '# 01. Motor Transaccional',
+            stepLabel: 'Motor Transaccional',
             badge: 'Fintech de Alta Concurrencia',
             stat: 'Idempotencia Atómica',
             metrics: [
@@ -158,7 +158,7 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             id: 102,
             title: 'PortLog OS',
             tagline: 'Operaciones Portuarias y Telemetría Industrial',
-            stepLabel: '# 02. Operaciones Portuarias',
+            stepLabel: 'Operaciones Portuarias',
             badge: 'Logística Portuaria y ZPEs',
             stat: '100% FSM Válida',
             metrics: [
@@ -175,7 +175,7 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             id: 103,
             title: 'SPECTR TestOps',
             tagline: 'Ingeniería de Calidad y Resiliencia de APIs',
-            stepLabel: '# 03. Ingeniería de Calidad',
+            stepLabel: 'Ingeniería de Calidad',
             badge: 'Observabilidad y TestOps',
             stat: 'NIST Nearest Rank Math',
             metrics: [
@@ -612,21 +612,16 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                 <header className="project-focus-header">
                     <div>
                         <span className="portfolio-eyebrow">
-                            {lang === 'en' ? '// 04. SELECTED WORK' : lang === 'es' ? '// 04. PROYECTOS SELECCIONADOS' : '// 04. PROJETOS SELECIONADOS'}
+                            {lang === 'en' ? 'SELECTED WORK' : lang === 'es' ? 'PROYECTOS SELECCIONADOS' : 'PROJETOS SELECIONADOS'}
                         </span>
                         <h2 id="featured-projects-heading" className="portfolio-title">
                             {lang === 'en' ? <>Featured <em>projects.</em></> : lang === 'es' ? <>Proyectos <em>destacados.</em></> : <>Projetos em <em>destaque.</em></>}
                         </h2>
                     </div>
                     <div className="project-focus-count" aria-label={lang === 'en' ? 'Current project' : lang === 'es' ? 'Proyecto actual' : 'Projeto atual'}>
-                        <div className="project-focus-count-top">
-                            <span className="project-focus-count-label">
-                                {lang === 'en' ? 'MODULE' : lang === 'es' ? 'MÓDULO' : 'MÓDULO'}
-                            </span>
-                            <span aria-live="polite">
-                                <strong>{String(activeIndex + 1).padStart(2, '0')}</strong> / {String(totalSlides).padStart(2, '0')}
-                            </span>
-                        </div>
+                        <span aria-live="polite">
+                            <strong>{String(activeIndex + 1).padStart(2, '0')}</strong> / {String(totalSlides).padStart(2, '0')}
+                        </span>
                         <div className="project-focus-progress-rail" aria-hidden="true">
                             <motion.div style={{ scaleX: countProgress }} />
                         </div>

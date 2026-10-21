@@ -491,10 +491,10 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                     <div className="journey-heading-motion">
                         <span className="portfolio-eyebrow mb-2 block">
                             {lang === 'en'
-                                ? '// 02. CAREER & OPERATIONAL ENGINEERING'
+                                ? 'CAREER & OPERATIONAL ENGINEERING'
                                 : lang === 'es'
-                                ? '// 02. TRAYECTORIA E INGENIERÍA OPERACIONAL'
-                                : '// 02. TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
+                                ? 'TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                : 'TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
                         </span>
                         <h2 id="experience-heading" className="portfolio-title mb-4">
                             {t('experience.title') || 'Trajetória Profissional'}
@@ -586,7 +586,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
             <div data-career-first-meta className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                    <span>{lang === 'en' ? 'CURRENTLY // IN PRODUCTION' : lang === 'es' ? 'ACTUALMENTE // EN PRODUCCIÓN' : 'ATUALMENTE // EM PRODUÇÃO'}</span>
+                    <span>{lang === 'en' ? 'CURRENTLY IN PRODUCTION' : lang === 'es' ? 'ACTUALMENTE EN PRODUCCIÓN' : 'ATUALMENTE EM PRODUÇÃO'}</span>
                 </div>
 
                 {/* Ano Monumental em Outline com micro-escala reativa */}
@@ -668,13 +668,13 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         {/* 1. Trilho Base Guia (Filamento escuro sutil de fundo) */}
                         <div className="absolute inset-0 bg-white/[0.12] rounded-full" />
 
-                        {/* 2. Feixe Laser Ativo Preenchido (Gradiente Accent -> Secondary -> White) */}
+                        {/* 2. Feixe Laser Ativo Preenchido (Emenda contínua desde 2026) */}
                         <motion.div
                             className="absolute top-0 left-0 right-0 rounded-full origin-top"
                             style={{
                                 height: lineHeight,
-                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 45%, transparent) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
-                                boxShadow: '0 0 14px color-mix(in srgb, var(--color-accent) 65%, transparent)',
+                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
+                                boxShadow: '0 0 12px color-mix(in srgb, var(--color-accent) 55%, transparent)',
                             }}
                         />
 
@@ -716,8 +716,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             className="absolute top-0 left-0 right-0 rounded-full origin-top"
                             style={{
                                 height: lineHeight,
-                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 45%, transparent) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
-                                boxShadow: '0 0 12px color-mix(in srgb, var(--color-accent) 60%, transparent)',
+                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
+                                boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 55%, transparent)',
                             }}
                         />
 
@@ -903,7 +903,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-3">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/5 text-primary border border-white/10">
                                     <i className="fas fa-graduation-cap text-[10px]" />
-                                    <span>{lang === 'en' ? 'HIGH SCHOOL & TECHNICAL DIPLOMA // 2023 - 2025' : lang === 'es' ? 'BACHILLERATO Y TÉCNICO // 2023 - 2025' : 'ENSINO MÉDIO & TÉCNICO // 2023 - 2025'}</span>
+                                    <span>{lang === 'en' ? 'HIGH SCHOOL & TECHNICAL DIPLOMA · 2023 – 2025' : lang === 'es' ? 'BACHILLERATO Y TÉCNICO · 2023 – 2025' : 'ENSINO MÉDIO & TÉCNICO · 2023 – 2025'}</span>
                                 </div>
 
                                 {/* Ano Monumental em Outline com micro-escala reativa */}

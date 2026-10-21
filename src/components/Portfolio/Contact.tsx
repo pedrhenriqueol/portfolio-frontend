@@ -218,7 +218,7 @@ function Contact() {
 
                 {/* ── Cabeçalho Limpo da Seção ── */}
                 <div className="contact-story-heading">
-                    <span className="portfolio-eyebrow">// 05. {t('contact.tag') || (lang === 'en' ? 'Contact' : 'Contato')}</span>
+                    <span className="portfolio-eyebrow">{t('contact.tag') || (lang === 'en' ? 'Contact' : 'Contato')}</span>
                     <h2 id="contact-title" className="portfolio-title">
                         {t('contact.title1') || (lang === 'en' ? "Let's " : "Vamos ")}
                         <span className="italic font-serif">{t('contact.title2') || (lang === 'en' ? "talk?" : "conversar?")}</span>

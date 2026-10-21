@@ -146,10 +146,10 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics, isLoa
                         <div ref={textRef} className="w-full space-y-6">
                             <span className="portfolio-eyebrow">
                                 {lang === 'en'
-                                    ? '// 00. SOFTWARE ENGINEERING & QA'
+                                    ? 'SOFTWARE ENGINEERING & QA'
                                     : lang === 'es'
-                                    ? '// 00. INGENIERÍA DE SOFTWARE & QA'
-                                    : '// 00. ENGENHARIA DE SOFTWARE & QA'}
+                                    ? 'INGENIERÍA DE SOFTWARE & QA'
+                                    : 'ENGENHARIA DE SOFTWARE & QA'}
                             </span>
 
                             {/* Stable identity; each line enters once, without a blinking loop. */}
@@ -287,8 +287,6 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics, isLoa
                                 }>
                                     <InteractiveTerminal />
                                 </Suspense>
-                                {/* Proposta B: Halo Elíptico de Piso / Spotlight de Palco sob o Terminal */}
-                                <div aria-hidden="true" className="hero-terminal-floor-halo" />
                             </div>
                         </div>
                     </motion.div>

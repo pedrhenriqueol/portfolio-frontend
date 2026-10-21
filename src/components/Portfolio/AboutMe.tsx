@@ -135,7 +135,6 @@ const BentoCard = memo(function BentoCard({
 });
 
 interface PillarDefinition {
-    code: string;
     icon: string;
     title: string;
     desc: string;
@@ -186,12 +185,6 @@ const PillarHudCard = memo(function PillarHudCard({
         setIsExpanded(prev => !prev);
     }, [isExpanded]);
 
-    const stackHeading = lang === 'en'
-        ? 'SKILLSET & TOOLS'
-        : lang === 'es'
-        ? 'STACK Y HERRAMIENTAS'
-        : 'STACK & FERRAMENTAS';
-
     const specsHeading = lang === 'en'
         ? 'ARCHITECTURAL DELIVERABLES'
         : lang === 'es'
@@ -225,19 +218,14 @@ const PillarHudCard = memo(function PillarHudCard({
 
             <div className="portfolio-hud-body relative z-20 h-full flex flex-col justify-between">
                 <div>
-                    <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2.5">
                             <div className="portfolio-icon flex items-center justify-center shrink-0">
                                 <i className={`${pillar.icon} text-xs`} aria-hidden="true" />
                             </div>
-                            <div>
-                                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent block">
-                                    {pillar.code}
-                                </span>
-                                <h4 className="text-base font-semibold text-white font-serif leading-snug">
-                                    {pillar.title}
-                                </h4>
-                            </div>
+                            <h4 className="text-base font-semibold text-white font-serif leading-snug">
+                                {pillar.title}
+                            </h4>
                         </div>
 
                         <button
@@ -254,7 +242,7 @@ const PillarHudCard = memo(function PillarHudCard({
                                     ? (lang === 'en' ? 'Collapse architecture specs' : lang === 'es' ? 'Contraer especificaciones' : 'Recolher especificações')
                                     : (lang === 'en' ? 'Expand architecture specs' : lang === 'es' ? 'Expandir especificaciones' : 'Expandir especificações')
                             }
-                            className="portfolio-hud-toggle mt-0.5"
+                            className="portfolio-hud-toggle"
                         >
                             <i
                                 aria-hidden="true"
@@ -296,16 +284,8 @@ const PillarHudCard = memo(function PillarHudCard({
                     </AnimatePresence>
                 </div>
 
-                {/* Divisória técnica tracejada com marcadores ├ e ┤ + TechChips Tracejados */}
+                {/* Divisória tracejada sutil + TechChips Tracejados */}
                 <div className="portfolio-hud-divider pt-3.5 mt-1">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-neutral-400">
-                            {stackHeading}
-                        </span>
-                        <span className="font-mono text-[9.5px] text-neutral-500">
-                            {pillar.tags.length} {lang === 'en' ? 'modules' : lang === 'es' ? 'módulos' : 'módulos'}
-                        </span>
-                    </div>
                     <div className="flex flex-wrap gap-1.5">
                         {pillar.tags.map((tag, tIdx) => (
                             <button
@@ -494,10 +474,10 @@ function SqlBenchmarkModal({
                         <div className="bg-black/40 p-3 rounded-lg border border-white/[0.05] text-neutral-300">
                             <div className="text-[10px] text-neutral-500 uppercase tracking-widest mb-1">
                                 {lang === 'en'
-                                    ? '// ANALYZED QUERY (T-SQL)'
+                                    ? 'ANALYZED QUERY (T-SQL)'
                                     : lang === 'es'
-                                    ? '// CONSULTA ANALIZADA (T-SQL)'
-                                    : '// CONSULTA ANALISADA (T-SQL)'}
+                                    ? 'CONSULTA ANALIZADA (T-SQL)'
+                                    : 'CONSULTA ANALISADA (T-SQL)'}
                             </div>
                             <code className="text-neutral-200 text-[11.5px] block font-mono">
                                 SELECT * FROM Transacoes WITH(NOLOCK) WHERE Status = 'PENDENTE' AND DataCriacao &gt;= '2026-01-01'
@@ -674,10 +654,10 @@ export function AboutIntro({ anchorId = 'sobre' }: { anchorId?: string | null } 
         <header id={anchorId ?? undefined} className="about-intro text-center lg:text-left">
             <span className="portfolio-eyebrow">
                     {lang === 'en'
-                        ? '// 01. BIOGRAPHY & TECHNICAL GUIDELINES'
+                        ? 'BIOGRAPHY & TECHNICAL GUIDELINES'
                         : lang === 'es'
-                        ? '// 01. BIOGRAFÍA Y DIRECTRICES TÉCNICAS'
-                        : '// 01. BIOGRAFIA & DIRETRIZES TÉCNICAS'}
+                        ? 'BIOGRAFÍA Y DIRECTRICES TÉCNICAS'
+                        : 'BIOGRAFIA & DIRETRIZES TÉCNICAS'}
             </span>
             <h2 id="about-heading" className="portfolio-title mb-3">
                 {t('about.title')}
@@ -868,7 +848,6 @@ export function AboutMe({ showIntro = true, renderLayout }: {
     // ── Pilares de especialidade unificados (Proposta A: Moldura HUD + Entregáveis Expansíveis) ──
     const pillarDefinitions: PillarDefinition[] = [
         {
-            code: '// 01. ARCH',
             icon: 'fas fa-sync-alt',
             title: lang === 'en' ? 'Legacy Modernization' : lang === 'es' ? 'Modernización Legacy' : 'Modernização de Legados',
             desc: lang === 'en'
@@ -896,7 +875,6 @@ export function AboutMe({ showIntro = true, renderLayout }: {
             tags: ['Delphi 11', 'UniGui', 'Laravel', 'React', 'TypeScript', 'Tailwind'],
         },
         {
-            code: '// 02. DATA',
             icon: 'fas fa-database',
             title: lang === 'en' ? 'Databases & Performance' : lang === 'es' ? 'Bases de Datos y Rendimiento' : 'Bancos de Dados & Performance',
             desc: lang === 'en'
@@ -924,7 +902,6 @@ export function AboutMe({ showIntro = true, renderLayout }: {
             tags: ['SQL Server', 'MySQL', 'PostgreSQL', lang === 'en' ? 'Indexing' : lang === 'es' ? 'Indexación' : 'Indexação', 'Tuning'],
         },
         {
-            code: '// 03. QA-OPS',
             icon: 'fas fa-shield-alt',
             title: lang === 'en' ? 'QA & Mission-Critical Systems' : lang === 'es' ? 'QA y Sistemas Críticos' : 'QA & Sistemas Críticos',
             desc: lang === 'en'
@@ -1116,7 +1093,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                         <span className="text-[10px] font-mono font-medium text-neutral-300 uppercase tracking-wider">
-                                            // WORKSTATION TELEMETRY
+                                            WORKSTATION TELEMETRY
                                         </span>
                                     </div>
                                     <button
@@ -1189,7 +1166,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
     const pillars = (
         <div className="chapter-tail grid grid-cols-1 md:grid-cols-3 gap-5">
             {pillarDefinitions.map((p, idx) => (
-                <motion.div key={p.code} variants={cardVariants} className="h-full">
+                <motion.div key={p.title} variants={cardVariants} className="h-full">
                     <PillarHudCard
                         pillar={p}
                         index={idx}

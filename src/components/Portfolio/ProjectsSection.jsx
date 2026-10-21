@@ -54,10 +54,10 @@ export default function ProjectsSection({ projects }) {
                                 <div className="corporate-arrival-copy">
                                     <span className="portfolio-eyebrow mb-3 block">
                                         {lang === 'en'
-                                            ? '// 04.02. ENTERPRISE REPOSITORY & SOLUTIONS'
+                                            ? 'ENTERPRISE REPOSITORY & SOLUTIONS'
                                             : lang === 'es'
-                                            ? '// 04.02. REPOSITORIO CORPORATIVO Y SOLUCIONES'
-                                            : '// 04.02. REPOSITÓRIO CORPORATIVO & SOLUÇÕES'}
+                                            ? 'REPOSITORIO CORPORATIVO Y SOLUCIONES'
+                                            : 'REPOSITÓRIO CORPORATIVO & SOLUÇÕES'}
                                     </span>
                                     <h2 id="corporate-projects-heading" className="portfolio-title mb-4">
                                         {lang === 'en'
