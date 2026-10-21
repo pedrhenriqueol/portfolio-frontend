@@ -229,7 +229,7 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const firstTrackerOpacity = useTransform([smoothFirstFlow, smoothProgress], ([f, r]) => {
         const fv = Number(f);
         const rv = Number(r);
-        if (rv > 0.005 || fv <= 0.005 || fv >= 0.995) return 0;
+        if (rv > 0.003 || fv <= 0.005 || fv >= 0.995) return 0;
         return 1;
     });
 
@@ -237,7 +237,11 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     // its original accelerated mapping.
     const trackerTop = useTransform(smoothProgress, [0, hasEntrance ? 1 : .55], ['0%', '100%'], { clamp: true });
     const lineHeight = useTransform(smoothProgress, [0, hasEntrance ? 1 : .55], ['0%', '100%'], { clamp: true });
-    const trackerOpacity = useTransform(smoothProgress, [0, .008], [hasEntrance ? 0 : 1, 1]);
+    const trackerOpacity = useTransform(smoothProgress, (v: number) => {
+        if (!hasEntrance) return 1;
+        if (v <= 0.003 || v >= 0.995) return 0;
+        return 1;
+    });
 
     // Micro-escalas reativas nos anos monumentais (sincronizadas com o percurso real)
     const firstSignal = useTransform([entranceProgress, smoothFirstFlow], ([ent, flow]) => {
@@ -683,7 +687,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                     style={{
                                         height: firstLineHeight,
                                         backgroundColor: 'var(--color-secondary)',
-                                        boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
                                     }}
                                 />
 
@@ -732,7 +735,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             style={{
                                 height: lineHeight,
                                 backgroundColor: 'var(--color-secondary)',
-                                boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
                             }}
                         />
 
@@ -775,7 +777,6 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                             style={{
                                 height: lineHeight,
                                 backgroundColor: 'var(--color-secondary)',
-                                boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
                             }}
                         />
 

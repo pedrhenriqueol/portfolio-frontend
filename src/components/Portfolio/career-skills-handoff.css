@@ -30,19 +30,28 @@
     }
     .career-skills-thread [data-skills-source-thread],
     .career-skills-thread [data-skills-heading-bridge] {
+        stroke: rgb(255 255 255 / .12);
+        stroke-width: 2px;
+        stroke-linecap: butt;
+    }
+    .career-skills-thread [data-skills-source-active] {
         stroke: var(--color-secondary);
         stroke-width: 2px;
-        stroke-linecap: round;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        stroke-linecap: butt;
     }
     .career-skills-thread [data-skills-source-marker] {
         fill: var(--color-secondary);
         stroke: var(--color-secondary);
         stroke-width: 1.5px;
+        opacity: 0;
     }
     .career-skills-thread [data-skills-guide-base] { stroke: rgb(255 255 255 / .12); stroke-width: 2px; }
     .career-skills-thread [data-skills-guide-active] {
         stroke: var(--color-secondary);
         stroke-width: 2px;
         stroke-linecap: round;
+        opacity: 0;
     }
 }

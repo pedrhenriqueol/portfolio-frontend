@@ -19,6 +19,7 @@ export default function CareerSkillsHandoff({ heading, children, mode, language 
                 <div className="career-skills-intro-frame">
                     <svg className="career-skills-thread" aria-hidden="true" focusable="false" preserveAspectRatio="none">
                         <path data-skills-source-thread fill="none" />
+                        <path data-skills-source-active fill="none" pathLength="1" />
                         <path data-skills-heading-bridge fill="none" />
                         <circle data-skills-source-marker r="3.2" />
                         <path data-skills-guide-base fill="none" />

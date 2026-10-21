@@ -31,6 +31,7 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         const anchor = root.querySelector<HTMLElement>('.career-skills-anchor')!;
         const svg = root.querySelector<SVGSVGElement>('.career-skills-thread')!;
         const sourcePath = svg.querySelector<SVGPathElement>('[data-skills-source-thread]')!;
+        const sourceActive = svg.querySelector<SVGPathElement>('[data-skills-source-active]')!;
         const marker = svg.querySelector<SVGCircleElement>('[data-skills-source-marker]')!;
         const headingBridge = svg.querySelector<SVGPathElement>('[data-skills-heading-bridge]')!;
         const guideBase = svg.querySelector<SVGPathElement>('[data-skills-guide-base]')!;
@@ -47,6 +48,8 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
         let travel = 0;
         let start = 0;
         let distance = 1;
+        let bridgeStart = 0;
+        let bridgeDistance = 1;
         let revealDistance = 1;
         let sourceX = 0;
         let sourceY = 0;
@@ -67,11 +70,12 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             pending = 0;
             if (disposed) return;
             const progress = enabled ? clamp((scrollPosition - start) / distance) : 1;
+            const bridgeProgress = enabled ? clamp((scrollPosition - bridgeStart) / bridgeDistance) : 1;
             // The heading finishes its entrance before it pins, so the pin
             // never opens on an empty viewport or hides readable controls.
             const reveal = enabled && !heading.contains(document.activeElement)
                 ? smooth(clamp((scrollPosition - start + revealDistance) / revealDistance)) : 1;
-            const state = `${progress}:${reveal}`;
+            const state = `${progress}:${bridgeProgress}:${reveal}`;
             if (state === lastState) return;
             lastState = state;
             root.dataset.sceneProgress = String(progress);
@@ -88,11 +92,17 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             // then stays at travel after release. Subtract only that movement
             // from the cached native rail endpoint, including on reverse scroll.
             const source = sourceY - progress * travel;
-            writePath(sourcePath, `M ${sourceX} ${source} L ${half} 8`);
+            const srcLine = `M ${sourceX} ${source} L ${half} 8`;
+            writePath(sourcePath, srcLine);
+            writePath(sourceActive, srcLine);
             // Fill the empty introduction while its heading is hidden, then
             // clear the bridge before it can intersect readable heading text.
             writePath(headingBridge, `M ${half} 8 L ${half} ${guideTop}`);
             motion.set(headingBridge, 'opacity', String(Math.max(0, 1 - reveal * 2.1)));
+            // O feixe de conexão e o marcador acendem em sincronia exata com a linha de leitura (55% viewport) saindo do fim de 2024
+            const activeEngage = smooth(clamp((bridgeProgress - .82) / .18));
+            motion.set(sourceActive, 'stroke-dashoffset', String(1 - bridgeProgress));
+            motion.set(marker, 'opacity', String(activeEngage));
             const endY = height + (1 - progress) * travel - 8;
             const fork = smooth(clamp((progress - .08) / .76));
             const splitY = guideTop + Math.min(22, Math.max(0, (endY - guideTop) * .25));
@@ -103,7 +113,7 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             }).join(' ');
             writePath(guideBase, guide);
             writePath(guideActive, guide);
-            motion.set(guideActive, 'opacity', String(.38 + fork * .62));
+            motion.set(guideActive, 'opacity', String(fork));
         };
         const schedulePaint = () => { if (!disposed && !pending) pending = requestAnimationFrame(paint); };
         const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
@@ -138,6 +148,11 @@ export function useCareerSkillsHandoff(ref: RefObject<HTMLElement | null>, mode:
             revealDistance = innerHeight * .38;
             if (enabled && rail) {
                 const railRect = rail.getBoundingClientRect();
+                const frameRect = frame.getBoundingClientRect();
+                const railEndScroll = railRect.bottom + window.scrollY - innerHeight * .55;
+                const markerEndScroll = frameRect.top + 8 * zoom + window.scrollY - innerHeight * .55;
+                bridgeStart = railEndScroll;
+                bridgeDistance = Math.max(1, markerEndScroll - railEndScroll);
                 sourceX = (railRect.left + railRect.width / 2 - trackRect.left) / zoom;
                 sourceY = (railRect.bottom + window.scrollY - trackTop) / zoom;
                 guideTop = height - forkRoom + 12;

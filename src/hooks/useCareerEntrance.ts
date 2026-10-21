@@ -229,10 +229,10 @@ export function useCareerRemainder(
             frame = 0;
             const rect = root.getBoundingClientRect();
             const zoom = rect.width / root.offsetWidth || 1;
-            const lineHeight = Math.max(1, root.offsetHeight - 16);
+            const lineHeight = Math.max(1, root.offsetHeight);
             scrollPosition = lenis ? lenis.scroll : window.scrollY;
             start = rect.top + window.scrollY - innerHeight * .55;
-            distance = lineHeight * zoom;
+            distance = Math.max(1, rect.height);
             if (firstTrack) {
                 const firstLine = firstTrack.querySelector<HTMLElement>('.career-first-native-line');
                 const targetBox = (firstLine || firstTrack).getBoundingClientRect();

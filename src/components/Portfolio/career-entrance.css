@@ -21,7 +21,7 @@
     z-index: 10;
 }
 .career-scene-section .career-remainder { padding-top: 0; }
-.career-scene-section .career-remainder > .career-timeline-rail { top: 0; }
+.career-scene-section .career-remainder > .career-timeline-rail { top: 0; bottom: 0; }
 .career-later-milestones { padding-top: 5rem; }
 
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
