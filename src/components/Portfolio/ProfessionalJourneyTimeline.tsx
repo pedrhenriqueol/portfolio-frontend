@@ -190,16 +190,18 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const timelineTrackRef = useRef<HTMLDivElement>(null);
     const hasEntrance = entrancePillars !== undefined;
     const entranceProgress = useMotionValue(0);
+    const firstFlowProgress = useMotionValue(0);
     const remainderProgress = useMotionValue(0);
     const station2025 = useMotionValue(.25);
     const station2024 = useMotionValue(.75);
     const handleEntranceProgress = useCallback((progress: number) => entranceProgress.set(progress), [entranceProgress]);
+    const handleFirstFlowProgress = useCallback((progress: number) => firstFlowProgress.set(progress), [firstFlowProgress]);
     const handleRemainderProgress = useCallback((progress: number, ratio2025: number, ratio2024: number) => {
         remainderProgress.set(progress);
         station2025.set(ratio2025);
         station2024.set(ratio2024);
     }, [remainderProgress, station2025, station2024]);
-    useCareerRemainder(timelineTrackRef, hasEntrance, handleRemainderProgress);
+    useCareerRemainder(timelineTrackRef, hasEntrance, handleRemainderProgress, handleFirstFlowProgress);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
 
     // Preserve the standalone timeline while the scene continuation uses
@@ -210,43 +212,63 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     });
 
     // Mola de alta frequência e aceleração imediata
+    const smoothFirstFlow = useSpring(firstFlowProgress, {
+        stiffness: 520,
+        damping: 24,
+        mass: 0.04,
+    });
     const smoothProgress = useSpring(hasEntrance ? remainderProgress : scrollYProgress, {
         stiffness: 520,
         damping: 24,
         mass: 0.04,
     });
 
+    // Animação progressiva do primeiro segmento (2026) no modo flow: inicia na primeira bolinha e entrega na fronteira com 2025
+    const firstLineHeight = useTransform(smoothFirstFlow, [0, 1], ['0%', '100%'], { clamp: true });
+    const firstTrackerTop = useTransform(smoothFirstFlow, [0, 1], ['0%', '100%'], { clamp: true });
+    const firstTrackerOpacity = useTransform([smoothFirstFlow, smoothProgress], ([f, r]) => {
+        const fv = Number(f);
+        const rv = Number(r);
+        if (rv > 0.005 || fv <= 0.005 || fv >= 0.995) return 0;
+        return 1;
+    });
+
     // The scene tracker stays at the reading line; the classic view keeps
     // its original accelerated mapping.
     const trackerTop = useTransform(smoothProgress, [0, hasEntrance ? 1 : .55], ['0%', '100%'], { clamp: true });
     const lineHeight = useTransform(smoothProgress, [0, hasEntrance ? 1 : .55], ['0%', '100%'], { clamp: true });
-    const trackerOpacity = useTransform(smoothProgress, [0, .015], [hasEntrance ? 0 : 1, 1]);
+    const trackerOpacity = useTransform(smoothProgress, [0, .008], [hasEntrance ? 0 : 1, 1]);
 
-    // Micro-escalas reativas nos anos monumentais (sincronizadas com o percurso super adiantado)
-    const firstProgress = hasEntrance ? entranceProgress : smoothProgress;
+    // Micro-escalas reativas nos anos monumentais (sincronizadas com o percurso real)
+    const firstSignal = useTransform([entranceProgress, smoothFirstFlow], ([ent, flow]) => {
+        const e = Number(ent);
+        const f = Number(flow);
+        return e < 1 ? e : f;
+    });
+    const firstProgress = hasEntrance ? firstSignal : smoothProgress;
     const passage2025 = useTransform([smoothProgress, station2025], ([progress, station]) => Math.min(1, Math.max(0, (Number(progress) - Number(station) + .04) / .08)));
     const passage2024 = useTransform([smoothProgress, station2024], ([progress, station]) => Math.min(1, Math.max(0, (Number(progress) - Number(station) + .04) / .08)));
     const signal2025 = hasEntrance ? passage2025 : smoothProgress;
     const signal2024 = hasEntrance ? passage2024 : smoothProgress;
-    const year2026Scale = useTransform(firstProgress, hasEntrance ? [.60, .80, 1] : [0, .03, .07], [1, 1.08, 1]);
+    const year2026Scale = useTransform(firstProgress, hasEntrance ? [.25, .55, .85] : [0, .03, .07], [1, 1.08, 1]);
     const year2025Scale = useTransform(signal2025, hasEntrance ? [0, .5, 1] : [.18, .25, .32], [1, 1.08, 1]);
     const year2024Scale = useTransform(signal2024, hasEntrance ? [0, .5, 1] : [.45, .52, .59], [1, 1.08, 1]);
 
-    // Proposta C: Reatividade dos nós de estação (2026, 2025, 2024) sincronizada com a paleta Accent / Secondary
-    const node2026Border = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.2)', 'var(--color-accent)']);
-    const node2026Bg = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
-    const node2026Shadow = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['0 0 0px rgba(255,255,255,0)', '0 0 16px var(--color-accent)']);
-    const node2026Scale = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], [1, 1.12]);
+    // Reatividade uniforme dos nós de estação (2026, 2025, 2024) com a mesma coloração Secondary/Accent do início ao fim
+    const node2026Border = useTransform(firstProgress, hasEntrance ? [0, .18] : [0, .03], ['rgba(255,255,255,0.2)', 'var(--color-secondary)']);
+    const node2026Bg = useTransform(firstProgress, hasEntrance ? [0, .18] : [0, .03], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
+    const node2026Shadow = useTransform(firstProgress, hasEntrance ? [0, .18] : [0, .03], ['0 0 0px rgba(255,255,255,0)', '0 0 14px var(--color-accent)']);
+    const node2026Scale = useTransform(firstProgress, hasEntrance ? [0, .18] : [0, .03], [1, 1.08]);
 
-    const node2025Border = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.2)', 'var(--color-accent)']);
+    const node2025Border = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.2)', 'var(--color-secondary)']);
     const node2025Bg = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
-    const node2025Shadow = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['0 0 0px rgba(255,255,255,0)', '0 0 16px var(--color-accent)']);
-    const node2025Scale = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], [1, 1.12]);
+    const node2025Shadow = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['0 0 0px rgba(255,255,255,0)', '0 0 14px var(--color-accent)']);
+    const node2025Scale = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], [1, 1.08]);
 
-    const node2024Border = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.2)', 'var(--color-accent)']);
+    const node2024Border = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.2)', 'var(--color-secondary)']);
     const node2024Bg = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
-    const node2024Shadow = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['0 0 0px rgba(255,255,255,0)', '0 0 16px var(--color-accent)']);
-    const node2024Scale = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], [1, 1.12]);
+    const node2024Shadow = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['0 0 0px rgba(255,255,255,0)', '0 0 14px var(--color-accent)']);
+    const node2024Scale = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], [1, 1.08]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -651,7 +673,43 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                         {journeyHeader}
                         {summaryStrip}
                         <div className="career-first-track">
-                            <div className="career-first-native-line" aria-hidden="true" />
+                            <div className="career-first-native-line" aria-hidden="true">
+                                {/* 1. Trilho Base Guia (Filamento escuro sutil de fundo) */}
+                                <div className="absolute inset-0 bg-white/[0.12] rounded-full" />
+
+                                {/* 2. Feixe Ativo Preenchido (Mesma coloração uniforme de ponta a ponta) */}
+                                <motion.div
+                                    className="absolute top-0 left-0 right-0 rounded-full origin-top"
+                                    style={{
+                                        height: firstLineHeight,
+                                        backgroundColor: 'var(--color-secondary)',
+                                        boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
+                                    }}
+                                />
+
+                                {/* 3. Esfera Luminosa Rastreadora que inicia na primeira bolinha (2026) e entrega para o restante */}
+                                <motion.div
+                                    className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center z-20"
+                                    style={{ top: firstTrackerTop, opacity: firstTrackerOpacity }}
+                                >
+                                    <div
+                                        className="absolute inset-0 rounded-full"
+                                        style={{
+                                            background: 'radial-gradient(circle, color-mix(in srgb, var(--color-secondary) 55%, var(--color-accent) 45%) 0%, transparent 72%)',
+                                            opacity: 0.65,
+                                        }}
+                                    />
+                                    <div
+                                        className="relative w-3.5 h-3.5 rounded-full border-2 border-[#090b10] flex items-center justify-center"
+                                        style={{
+                                            backgroundColor: 'var(--color-secondary)',
+                                            boxShadow: '0 0 14px var(--color-accent), 0 0 6px var(--color-secondary)',
+                                        }}
+                                    >
+                                        <div className="w-1 h-1 rounded-full bg-[#090b10]" />
+                                    </div>
+                                </motion.div>
+                            </div>
                             <div className="career-first-content" data-career-first-layout>{firstMilestone}</div>
                         </div>
                     </CareerEntranceStage>
@@ -661,20 +719,20 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 <div ref={timelineTrackRef} className={`relative w-full max-w-5xl mx-auto py-12 ${hasEntrance ? "career-remainder" : ""}`}>
 
                     {/* ══════════════════════════════════════════════════════════
-                        PROPOSTA C: TRILHO CENTRAL LASER ACCENT + ESFERA LUMINOSA (md+)
-                        Sincronia suave 1:1 focal com a paleta ativa da Navbar
+                        PROPOSTA C: TRILHO CENTRAL UNIFORME + ESFERA LUMINOSA (md+)
+                        Mesma coloração contínua do início ao fim (2026 -> 2025 -> 2024)
                         ══════════════════════════════════════════════════════════ */}
                     <div className="career-timeline-rail absolute left-1/2 -translate-x-1/2 top-4 bottom-4 w-[2px] hidden md:block pointer-events-none z-10">
                         {/* 1. Trilho Base Guia (Filamento escuro sutil de fundo) */}
                         <div className="absolute inset-0 bg-white/[0.12] rounded-full" />
 
-                        {/* 2. Feixe Laser Ativo Preenchido (Emenda contínua desde 2026) */}
+                        {/* 2. Feixe Ativo Preenchido (Mesma coloração uniforme --color-secondary de ponta a ponta) */}
                         <motion.div
                             className="absolute top-0 left-0 right-0 rounded-full origin-top"
                             style={{
                                 height: lineHeight,
-                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
-                                boxShadow: '0 0 12px color-mix(in srgb, var(--color-accent) 55%, transparent)',
+                                backgroundColor: 'var(--color-secondary)',
+                                boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
                             }}
                         />
 
@@ -705,19 +763,19 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                     </div>
 
                     {/* ══════════════════════════════════════════════════════════
-                        PROPOSTA C: TRILHO LATERAL LASER ACCENT + ORB (< md)
+                        PROPOSTA C: TRILHO LATERAL UNIFORME + ORB (< md)
                         ══════════════════════════════════════════════════════════ */}
                     <div className="career-timeline-rail absolute left-4 sm:left-6 top-4 bottom-4 w-[2px] md:hidden pointer-events-none z-10">
                         {/* 1. Trilho Base Guia Mobile */}
                         <div className="absolute inset-0 bg-white/[0.12] rounded-full" />
 
-                        {/* 2. Feixe Laser Ativo Mobile */}
+                        {/* 2. Feixe Ativo Mobile (Mesma coloração uniforme --color-secondary) */}
                         <motion.div
                             className="absolute top-0 left-0 right-0 rounded-full origin-top"
                             style={{
                                 height: lineHeight,
-                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
-                                boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 55%, transparent)',
+                                backgroundColor: 'var(--color-secondary)',
+                                boxShadow: '0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
                             }}
                         />
 

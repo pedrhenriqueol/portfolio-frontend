@@ -13,12 +13,12 @@
 .career-first-native-line {
     position: absolute;
     left: 50%;
-    top: 0;
+    top: calc(1.5rem + var(--career-first-center, 0px));
     bottom: 0;
     width: 2px;
     transform: translateX(-50%);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%), rgba(255,255,255,0.14));
     pointer-events: none;
+    z-index: 10;
 }
 .career-scene-section .career-remainder { padding-top: 0; }
 .career-scene-section .career-remainder > .career-timeline-rail { top: 0; }
@@ -60,7 +60,7 @@
     .career-entrance-track[data-scene="connected"] .career-scene-thread { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: visible; }
     .career-scene-thread [data-career-thread-base] { stroke: rgb(255 255 255 / .12); stroke-width: 2px; }
     .career-scene-thread [data-career-thread-active] {
-        stroke: color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%);
+        stroke: var(--color-secondary);
         stroke-width: 2px;
         stroke-dasharray: 1;
         stroke-linecap: round;

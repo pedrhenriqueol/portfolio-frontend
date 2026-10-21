@@ -135,6 +135,7 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
             layout.set(root, '--career-travel', `${travel}px`);
             layout.set(root, '--career-inset', `${inset}px`);
             layout.set(root, '--career-spread-distance', `${width * .24}px`);
+            layout.set(root, '--career-first-center', `${firstLeadHeight / 2}px`);
             layout.set(first, '--career-first-center', `${firstLeadHeight / 2}px`);
             // A stationary sibling represents the scroll position at which the
             // incoming composition is complete. It never inherits transforms.
@@ -183,24 +184,38 @@ export function useCareerEntrance(ref: RefObject<HTMLElement | null>, onProgress
 
 /** The continuing tracker follows the reading line in viewport pixels, even
  * with the site's CSS zoom. Milestone positions come from their real layout. */
-export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: boolean, onProgress: (progress: number, station2025: number, station2024: number) => void) {
+export function useCareerRemainder(
+    ref: RefObject<HTMLElement | null>,
+    enabled: boolean,
+    onProgress: (progress: number, station2025: number, station2024: number) => void,
+    onFirstProgress?: (progress: number) => void,
+) {
     const lenis = useLenis();
 
     useLayoutEffect(() => {
         const root = ref.current;
         if (!root || !enabled) return;
+        const firstTrack = root.closest('section')?.querySelector<HTMLElement>('.career-first-track');
         const rows = ['2025', '2024'].map(year => root.querySelector<HTMLElement>(`[data-career-year="${year}"]`)!);
         let start = 0;
         let distance = 1;
+        let firstStart = 0;
+        let firstDistance = 1;
         let stations = [.25, .75];
         let scrollPosition = lenis ? lenis.scroll : window.scrollY;
         let lastProgress = NaN;
+        let lastFirstProgress = NaN;
         let frame = 0;
         let disposed = false;
         const paint = () => {
             frame = 0;
             if (disposed) return;
             const progress = Math.min(1, Math.max(0, (scrollPosition - start) / distance));
+            const firstProgress = Math.min(1, Math.max(0, (scrollPosition - firstStart) / firstDistance));
+            if (onFirstProgress && firstProgress !== lastFirstProgress) {
+                lastFirstProgress = firstProgress;
+                onFirstProgress(firstProgress);
+            }
             if (progress === lastProgress) return;
             lastProgress = progress;
             onProgress(progress, stations[0], stations[1]);
@@ -218,16 +233,26 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
             scrollPosition = lenis ? lenis.scroll : window.scrollY;
             start = rect.top + window.scrollY - innerHeight * .55;
             distance = lineHeight * zoom;
+            if (firstTrack) {
+                const firstLine = firstTrack.querySelector<HTMLElement>('.career-first-native-line');
+                const targetBox = (firstLine || firstTrack).getBoundingClientRect();
+                firstStart = targetBox.top + window.scrollY - innerHeight * .55;
+                firstDistance = Math.max(1, targetBox.height);
+            } else {
+                firstStart = start;
+                firstDistance = 1;
+            }
             stations = rows.map(row => {
                 let top = 0;
                 for (let node: HTMLElement | null = row; node && node !== root; node = node.offsetParent as HTMLElement | null) top += node.offsetTop;
                 return Math.min(1, Math.max(0, (top + row.offsetHeight / 2) / lineHeight));
             });
             lastProgress = NaN;
+            lastFirstProgress = NaN;
             paint();
         };
         const observer = new ResizeObserver(measure);
-        [root, ...rows].forEach(node => observer.observe(node));
+        [root, ...(firstTrack ? [firstTrack] : []), ...rows].forEach(node => observer.observe(node));
         const main = root.closest('main');
         if (main) observer.observe(main);
         if (lenis) lenis.on('scroll', onLenisScroll);
@@ -243,5 +268,5 @@ export function useCareerRemainder(ref: RefObject<HTMLElement | null>, enabled: 
             else window.removeEventListener('scroll', onNativeScroll);
             window.removeEventListener('resize', measure);
         };
-    }, [ref, enabled, onProgress, lenis]);
+    }, [ref, enabled, onProgress, onFirstProgress, lenis]);
 }

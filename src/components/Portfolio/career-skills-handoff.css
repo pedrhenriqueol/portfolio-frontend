@@ -30,18 +30,18 @@
     }
     .career-skills-thread [data-skills-source-thread],
     .career-skills-thread [data-skills-heading-bridge] {
-        stroke: color-mix(in srgb, var(--color-secondary) 72%, var(--color-accent) 28%);
+        stroke: var(--color-secondary);
         stroke-width: 2px;
         stroke-linecap: round;
     }
     .career-skills-thread [data-skills-source-marker] {
         fill: var(--color-secondary);
-        stroke: var(--color-accent);
-        stroke-width: 1.75px;
+        stroke: var(--color-secondary);
+        stroke-width: 1.5px;
     }
     .career-skills-thread [data-skills-guide-base] { stroke: rgb(255 255 255 / .12); stroke-width: 2px; }
     .career-skills-thread [data-skills-guide-active] {
-        stroke: color-mix(in srgb, var(--color-secondary) 72%, var(--color-accent) 28%);
+        stroke: var(--color-secondary);
         stroke-width: 2px;
         stroke-linecap: round;
     }
