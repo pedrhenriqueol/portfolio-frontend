@@ -287,6 +287,8 @@ export const Hero: React.FC<HeroProps> = ({ profile, credentials, metrics, isLoa
                                 }>
                                     <InteractiveTerminal />
                                 </Suspense>
+                                {/* Proposta B: Halo Elíptico de Piso / Spotlight de Palco sob o Terminal */}
+                                <div aria-hidden="true" className="hero-terminal-floor-halo" />
                             </div>
                         </div>
                     </motion.div>

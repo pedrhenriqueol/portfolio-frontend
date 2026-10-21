@@ -56,23 +56,33 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             // The profile takes over while the name fades; the completed
             // dashboard keeps a comfortable reading interval before release.
             const exit = smooth(phase(progress, .06, .36));
-            const reveal = smooth(phase(progress, .28, .60));
+            const reveal = smooth(phase(progress, .24, .62));
             const assemble = smooth(phase(progress, .54, .86));
             const terminalY = mix(homeTop, finalTop, assemble);
             const terminalHeight = mix(expandedHeight, collapsedHeight, assemble);
-            const credentialsReveal = smooth(phase(progress, .68, .86));
-            const metricsReveal = smooth(phase(progress, .76, .90));
+            const credentialsReveal = smooth(phase(progress, .66, .86));
+            const metricsReveal = smooth(phase(progress, .74, .90));
+            // Intensidade do halo elíptico de palco sob o Terminal ao pousar em "Sobre Mim"
+            const stageGlow = smooth(phase(progress, .18, .58));
+
             motion.set(copy, 'transform', `translate3d(${px(exit * -28)}, ${px(exit * -8)}, ${px(exit * -80)}) scale(${(1 - exit * .04).toFixed(4)})`);
             motion.set(copy, 'opacity', String(1 - exit));
             motion.set(terminal, 'transform', `translate3d(${px(width * .54 * (1 - travel))}, ${px(terminalY)}, 0) rotateY(${(-6.5 * Math.sin(Math.PI * travel)).toFixed(3)}deg) scale(${(1 + .085 * Math.sin(Math.PI * travel)).toFixed(5)})`);
             motion.set(terminalBox, '--terminal-height', px(terminalHeight));
-            motion.set(profile, 'transform', `translate3d(${px((1 - reveal) * 36)}, ${px(mix(profileTop, finalTop, assemble))}, 0)`);
-            motion.set(profile, 'clip-path', `inset(0 0 ${((1 - reveal) * 100).toFixed(3)}% 0)`);
-            motion.set(profile, 'opacity', String(Math.min(1, reveal * 2.2)));
+            motion.set(terminalBox, '--terminal-stage-glow', stageGlow.toFixed(4));
+
+            // Proposta B: Varredura progressiva com Feather Mask (borda de penumbra suave de cima para baixo)
+            motion.set(profile, 'transform', `translate3d(${px((1 - reveal) * 28)}, ${px(mix(profileTop, finalTop, assemble) + (1 - reveal) * 14)}, 0)`);
+            motion.set(profile, '--hero-reveal', reveal.toFixed(4));
+            motion.set(profile, 'opacity', String(Math.min(1, reveal * 1.85)));
+
             motion.set(credentials, 'transform', `translate3d(0, ${px(terminalY + terminalHeight + 24 + (1 - credentialsReveal) * 18)}, 0)`);
+            motion.set(credentials, '--credentials-reveal', credentialsReveal.toFixed(4));
             motion.set(credentials, 'opacity', String(credentialsReveal));
+
             motion.set(metrics, 'transform', `translate3d(0, ${px((1 - metricsReveal) * 18)}, 0)`);
             motion.set(metrics, 'opacity', String(metricsReveal));
+
             setSceneInert(copy, exit > .85);
             setSceneInert(profile, reveal < .98);
             setSceneInert(credentials, credentialsReveal < .98);

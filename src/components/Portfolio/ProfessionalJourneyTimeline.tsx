@@ -27,7 +27,22 @@ function HighlightedText({ text }: { text: string }) {
     );
 }
 
-function TimelineResponsibilities({ groups }: { groups?: { title: string; icon?: string; items: string[] }[] }) {
+export interface TimelineResponsibilityGroup {
+    title: string;
+    icon?: string;
+    items: string[];
+}
+
+export interface JourneyExperienceItem {
+    id?: number;
+    company: string;
+    role: string;
+    period: string;
+    techBadges?: string[];
+    groups?: TimelineResponsibilityGroup[];
+}
+
+function TimelineResponsibilities({ groups }: { groups?: TimelineResponsibilityGroup[] }) {
     if (!groups?.length) return null;
     return (
         <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
@@ -66,7 +81,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
     period: string;
     isCurrent?: boolean;
     techBadges?: string[];
-    groups?: { title: string; icon?: string; items: string[] }[];
+    groups?: TimelineResponsibilityGroup[];
     lang: string;
 }) {
     const cardRef = useRef<HTMLDivElement>(null);
@@ -148,7 +163,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
                             {techBadges.map((badge, bIdx) => (
                                 <span
                                     key={bIdx}
-                                    className="portfolio-chip select-none"
+                                    className="portfolio-chip-dashed select-none"
                                 >
                                     {badge}
                                 </span>
@@ -164,7 +179,7 @@ const TimelineExperienceCard = memo(function TimelineExperienceCard({
 });
 
 interface ProfessionalJourneyTimelineProps {
-    experiences?: any[];
+    experiences?: JourneyExperienceItem[];
     guidedIntro?: boolean;
     entrancePillars?: React.ReactNode;
 }
@@ -217,24 +232,21 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
     const year2025Scale = useTransform(signal2025, hasEntrance ? [0, .5, 1] : [.18, .25, .32], [1, 1.08, 1]);
     const year2024Scale = useTransform(signal2024, hasEntrance ? [0, .5, 1] : [.45, .52, .59], [1, 1.08, 1]);
 
-    // Reatividade orgânica dos nós de estação (2026, 2025, 2024) sincronizados com o puck super adiantado:
-    // Marco 2026: acende prontamente logo no primeiro scroll
-    const node2026Border = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2026Bg = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2026Shadow = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2026Scale = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], [1, 1.1]);
+    // Proposta C: Reatividade dos nós de estação (2026, 2025, 2024) sincronizada com a paleta Accent / Secondary
+    const node2026Border = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.2)', 'var(--color-accent)']);
+    const node2026Bg = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
+    const node2026Shadow = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], ['0 0 0px rgba(255,255,255,0)', '0 0 16px var(--color-accent)']);
+    const node2026Scale = useTransform(firstProgress, hasEntrance ? [.60, .85] : [0, .03], [1, 1.12]);
 
-    // Marco central de 2025 (Qualisoft): acende no exato momento em que o puck passa por ele
-    const node2025Border = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2025Bg = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2025Shadow = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2025Scale = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], [1, 1.1]);
+    const node2025Border = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.2)', 'var(--color-accent)']);
+    const node2025Bg = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
+    const node2025Shadow = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], ['0 0 0px rgba(255,255,255,0)', '0 0 16px var(--color-accent)']);
+    const node2025Scale = useTransform(signal2025, hasEntrance ? [0, 1] : [.20, .26], [1, 1.12]);
 
-    // Marco final de 2024 (EEEP): acende quando a bolinha atinge o pouso final na base da timeline
-    const node2024Border = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.85)']);
-    const node2024Bg = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.3)', '#ffffff']);
-    const node2024Shadow = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['0 0 0px rgba(255,255,255,0)', '0 0 12px rgba(255,255,255,0.4)']);
-    const node2024Scale = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], [1, 1.1]);
+    const node2024Border = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.2)', 'var(--color-accent)']);
+    const node2024Bg = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['rgba(255,255,255,0.3)', 'var(--color-secondary)']);
+    const node2024Shadow = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], ['0 0 0px rgba(255,255,255,0)', '0 0 16px var(--color-accent)']);
+    const node2024Scale = useTransform(signal2024, hasEntrance ? [0, 1] : [.46, .53], [1, 1.12]);
 
     // Métricas executivas da trajetória
     const summaryStats = [
@@ -581,8 +593,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 <motion.span
                     style={{
                         scale: year2026Scale,
-                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
-                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                        WebkitTextStroke: '1.5px color-mix(in srgb, var(--color-accent) 45%, rgba(255, 255, 255, 0.25))',
+                        textShadow: '0 0 40px color-mix(in srgb, var(--color-accent) 18%, transparent)',
                     }}
                     className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-right"
                 >
@@ -649,47 +661,87 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                 <div ref={timelineTrackRef} className={`relative w-full max-w-5xl mx-auto py-12 ${hasEntrance ? "career-remainder" : ""}`}>
 
                     {/* ══════════════════════════════════════════════════════════
-                        TRILHO CENTRAL MINIMALISTA (md+) — FILAMENTO FINO DE 2PX
-                        Sincronia suave 1:1 focal com o centro da tela
+                        PROPOSTA C: TRILHO CENTRAL LASER ACCENT + ESFERA LUMINOSA (md+)
+                        Sincronia suave 1:1 focal com a paleta ativa da Navbar
                         ══════════════════════════════════════════════════════════ */}
                     <div className="career-timeline-rail absolute left-1/2 -translate-x-1/2 top-4 bottom-4 w-[2px] hidden md:block pointer-events-none z-10">
                         {/* 1. Trilho Base Guia (Filamento escuro sutil de fundo) */}
-                        <div className="absolute inset-0 bg-white/20 rounded-full" />
+                        <div className="absolute inset-0 bg-white/[0.12] rounded-full" />
 
-                        {/* 2. Feixe Ativo Preenchido (Gradiente luminoso que desce suavemente) */}
+                        {/* 2. Feixe Laser Ativo Preenchido (Gradiente Accent -> Secondary -> White) */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/30 rounded-full origin-top"
-                            style={{ height: lineHeight }}
+                            className="absolute top-0 left-0 right-0 rounded-full origin-top"
+                            style={{
+                                height: lineHeight,
+                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 45%, transparent) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
+                                boxShadow: '0 0 14px color-mix(in srgb, var(--color-accent) 65%, transparent)',
+                            }}
                         />
 
-                        {/* 3. Puck / Marcador Rastreador (Ponto tátil que lidera a leitura) */}
+                        {/* 3. Esfera Luminosa / Orb Rastreador na Ponta do Feixe */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2 z-20"
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center z-20"
                             style={{ top: trackerTop, opacity: trackerOpacity }}
                         >
-                            <div className="w-1 h-1 rounded-full bg-[#090b10]" />
+                            {/* Halo difuso externo */}
+                            <div
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                    background: 'radial-gradient(circle, color-mix(in srgb, var(--color-secondary) 55%, var(--color-accent) 45%) 0%, transparent 72%)',
+                                    opacity: 0.65,
+                                }}
+                            />
+                            {/* Núcleo esférico energético */}
+                            <div
+                                className="relative w-3.5 h-3.5 rounded-full border-2 border-[#090b10] flex items-center justify-center"
+                                style={{
+                                    backgroundColor: 'var(--color-secondary)',
+                                    boxShadow: '0 0 14px var(--color-accent), 0 0 6px var(--color-secondary)',
+                                }}
+                            >
+                                <div className="w-1 h-1 rounded-full bg-[#090b10]" />
+                            </div>
                         </motion.div>
                     </div>
 
                     {/* ══════════════════════════════════════════════════════════
-                        TRILHO LATERAL MINIMALISTA (< md)
+                        PROPOSTA C: TRILHO LATERAL LASER ACCENT + ORB (< md)
                         ══════════════════════════════════════════════════════════ */}
                     <div className="career-timeline-rail absolute left-4 sm:left-6 top-4 bottom-4 w-[2px] md:hidden pointer-events-none z-10">
                         {/* 1. Trilho Base Guia Mobile */}
-                        <div className="absolute inset-0 bg-white/20 rounded-full" />
+                        <div className="absolute inset-0 bg-white/[0.12] rounded-full" />
 
-                        {/* 2. Feixe Ativo Mobile */}
+                        {/* 2. Feixe Laser Ativo Mobile */}
                         <motion.div
-                            className="absolute top-0 left-0 right-0 bg-gradient-to-b from-white via-white/80 to-white/30 rounded-full origin-top"
-                            style={{ height: lineHeight }}
+                            className="absolute top-0 left-0 right-0 rounded-full origin-top"
+                            style={{
+                                height: lineHeight,
+                                background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 45%, transparent) 0%, var(--color-accent) 55%, var(--color-secondary) 92%, #ffffff 100%)',
+                                boxShadow: '0 0 12px color-mix(in srgb, var(--color-accent) 60%, transparent)',
+                            }}
                         />
 
-                        {/* 3. Puck Mobile */}
+                        {/* 3. Orb Luminoso Mobile */}
                         <motion.div
-                            className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] border-2 border-[#090b10] flex items-center justify-center -translate-y-1/2 z-20"
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center z-20"
                             style={{ top: trackerTop, opacity: trackerOpacity }}
                         >
-                            <div className="w-1 h-1 rounded-full bg-[#090b10]" />
+                            <div
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                    background: 'radial-gradient(circle, color-mix(in srgb, var(--color-secondary) 55%, var(--color-accent) 45%) 0%, transparent 72%)',
+                                    opacity: 0.6,
+                                }}
+                            />
+                            <div
+                                className="relative w-3.5 h-3.5 rounded-full border-2 border-[#090b10] flex items-center justify-center"
+                                style={{
+                                    backgroundColor: 'var(--color-secondary)',
+                                    boxShadow: '0 0 12px var(--color-accent), 0 0 5px var(--color-secondary)',
+                                }}
+                            >
+                                <div className="w-1 h-1 rounded-full bg-[#090b10]" />
+                            </div>
                         </motion.div>
                     </div>
 
@@ -771,8 +823,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 <motion.span
                                     style={{
                                         scale: year2025Scale,
-                                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
-                                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                                        WebkitTextStroke: '1.5px color-mix(in srgb, var(--color-accent) 45%, rgba(255, 255, 255, 0.25))',
+                                        textShadow: '0 0 40px color-mix(in srgb, var(--color-accent) 18%, transparent)',
                                     }}
                                     className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-left"
                                 >
@@ -858,8 +910,8 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
                                 <motion.span
                                     style={{
                                         scale: year2024Scale,
-                                        WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.25)',
-                                        textShadow: '0 0 40px rgba(255,255,255,0.05)',
+                                        WebkitTextStroke: '1.5px color-mix(in srgb, var(--color-accent) 45%, rgba(255, 255, 255, 0.25))',
+                                        textShadow: '0 0 40px color-mix(in srgb, var(--color-accent) 18%, transparent)',
                                     }}
                                     className="text-6xl sm:text-7xl md:text-8xl font-mono font-black text-transparent select-none tracking-tight block origin-center md:origin-right"
                                 >
