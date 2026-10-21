@@ -134,6 +134,203 @@ const BentoCard = memo(function BentoCard({
     );
 });
 
+interface PillarDefinition {
+    code: string;
+    icon: string;
+    title: string;
+    desc: string;
+    specs: string[];
+    tags: string[];
+}
+
+/* ── Card de Pilar Técnico com Moldura HUD Tracejada, Cantoneiras e Ignição "Pisca" ── */
+const PillarHudCard = memo(function PillarHudCard({
+    pillar,
+    index,
+    lang,
+    onTechChipClick,
+}: {
+    pillar: PillarDefinition;
+    index: number;
+    lang: string;
+    onTechChipClick: (tech: string) => void;
+}) {
+    const [isIgnited, setIsIgnited] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = cardRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsIgnited(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.18 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    }, []);
+
+    const toggleExpand = useCallback(() => {
+        playMechanicalKey(isExpanded ? 620 : 820, 0.04);
+        setIsExpanded(prev => !prev);
+    }, [isExpanded]);
+
+    const stackHeading = lang === 'en'
+        ? 'SKILLSET & TOOLS'
+        : lang === 'es'
+        ? 'STACK Y HERRAMIENTAS'
+        : 'STACK & FERRAMENTAS';
+
+    const specsHeading = lang === 'en'
+        ? 'ARCHITECTURAL DELIVERABLES'
+        : lang === 'es'
+        ? 'ENTREGABLES DE ARQUITECTURA'
+        : 'ENTREGÁVEIS DE ARQUITETURA';
+
+    return (
+        <div
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            data-hud-ignited={isIgnited ? 'true' : 'false'}
+            style={{
+                transform: 'translateZ(0)',
+                ['--hud-delay' as string]: `${index * 110}ms`,
+            }}
+            className="portfolio-hud-frame p-5 md:p-6 h-full flex flex-col justify-between group"
+        >
+            {/* Cantoneiras Técnicas em L (┌ ┐ └ ┘) */}
+            <div className="portfolio-hud-corners" aria-hidden="true">
+                <span className="portfolio-hud-corner-bl" />
+                <span className="portfolio-hud-corner-br" />
+            </div>
+
+            {/* Spotlight monocromático interno via variáveis CSS */}
+            <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10"
+                style={{
+                    background: 'radial-gradient(520px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(255, 255, 255, 0.035), transparent 60%)',
+                }}
+            />
+
+            <div className="portfolio-hud-body relative z-20 h-full flex flex-col justify-between">
+                <div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="portfolio-icon flex items-center justify-center shrink-0">
+                                <i className={`${pillar.icon} text-xs`} aria-hidden="true" />
+                            </div>
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent block">
+                                    {pillar.code}
+                                </span>
+                                <h4 className="text-base font-semibold text-white font-serif leading-snug">
+                                    {pillar.title}
+                                </h4>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={toggleExpand}
+                            aria-expanded={isExpanded}
+                            aria-label={
+                                isExpanded
+                                    ? (lang === 'en' ? `Collapse details for ${pillar.title}` : lang === 'es' ? `Contraer detalles de ${pillar.title}` : `Recolher detalhes de ${pillar.title}`)
+                                    : (lang === 'en' ? `Expand details for ${pillar.title}` : lang === 'es' ? `Expandir detalles de ${pillar.title}` : `Expandir detalhes de ${pillar.title}`)
+                            }
+                            title={
+                                isExpanded
+                                    ? (lang === 'en' ? 'Collapse architecture specs' : lang === 'es' ? 'Contraer especificaciones' : 'Recolher especificações')
+                                    : (lang === 'en' ? 'Expand architecture specs' : lang === 'es' ? 'Expandir especificaciones' : 'Expandir especificações')
+                            }
+                            className="portfolio-hud-toggle mt-0.5"
+                        >
+                            <i
+                                aria-hidden="true"
+                                className={`fas fa-chevron-down text-[9px] transition-transform duration-200 ${
+                                    isExpanded ? 'rotate-180' : ''
+                                }`}
+                            />
+                        </button>
+                    </div>
+
+                    <p className="text-neutral-300 text-[13px] sm:text-sm leading-relaxed mb-4">
+                        {pillar.desc}
+                    </p>
+
+                    <AnimatePresence initial={false}>
+                        {isExpanded && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                                className="overflow-hidden"
+                            >
+                                <div className="mb-4 p-3 rounded bg-black/35 border border-dashed border-white/[0.12] space-y-1.5">
+                                    <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-secondary/85 block">
+                                        {specsHeading}
+                                    </span>
+                                    <ul className="space-y-1">
+                                        {pillar.specs.map((spec, sIdx) => (
+                                            <li key={sIdx} className="text-xs text-neutral-300 font-sans flex items-start gap-2">
+                                                <span className="text-accent font-mono text-[10px] mt-0.5">›</span>
+                                                <span>{spec}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Divisória técnica tracejada com marcadores ├ e ┤ + TechChips Tracejados */}
+                <div className="portfolio-hud-divider pt-3.5 mt-1">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-neutral-400">
+                            {stackHeading}
+                        </span>
+                        <span className="font-mono text-[9.5px] text-neutral-500">
+                            {pillar.tags.length} {lang === 'en' ? 'modules' : lang === 'es' ? 'módulos' : 'módulos'}
+                        </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                        {pillar.tags.map((tag, tIdx) => (
+                            <button
+                                key={tIdx}
+                                type="button"
+                                onClick={() => onTechChipClick(tag)}
+                                className="portfolio-chip-dashed select-none cursor-pointer flex items-center gap-1"
+                                title={
+                                    lang === 'en'
+                                        ? `Query Terminal about ${tag}`
+                                        : lang === 'es'
+                                        ? `Consultar en la Terminal sobre ${tag}`
+                                        : `Consultar no Terminal sobre ${tag}`
+                                }
+                            >
+                                <span>{tag}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+
 /* ── Contador com aceleração suave ativado por viewport ── */
 function AnimatedCounter({
     targetValue,
@@ -624,7 +821,7 @@ export function AboutMe({ showIntro = true, renderLayout }: {
             'Testes Funcionais': '¿Cómo diseñas suites de pruebas funcionales y regresivas?',
             'Functional Testing': '¿Cómo diseñas suites de pruebas funcionales y regresivas?',
             'Pruebas Funcionales': '¿Cómo diseñas suites de pruebas funcionales y regresivas?',
-            'Scrum / Kanban': '¿Cómo es tu dinámica con metodologías ágeis en equipos de ingeniería?',
+            'Scrum / Kanban': '¿Cómo es tu dinámica con metodologías ágiles en equipos de ingeniería?',
             'ZPEs / Portos': '¿Cómo funciona la validación en sistemas críticos de logística aduanera y ZPEs?',
             'FTZ / Ports': '¿Cómo funciona la validación en sistemas críticos de logística aduanera y ZPEs?',
             'ZPEs / Puertos': '¿Cómo funciona la validación en sistemas críticos de logística aduanera y ZPEs?',
@@ -668,9 +865,10 @@ export function AboutMe({ showIntro = true, renderLayout }: {
         },
     ];
 
-    // ── Pilares de especialidade unificados ──
-    const pillarDefinitions = [
+    // ── Pilares de especialidade unificados (Proposta A: Moldura HUD + Entregáveis Expansíveis) ──
+    const pillarDefinitions: PillarDefinition[] = [
         {
+            code: '// 01. ARCH',
             icon: 'fas fa-sync-alt',
             title: lang === 'en' ? 'Legacy Modernization' : lang === 'es' ? 'Modernización Legacy' : 'Modernização de Legados',
             desc: lang === 'en'
@@ -678,9 +876,27 @@ export function AboutMe({ showIntro = true, renderLayout }: {
                 : lang === 'es'
                 ? 'Especialista en migración de monolitos heredados a SPAs modernas y APIs REST desacopladas.'
                 : 'Especialista em transição de monolitos legados para SPAs modernas e APIs REST desacopladas.',
+            specs: lang === 'en'
+                ? [
+                    'Decoupling VCL business rules into pure service layers before web migration',
+                    'Strict REST contracts & DTO validation between Delphi/Laravel and React SPAs',
+                    '100% SEFAZ tax compliance maintained across ACBr invoicing modules',
+                ]
+                : lang === 'es'
+                ? [
+                    'Desacoplamiento de reglas de negocio VCL en capas de servicio puras',
+                    'Contratos REST estrictos y validación de DTOs entre Delphi/Laravel y SPAs React',
+                    '100% de conformidad fiscal SEFAZ mantenida en módulos ACBr',
+                ]
+                : [
+                    'Desacoplamento de regras de negócio VCL em camadas de serviço puras',
+                    'Contratos REST estritos e validação de DTOs entre Delphi/Laravel e SPAs React',
+                    '100% de conformidade fiscal SEFAZ preservada nos módulos ACBr',
+                ],
             tags: ['Delphi 11', 'UniGui', 'Laravel', 'React', 'TypeScript', 'Tailwind'],
         },
         {
+            code: '// 02. DATA',
             icon: 'fas fa-database',
             title: lang === 'en' ? 'Databases & Performance' : lang === 'es' ? 'Bases de Datos y Rendimiento' : 'Bancos de Dados & Performance',
             desc: lang === 'en'
@@ -688,9 +904,27 @@ export function AboutMe({ showIntro = true, renderLayout }: {
                 : lang === 'es'
                 ? 'Refactorización crítica de consultas N+1, indexación inteligente e integridad transaccional.'
                 : 'Refatoração de queries críticas N+1, indexação inteligente e garantia de integridade transacional.',
+            specs: lang === 'en'
+                ? [
+                    'Elimination of Clustered Table Scans via covering nonclustered indexes (-80.7% latency)',
+                    'Proactive N+1 query bottleneck resolution in high-concurrency ERP routines',
+                    'Strict ACID transactional isolation & deadlock prevention in SQL Server / PostgreSQL',
+                ]
+                : lang === 'es'
+                ? [
+                    'Eliminación de Table Scans mediante índices cubiertos no agrupados (-80.7% latencia)',
+                    'Resolución proactiva de cuellos de botella N+1 en rutinas ERP de alta concurrencia',
+                    'Aislamiento transaccional ACID estricto en SQL Server y PostgreSQL',
+                ]
+                : [
+                    'Eliminação de Table Scans via índices cobertos não-clusterizados (-80,7% de latência)',
+                    'Resolução proativa de gargalos N+1 em rotinas ERP de alta concorrência',
+                    'Isolamento transacional ACID estrito em SQL Server e PostgreSQL',
+                ],
             tags: ['SQL Server', 'MySQL', 'PostgreSQL', lang === 'en' ? 'Indexing' : lang === 'es' ? 'Indexación' : 'Indexação', 'Tuning'],
         },
         {
+            code: '// 03. QA-OPS',
             icon: 'fas fa-shield-alt',
             title: lang === 'en' ? 'QA & Mission-Critical Systems' : lang === 'es' ? 'QA y Sistemas Críticos' : 'QA & Sistemas Críticos',
             desc: lang === 'en'
@@ -698,6 +932,23 @@ export function AboutMe({ showIntro = true, renderLayout }: {
                 : lang === 'es'
                 ? 'Ingeniería de requisitos, pruebas automatizadas/manuales con Postman y blindaje contra regresiones.'
                 : 'Engenharia de requisitos, testes automatizados/manuais via Postman e blindagem contra regressões.',
+            specs: lang === 'en'
+                ? [
+                    'Automated API contract & JSON Schema assertions in Postman collections',
+                    'End-to-end regression shielding for customs logistics and FTZ port workflows',
+                    'SQL data auditing & edge-case validation prior to production deployments',
+                ]
+                : lang === 'es'
+                ? [
+                    'Validación automatizada de contratos API y JSON Schema en colecciones Postman',
+                    'Blindaje regresivo de extremo a extremo para flujos aduaneros y ZPEs portuarias',
+                    'Auditoría de datos SQL y validación de casos límite antes del despliegue',
+                ]
+                : [
+                    'Validação automatizada de contratos de API e JSON Schema em coleções Postman',
+                    'Blindagem regressiva ponta a ponta em fluxos aduaneiros e ZPEs portuárias',
+                    'Auditoria de dados SQL e validação de casos de borda pré-deploy em produção',
+                ],
             tags: ['Postman', lang === 'en' ? 'Functional Testing' : lang === 'es' ? 'Pruebas Funcionales' : 'Testes Funcionais', 'Scrum / Kanban', lang === 'en' ? 'FTZ / Ports' : lang === 'es' ? 'ZPEs / Puertos' : 'ZPEs / Portos'],
         },
     ];
@@ -938,41 +1189,13 @@ export function AboutMe({ showIntro = true, renderLayout }: {
     const pillars = (
         <div className="chapter-tail grid grid-cols-1 md:grid-cols-3 gap-5">
             {pillarDefinitions.map((p, idx) => (
-                <motion.div key={idx} variants={cardVariants} className="h-full">
-                    <BentoCard className="p-5 md:p-6 h-full flex flex-col justify-between">
-                        <div>
-                            <div className="portfolio-icon flex items-center justify-center mb-3">
-                                <i className={`${p.icon} text-xs`} />
-                            </div>
-                            <h4 className="text-base font-semibold text-white font-serif mb-1.5">
-                                {p.title}
-                            </h4>
-                            <p className="text-neutral-400 text-[13px] sm:text-sm leading-relaxed mb-4">
-                                {p.desc}
-                            </p>
-                        </div>
-
-                        {/* TechChips Canônicos com Bridge ao Terminal */}
-                        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-white/[0.04]">
-                            {p.tags.map((tag, tIdx) => (
-                                <button
-                                    key={tIdx}
-                                    type="button"
-                                    onClick={() => handleTechChipClick(tag)}
-                                    className="portfolio-chip portfolio-control select-none cursor-pointer flex items-center gap-1"
-                                    title={
-                                        lang === 'en'
-                                            ? `Query Terminal about ${tag}`
-                                            : lang === 'es'
-                                            ? `Consultar en la Terminal sobre ${tag}`
-                                            : `Consultar no Terminal sobre ${tag}`
-                                    }
-                                >
-                                    <span>{tag}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </BentoCard>
+                <motion.div key={p.code} variants={cardVariants} className="h-full">
+                    <PillarHudCard
+                        pillar={p}
+                        index={idx}
+                        lang={lang}
+                        onTechChipClick={handleTechChipClick}
+                    />
                 </motion.div>
             ))}
         </div>

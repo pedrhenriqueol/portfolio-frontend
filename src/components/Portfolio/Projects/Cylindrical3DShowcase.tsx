@@ -1,11 +1,16 @@
 import { useProjectPresentation } from '../../../hooks/useProjectPresentation';
 import '../projects-focus.css';
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useVelocity, useReducedMotion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, useVelocity, useReducedMotion, type MotionValue } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
 import { playMechanicalClick, playTabSwitch } from '../../../lib/sound';
 import useSectionInView from '../../../hooks/useSectionInView';
 import { useLanguage } from '../../../context/LanguageContext';
+
+export interface ProjectHudMetric {
+    value: string;
+    label: string;
+}
 
 export interface FlagshipProject {
     id: number;
@@ -14,6 +19,7 @@ export interface FlagshipProject {
     stepLabel: string;
     badge: string;
     stat: string;
+    metrics: [ProjectHudMetric, ProjectHudMetric];
     description: string;
     image: string;
     techs: string[];
@@ -29,6 +35,10 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
         stepLabel: '# 01. Motor Transacional',
         badge: 'Fintech de Alta Concorrência',
         stat: 'Idempotência Atômica',
+        metrics: [
+            { value: 'P2002 ACID', label: 'Idempotência Atômica' },
+            { value: '100% Inteiro', label: 'Split em Centavos' },
+        ],
         description: 'Gateway corporativo de pagamentos fintech com liquidação de split multipartes em centavos inteiros, idempotência atômica via restrição P2002 no PostgreSQL e webhooks assinados com HMAC-SHA256 com proteção contra timing attacks.',
         image: '/projects/paystream-dash.png',
         techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
@@ -42,6 +52,10 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
         stepLabel: '# 02. Operações Portuárias',
         badge: 'Logística Portuária & ZPEs',
         stat: '100% FSM Válida',
+        metrics: [
+            { value: '100% FSM', label: 'Transições Válidas' },
+            { value: 'Multi-Tenant', label: 'Isolamento por Terminal' },
+        ],
         description: 'Sistema operacional portuário com governança multi-tenant estrita por terminal, máquina de estados finita (FSM) no Kanban de manutenção de guindastes pesados (STS/RTG) e telemetria preditiva IoT em tempo real.',
         image: '/projects/portlog-dash.png',
         techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
@@ -55,6 +69,10 @@ export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
         stepLabel: '# 03. Engenharia de Qualidade',
         badge: 'Observabilidade & TestOps',
         stat: 'NIST Nearest Rank Math',
+        metrics: [
+            { value: 'p50–p99 NIST', label: 'Telemetria de Cauda' },
+            { value: 'Chaos Lab', label: 'Injeção de Falhas' },
+        ],
         description: 'Plataforma corporativa de engenharia de testes com runner isolado, validação recursiva de esquemas OpenAPI/JSON Schema, testes de estresse no Chaos Lab e percentis de cauda p50/p90/p95/p99 padronizados pelo NIST.',
         image: '/projects/spectr-workbench.png',
         techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
@@ -73,6 +91,10 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             stepLabel: '# 01. Transaction Engine',
             badge: 'High-Concurrency Fintech',
             stat: 'Atomic Idempotency',
+            metrics: [
+                { value: 'P2002 ACID', label: 'Atomic Idempotency' },
+                { value: '100% Integer', label: 'Full-Cent Split' },
+            ],
             description: 'Enterprise fintech payment gateway featuring full-cent multipart split settlement, atomic idempotency via PostgreSQL P2002 constraint, and HMAC-SHA256 signed webhooks protected against timing attacks.',
             image: '/projects/paystream-dash.png',
             techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
@@ -86,6 +108,10 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             stepLabel: '# 02. Port Operations',
             badge: 'Port Logistics & FTZ',
             stat: '100% Valid FSM',
+            metrics: [
+                { value: '100% FSM', label: 'Valid State Transitions' },
+                { value: 'Multi-Tenant', label: 'Per-Terminal Isolation' },
+            ],
             description: 'Port operating system with strict per-terminal multi-tenant governance, finite state machine (FSM) for heavy crane maintenance Kanban (STS/RTG), and real-time IoT predictive telemetry.',
             image: '/projects/portlog-dash.png',
             techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
@@ -99,6 +125,10 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             stepLabel: '# 03. Quality Engineering',
             badge: 'Observability & TestOps',
             stat: 'NIST Nearest Rank Math',
+            metrics: [
+                { value: 'p50–p99 NIST', label: 'Tail Latency Math' },
+                { value: 'Chaos Lab', label: 'Fault Injection' },
+            ],
             description: 'Enterprise test engineering platform featuring isolated test runner, recursive OpenAPI/JSON Schema validation, Chaos Lab resilience testing, and NIST-standardized tail latency percentiles (p50/p90/p95/p99).',
             image: '/projects/spectr-workbench.png',
             techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
@@ -114,6 +144,10 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             stepLabel: '# 01. Motor Transaccional',
             badge: 'Fintech de Alta Concurrencia',
             stat: 'Idempotencia Atómica',
+            metrics: [
+                { value: 'P2002 ACID', label: 'Idempotencia Atómica' },
+                { value: '100% Entero', label: 'Split en Centavos' },
+            ],
             description: 'Pasarela corporativa de pagos fintech con liquidación de split multipartes en centavos enteros, idempotencia atómica vía restricción P2002 en PostgreSQL y webhooks firmados con HMAC-SHA256 contra timing attacks.',
             image: '/projects/paystream-dash.png',
             techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
@@ -127,6 +161,10 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             stepLabel: '# 02. Operaciones Portuarias',
             badge: 'Logística Portuaria y ZPEs',
             stat: '100% FSM Válida',
+            metrics: [
+                { value: '100% FSM', label: 'Transiciones Válidas' },
+                { value: 'Multi-Tenant', label: 'Aislamiento por Terminal' },
+            ],
             description: 'Sistema operativo portuario con gobernanza multi-tenant estricta por terminal, máquina de estados finitos (FSM) en Kanban de mantenimiento de grúas pesadas (STS/RTG) y telemetría predictiva IoT en tiempo real.',
             image: '/projects/portlog-dash.png',
             techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
@@ -140,6 +178,10 @@ export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
             stepLabel: '# 03. Ingeniería de Calidad',
             badge: 'Observabilidad y TestOps',
             stat: 'NIST Nearest Rank Math',
+            metrics: [
+                { value: 'p50–p99 NIST', label: 'Telemetría de Cola' },
+                { value: 'Chaos Lab', label: 'Inyección de Fallos' },
+            ],
             description: 'Plataforma corporativa de ingeniería de pruebas con ejecutor aislado, validación recursiva de esquemas OpenAPI/JSON Schema, pruebas de estrés en Chaos Lab y percentiles NIST p50/p90/p95/p99.',
             image: '/projects/spectr-workbench.png',
             techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
@@ -153,7 +195,7 @@ interface CylindricalCardProps {
     project: FlagshipProject;
     index: number;
     activeIndex: number;
-    smoothProgress: any;
+    smoothProgress: MotionValue<number>;
     onSelect: (project: FlagshipProject) => void;
     onCardFocus: (index: number) => void;
     presenting: boolean;
@@ -162,7 +204,7 @@ interface CylindricalCardProps {
 
 /**
  * CylindricalCard - Card 3D individual com isolamento de empilhamento estrito,
- * separação espacial calibrada e botões integrados sem interceptação.
+ * separação espacial calibrada, cantoneiras HUD e métricas emolduradas (Proposta D).
  */
 const CylindricalCard = memo(function CylindricalCard({
     project,
@@ -185,20 +227,14 @@ const CylindricalCard = memo(function CylindricalCard({
     }, [isCurrent]);
 
     // ── 1. Gestão Estrita de Z-Index & Empilhamento ──
-    // Card ativo tem prioridade máxima (50) para nunca sofrer interceptação de cards laterais
     const zIndex = isCurrent ? 50 : 20 - Math.abs(index - activeIndex);
 
     // ── 2. Calibração Espacial Tridimensional ──
-    // Deslocamento X com 115% de espaçamento lateral evitando colisões de bordas
     const translateX = useTransform(smoothProgress, (p: number) => `${(index - p) * 115}%`);
-    // Rotação Y com -24deg no arco côncavo cilíndrico
     const rotateY = useTransform(smoothProgress, (p: number) => `${(index - p) * -24}deg`);
-    // Recuo em Z: 0px no ativo, -220px nos laterais
     const translateZ = useTransform(smoothProgress, (p: number) => `${-Math.abs(index - p) * 220}px`);
-    // Escala: 1.0 no ativo, 0.86 nos adjacentes (0.935 no modo presenting plano para hierarquia óptica)
     const scale = useTransform(smoothProgress, (p: number) => Math.max(0.86, 1 - Math.abs(index - p) * 0.14));
     const presentingScale = useTransform(smoothProgress, (p: number) => Math.max(0.935, 1 - Math.abs(index - p) * 0.065));
-    // Opacidade: 1.0 no ativo, 0.40 nos adjacentes
     const opacity = useTransform(smoothProgress, (p: number) => Math.max(0.2, 1 - Math.abs(index - p) * 0.6));
     const shadowOpacity = useTransform(smoothProgress, (p: number) => Math.max(0, 0.85 - Math.abs(index - p) * 0.45));
 
@@ -207,6 +243,8 @@ const CylindricalCard = memo(function CylindricalCard({
             onCardFocus(index);
         }
     };
+
+    const formattedIndex = String(index + 1).padStart(2, '0');
 
     return (
         <motion.div
@@ -222,7 +260,7 @@ const CylindricalCard = memo(function CylindricalCard({
                 transformOrigin: '50% 50%',
             }}
             onClick={handleCardContainerClick}
-            className={`project-focus-card absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[650px] sm:h-[500px] md:h-[480px] will-change-transform select-none antialiased subpixel-antialiased ${
+            className={`project-focus-card absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[680px] sm:h-[520px] md:h-[500px] will-change-transform select-none antialiased subpixel-antialiased ${
                 isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
             }`}
         >
@@ -236,8 +274,16 @@ const CylindricalCard = memo(function CylindricalCard({
                         : 'border-white/5 pointer-events-none'
                 }`}
             >
+                {/* Cantoneiras Técnicas em L no card ativo */}
+                {isCurrent && (
+                    <div className="portfolio-hud-corners" aria-hidden="true">
+                        <span className="portfolio-hud-corner-bl" />
+                        <span className="portfolio-hud-corner-br" />
+                    </div>
+                )}
+
                 {/* ── Lado Esquerdo: Área Visual e Preview Nítido ── */}
-                <div className="w-full md:w-[48%] h-48 sm:h-56 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-white/10 shrink-0 pointer-events-none">
+                <div className="w-full md:w-[46%] h-44 sm:h-52 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-dashed border-white/15 shrink-0 pointer-events-none">
                     <img
                         src={project.image}
                         alt={project.title}
@@ -255,49 +301,69 @@ const CylindricalCard = memo(function CylindricalCard({
                     <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-35 pointer-events-none" />
                     
                     {/* Badge de Categoria com Indicador de Status ao Vivo */}
-                    <div className="portfolio-chip absolute top-4 left-4 z-10 flex items-center gap-2 bg-darker pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-accent/70" />
-                        <span className="text-[10px] font-mono text-accent">
+                    <div className="portfolio-chip-dashed absolute top-3.5 left-3.5 z-10 flex items-center gap-2 bg-darker/95 pointer-events-none">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                        <span className="text-[10px] font-mono text-secondary">
                             {project.badge}
                         </span>
                     </div>
                 </div>
 
-                {/* ── Lado Direito: Especificações Técnicas e Anatomia Integrada ── */}
-                <div className="p-6 sm:p-7 md:p-8 flex-1 flex flex-col justify-between overflow-hidden">
+                {/* ── Lado Direito: Especificações Técnicas, Métricas HUD e Anatomia Integrada ── */}
+                <div className="p-5 sm:p-6 md:p-7 flex-1 flex flex-col justify-between overflow-hidden">
                     <div>
-                        {/* Cabeçalho Interno: Tag de Passo + Indicador de Confiabilidade */}
-                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-2.5">
-                            <span className="portfolio-eyebrow">
-                                {project.stepLabel}
-                            </span>
-                            <span className="portfolio-chip flex items-center gap-1.5 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent/70" />
+                        {/* Cabeçalho Interno: Índice 01 + Subtítulo Serif/Cursiva + Stat Chip */}
+                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-2">
+                            <div className="flex items-baseline gap-2.5 min-w-0">
+                                <span className="font-mono text-lg sm:text-xl font-semibold text-secondary leading-none tracking-tight">
+                                    {formattedIndex}
+                                </span>
+                                <span className="text-white/20 font-mono text-xs">/</span>
+                                <span className="font-serif italic text-xs sm:text-sm text-accent truncate">
+                                    {project.badge}
+                                </span>
+                            </div>
+                            <span className="portfolio-chip-dashed flex items-center gap-1.5 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-accent/80" />
                                 {project.stat}
                             </span>
                         </div>
 
                         {/* Título do Sistema */}
-                        <h3 className="text-2xl sm:text-3xl font-serif text-primary font-normal tracking-tight leading-tight mb-2 truncate">
+                        <h3 className="text-2xl sm:text-[28px] font-serif text-primary font-normal tracking-tight leading-tight mb-1 truncate">
                             {project.title}
                         </h3>
 
                         {/* Tagline de Arquitetura */}
-                        <p className="text-primary/90 text-xs sm:text-sm font-sans font-medium mb-3">
+                        <p className="text-secondary/90 text-xs sm:text-[13px] font-sans font-medium mb-2.5 truncate">
                             {project.tagline}
                         </p>
 
                         {/* Descrição Detalhada da Arquitetura */}
-                        <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-4 font-sans line-clamp-3 md:line-clamp-4">
+                        <p className="text-neutral-300 text-xs sm:text-[13px] leading-relaxed mb-3.5 font-sans line-clamp-2 md:line-clamp-3">
                             {project.description}
                         </p>
 
-                        {/* Badges de Stack Técnica Refinadas */}
-                        <div className="flex flex-wrap gap-1.5 mb-5">
+                        {/* ── Proposta D: 2 Blocos de Métrica/Arquitetura Emoldurados com Cantoneiras e Borda Tracejada ── */}
+                        <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+                            {project.metrics.map((metric) => (
+                                <div key={metric.label} className="portfolio-hud-metric">
+                                    <span className="font-mono text-xs sm:text-[13px] font-semibold text-secondary block leading-tight">
+                                        {metric.value}
+                                    </span>
+                                    <span className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-neutral-400 block mt-0.5 truncate">
+                                        {metric.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Badges de Stack Técnica com Borda Tracejada */}
+                        <div className="flex flex-wrap gap-1.5 mb-3">
                             {project.techs.map((tech) => (
                                 <span
                                     key={tech}
-                                    className="portfolio-chip"
+                                    className="portfolio-chip-dashed"
                                 >
                                     {tech}
                                 </span>
@@ -306,7 +372,7 @@ const CylindricalCard = memo(function CylindricalCard({
                     </div>
 
                     {/* ── Rodapé Integrado: Ações Diretas no Card sem Interceptação ── */}
-                    <div className="flex flex-wrap items-center gap-2.5 pt-4 border-t border-white/10 mt-auto relative z-20">
+                    <div className="portfolio-hud-divider flex flex-wrap items-center gap-2.5 pt-3.5 mt-auto relative z-20">
                         {/* Botão Detalhes Técnicos */}
                         <button
                             type="button"
@@ -315,7 +381,7 @@ const CylindricalCard = memo(function CylindricalCard({
                                 onSelect(project);
                             }}
                             data-cursor-morph="true"
-                            className="portfolio-control flex-1 min-w-[135px] py-3 px-4 font-semibold text-xs transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative z-30"
+                            className="portfolio-control flex-1 min-w-[130px] py-2.5 px-3.5 font-semibold text-xs transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative z-30"
                         >
                             <i aria-hidden="true" className="fas fa-microchip text-xs" />
                             <span>{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
@@ -328,7 +394,7 @@ const CylindricalCard = memo(function CylindricalCard({
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="portfolio-button portfolio-button-primary flex-1 min-w-[155px] font-semibold flex items-center justify-center gap-1.5 shadow-md relative z-30 cursor-pointer"
+                            className="portfolio-button portfolio-button-primary flex-1 min-w-[150px] !min-h-[38px] !py-2.5 !px-4 font-semibold flex items-center justify-center gap-1.5 shadow-md relative z-30 cursor-pointer"
                         >
                             <span>{lang === 'en' ? 'Live Demo' : lang === 'es' ? 'Demostración en Vivo' : 'Acessar Demonstração'}</span>
                             <i aria-hidden="true" className="fas fa-external-link-alt text-[9px]" />
@@ -341,11 +407,11 @@ const CylindricalCard = memo(function CylindricalCard({
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="portfolio-control p-3 flex items-center justify-center shrink-0 relative z-30 cursor-pointer"
+                            className="portfolio-control p-2.5 flex items-center justify-center shrink-0 relative z-30 cursor-pointer"
                             title={lang === 'en' ? 'Source Code on GitHub' : lang === 'es' ? 'Código Fuente en GitHub' : 'Código-Fonte no GitHub'}
                             aria-label={lang === 'en' ? `${project.title} source code on GitHub` : `Código-fonte de ${project.title} no GitHub`}
                         >
-                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
                             </svg>
                         </a>
@@ -373,8 +439,8 @@ const CylindricalCard = memo(function CylindricalCard({
 
 
 interface Cylindrical3DShowcaseProps {
-    onSelectProject?: (project: any) => void;
-    projects?: any[];
+    onSelectProject?: (project: FlagshipProject | Record<string, unknown>) => void;
+    projects?: Array<FlagshipProject | (Record<string, unknown> & { id?: number })>;
 }
 
 /**
@@ -553,8 +619,17 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                         </h2>
                     </div>
                     <div className="project-focus-count" aria-label={lang === 'en' ? 'Current project' : lang === 'es' ? 'Proyecto actual' : 'Projeto atual'}>
-                        <span aria-live="polite"><strong>{String(activeIndex + 1).padStart(2, '0')}</strong> / {String(totalSlides).padStart(2, '0')}</span>
-                        <div aria-hidden="true"><motion.div style={{ scaleX: countProgress }} /></div>
+                        <div className="project-focus-count-top">
+                            <span className="project-focus-count-label">
+                                {lang === 'en' ? 'MODULE' : lang === 'es' ? 'MÓDULO' : 'MÓDULO'}
+                            </span>
+                            <span aria-live="polite">
+                                <strong>{String(activeIndex + 1).padStart(2, '0')}</strong> / {String(totalSlides).padStart(2, '0')}
+                            </span>
+                        </div>
+                        <div className="project-focus-progress-rail" aria-hidden="true">
+                            <motion.div style={{ scaleX: countProgress }} />
+                        </div>
                     </div>
                 </header>
 
@@ -563,11 +638,11 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
                     ref={containerRef}
                     onPointerDown={handlePointerDown}
                     style={{ perspective: presenting ? undefined : '1400px', perspectiveOrigin: '50% 50%', isolation: 'isolate', transformStyle: presenting ? 'flat' : 'preserve-3d' }}
-                    className="project-focus-stage w-full mx-auto min-h-[690px] sm:min-h-[550px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
+                    className="project-focus-stage w-full mx-auto min-h-[710px] sm:min-h-[560px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
                 >
                     <motion.div
                         style={{ rotateZ: presenting || reducedMotion ? 0 : velocityRotateZ, skewX: presenting || reducedMotion ? 0 : velocitySkewX, transformStyle: presenting ? 'flat' : 'preserve-3d' }}
-                        className="relative w-full h-full min-h-[650px] sm:min-h-[500px] lg:min-h-[520px]"
+                        className="relative w-full h-full min-h-[680px] sm:min-h-[520px] lg:min-h-[520px]"
                     >
                         {flagshipItems.map((project, idx) => (
                             <CylindricalCard key={project.id} project={project} index={idx} activeIndex={activeIndex}

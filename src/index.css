@@ -82,6 +82,162 @@ html {
   color: #bebfbb;
   font: 400 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+.portfolio-chip-dashed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  color: #cfcfcc;
+  font: 400 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  transition: border-color .22s ease, background-color .22s ease, color .22s ease;
+}
+.portfolio-chip-dashed:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 65%, var(--color-secondary) 35%);
+  background: color-mix(in srgb, var(--color-accent) 12%, rgba(255, 255, 255, 0.03));
+  color: var(--color-secondary);
+}
+
+/* ── Chassi Técnico HUD: Borda Tracejada + Cantoneiras em L (┌ ┐ ├ ┤ └ ┘) ── */
+.portfolio-hud-frame {
+  position: relative;
+  background: var(--portfolio-surface);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition: border-color .3s ease, background-color .3s ease;
+}
+.portfolio-hud-frame:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, rgba(255, 255, 255, 0.22));
+}
+.portfolio-hud-corners {
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  z-index: 25;
+}
+.portfolio-hud-corners::before,
+.portfolio-hud-corners::after,
+.portfolio-hud-corner-bl,
+.portfolio-hud-corner-br {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: color-mix(in srgb, var(--color-accent) 75%, var(--color-secondary) 25%);
+  border-style: solid;
+  pointer-events: none;
+  transition: border-color .3s ease, transform .3s var(--portfolio-ease);
+}
+.portfolio-hud-corners::before {
+  top: 0;
+  left: 0;
+  border-width: 1.5px 0 0 1.5px;
+}
+.portfolio-hud-corners::after {
+  top: 0;
+  right: 0;
+  border-width: 1.5px 1.5px 0 0;
+}
+.portfolio-hud-corner-bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1.5px 1.5px;
+}
+.portfolio-hud-corner-br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1.5px 1.5px 0;
+}
+.portfolio-hud-frame:hover .portfolio-hud-corners::before,
+.portfolio-hud-frame:hover .portfolio-hud-corners::after,
+.portfolio-hud-frame:hover .portfolio-hud-corner-bl,
+.portfolio-hud-frame:hover .portfolio-hud-corner-br {
+  border-color: var(--color-secondary);
+}
+
+/* Divisória horizontal tracejada com marcadores técnicos ├ e ┤ */
+.portfolio-hud-divider {
+  position: relative;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+}
+.portfolio-hud-divider::before,
+.portfolio-hud-divider::after {
+  content: '';
+  position: absolute;
+  top: -3.5px;
+  width: 5px;
+  height: 6px;
+  border-top: 1.5px solid color-mix(in srgb, var(--color-accent) 70%, var(--color-secondary) 30%);
+  pointer-events: none;
+}
+.portfolio-hud-divider::before {
+  left: 0;
+  border-left: 1.5px solid color-mix(in srgb, var(--color-accent) 70%, var(--color-secondary) 30%);
+}
+.portfolio-hud-divider::after {
+  right: 0;
+  border-right: 1.5px solid color-mix(in srgb, var(--color-accent) 70%, var(--color-secondary) 30%);
+}
+
+/* Botão quadrado minimalista de recolher/expandir [v] / [^] */
+.portfolio-hud-toggle {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--portfolio-muted);
+  transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.portfolio-hud-toggle:hover,
+.portfolio-hud-toggle[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--color-accent) 65%, var(--color-secondary) 35%);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--color-secondary);
+}
+
+/* Bloco de métrica/arquitetura com cantoneiras e borda tracejada (Proposta D) */
+.portfolio-hud-metric {
+  position: relative;
+  padding: 8px 11px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color .25s ease, background-color .25s ease;
+}
+.portfolio-hud-metric::before,
+.portfolio-hud-metric::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: color-mix(in srgb, var(--color-accent) 75%, var(--color-secondary) 25%);
+  border-style: solid;
+  pointer-events: none;
+}
+.portfolio-hud-metric::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1.5px 0 0 1.5px;
+}
+.portfolio-hud-metric::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1.5px 1.5px 0;
+}
+.portfolio-hud-metric:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, rgba(255, 255, 255, 0.25));
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .portfolio-control, .portfolio-button {
   border: 1px solid var(--portfolio-line);
   border-radius: 10px;
@@ -151,7 +307,7 @@ html {
   html { scroll-behavior: auto; }
   .portfolio-channel .channel-arrow { transition: none; }
   button:active, a:active { transform: none; }
-  .portfolio-surface, .portfolio-control, .portfolio-button, .portfolio-field { transition: none; }
+  .portfolio-surface, .portfolio-control, .portfolio-button, .portfolio-field, .portfolio-hud-frame, .portfolio-chip-dashed { transition: none; }
 }
 
 body {
@@ -291,4 +447,35 @@ body.modal-open nav {
   }
 }
 
+/* ── HUD Ignition Flicker ("Pisca" de Ignição Técnica Compositor-Only) ── */
+@keyframes hud-frame-lock {
+  0%   { opacity: 0; }
+  35%  { opacity: 1; }
+  62%  { opacity: 0.36; }
+  100% { opacity: 1; }
+}
 
+@keyframes hud-flicker-in {
+  0%   { opacity: 0; transform: translate3d(0, 4px, 0); }
+  22%  { opacity: 0.86; transform: translate3d(0, 0, 0); }
+  40%  { opacity: 0.28; }
+  62%  { opacity: 0.94; }
+  78%  { opacity: 0.18; }
+  100% { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portfolio-hud-frame[data-hud-ignited="false"] .portfolio-hud-corners {
+    opacity: 0;
+  }
+  .portfolio-hud-frame[data-hud-ignited="false"] .portfolio-hud-body {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+  .portfolio-hud-frame[data-hud-ignited="true"] .portfolio-hud-corners {
+    animation: hud-frame-lock 240ms cubic-bezier(0.22, 1, 0.36, 1) var(--hud-delay, 0ms) both;
+  }
+  .portfolio-hud-frame[data-hud-ignited="true"] .portfolio-hud-body {
+    animation: hud-flicker-in 480ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--hud-delay, 0ms) + 120ms) both;
+  }
+}
