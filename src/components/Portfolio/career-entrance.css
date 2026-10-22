@@ -5,6 +5,7 @@
 
 /* ══════════════════════════════════════════════════════════════════════════
    PALCO DE TRANSIÇÃO CINEMÁTICA: 3 PILARES ("PISCAS") ➔ ABERTURA DA CARREIRA
+   Altura intrínseca livre (sem bottom:0 / inset:0) para impedir loop de ResizeObserver
    ══════════════════════════════════════════════════════════════════════════ */
 .career-entrance-track,
 .career-entrance-frame,
@@ -26,7 +27,7 @@
 .career-pillars-layout {
     width: min(92%, 1720px);
     margin-inline: auto;
-    padding-top: 1.5rem;
+    padding-top: 1.25rem;
     padding-bottom: 2rem;
 }
 
@@ -34,7 +35,7 @@
     max-width: 72rem;
     margin-inline: auto;
     padding-inline: 1rem;
-    padding-top: 1.5rem;
+    padding-top: 1rem;
 }
 
 @media (min-width: 640px) {
@@ -68,8 +69,8 @@
 
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
     .career-entrance-track[data-scene="connected"] {
-        height: calc(var(--career-frame-height, 420px) + var(--career-travel, 480px));
-        margin-bottom: 1.5rem;
+        height: calc(var(--career-frame-height, 420px) + var(--career-travel, 380px));
+        margin-bottom: 1.25rem;
     }
 
     .career-entrance-track[data-scene="connected"] .career-entrance-frame {
@@ -78,11 +79,16 @@
         height: var(--career-frame-height, 420px);
         width: min(92%, 1720px);
         margin-inline: auto;
-        isolation: isolate;
     }
 
+    /* IMPORTANTE: top: 0; left: 0; right: 0; height: auto (NUNCA inset: 0 / bottom: 0) */
     .career-entrance-track[data-scene="connected"] .career-pillars-layout {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
         width: 100%;
+        height: auto;
         padding-top: 0.5rem;
         padding-bottom: 0;
         z-index: 2;
@@ -90,9 +96,12 @@
 
     .career-entrance-track[data-scene="connected"] .career-opening-layout {
         position: absolute;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
         width: 100%;
         max-width: 72rem;
+        height: auto;
         margin-inline: auto;
         padding-top: 0.25rem;
         z-index: 3;
@@ -115,22 +124,21 @@
     }
 
     .career-entrance-path-base {
-        stroke: rgba(255, 255, 255, 0.12);
-        stroke-width: 1.75px;
+        stroke: rgba(255, 255, 255, 0.11);
+        stroke-width: 1.5px;
         stroke-dasharray: 4 6;
     }
 
     .career-entrance-path-active {
         stroke: var(--color-secondary);
-        stroke-width: 2.25px;
+        stroke-width: 2px;
         stroke-dasharray: 1;
         stroke-dashoffset: 1;
         stroke-linecap: round;
-        filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 70%, transparent));
     }
 
     .career-entrance-orb-halo {
-        fill: color-mix(in srgb, var(--color-secondary) 38%, transparent);
+        fill: color-mix(in srgb, var(--color-secondary) 28%, transparent);
         opacity: 0;
     }
 
@@ -138,7 +146,6 @@
         fill: var(--color-secondary);
         stroke: #07090e;
         stroke-width: 1.5px;
-        filter: drop-shadow(0 0 10px var(--color-accent));
         opacity: 0;
     }
 }
@@ -216,8 +223,8 @@
     margin-left: -1.25px;
     background: var(--color-secondary);
     box-shadow:
-        0 0 18px color-mix(in srgb, var(--color-accent) 75%, var(--color-secondary) 25%),
-        0 0 5px var(--color-secondary);
+        0 0 14px color-mix(in srgb, var(--color-accent) 70%, var(--color-secondary) 30%),
+        0 0 4px var(--color-secondary);
     border-radius: 999px;
     transform-origin: top center;
     transform: scaleY(0);
@@ -245,10 +252,10 @@
     border-radius: 999px;
     background: radial-gradient(
         circle,
-        color-mix(in srgb, var(--color-secondary) 60%, var(--color-accent) 40%) 0%,
+        color-mix(in srgb, var(--color-secondary) 55%, var(--color-accent) 45%) 0%,
         transparent 70%
     );
-    opacity: 0.72;
+    opacity: 0.7;
 }
 
 .career-rail-traveller-ring {
@@ -267,8 +274,8 @@
     background: var(--color-secondary);
     border: 2.5px solid #07090e;
     box-shadow:
-        0 0 16px var(--color-accent),
-        0 0 6px var(--color-secondary);
+        0 0 12px var(--color-accent),
+        0 0 5px var(--color-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -333,7 +340,6 @@
         color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 78%,
         transparent 100%
     );
-    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 55%, transparent);
     pointer-events: none;
     z-index: 20;
     will-change: transform, opacity;
@@ -381,8 +387,8 @@
             var(--color-secondary) calc(var(--station-ignition, 0) * 100%),
             rgba(255, 255, 255, 0.22)
         );
-    box-shadow: 0 0 calc(var(--station-ignition, 0) * 16px)
-        color-mix(in srgb, var(--color-accent) 80%, transparent);
+    box-shadow: 0 0 calc(var(--station-ignition, 0) * 14px)
+        color-mix(in srgb, var(--color-accent) 75%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -22,7 +22,6 @@ interface CardGeometry {
     rot: number;
     scaleStart: number;
     topAnchorX: number;
-    topAnchorY: number;
 }
 
 const pointOnCurve = (points: [Point, Point, Point, Point], t: number): Point => {
@@ -41,25 +40,24 @@ const pointOnCurve = (points: [Point, Point, Point, Point], t: number): Point =>
     };
 };
 
-function offsetRelativeTo(node: HTMLElement, ancestor: HTMLElement): Point {
+function offsetLeftRelativeTo(node: HTMLElement, ancestor: HTMLElement): number {
     let x = 0;
-    let y = 0;
     let current: HTMLElement | null = node;
     while (current && current !== ancestor) {
         x += current.offsetLeft;
-        y += current.offsetTop;
         current = current.offsetParent as HTMLElement | null;
     }
-    return { x, y };
+    return x;
 }
 
 /**
  * Transição cinemática de alto desempenho entre o fim da Experiência Profissional (2024)
  * e a Especialização Técnica, inspirada na coreografia espacial da seção de Contato:
  * - Recuo em profundidade do último marco da carreira (2024)
- * - Feixe óptico Bezier + Orb luminoso viajante conectando o trilho de carreira ao palco
+ * - Feixe óptico Bezier + Orb luminoso viajante do fim do trilho 2024 até o topo do cabeçalho
  * - Elevação e escala monumental do título "Especialização técnica."
- * - Bifurcação de condutores SVG e desdobramento espacial dos 4 cards do centro para o Bento Grid
+ * - Câmara óptica de bifurcação tripla (abaixo dos botões, sem cruzar textos)
+ * - Desdobramento espacial dos 4 cards do eixo central para o Bento Grid sem sobrepor o título
  */
 export function useCareerSkillsHandoff(
     ref: RefObject<HTMLElement | null>,
@@ -72,22 +70,32 @@ export function useCareerSkillsHandoff(
         const root = ref.current;
         if (!root) return;
 
-        const frameEl = root.querySelector<HTMLElement>('.career-skills-frame');
-        const content = root.querySelector<HTMLElement>('.career-skills-content');
+        const introTrack = root.querySelector<HTMLElement>('.career-skills-intro-track');
+        const introFrame = root.querySelector<HTMLElement>('.career-skills-intro-frame');
         const heading = root.querySelector<HTMLElement>('.career-skills-heading');
+        const headingInner =
+            root.querySelector<HTMLElement>('.career-skills-heading-inner') || heading;
         const title = heading?.querySelector<HTMLElement>('h2') || null;
         const body = root.querySelector<HTMLElement>('.career-skills-body');
         const anchor = root.querySelector<HTMLElement>('#habilidades');
         const svg = root.querySelector<SVGSVGElement>('.career-skills-thread');
+
         const sourceThread = root.querySelector<SVGPathElement>('[data-skills-source-thread]');
         const sourceActive = root.querySelector<SVGPathElement>('[data-skills-source-active]');
         const headingBridge = root.querySelector<SVGPathElement>('[data-skills-heading-bridge]');
-        const guideBase = root.querySelector<SVGPathElement>('[data-skills-guide-base]');
-        const guideActive = root.querySelector<SVGPathElement>('[data-skills-guide-active]');
+        const branchBasePaths = [0, 1, 2].map((i) =>
+            root.querySelector<SVGPathElement>(`[data-skills-branch-base="${i}"]`)
+        );
+        const branchActivePaths = [0, 1, 2].map((i) =>
+            root.querySelector<SVGPathElement>(`[data-skills-branch-active="${i}"]`)
+        );
         const marker = root.querySelector<SVGCircleElement>('[data-skills-source-marker]');
         const halo = root.querySelector<SVGCircleElement>('[data-skills-source-halo]');
+        const branchOrbs = [0, 1, 2].map((i) =>
+            root.querySelector<SVGCircleElement>(`[data-skills-branch-orb="${i}"]`)
+        );
 
-        if (!frameEl || !content || !heading || !body) return;
+        if (!introTrack || !introFrame || !heading || !body) return;
 
         const media = matchMedia(
             '(min-width: 1024px) and (min-height: 620px) and (prefers-reduced-motion: no-preference)'
@@ -101,33 +109,23 @@ export function useCareerSkillsHandoff(
         let disposed = false;
         let paintFrame = 0;
         let measureFrame = 0;
+        let lastMeasureSig = '';
 
         let zoom = 1;
-        let start = 0;
-        let run = 1;
-        let finish = 0;
+        let inset = 92;
+        let introHeight = 260;
+        let introTravel = 220;
         let frameWidth = 1120;
-        let frameHeight = 680;
-        let contentTop = 16;
-        let overflowY = 0;
-        let headingStartY = 110;
-        let nexusPoint: Point = { x: 560, y: 210 };
+        let topHubPoint: Point = { x: 560, y: -4 };
+        let forkOriginPoint: Point = { x: 560, y: 210 };
         let incomingCurve: [Point, Point, Point, Point] = [
             { x: 560, y: -140 },
-            { x: 560, y: -40 },
-            { x: 560, y: 80 },
-            { x: 560, y: 210 },
+            { x: 560, y: -80 },
+            { x: 560, y: -32 },
+            { x: 560, y: -4 },
         ];
-        let primaryCardCurve: [Point, Point, Point, Point] = [
-            { x: 560, y: 210 },
-            { x: 560, y: 250 },
-            { x: 560, y: 270 },
-            { x: 560, y: 300 },
-        ];
+        let branchCurves: [Point, Point, Point, Point][] = [];
         let cardGeometries: CardGeometry[] = [];
-
-        let scrollPosition = lenis ? lenis.scroll : window.scrollY;
-        let lastStateKey = NaN;
 
         const clearInteraction = () => {
             setSceneInert(heading, false);
@@ -135,75 +133,67 @@ export function useCareerSkillsHandoff(
             setProjectFocus(false, 'skills');
         };
 
-        const paintOutgoing = () => {
-            if (!enabled || !outgoing) return;
-            const exit = phase(scrollPosition, start - window.innerHeight * 0.38, start + window.innerHeight * 0.04);
-            const focused = outgoing.contains(document.activeElement);
-            motion.set(outgoing, 'opacity', (focused ? 1 : 1 - exit * 0.82).toFixed(4));
-            motion.set(
-                outgoing,
-                'transform',
-                `translate3d(0, ${px(focused ? 0 : -exit * 44)}, 0) scale(${(focused ? 1 : 1 - exit * 0.035).toFixed(4)})`
-            );
-        };
-
         const paint = () => {
             paintFrame = 0;
             if (disposed || !enabled) return;
 
             const vh = window.innerHeight;
-            const actual = clamp((scrollPosition - start) / Math.max(1, run));
-            const approach = phase(scrollPosition, start - vh * 0.34, start + vh * 0.02);
+            const trackRect = introTrack.getBoundingClientRect();
+            const insetPx = inset * zoom;
+            const travelPx = Math.max(1, introTravel * zoom);
+
+            // Progresso contínuo da abordagem e do pin a partir da posição real na viewport
+            const approach = phase(vh - trackRect.top, vh * 0.12, vh - insetPx);
+            const pinProgress = clamp((insetPx - trackRect.top) / travelPx);
+            const totalProgress = clamp(approach * 0.45 + pinProgress * 0.55);
+
             const interacting =
                 heading.contains(document.activeElement) || body.contains(document.activeElement);
-            const progress = interacting ? Math.max(0.88, actual) : actual;
+            const progress = interacting ? Math.max(0.92, totalProgress) : totalProgress;
             const entry = interacting ? 1 : approach;
 
+            // 1. Recuo suave em profundidade do marco final 2024 da seção anterior
+            if (outgoing) {
+                const outgoingFocused = outgoing.contains(document.activeElement);
+                const exit = outgoingFocused ? 0 : phase(progress, 0.04, 0.54);
+                motion.set(outgoing, 'opacity', (1 - exit * 0.72).toFixed(4));
+                motion.set(
+                    outgoing,
+                    'transform',
+                    `translate3d(0, ${px(-exit * 34)}, 0) scale(${(1 - exit * 0.035).toFixed(4)})`
+                );
+            }
+
             setProjectFocus(
-                scrollPosition >= start - vh * 0.36 && actual < 0.86 && !interacting,
+                trackRect.top <= vh * 0.78 && pinProgress < 0.9 && !interacting,
                 'skills'
             );
 
-            const stateKey = progress + entry * 10;
-            if (stateKey === lastStateKey) return;
-            lastStateKey = stateKey;
-
             root.dataset.skillsReveal = progress.toFixed(4);
 
-            // ── Fases coreográficas (Padrão ContactStory) ──
-            const lift = phase(progress, 0.08, 0.48);
-            const unfold = phase(progress, 0.18, 0.74);
-            const reveal = phase(progress, 0.34, 0.82);
-            const settleScroll = overflowY > 0 ? phase(progress, 0.52, 0.95) : 0;
-            const travel = phase(progress, 0.0, 0.72);
-            const branchDraw = phase(progress, 0.22, 0.72);
-            const ink = (1 - phase(progress, 0.74, 0.92) * 0.72) * entry;
-
-            // Deslocamento vertical suave caso o Bento Grid exceda a altura da viewport em telas menores
-            const currentScrollOffset = -overflowY * settleScroll;
-            motion.set(content, 'transform', `translate3d(0, ${px(currentScrollOffset)}, 0)`);
-
-            // 1. Elevação e Escala Monumental do Cabeçalho "Especialização técnica."
-            const currentHeadingY = headingStartY * (1 - lift) + (1 - entry) * 28;
-            motion.set(heading, 'opacity', entry.toFixed(4));
-            motion.set(heading, 'transform', `translate3d(0, ${px(currentHeadingY)}, 0)`);
+            // 2. Elevação e Escala Monumental do Cabeçalho "Especialização técnica."
+            const lift = phase(progress, 0.06, 0.58);
+            const headingY = (1 - lift) * 32;
+            const headingOpacity = clamp(0.15 + entry * 0.85);
+            motion.set(heading, 'opacity', headingOpacity.toFixed(4));
+            motion.set(heading, 'transform', `translate3d(0, ${px(headingY)}, 0)`);
             if (title) {
-                const titleScale = 1.24 - lift * 0.24;
+                const titleScale = 1.18 - lift * 0.18;
                 motion.set(title, 'transform', `scale(${titleScale.toFixed(4)})`);
             }
 
-            // 2. Desdobramento Espacial dos 4 Cards de Especialidade (ou Visualizador 3D)
+            // 3. Desdobramento Espacial dos 4 Cards do Bento Grid (sempre abaixo do cabeçalho, dy >= 0)
             if (cardGeometries.length > 0) {
                 cardGeometries.forEach((geom, idx) => {
-                    const stagger = idx * 0.035;
-                    const cardUnfold = phase(progress, 0.16 + stagger, 0.72 + stagger);
-                    const cardEntry = phase(progress, 0.08 + stagger, 0.44 + stagger) * entry;
+                    const stagger = idx * 0.045;
+                    const cardUnfold = phase(progress, 0.22 + stagger, 0.86 + stagger);
+                    const cardEntry = phase(progress, 0.14 + stagger, 0.62 + stagger);
                     const tx = geom.dx * (1 - cardUnfold);
-                    const ty = geom.dy * (1 - cardUnfold) + (1 - entry) * 24;
+                    const ty = geom.dy * (1 - cardUnfold);
                     const rot = geom.rot * (1 - cardUnfold);
                     const sc = geom.scaleStart + cardUnfold * (1 - geom.scaleStart);
 
-                    motion.set(geom.node, 'opacity', (0.14 + cardEntry * 0.86).toFixed(4));
+                    motion.set(geom.node, 'opacity', (0.2 + cardEntry * 0.8).toFixed(4));
                     motion.set(
                         geom.node,
                         'transform',
@@ -211,43 +201,43 @@ export function useCareerSkillsHandoff(
                     );
 
                     if (geom.body) {
-                        const bodyReveal = phase(progress, 0.34 + stagger, 0.78 + stagger);
-                        motion.set(geom.body, 'opacity', (0.25 + bodyReveal * 0.75).toFixed(4));
+                        const bodyReveal = phase(progress, 0.32 + stagger, 0.88 + stagger);
+                        motion.set(geom.body, 'opacity', (0.35 + bodyReveal * 0.65).toFixed(4));
                         motion.set(
                             geom.body,
                             'transform',
-                            `translate3d(0, ${px((1 - bodyReveal) * 14)}, 0)`
+                            `translate3d(0, ${px((1 - bodyReveal) * 10)}, 0)`
                         );
                     }
                 });
             } else {
-                const bodyGrow = phase(progress, 0.18, 0.72);
-                motion.set(body, 'opacity', (0.15 + entry * 0.85).toFixed(4));
+                const bodyGrow = phase(progress, 0.2, 0.82);
+                motion.set(body, 'opacity', (0.2 + bodyGrow * 0.8).toFixed(4));
                 motion.set(
                     body,
                     'transform',
-                    `translate3d(0, ${px((1 - bodyGrow) * 52)}, 0) scale(${(0.86 + bodyGrow * 0.14).toFixed(4)})`
+                    `translate3d(0, ${px((1 - bodyGrow) * 32)}, 0) scale(${(0.92 + bodyGrow * 0.08).toFixed(4)})`
                 );
             }
 
-            // 3. Atualização Dinâmica da Origem do Feixe Conectado ao Fim do Trilho 2024
-            if (careerRail && frameEl) {
+            // 4. Feixe Óptico de Entrada (do fim do trilho 2024 até o topo do eyebrow, sem cruzar textos)
+            if (careerRail) {
                 const railRect = careerRail.getBoundingClientRect();
-                const frameRect = frameEl.getBoundingClientRect();
+                const frameRect = introFrame.getBoundingClientRect();
                 const sourceX = (railRect.left + railRect.width * 0.5 - frameRect.left) / zoom;
                 const rawSourceY = (railRect.bottom - frameRect.top) / zoom;
-                const sourceY = Math.max(-220, Math.min(nexusPoint.y - 40, rawSourceY));
+                const sourceY = Math.max(-220, Math.min(topHubPoint.y - 28, rawSourceY));
 
                 incomingCurve[0] = { x: sourceX, y: sourceY };
                 incomingCurve[1] = {
                     x: sourceX,
-                    y: sourceY + (nexusPoint.y - sourceY) * 0.45,
+                    y: sourceY + (topHubPoint.y - sourceY) * 0.45,
                 };
                 incomingCurve[2] = {
-                    x: nexusPoint.x,
-                    y: sourceY + (nexusPoint.y - sourceY) * 0.78,
+                    x: topHubPoint.x,
+                    y: sourceY + (topHubPoint.y - sourceY) * 0.78,
                 };
-                incomingCurve[3] = nexusPoint;
+                incomingCurve[3] = topHubPoint;
 
                 const c = (p: Point) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
                 const dIn = `M ${c(incomingCurve[0])} C ${c(incomingCurve[1])}, ${c(incomingCurve[2])}, ${c(incomingCurve[3])}`;
@@ -255,90 +245,86 @@ export function useCareerSkillsHandoff(
                 sourceActive?.setAttribute('d', dIn);
             }
 
-            // 4. Animação do Feixe Principal, Bifurcação para os Cards e Orb Luminoso Viajante
-            const inDraw = phase(travel, 0.0, 0.52);
+            const inDraw = phase(progress, 0.02, 0.46);
+            const forkDraw = phase(progress, 0.34, 0.86);
+            const inkFade = 1 - phase(progress, 0.86, 0.99) * 0.65;
+
+            if (sourceThread) {
+                motion.set(sourceThread, 'opacity', (entry * inkFade * 0.45).toFixed(4));
+            }
             if (sourceActive) {
                 motion.set(sourceActive, 'stroke-dashoffset', (1 - inDraw).toFixed(4));
-                motion.set(sourceActive, 'opacity', (ink * 0.95).toFixed(4));
-            }
-            if (sourceThread) {
-                motion.set(sourceThread, 'opacity', (ink * 0.45).toFixed(4));
+                motion.set(sourceActive, 'opacity', (inDraw * inkFade * 0.92).toFixed(4));
             }
             if (headingBridge) {
-                motion.set(headingBridge, 'opacity', (ink * 0.4).toFixed(4));
-            }
-            if (guideBase) {
-                motion.set(guideBase, 'opacity', (branchDraw * ink * 0.5).toFixed(4));
-            }
-            if (guideActive) {
-                motion.set(guideActive, 'stroke-dashoffset', (1 - branchDraw).toFixed(4));
-                motion.set(guideActive, 'opacity', (branchDraw * ink * 0.92).toFixed(4));
+                motion.set(headingBridge, 'opacity', (forkDraw * inkFade * 0.45).toFixed(4));
             }
 
-            const dot =
-                travel < 0.52
-                    ? pointOnCurve(incomingCurve, travel / 0.52)
-                    : pointOnCurve(primaryCardCurve, (travel - 0.52) / 0.48);
-
-            const orbOpacity = clamp(entry * (1 - phase(progress, 0.72, 0.88)));
+            const inDot = pointOnCurve(incomingCurve, inDraw);
+            const inOrbOpacity =
+                phase(progress, 0.02, 0.16) * (1 - phase(progress, 0.42, 0.56));
             if (marker) {
-                marker.setAttribute('cx', dot.x.toFixed(1));
-                marker.setAttribute('cy', (dot.y + currentScrollOffset).toFixed(1));
-                motion.set(marker, 'opacity', orbOpacity.toFixed(4));
+                marker.setAttribute('cx', inDot.x.toFixed(1));
+                marker.setAttribute('cy', inDot.y.toFixed(1));
+                motion.set(marker, 'opacity', inOrbOpacity.toFixed(4));
             }
             if (halo) {
-                halo.setAttribute('cx', dot.x.toFixed(1));
-                halo.setAttribute('cy', (dot.y + currentScrollOffset).toFixed(1));
-                motion.set(halo, 'opacity', (orbOpacity * 0.55).toFixed(4));
+                halo.setAttribute('cx', inDot.x.toFixed(1));
+                halo.setAttribute('cy', inDot.y.toFixed(1));
+                motion.set(halo, 'opacity', (inOrbOpacity * 0.5).toFixed(4));
             }
 
-            setSceneInert(heading, lift < 0.85 && !interacting);
-            setSceneInert(body, reveal < 0.88 && !interacting);
+            // 5. Bifurcação Tripla na Câmara Óptica Inferior + 3 Orbs distribuindo para as colunas
+            branchCurves.forEach((curve, idx) => {
+                const basePath = branchBasePaths[idx];
+                const activePath = branchActivePaths[idx];
+                const orb = branchOrbs[idx];
+
+                if (basePath) {
+                    motion.set(basePath, 'opacity', (forkDraw * inkFade * 0.48).toFixed(4));
+                }
+                if (activePath) {
+                    motion.set(activePath, 'stroke-dashoffset', (1 - forkDraw).toFixed(4));
+                    motion.set(activePath, 'opacity', (forkDraw * inkFade * 0.9).toFixed(4));
+                }
+                if (orb) {
+                    const pt = pointOnCurve(curve, forkDraw);
+                    const branchOrbOpacity =
+                        phase(progress, 0.34, 0.48) * (1 - phase(progress, 0.82, 0.96));
+                    orb.setAttribute('cx', pt.x.toFixed(1));
+                    orb.setAttribute('cy', pt.y.toFixed(1));
+                    motion.set(orb, 'opacity', branchOrbOpacity.toFixed(4));
+                }
+            });
+
+            setSceneInert(heading, false);
+            setSceneInert(body, false);
         };
 
         const schedulePaint = () => {
             if (!disposed && !paintFrame) {
-                paintFrame = requestAnimationFrame(() => {
-                    paintOutgoing();
-                    paint();
-                });
+                paintFrame = requestAnimationFrame(paint);
             }
-        };
-
-        const onFocusIn = (event: FocusEvent) => {
-            if (!enabled) return;
-            const target = event.target as Node;
-            if ((heading.contains(target) || body.contains(target)) && scrollPosition < finish) {
-                if (lenis) lenis.scrollTo(finish, { immediate: true, force: true });
-                else window.scrollTo({ top: finish, behavior: 'instant' });
-                scrollPosition = finish;
-            }
-            schedulePaint();
         };
 
         const measure = () => {
             measureFrame = 0;
             if (disposed) return;
-            cancelAnimationFrame(paintFrame);
-            paintFrame = 0;
 
-            zoom = root.getBoundingClientRect().width / root.offsetWidth || 1;
+            zoom = root.getBoundingClientRect().width / (root.offsetWidth || 1) || 1;
             const vh = window.innerHeight;
             const viewport = vh / zoom;
-            const inset = Math.max(88, viewport * 0.085);
-            const available = Math.max(420, viewport - inset - 24);
+            const nextEnabled = media.matches;
 
-            // Reset temporário de transformações para medir geometria natural exata
-            motion.clear();
+            const headingH = headingInner ? headingInner.offsetHeight : heading.offsetHeight;
+            const bodyW = body.offsetWidth;
+            const sig = `${Math.round(vh)}:${Math.round(bodyW)}:${nextEnabled}:${mode}:${language}:${Math.round(headingH)}`;
 
-            const next = media.matches;
-            if (next !== enabled) {
-                enabled = next;
+            if (nextEnabled !== enabled) {
+                enabled = nextEnabled;
                 clearInteraction();
             }
-
             root.dataset.connected = String(enabled);
-            scrollPosition = lenis ? lenis.scroll : window.scrollY;
 
             const main = root.closest('main');
             const row2024 = main?.querySelector<HTMLElement>('[data-career-row="2024"]') || null;
@@ -347,169 +333,119 @@ export function useCareerSkillsHandoff(
 
             if (!enabled) {
                 layout.clear();
+                motion.clear();
                 delete root.dataset.skillsReveal;
                 if (anchor) delete anchor.dataset.navAt;
                 return;
             }
 
-            const contentHeight = content.offsetHeight;
-            overflowY = Math.max(0, contentHeight - available + 20);
-            contentTop = overflowY > 0 ? 8 : Math.max(8, (available - contentHeight) * 0.35);
-            frameHeight = available;
-            frameWidth = frameEl.clientWidth || content.clientWidth || 1120;
-            run = vh * 1.32 + overflowY * zoom;
+            if (sig === lastMeasureSig) {
+                paint();
+                return;
+            }
+            lastMeasureSig = sig;
+
+            // Câmara óptica dedicada de 54px abaixo dos botões (sem tocar em nenhum texto)
+            const forkChamberH = 54;
+            inset = Math.max(88, viewport * 0.085);
+            introHeight = headingH + forkChamberH;
+            introTravel = Math.min(240, Math.max(150, viewport * 0.28));
+            frameWidth = introFrame.clientWidth || root.clientWidth || 1120;
 
             layout.set(root, '--skills-inset', px(inset));
-            layout.set(root, '--skills-frame-height', px(frameHeight));
-            layout.set(root, '--skills-run', px(run / zoom));
-            layout.set(root, '--skills-content-top', px(contentTop));
+            layout.set(root, '--skills-intro-height', px(introHeight));
+            layout.set(root, '--skills-intro-travel', px(introTravel));
 
             if (anchor) {
-                layout.set(anchor, 'top', px((run * 0.82) / zoom));
-            }
-
-            start = root.getBoundingClientRect().top + window.scrollY - inset * zoom;
-            finish = start + run * 0.86;
-            if (anchor) {
-                anchor.dataset.navAt = String(start + run * 0.45);
+                layout.set(anchor, 'top', px(introTravel * 0.5));
+                const trackDocTop = introTrack.getBoundingClientRect().top + window.scrollY;
+                anchor.dataset.navAt = String(trackDocTop - inset * zoom + introTravel * zoom * 0.45);
             }
 
             if (svg) {
-                svg.setAttribute('viewBox', `0 0 ${frameWidth} ${frameHeight}`);
+                svg.setAttribute('viewBox', `0 0 ${frameWidth} ${introHeight}`);
             }
 
             const halfX = frameWidth * 0.5;
-            const headingH = heading.offsetHeight;
-            headingStartY = Math.max(56, Math.min(140, frameHeight * 0.2 - contentTop));
-
-            // Nexus central logo abaixo do seletor de modos do cabeçalho
-            nexusPoint = {
-                x: halfX,
-                y: contentTop + headingH + 10,
-            };
-
-            incomingCurve = [
-                { x: halfX, y: -140 },
-                { x: halfX, y: -40 },
-                { x: halfX, y: nexusPoint.y * 0.55 },
-                nexusPoint,
-            ];
+            topHubPoint = { x: halfX, y: -4 };
+            forkOriginPoint = { x: halfX, y: headingH + 8 };
 
             const c = (p: Point) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
-            const dIn = `M ${c(incomingCurve[0])} C ${c(incomingCurve[1])}, ${c(incomingCurve[2])}, ${c(incomingCurve[3])}`;
-            sourceThread?.setAttribute('d', dIn);
-            sourceActive?.setAttribute('d', dIn);
 
-            // Medição dos 4 Cards do Bento Grid para o Desdobramento Espacial
-            const skillCards = Array.from(body.querySelectorAll<HTMLElement>('[data-skill-card]'));
-            const deckCenter: Point = {
-                x: halfX,
-                y: contentTop + headingH + 155,
-            };
-
-            const rotations = [-4.2, 0, 4.2, -1.8];
-            cardGeometries = skillCards.map((card, idx) => {
-                const pos = offsetRelativeTo(card, content);
-                const cardCenterX = pos.x + card.offsetWidth * 0.5;
-                const cardCenterY = contentTop + pos.y + card.offsetHeight * 0.5;
-                const topAnchorX = pos.x + card.offsetWidth * 0.5;
-                const topAnchorY = contentTop + pos.y + 4;
-
-                return {
-                    node: card,
-                    body: card.querySelector<HTMLElement>('.portfolio-hud-body'),
-                    dx: (deckCenter.x - cardCenterX) * 0.68,
-                    dy: (deckCenter.y - cardCenterY) * 0.56 + 32,
-                    rot: rotations[idx] ?? 0,
-                    scaleStart: idx === 3 ? 0.88 : 0.82,
-                    topAnchorX,
-                    topAnchorY,
-                };
-            });
-
-            // Construção dos feixes distribuidores (do Nexus Central até o topo dos Cards)
-            if (cardGeometries.length > 0) {
-                const topRowCards = cardGeometries.slice(0, 3);
-                const segments: string[] = [];
-
-                topRowCards.forEach((geom) => {
-                    const midY = nexusPoint.y + (geom.topAnchorY - nexusPoint.y) * 0.52;
-                    segments.push(
-                        `M ${c(nexusPoint)} C ${nexusPoint.x.toFixed(1)} ${midY.toFixed(1)}, ${geom.topAnchorX.toFixed(1)} ${midY.toFixed(1)}, ${geom.topAnchorX.toFixed(1)} ${geom.topAnchorY.toFixed(1)}`
-                    );
-                });
-
-                if (cardGeometries[3]) {
-                    const bottomCard = cardGeometries[3];
-                    const midCard = cardGeometries[1] || cardGeometries[0];
-                    const startBottomY = midCard.topAnchorY + midCard.node.offsetHeight - 4;
-                    segments.push(
-                        `M ${halfX.toFixed(1)} ${startBottomY.toFixed(1)} L ${bottomCard.topAnchorX.toFixed(1)} ${bottomCard.topAnchorY.toFixed(1)}`
-                    );
-                }
-
-                const guidePathString = segments.join(' ');
-                guideBase?.setAttribute('d', guidePathString);
-                guideActive?.setAttribute('d', guidePathString);
-
-                const targetCard = cardGeometries[1] || cardGeometries[0];
-                const targetPoint = { x: targetCard.topAnchorX, y: targetCard.topAnchorY };
-                const midY = nexusPoint.y + (targetPoint.y - nexusPoint.y) * 0.5;
-                primaryCardCurve = [
-                    nexusPoint,
-                    { x: nexusPoint.x, y: midY },
-                    { x: targetPoint.x, y: midY },
-                    targetPoint,
-                ];
-            } else {
-                const bodyTopY = contentTop + headingH + 36;
-                const dSingle = `M ${c(nexusPoint)} L ${halfX.toFixed(1)} ${bodyTopY.toFixed(1)}`;
-                guideBase?.setAttribute('d', dSingle);
-                guideActive?.setAttribute('d', dSingle);
-                primaryCardCurve = [
-                    nexusPoint,
-                    { x: halfX, y: nexusPoint.y + 12 },
-                    { x: halfX, y: bodyTopY - 12 },
-                    { x: halfX, y: bodyTopY },
-                ];
-            }
-
-            // Linha sutil horizontal de ancoragem no cabeçalho
+            // Ponte horizontal sutil na origem da câmara óptica (abaixo dos botões)
             if (headingBridge) {
-                const bridgeW = Math.min(220, frameWidth * 0.22);
-                const bridgeY = nexusPoint.y;
+                const bridgeW = Math.min(180, frameWidth * 0.18);
                 headingBridge.setAttribute(
                     'd',
-                    `M ${(halfX - bridgeW * 0.5).toFixed(1)} ${bridgeY.toFixed(1)} L ${(halfX + bridgeW * 0.5).toFixed(1)} ${bridgeY.toFixed(1)}`
+                    `M ${(halfX - bridgeW * 0.5).toFixed(1)} ${forkOriginPoint.y.toFixed(1)} L ${(halfX + bridgeW * 0.5).toFixed(1)} ${forkOriginPoint.y.toFixed(1)}`
                 );
             }
 
-            lastStateKey = NaN;
-            paintOutgoing();
+            // Medição natural dos 4 Cards do Bento Grid para o Desdobramento Horizontal/Descendente
+            const skillCards = Array.from(body.querySelectorAll<HTMLElement>('[data-skill-card]'));
+            const rotations = [-2.6, 0, 2.6, -1.2];
+
+            cardGeometries = skillCards.map((card, idx) => {
+                const left = offsetLeftRelativeTo(card, body);
+                const cardCenterX = left + card.offsetWidth * 0.5;
+                return {
+                    node: card,
+                    body: card.querySelector<HTMLElement>('.portfolio-hud-body'),
+                    // Converge horizontalmente em direção ao eixo central e apenas para BAIXO (+dy),
+                    // garantindo matematicamente ZERO sobreposição com o cabeçalho ou botões!
+                    dx: (halfX - cardCenterX) * 0.38,
+                    dy: 26 + idx * 6,
+                    rot: rotations[idx] ?? 0,
+                    scaleStart: idx === 3 ? 0.94 : 0.9,
+                    topAnchorX: cardCenterX,
+                };
+            });
+
+            // 3 ramos Bezier na câmara óptica conectando o centro abaixo dos botões às 3 colunas do Bento Grid
+            const targetXs =
+                cardGeometries.length >= 3
+                    ? [
+                          cardGeometries[0].topAnchorX,
+                          cardGeometries[1].topAnchorX,
+                          cardGeometries[2].topAnchorX,
+                      ]
+                    : [frameWidth * 0.2, halfX, frameWidth * 0.8];
+
+            const forkEndY = introHeight - 2;
+            const midY = forkOriginPoint.y + (forkEndY - forkOriginPoint.y) * 0.54;
+
+            branchCurves = targetXs.map((tx) => {
+                const curve: [Point, Point, Point, Point] = [
+                    forkOriginPoint,
+                    { x: forkOriginPoint.x, y: midY },
+                    { x: tx, y: midY },
+                    { x: tx, y: forkEndY },
+                ];
+                return curve;
+            });
+
+            branchCurves.forEach((curve, idx) => {
+                const d = `M ${c(curve[0])} C ${c(curve[1])}, ${c(curve[2])}, ${c(curve[3])}`;
+                branchBasePaths[idx]?.setAttribute('d', d);
+                branchActivePaths[idx]?.setAttribute('d', d);
+            });
+
             paint();
         };
 
         const scheduleMeasure = () => {
             if (!disposed && !measureFrame) measureFrame = requestAnimationFrame(measure);
         };
-        const onNativeScroll = () => {
-            scrollPosition = window.scrollY;
-            schedulePaint();
-        };
-        const onLenisScroll = (instance: { scroll: number }) => {
-            scrollPosition = instance.scroll;
-            schedulePaint();
-        };
 
+        // Observa apenas os contêineres de tamanho intrínseco (nunca o track/frame sticky)
         const observer = new ResizeObserver(scheduleMeasure);
-        [root, frameEl, content, heading, body].forEach((node) => observer.observe(node));
-        const main = root.closest('main');
-        if (main) observer.observe(main);
+        if (headingInner) observer.observe(headingInner);
+        observer.observe(body);
 
-        if (lenis) lenis.on('scroll', onLenisScroll);
-        else window.addEventListener('scroll', onNativeScroll, { passive: true });
+        if (lenis) lenis.on('scroll', schedulePaint);
+        window.addEventListener('scroll', schedulePaint, { passive: true });
         window.addEventListener('resize', scheduleMeasure);
-        root.addEventListener('focusin', onFocusIn);
+        root.addEventListener('focusin', schedulePaint);
         root.addEventListener('focusout', schedulePaint);
         media.addEventListener('change', scheduleMeasure);
         document.fonts.ready.then(scheduleMeasure);
@@ -520,10 +456,10 @@ export function useCareerSkillsHandoff(
             cancelAnimationFrame(paintFrame);
             cancelAnimationFrame(measureFrame);
             observer.disconnect();
-            if (lenis) lenis.off('scroll', onLenisScroll);
-            else window.removeEventListener('scroll', onNativeScroll);
+            if (lenis) lenis.off('scroll', schedulePaint);
+            window.removeEventListener('scroll', schedulePaint);
             window.removeEventListener('resize', scheduleMeasure);
-            root.removeEventListener('focusin', onFocusIn);
+            root.removeEventListener('focusin', schedulePaint);
             root.removeEventListener('focusout', schedulePaint);
             media.removeEventListener('change', scheduleMeasure);
             clearInteraction();
