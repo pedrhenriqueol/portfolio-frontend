@@ -7,6 +7,8 @@ const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const smooth = (n: number) => n * n * (3 - 2 * n);
 const phase = (value: number, from: number, to: number) =>
     smooth(clamp((value - from) / Math.max(0.0001, to - from)));
+/** Raio visual do retículo da estação (36px / 2) para encaixar o feixe na borda do nó. */
+const NODE_RADIUS = 18;
 
 export interface CareerRailTelemetry {
     beamProgress: number;
@@ -143,12 +145,16 @@ export function useCareerMasterScene(
                 return;
             }
 
+            // Leituras de geometria agrupadas ANTES de qualquer escrita de estilo (zero layout thrashing)
+            const trackRect = entranceTrack ? entranceTrack.getBoundingClientRect() : null;
+            const frameRect = entranceFrame ? entranceFrame.getBoundingClientRect() : null;
+            const masterRect = masterTimeline ? masterTimeline.getBoundingClientRect() : null;
+
             // ══════════════════════════════════════════════════════════════════
             // PARTE A: TRANSIÇÃO CINEMÁTICA DOS 3 CARDS "PISCAS" -> EXPERIÊNCIA
             // ══════════════════════════════════════════════════════════════════
             let entranceProgress = 1;
-            if (entranceEnabled && entranceTrack && pillarsLayout && openingLayout) {
-                const trackRect = entranceTrack.getBoundingClientRect();
+            if (entranceEnabled && entranceTrack && pillarsLayout && openingLayout && trackRect) {
                 const insetPx = entranceInset * zoom;
                 const travelPx = Math.max(1, entranceTravel * zoom);
                 const rawP = clamp((insetPx - trackRect.top) / travelPx);
@@ -231,9 +237,17 @@ export function useCareerMasterScene(
                 });
 
                 // O conector vertical inferior começa estritamente ABAIXO das 4 métricas (spineStartY),
-                // nunca cruzando o título "Experiência Profissional" nem o subtítulo.
+                // nunca cruzando o título "Experiência Profissional" nem o subtítulo, e termina
+                // exatamente no topo do nó 2026 (calculado ao vivo), formando um trilho contínuo
+                // sem cortes até a espinha dorsal 2026 -> 2025 -> 2024.
                 const spineDraw = phase(entranceProgress, 0.46, 0.96);
-                const continuationY = spineStartY + 84;
+                const node2026ViewportY =
+                    masterRect !== null ? masterRect.top + localNodeY[0] * zoom : NaN;
+                const liveContinuationY =
+                    frameRect !== null && Number.isFinite(node2026ViewportY)
+                        ? (node2026ViewportY - frameRect.top) / zoom - NODE_RADIUS
+                        : spineStartY + 84;
+                const continuationY = Math.max(spineStartY + 12, liveContinuationY);
                 const half = frameWidth / 2;
                 const spineD = `M ${half.toFixed(1)} ${spineStartY.toFixed(1)} L ${half.toFixed(1)} ${continuationY.toFixed(1)}`;
                 if (spineBasePath) {
@@ -264,8 +278,7 @@ export function useCareerMasterScene(
             // ══════════════════════════════════════════════════════════════════
             // PARTE B: TRILHO MESTRE UNIFICADO & COREOGRAFIA SEQUENCIAL (2026 -> 2025 -> 2024)
             // ══════════════════════════════════════════════════════════════════
-            if (!masterTimeline) return;
-            const masterRect = masterTimeline.getBoundingClientRect();
+            if (!masterTimeline || !masterRect) return;
             const stationViewportY: [number, number, number] = [
                 masterRect.top + localNodeY[0] * zoom,
                 masterRect.top + localNodeY[1] * zoom,
