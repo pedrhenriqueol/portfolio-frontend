@@ -5,27 +5,19 @@ import { createSceneStyles, setSceneInert } from '../utils/sceneStyles';
 
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const smooth = (n: number) => n * n * (3 - 2 * n);
-const phase = (value: number, from: number, to: number) => smooth(clamp((value - from) / Math.max(0.0001, to - from)));
+const phase = (value: number, from: number, to: number) =>
+    smooth(clamp((value - from) / Math.max(0.0001, to - from)));
 
 export interface CareerRailTelemetry {
-    /** Progresso contínuo do feixe (0 no centro do nó 2026 -> 1 no centro do nó 2024) */
     beamProgress: number;
-    /** Índice do marco atualmente em foco (0 = 2026, 1 = 2025, 2 = 2024) */
     activeStationIndex: number;
-    /** Estado de ignição de cada estação [2026, 2025, 2024] (0 -> 1) */
     stationIgnitions: [number, number, number];
-    /** Peso de foco óptico de cada estação [2026, 2025, 2024] (0 -> 1) */
     stationFocus: [number, number, number];
 }
 
 /**
- * Motor de Coreografia Sequencial em Foco & Trilho Unificado de Alta Precisão (`useCareerMasterScene`).
- * - Opera 100% no compositor (`translate3d`, `scale`, `opacity`) via `requestAnimationFrame`.
- * - Anima a saída em profundidade dos 3 cards de Pilares ("Sobre Mim") sem buraco vazio.
- * - Orquestra a entrada em cascata do Cabeçalho e das 4 Métricas Executivas.
- * - Trava geometricamente o Trilho Central do centro exato da estação `2026` ao centro exato da estação `2024`,
- *   garantindo que o feixe luminoso e o núcleo viajante toquem cada nó no exato pixel de leitura.
- * - Coloca cada marco (`2026` -> `2025` -> `2024`) em foco espacial sequencial ("um vindo após o outro").
+ * Orquestrador Unificado de Entrada Cinemática ("Piscas" do Sobre Mim -> Experiência)
+ * + Trilho Mestre de Alta Precisão (2026 -> 2025 -> 2024).
  */
 export function useCareerMasterScene(
     ref: RefObject<HTMLElement | null>,
@@ -37,13 +29,32 @@ export function useCareerMasterScene(
         const root = ref.current;
         if (!root) return;
 
-        const pillarsTail = root.querySelector<HTMLElement>('.career-pillars-bridge .chapter-tail');
+        // ── Camada 1: Palco Sticky de Entrada (3 Cards "Piscas" -> Abertura da Experiência) ──
+        const entranceTrack = root.querySelector<HTMLElement>('.career-entrance-track');
+        const entranceFrame = root.querySelector<HTMLElement>('.career-entrance-frame');
+        const entranceAnchor = root.querySelector<HTMLElement>('.career-scene-anchor');
+        const entranceSvg = root.querySelector<SVGSVGElement>('.career-entrance-thread');
+        const pillarsLayout = root.querySelector<HTMLElement>('.career-pillars-layout');
+        const openingLayout = root.querySelector<HTMLElement>('.career-opening-layout');
+        const pillarsTail = pillarsLayout?.querySelector<HTMLElement>('.chapter-tail') || null;
         const pillarCards = pillarsTail
             ? Array.from(pillarsTail.children).filter((el): el is HTMLElement => el instanceof HTMLElement)
             : [];
 
+        const pillarBasePaths = [0, 1, 2]
+            .map((i) => entranceSvg?.querySelector<SVGPathElement>(`[data-pillar-base="${i}"]`) || null);
+        const pillarActivePaths = [0, 1, 2]
+            .map((i) => entranceSvg?.querySelector<SVGPathElement>(`[data-pillar-active="${i}"]`) || null);
+        const spineBasePath = entranceSvg?.querySelector<SVGPathElement>('[data-entrance-spine-base]') || null;
+        const spineActivePath = entranceSvg?.querySelector<SVGPathElement>('[data-entrance-spine-active]') || null;
+        const entranceTraveller = entranceSvg?.querySelector<SVGCircleElement>('[data-entrance-traveller]') || null;
+        const entranceTravellerHalo = entranceSvg?.querySelector<SVGCircleElement>('[data-entrance-traveller-halo]') || null;
+
         const heading = root.querySelector<HTMLElement>('.career-heading-block');
+        const headingTitle = heading?.querySelector<HTMLElement>('h2') || null;
         const metricCards = Array.from(root.querySelectorAll<HTMLElement>('[data-career-metric]'));
+
+        // ── Camada 2: Espinha Dorsal Unificada (2026 -> 2025 -> 2024) ──
         const masterTimeline = root.querySelector<HTMLElement>('.career-timeline-master');
         const beamFill = root.querySelector<HTMLElement>('[data-career-beam-fill]');
         const traveller = root.querySelector<HTMLElement>('[data-career-traveller]');
@@ -66,16 +77,22 @@ export function useCareerMasterScene(
             .map((y) => root.querySelector<HTMLElement>(`[data-career-branch="${y}"]`))
             .filter((el): el is HTMLElement => el !== null);
 
-        const media = matchMedia('(min-width: 768px) and (prefers-reduced-motion: no-preference)');
+        const desktopMedia = matchMedia('(min-width: 1024px) and (prefers-reduced-motion: no-preference)');
+        const timelineMedia = matchMedia('(min-width: 768px) and (prefers-reduced-motion: no-preference)');
         const layout = createSceneStyles();
         const motion = createSceneStyles();
 
-        let enabled = media.matches;
+        let entranceEnabled = false;
+        let timelineEnabled = false;
         let zoom = 1;
-        let pillarsStart = 0;
-        let pillarsDistance = 1;
-        let headingDocY = 0;
-        let metricsDocY = 0;
+        let frameWidth = 1200;
+        let frameHeight = 420;
+        let entranceTravel = 0;
+        let entranceStart = 0;
+        let entranceDistance = 1;
+        let nexusY = 180;
+        let metricOffsetsX: number[] = [0, 0, 0, 0];
+
         let sectionFocusStart = 0;
         let sectionFocusEnd = 0;
         let nodeDocY: [number, number, number] = [0, 500, 1000];
@@ -97,6 +114,16 @@ export function useCareerMasterScene(
             return top;
         };
 
+        const offsetLeftRelativeTo = (el: HTMLElement, ancestor: HTMLElement): number => {
+            let left = 0;
+            let curr: HTMLElement | null = el;
+            while (curr && curr !== ancestor) {
+                left += curr.offsetLeft;
+                curr = curr.offsetParent as HTMLElement | null;
+            }
+            return left;
+        };
+
         const paint = () => {
             frame = 0;
             if (disposed) return;
@@ -106,83 +133,131 @@ export function useCareerMasterScene(
             const vh = window.innerHeight;
             const readingLine = scrollPosition + vh * 0.54;
 
-            // 1. Foco global da seção Experiência Profissional (sincroniza Navbar & ambiente)
-            const isSectionFocused = enabled && scrollPosition >= sectionFocusStart && scrollPosition <= sectionFocusEnd;
+            const isSectionFocused =
+                timelineEnabled && scrollPosition >= sectionFocusStart && scrollPosition <= sectionFocusEnd;
             setProjectFocus(isSectionFocused, 'career');
 
-            if (!enabled) {
+            if (!timelineEnabled) {
                 motion.clear();
-                if (pillarsTail) setSceneInert(pillarsTail, false);
+                if (pillarsLayout) setSceneInert(pillarsLayout, false);
+                if (openingLayout) setSceneInert(openingLayout, false);
                 return;
             }
 
-            // 2. Transição de Saída dos 3 Cards de Pilares ("Sobre Mim" -> "Experiência")
-            if (pillarsTail) {
-                const pOut = phase(scrollPosition, pillarsStart, pillarsStart + pillarsDistance);
-                const pillarsFocused = pillarsTail.contains(document.activeElement);
-                if (pillarsFocused || pOut <= 0.001) {
-                    motion.set(pillarsTail, 'opacity', '1');
-                    motion.set(pillarsTail, 'transform', 'translate3d(0, 0, 0) scale(1)');
-                    pillarCards.forEach((card) => {
-                        motion.set(card, 'transform', 'translate3d(0, 0, 0) scale(1)');
-                        motion.set(card, 'opacity', '1');
-                    });
-                    setSceneInert(pillarsTail, false);
-                } else {
-                    motion.set(pillarsTail, 'opacity', (1 - pOut * 0.92).toFixed(4));
-                    motion.set(
-                        pillarsTail,
-                        'transform',
-                        `translate3d(0, ${(-pOut * 28).toFixed(2)}px, 0) scale(${(1 - pOut * 0.04).toFixed(4)})`
-                    );
-                    pillarCards.forEach((card, idx) => {
-                        // Card central recua primeiro em profundidade; laterais abrem sutilmente
-                        const cardPhase = phase(pOut, idx === 1 ? 0 : 0.08, idx === 1 ? 0.88 : 1);
-                        const dirX = idx === 0 ? -1 : idx === 2 ? 1 : 0;
-                        const tx = dirX * cardPhase * 26;
-                        const ty = idx === 1 ? -cardPhase * 24 : -cardPhase * 12;
-                        const sc = idx === 1 ? 1 - cardPhase * 0.055 : 1 - cardPhase * 0.035;
+            // ══════════════════════════════════════════════════════════════════
+            // PARTE A: TRANSIÇÃO CINEMÁTICA DOS 3 CARDS "PISCAS" -> EXPERIÊNCIA
+            // ══════════════════════════════════════════════════════════════════
+            let entranceProgress = 1;
+            if (entranceEnabled && entranceTrack && pillarsLayout && openingLayout) {
+                const rawP = clamp((scrollPosition - entranceStart) / entranceDistance);
+                const openingHasFocus = openingLayout.contains(document.activeElement);
+                const pillarsHasFocus = pillarsLayout.contains(document.activeElement);
+                entranceProgress = openingHasFocus ? Math.max(0.88, rawP) : pillarsHasFocus ? 0 : rawP;
+
+                // 1. Saída em profundidade e abertura lateral dos 3 Cards "Piscas"
+                //    Card do meio sobe e recua primeiro; laterais abrem e inclinam sutilmente
+                const middleExit = phase(entranceProgress, 0.0, 0.36);
+                const lateralExit = phase(entranceProgress, 0.04, 0.44);
+
+                pillarCards.forEach((card, idx) => {
+                    if (idx === 1) {
+                        const ty = -middleExit * 48;
+                        const sc = 1 - middleExit * 0.14;
                         motion.set(
                             card,
                             'transform',
-                            `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) scale(${sc.toFixed(4)})`
+                            `translate3d(0, ${ty.toFixed(2)}px, 0) scale(${sc.toFixed(4)})`
                         );
-                        motion.set(card, 'opacity', (1 - cardPhase * 0.9).toFixed(4));
-                    });
-                    setSceneInert(pillarsTail, pOut >= 0.95);
+                        motion.set(card, 'opacity', (1 - middleExit).toFixed(4));
+                    } else {
+                        const dir = idx === 0 ? -1 : 1;
+                        const tx = dir * lateralExit * (frameWidth * 0.14);
+                        const ty = -lateralExit * 22;
+                        const rot = dir * lateralExit * 2.4;
+                        const sc = 1 - lateralExit * 0.08;
+                        motion.set(
+                            card,
+                            'transform',
+                            `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(4)})`
+                        );
+                        motion.set(card, 'opacity', (1 - lateralExit).toFixed(4));
+                    }
+                });
+                setSceneInert(pillarsLayout, lateralExit >= 0.92);
+
+                // 2. Elevação e Escala do Título "Trajetória Profissional" (Padrão Contato)
+                const headerEnter = phase(entranceProgress, 0.14, 0.56);
+                const headerLift = phase(entranceProgress, 0.18, 0.64);
+                if (heading) {
+                    const hY = (1 - headerLift) * 52;
+                    motion.set(heading, 'opacity', headerEnter.toFixed(4));
+                    motion.set(heading, 'transform', `translate3d(0, ${hY.toFixed(2)}px, 0)`);
+                }
+                if (headingTitle) {
+                    const tScale = 1.2 - headerLift * 0.2;
+                    motion.set(headingTitle, 'transform', `scale(${tScale.toFixed(4)})`);
+                }
+
+                // 3. Desdobramento Espacial das 4 Métricas Executivas a partir do Centro
+                const metricsEnter = phase(entranceProgress, 0.3, 0.68);
+                const metricsUnfold = phase(entranceProgress, 0.34, 0.84);
+                metricCards.forEach((card, idx) => {
+                    const dx = (metricOffsetsX[idx] || 0) * (1 - metricsUnfold) * 0.55;
+                    const dy = (1 - metricsUnfold) * 34 + Math.abs(idx - 1.5) * (1 - metricsUnfold) * 10;
+                    const rot = (idx - 1.5) * -2.2 * (1 - metricsUnfold);
+                    const sc = 0.84 + metricsUnfold * 0.16;
+                    motion.set(card, 'opacity', metricsEnter.toFixed(4));
+                    motion.set(
+                        card,
+                        'transform',
+                        `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(4)})`
+                    );
+                });
+                setSceneInert(openingLayout, headerEnter < 0.85 && !openingHasFocus);
+
+                // 4. Feixes Curvos de Energia dos 3 Cards + Feixe Conector Central + Orb Viajante
+                const convergeDraw = phase(entranceProgress, 0.02, 0.46);
+                const convergeFade = 1 - phase(entranceProgress, 0.48, 0.78);
+                pillarActivePaths.forEach((path) => {
+                    if (!path) return;
+                    motion.set(path, 'stroke-dashoffset', (1 - convergeDraw).toFixed(4));
+                    motion.set(path, 'opacity', (convergeDraw * convergeFade).toFixed(4));
+                });
+                pillarBasePaths.forEach((path) => {
+                    if (!path) return;
+                    motion.set(path, 'opacity', (convergeFade * 0.65).toFixed(4));
+                });
+
+                const spineDraw = phase(entranceProgress, 0.28, 0.92);
+                const continuationY = frameHeight + (1 - entranceProgress) * entranceTravel + 24;
+                const half = frameWidth / 2;
+                const spineD = `M ${half.toFixed(1)} ${nexusY.toFixed(1)} L ${half.toFixed(1)} ${continuationY.toFixed(1)}`;
+                if (spineBasePath) spineBasePath.setAttribute('d', spineD);
+                if (spineActivePath) {
+                    spineActivePath.setAttribute('d', spineD);
+                    motion.set(spineActivePath, 'stroke-dashoffset', (1 - spineDraw).toFixed(4));
+                    motion.set(spineActivePath, 'opacity', spineDraw.toFixed(4));
+                }
+
+                // Posição contínua do Orb Viajante durante a transição de entrada
+                const orbY = nexusY + (continuationY - nexusY) * spineDraw;
+                const orbOpacity =
+                    phase(entranceProgress, 0.04, 0.2) * (1 - phase(entranceProgress, 0.88, 0.99));
+                if (entranceTraveller) {
+                    entranceTraveller.setAttribute('cx', half.toFixed(1));
+                    entranceTraveller.setAttribute('cy', orbY.toFixed(1));
+                    motion.set(entranceTraveller, 'opacity', orbOpacity.toFixed(4));
+                }
+                if (entranceTravellerHalo) {
+                    entranceTravellerHalo.setAttribute('cx', half.toFixed(1));
+                    entranceTravellerHalo.setAttribute('cy', orbY.toFixed(1));
+                    motion.set(entranceTravellerHalo, 'opacity', (orbOpacity * 0.55).toFixed(4));
                 }
             }
 
-            // 3. Revelação Cinemática do Cabeçalho da Experiência Profissional
-            if (heading) {
-                const hEnter = phase(scrollPosition + vh * 0.82, headingDocY - vh * 0.12, headingDocY + vh * 0.22);
-                motion.set(heading, 'opacity', (0.15 + hEnter * 0.85).toFixed(4));
-                motion.set(
-                    heading,
-                    'transform',
-                    `translate3d(0, ${((1 - hEnter) * 34).toFixed(2)}px, 0) scale(${(0.95 + hEnter * 0.05).toFixed(4)})`
-                );
-            }
-
-            // 4. Entrada em Cascata das 4 Métricas Executivas (uma após a outra)
-            metricCards.forEach((card, idx) => {
-                const staggerOffset = idx * (vh * 0.055);
-                const mEnter = phase(
-                    scrollPosition + vh * 0.84,
-                    metricsDocY - vh * 0.08 + staggerOffset,
-                    metricsDocY + vh * 0.24 + staggerOffset
-                );
-                motion.set(card, 'opacity', (0.1 + mEnter * 0.9).toFixed(4));
-                motion.set(
-                    card,
-                    'transform',
-                    `translate3d(0, ${((1 - mEnter) * 28).toFixed(2)}px, 0) scale(${(0.94 + mEnter * 0.06).toFixed(4)})`
-                );
-            });
-
-            // 5. Geometria Exata do Trilho Unificado (2026 -> 2025 -> 2024)
-            // O feixe é estritamente parametrizado por segmentos para que na leitura de 2025
-            // o progresso seja exatamente nodeRatios[1], e em 2024 seja exatamente 1.
+            // ══════════════════════════════════════════════════════════════════
+            // PARTE B: TRILHO MESTRE UNIFICADO & COREOGRAFIA SEQUENCIAL (2026 -> 2025 -> 2024)
+            // ══════════════════════════════════════════════════════════════════
             const y0 = nodeDocY[0];
             const y1 = nodeDocY[1];
             const y2 = nodeDocY[2];
@@ -206,8 +281,7 @@ export function useCareerMasterScene(
             }
             if (traveller) {
                 motion.set(traveller, 'top', `${(beamProgress * 100).toFixed(3)}%`);
-                // O núcleo viajante acende assim que o primeiro marco entra em leitura
-                const travellerEnter = phase(readingLine, y0 - vh * 0.18, y0 - vh * 0.02);
+                const travellerEnter = phase(readingLine, y0 - vh * 0.22, y0 - vh * 0.02);
                 motion.set(traveller, 'opacity', travellerEnter.toFixed(4));
                 motion.set(
                     traveller,
@@ -216,10 +290,6 @@ export function useCareerMasterScene(
                 );
             }
 
-            // 6. Coreografia Sequencial dos 3 Marcos (2026 -> 2025 -> 2024):
-            //    - Ignição exata do nó quando o feixe atinge a estação
-            //    - Disparo do feixe horizontal conector (branch beam)
-            //    - Entrada lateral + Foco Espacial ("um vindo após o outro")
             const ignitions: [number, number, number] = [0, 0, 0];
             const focuses: [number, number, number] = [0, 0, 0];
 
@@ -227,27 +297,22 @@ export function useCareerMasterScene(
                 const stationY = nodeDocY[idx];
                 const stationRatio = nodeRatios[idx];
 
-                // Ignição da estação: 2026 acende quando a linha de leitura chega em y0;
-                // 2025 e 2024 acendem no exato instante em que o feixe atinge sua coordenada!
                 const ignition =
                     idx === 0
-                        ? phase(readingLine, y0 - vh * 0.16, y0 + vh * 0.02)
+                        ? phase(readingLine, y0 - vh * 0.18, y0 + vh * 0.02)
                         : phase(beamProgress, stationRatio - 0.035, stationRatio + 0.01);
                 ignitions[idx] = ignition;
 
-                // Revelação sequencial: primeiro o Ano Monumental + Nó, seguido imediatamente pelo Card Detalhado
-                const yearReveal = phase(readingLine, stationY - vh * 0.42, stationY - vh * 0.06);
-                const cardReveal = phase(readingLine, stationY - vh * 0.34, stationY + vh * 0.02);
+                const yearReveal = phase(readingLine, stationY - vh * 0.44, stationY - vh * 0.06);
+                const cardReveal = phase(readingLine, stationY - vh * 0.36, stationY + vh * 0.02);
 
-                // Janela de Foco Ativo: quando este marco é o protagonista na linha de leitura
                 const distFromReading = readingLine - stationY;
                 const enterFocus = phase(readingLine, stationY - vh * 0.28, stationY - vh * 0.02);
-                // Quando o próximo marco assume o foco, o anterior recua suavemente em profundidade (mas o último mantém foco até o fim da seção)
                 const nextStationY = idx < 2 ? nodeDocY[idx + 1] : stationY + vh * 0.65;
                 const exitFocus =
                     idx < 2
-                        ? 1 - phase(readingLine, nextStationY - vh * 0.24, nextStationY + vh * 0.04) * 0.58
-                        : 1 - phase(readingLine, stationY + vh * 0.45, stationY + vh * 0.78) * 0.45;
+                        ? 1 - phase(readingLine, nextStationY - vh * 0.24, nextStationY + vh * 0.04) * 0.56
+                        : 1 - phase(readingLine, stationY + vh * 0.45, stationY + vh * 0.78) * 0.42;
 
                 const isHoveredOrFocused = row.matches(':hover') || row.contains(document.activeElement);
                 const focusWeight = isHoveredOrFocused ? 1 : clamp(enterFocus * exitFocus);
@@ -257,7 +322,6 @@ export function useCareerMasterScene(
                 motion.set(row, '--station-ignition', ignition.toFixed(4));
                 motion.set(row, '--station-focus', focusWeight.toFixed(4));
 
-                // Conector horizontal de energia (Branch Beam) saindo do nó central para o Card e o Ano
                 const branch = branches[idx];
                 if (branch) {
                     const branchScale = clamp(ignition * (0.35 + focusWeight * 0.65));
@@ -265,18 +329,14 @@ export function useCareerMasterScene(
                     motion.set(branch, 'opacity', (ignition * (0.4 + focusWeight * 0.6)).toFixed(4));
                 }
 
-                // Nó da estação
                 const node = nodes[idx];
                 if (node) {
                     const nodeScale = 0.88 + ignition * 0.12 + (focusWeight > 0.6 ? 0.08 : 0);
                     motion.set(node, 'transform', `translate3d(-50%, -50%, 0) scale(${nodeScale.toFixed(4)})`);
                 }
 
-                // Direção lateral alternada (2026: Ano na Esq / Card na Dir | 2025: Card na Esq / Ano na Dir | 2024: Ano na Esq / Card na Dir)
                 const yearDir = idx === 1 ? 1 : -1;
                 const cardDir = idx === 1 ? -1 : 1;
-
-                // Recuo pós-leitura suave quando o foco já passou para a estação seguinte
                 const passedRecede = distFromReading > vh * 0.22 && !isHoveredOrFocused ? 1 - exitFocus : 0;
 
                 const yearCol = yearCols[idx];
@@ -308,7 +368,6 @@ export function useCareerMasterScene(
                 }
             });
 
-            // 7. Atualiza o ano exibido na cápsula do viajante óptico
             const activeIdx =
                 beamProgress >= nodeRatios[2] - 0.08
                     ? 2
@@ -337,33 +396,82 @@ export function useCareerMasterScene(
             measureFrame = 0;
             if (disposed) return;
 
-            enabled = media.matches;
-            root.dataset.careerScene = enabled ? 'active' : 'native';
-
             const rootRect = root.getBoundingClientRect();
             zoom = rootRect.width / root.offsetWidth || 1;
             const vh = window.innerHeight;
+            const viewport = vh / zoom;
             scrollPosition = lenis ? lenis.scroll : window.scrollY;
 
-            if (pillarsTail) {
-                const pRect = pillarsTail.getBoundingClientRect();
-                pillarsStart = pRect.top + window.scrollY - vh * 0.18;
-                pillarsDistance = Math.max(1, pRect.height + vh * 0.36);
+            timelineEnabled = timelineMedia.matches;
+            entranceEnabled = Boolean(
+                desktopMedia.matches && entranceTrack && entranceFrame && pillarsLayout && openingLayout
+            );
+
+            root.dataset.careerScene = timelineEnabled ? 'active' : 'native';
+            if (entranceTrack) {
+                entranceTrack.dataset.scene = entranceEnabled ? 'connected' : 'flow';
             }
 
-            if (heading) {
-                headingDocY = heading.getBoundingClientRect().top + window.scrollY;
-            }
-            if (metricCards[0]) {
-                metricsDocY = metricCards[0].getBoundingClientRect().top + window.scrollY;
+            if (entranceEnabled && entranceTrack && entranceFrame && pillarsLayout && openingLayout) {
+                const inset = Math.max(96, viewport * 0.09);
+                const pillarsH = pillarsLayout.offsetHeight;
+                const openingH = openingLayout.offsetHeight;
+                frameHeight = Math.max(pillarsH, openingH) + 24;
+                frameWidth = entranceFrame.offsetWidth || 1120;
+                entranceTravel = viewport * 0.66;
+
+                layout.set(entranceTrack, '--career-frame-height', `${frameHeight.toFixed(1)}px`);
+                layout.set(entranceTrack, '--career-travel', `${entranceTravel.toFixed(1)}px`);
+                layout.set(entranceTrack, '--career-inset', `${inset.toFixed(1)}px`);
+
+                if (entranceAnchor) {
+                    layout.set(entranceAnchor, 'top', `${entranceTravel.toFixed(1)}px`);
+                    layout.set(entranceAnchor, 'scroll-margin-top', `${inset.toFixed(1)}px`);
+                }
+
+                const trackRect = entranceTrack.getBoundingClientRect();
+                const trackTopDoc = trackRect.top + window.scrollY;
+                entranceStart = trackTopDoc - inset * zoom;
+                entranceDistance = Math.max(1, entranceTravel * zoom);
+
+                if (entranceAnchor) {
+                    entranceAnchor.dataset.navAt = String(entranceStart + entranceDistance * 0.35);
+                }
+
+                // Geometria SVG dos 3 feixes curvos saindo dos 3 Cards de Pilares até o Nexus Central
+                const half = frameWidth / 2;
+                nexusY = Math.min(frameHeight * 0.56, pillarsH * 0.72);
+                if (entranceSvg) {
+                    entranceSvg.setAttribute('viewBox', `0 0 ${frameWidth} ${frameHeight}`);
+                }
+
+                pillarCards.forEach((card, idx) => {
+                    const cardCenterX =
+                        offsetLeftRelativeTo(card, entranceFrame) + card.offsetWidth * 0.5;
+                    const cardBottomY = Math.min(
+                        pillarsH,
+                        offsetTopRelativeTo(card, entranceFrame) + card.offsetHeight * 0.85
+                    );
+                    const cpY1 = cardBottomY + (nexusY - cardBottomY) * 0.55;
+                    const cpY2 = cardBottomY + (nexusY - cardBottomY) * 0.85;
+                    const d = `M ${cardCenterX.toFixed(1)} ${cardBottomY.toFixed(1)} C ${cardCenterX.toFixed(1)} ${cpY1.toFixed(1)}, ${half.toFixed(1)} ${cpY2.toFixed(1)}, ${half.toFixed(1)} ${nexusY.toFixed(1)}`;
+                    pillarBasePaths[idx]?.setAttribute('d', d);
+                    pillarActivePaths[idx]?.setAttribute('d', d);
+                });
+
+                // Deslocamentos horizontais das 4 métricas em relação ao centro para o desdobramento
+                metricOffsetsX = metricCards.map((card) => {
+                    const cardCenter =
+                        offsetLeftRelativeTo(card, openingLayout) + card.offsetWidth * 0.5;
+                    return half - cardCenter;
+                });
             }
 
             if (masterTimeline && rows.length === 3 && nodes.length === 3) {
                 const masterRect = masterTimeline.getBoundingClientRect();
                 const masterTopDoc = masterRect.top + window.scrollY;
 
-                // Mede o centro exato de cada nó (2026, 2025, 2024) em coordenadas CSS locais de `masterTimeline`
-                const localY = nodes.map((node, idx) => {
+                const localY = nodes.map((_, idx) => {
                     const row = rows[idx];
                     const rowTop = offsetTopRelativeTo(row, masterTimeline);
                     return rowTop + row.offsetHeight * 0.5;
@@ -384,7 +492,7 @@ export function useCareerMasterScene(
                 layout.set(masterTimeline, '--career-rail-height', `${railSpan.toFixed(1)}px`);
                 layout.set(masterTimeline, '--career-node-2025-pct', `${(ratio2025 * 100).toFixed(3)}%`);
 
-                sectionFocusStart = (heading ? headingDocY : masterTopDoc) - vh * 0.35;
+                sectionFocusStart = entranceEnabled ? entranceStart : masterTopDoc - vh * 0.35;
                 sectionFocusEnd = nodeDocY[2] + vh * 0.35;
             }
 
@@ -403,22 +511,23 @@ export function useCareerMasterScene(
             scrollPosition = instance.scroll;
             schedulePaint();
         };
+        const onInteractionRefresh = () => {
+            lastScroll = NaN;
+            schedulePaint();
+        };
 
         const observer = new ResizeObserver(scheduleMeasure);
         observer.observe(root);
+        if (entranceTrack) observer.observe(entranceTrack);
+        if (pillarsLayout) observer.observe(pillarsLayout);
+        if (openingLayout) observer.observe(openingLayout);
         if (masterTimeline) observer.observe(masterTimeline);
         rows.forEach((r) => observer.observe(r));
-        if (pillarsTail) observer.observe(pillarsTail);
         const main = root.closest('main');
         if (main) observer.observe(main);
 
         if (lenis) lenis.on('scroll', onLenisScroll);
         else window.addEventListener('scroll', onNativeScroll, { passive: true });
-
-        const onInteractionRefresh = () => {
-            lastScroll = NaN;
-            schedulePaint();
-        };
 
         window.addEventListener('resize', scheduleMeasure);
         root.addEventListener('focusin', onInteractionRefresh);
@@ -427,7 +536,8 @@ export function useCareerMasterScene(
             r.addEventListener('pointerenter', onInteractionRefresh, { passive: true });
             r.addEventListener('pointerleave', onInteractionRefresh, { passive: true });
         });
-        media.addEventListener('change', scheduleMeasure);
+        desktopMedia.addEventListener('change', scheduleMeasure);
+        timelineMedia.addEventListener('change', scheduleMeasure);
         document.fonts.ready.then(scheduleMeasure);
         measure();
 
@@ -445,8 +555,12 @@ export function useCareerMasterScene(
                 r.removeEventListener('pointerenter', onInteractionRefresh);
                 r.removeEventListener('pointerleave', onInteractionRefresh);
             });
-            media.removeEventListener('change', scheduleMeasure);
-            if (pillarsTail) setSceneInert(pillarsTail, false);
+            desktopMedia.removeEventListener('change', scheduleMeasure);
+            timelineMedia.removeEventListener('change', scheduleMeasure);
+            if (pillarsLayout) setSceneInert(pillarsLayout, false);
+            if (openingLayout) setSceneInert(openingLayout, false);
+            if (entranceTrack) delete entranceTrack.dataset.scene;
+            if (entranceAnchor) delete entranceAnchor.dataset.navAt;
             delete root.dataset.careerScene;
             layout.clear();
             motion.clear();

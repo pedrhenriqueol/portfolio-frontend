@@ -3,28 +3,144 @@
     width: 100%;
 }
 
-.career-pillars-bridge {
+/* ══════════════════════════════════════════════════════════════════════════
+   PALCO DE TRANSIÇÃO CINEMÁTICA: 3 PILARES ("PISCAS") ➔ ABERTURA DA CARREIRA
+   ══════════════════════════════════════════════════════════════════════════ */
+.career-entrance-track,
+.career-entrance-frame,
+.career-pillars-layout,
+.career-opening-layout {
+    position: relative;
+}
+
+.career-scene-anchor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    scroll-margin-top: 100px;
+    pointer-events: none;
+}
+
+.career-pillars-layout {
     width: min(92%, 1720px);
     margin-inline: auto;
     padding-top: 1.5rem;
-    padding-bottom: 2.5rem;
+    padding-bottom: 2rem;
 }
 
-.career-pillars-bridge .chapter-tail {
-    will-change: transform, opacity;
-    transform-origin: center top;
+.career-opening-layout {
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    padding-top: 1.5rem;
 }
 
-.career-pillars-bridge .chapter-tail > * {
-    will-change: transform, opacity;
-    transform-origin: center center;
+@media (min-width: 640px) {
+    .career-opening-layout {
+        padding-inline: 1.5rem;
+    }
 }
 
+@media (min-width: 1024px) {
+    .career-opening-layout {
+        padding-inline: 2rem;
+    }
+}
+
+.career-entrance-thread {
+    display: none;
+}
+
+.career-pillars-layout .chapter-tail > *,
 .career-heading-block,
+.career-heading-block h2,
 [data-career-metric],
 [data-career-year-col],
 [data-career-card-col] {
     will-change: transform, opacity;
+}
+
+.career-heading-block h2 {
+    transform-origin: center center;
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .career-entrance-track[data-scene="connected"] {
+        height: calc(var(--career-frame-height, 420px) + var(--career-travel, 480px));
+        margin-bottom: 1.5rem;
+    }
+
+    .career-entrance-track[data-scene="connected"] .career-entrance-frame {
+        position: sticky;
+        top: var(--career-inset, 96px);
+        height: var(--career-frame-height, 420px);
+        width: min(92%, 1720px);
+        margin-inline: auto;
+        isolation: isolate;
+    }
+
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout {
+        width: 100%;
+        padding-top: 0.5rem;
+        padding-bottom: 0;
+        z-index: 2;
+    }
+
+    .career-entrance-track[data-scene="connected"] .career-opening-layout {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        max-width: 72rem;
+        margin-inline: auto;
+        padding-top: 0.25rem;
+        z-index: 3;
+    }
+
+    .career-entrance-track[data-scene="connected"] .career-pillars-layout[inert],
+    .career-entrance-track[data-scene="connected"] .career-opening-layout[inert] {
+        pointer-events: none;
+    }
+
+    .career-entrance-track[data-scene="connected"] .career-entrance-thread {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .career-entrance-path-base {
+        stroke: rgba(255, 255, 255, 0.12);
+        stroke-width: 1.75px;
+        stroke-dasharray: 4 6;
+    }
+
+    .career-entrance-path-active {
+        stroke: var(--color-secondary);
+        stroke-width: 2.25px;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 70%, transparent));
+    }
+
+    .career-entrance-orb-halo {
+        fill: color-mix(in srgb, var(--color-secondary) 38%, transparent);
+        opacity: 0;
+    }
+
+    .career-entrance-orb-core {
+        fill: var(--color-secondary);
+        stroke: #07090e;
+        stroke-width: 1.5px;
+        filter: drop-shadow(0 0 10px var(--color-accent));
+        opacity: 0;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -330,7 +446,7 @@
 
 /* Adaptação Responsiva Mobile (< 768px) */
 @media (max-width: 767px) {
-    .career-pillars-bridge {
+    .career-pillars-layout {
         width: 100%;
         padding-inline: 1rem;
     }

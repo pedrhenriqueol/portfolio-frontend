@@ -1,6 +1,5 @@
 import { ChapterHeading } from './Common/ScrollChapter';
 import CareerEntranceStage from './Common/CareerEntranceStage';
-import SectionDivider from './Common/SectionDivider';
 import { useCareerMasterScene } from '../../hooks/useCareerEntrance';
 import React, { useRef, useState, useMemo, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -611,83 +610,88 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         ],
     };
 
+    const experienceOpening = (
+        <>
+            {/* ── 1. Cabeçalho da Trajetória Profissional ── */}
+            <div className="career-heading-block">
+                <ChapterHeading className="career-heading relative text-center mb-10">
+                    <div className="journey-intro">
+                        <div
+                            id={entrancePillars ? undefined : 'experiencia'}
+                            className="journey-heading-anchor"
+                        >
+                            <div
+                                data-journey-guide-slot
+                                className="journey-guide-slot flex justify-center mb-4"
+                            >
+                                {(!guidedIntro || entrancePillars !== undefined) && (
+                                    <TechCompanionCritter
+                                        variant="sentinel-timeline"
+                                        captionPosition="top"
+                                        className="transition-transform duration-300 hover:scale-105"
+                                    />
+                                )}
+                            </div>
+
+                            <div className="journey-heading-motion">
+                                <span className="portfolio-eyebrow mb-2 block">
+                                    {lang === 'en'
+                                        ? 'CAREER & OPERATIONAL ENGINEERING'
+                                        : lang === 'es'
+                                        ? 'TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                        : 'TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
+                                </span>
+                                <h2 id="experience-heading" className="portfolio-title mb-4">
+                                    {t('experience.title') || 'Trajetória Profissional'}
+                                </h2>
+                                <p className="portfolio-lede max-w-2xl mx-auto">
+                                    {t('experience.subtitle') ||
+                                        'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </ChapterHeading>
+            </div>
+
+            {/* ── 2. Strip de 4 Métricas Executivas com Desdobramento Espacial ── */}
+            <div className="career-summary grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {summaryStats.map((stat, idx) => (
+                    <div
+                        key={idx}
+                        data-career-metric={idx}
+                        data-cursor-card="true"
+                        className="portfolio-surface portfolio-card-hover flex items-center gap-3.5 p-4"
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
+                            <i aria-hidden="true" className={`${stat.icon} text-sm`} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
+                                {stat.value}
+                            </span>
+                            <span
+                                className="text-[11px] text-neutral-400 font-sans truncate"
+                                title={stat.label}
+                            >
+                                {stat.label}
+                            </span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </>
+    );
+
     return (
         <div ref={sceneRef} className="career-scene-wrapper">
-            <CareerEntranceStage pillars={entrancePillars}>
-                {entrancePillars && <SectionDivider className="my-4 md:my-6" marker="+" />}
-
+            <CareerEntranceStage pillars={entrancePillars} opening={experienceOpening}>
                 <section
                     id="career-details"
                     aria-labelledby="experience-heading"
-                    className="py-16 md:py-24 bg-transparent relative overflow-visible"
+                    className="pt-8 pb-16 md:pt-12 md:pb-24 bg-transparent relative overflow-visible"
                 >
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-                        {/* ── 1. Cabeçalho da Trajetória Profissional ── */}
-                        <div className="career-heading-block">
-                            <ChapterHeading className="career-heading relative text-center mb-12">
-                                <div className="journey-intro">
-                                    <div id="experiencia" className="journey-heading-anchor">
-                                        <div
-                                            data-journey-guide-slot
-                                            className="journey-guide-slot flex justify-center mb-4"
-                                        >
-                                            {(!guidedIntro || entrancePillars !== undefined) && (
-                                                <TechCompanionCritter
-                                                    variant="sentinel-timeline"
-                                                    captionPosition="top"
-                                                    className="transition-transform duration-300 hover:scale-105"
-                                                />
-                                            )}
-                                        </div>
-
-                                        <div className="journey-heading-motion">
-                                            <span className="portfolio-eyebrow mb-2 block">
-                                                {lang === 'en'
-                                                    ? 'CAREER & OPERATIONAL ENGINEERING'
-                                                    : lang === 'es'
-                                                    ? 'TRAYECTORIA E INGENIERÍA OPERACIONAL'
-                                                    : 'TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
-                                            </span>
-                                            <h2 id="experience-heading" className="portfolio-title mb-4">
-                                                {t('experience.title') || 'Trajetória Profissional'}
-                                            </h2>
-                                            <p className="portfolio-lede max-w-2xl mx-auto">
-                                                {t('experience.subtitle') ||
-                                                    'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </ChapterHeading>
-                        </div>
-
-                        {/* ── 2. Strip de 4 Métricas Executivas com Entrada Sequencial em Cascata ── */}
-                        <div className="career-summary grid grid-cols-2 lg:grid-cols-4 gap-4 mb-20">
-                            {summaryStats.map((stat, idx) => (
-                                <div
-                                    key={idx}
-                                    data-career-metric={idx}
-                                    data-cursor-card="true"
-                                    className="portfolio-surface portfolio-card-hover flex items-center gap-3.5 p-4"
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
-                                        <i aria-hidden="true" className={`${stat.icon} text-sm`} />
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
-                                            {stat.value}
-                                        </span>
-                                        <span
-                                            className="text-[11px] text-neutral-400 font-sans truncate"
-                                            title={stat.label}
-                                        >
-                                            {stat.label}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
                         {/* ══════════════════════════════════════════════════════════════════
                             3. ESPINHA DORSAL CENTRAL UNIFICADA & TIMELINE ALTERNADA (ZIG-ZAG)
                             Um único trilho de precisão milimétrica do centro de 2026 ao centro de 2024

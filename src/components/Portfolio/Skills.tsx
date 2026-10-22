@@ -289,7 +289,6 @@ const BentoSkillCard = memo(function BentoSkillCard({
     cardIndex: number;
     lang: string;
 }) {
-    const reducedMotion = useReducedMotion();
     const isSpanned = card.id === 'frontend-modern';
     const [isIgnited, setIsIgnited] = useState(false);
     const [isExpanded, setIsExpanded] = useState(true);
@@ -317,20 +316,11 @@ const BentoSkillCard = memo(function BentoSkillCard({
     }, []);
 
     return (
-        <motion.div
+        <div
             ref={cardRef}
             data-skill-card={card.id}
             data-hud-ignited={isIgnited ? 'true' : 'false'}
-            initial={{ opacity: 0, y: reducedMotion ? 0 : 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{
-                duration: reducedMotion ? 0.15 : 0.55,
-                delay: reducedMotion ? 0 : cardIndex * 0.06,
-                ease: [0.22, 1, 0.36, 1],
-            }}
             style={{
-                transform: 'translateZ(0)',
                 ['--hud-delay' as string]: `${cardIndex * 95}ms`,
             }}
             className={`portfolio-hud-frame p-5 md:p-6 ${card.colSpan}`}
@@ -446,7 +436,7 @@ const BentoSkillCard = memo(function BentoSkillCard({
                     )}
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 });
 
