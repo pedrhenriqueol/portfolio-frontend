@@ -7,13 +7,13 @@ export default function CareerEntranceStage({ pillars, children }: {
     onProgress?: (progress: number) => void;
 }) {
     return (
-        <div className="career-scene-wrapper">
+        <>
             {pillars && (
                 <div className="career-pillars-bridge">
                     {pillars}
                 </div>
             )}
             {children}
-        </div>
+        </>
     );
 }

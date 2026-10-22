@@ -1,27 +1,18 @@
-import React, { useRef, useState, useMemo, useCallback, useEffect, memo } from 'react';
-import {
-    motion,
-    useMotionValue,
-    useSpring,
-    useTransform,
-    useVelocity,
-    useReducedMotion,
-    type MotionValue,
-} from 'framer-motion';
-import { useLanguage } from '../../context/LanguageContext';
-import { useCareerPresentation } from '../../hooks/useCareerEntrance';
-import useSectionInView from '../../hooks/useSectionInView';
+import { ChapterHeading } from './Common/ScrollChapter';
 import CareerEntranceStage from './Common/CareerEntranceStage';
 import SectionDivider from './Common/SectionDivider';
-import MagneticButton from './MagneticButton';
+import { useCareerMasterScene } from '../../hooks/useCareerEntrance';
+import React, { useRef, useState, useMemo, memo } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 import JourneyPhotoModal, { JourneyMilestoneArchive } from './JourneyPhotoModal';
 import JourneyMigrationDiagram from './JourneyMigrationDiagram';
-import { playMechanicalClick, playTabSwitch } from '../../lib/sound';
+import TechCompanionCritter from './TechCompanionCritter';
 import './career-entrance.css';
 
 /** Faz highlight de métricas numéricas e termos técnicos-chave no texto */
 function HighlightedText({ text }: { text: string }) {
-    const pattern = /(\d+[\+\-]?\s*(?:ms|s|%|usuários|bugs|travamentos|Endpoints)?(?:\s*diários)?|<\d+ms|N\+1|100\+|8\+|Multi-tenant|RBAC|ZPEs?|ePita|UniGui|Laravel|ACBr)/g;
+    const pattern = /(\d+[\+\-]?\s*(?:ms|s|%|usuários|bugs|travamentos|Endpoints)?(?:\s*diários)?|<\d+ms|N\+1|100\+|8\+|Multi-tenant|RBAC|ZPEs?|ePita)/g;
     const parts = text.split(pattern);
     return (
         <>
@@ -53,302 +44,148 @@ export interface JourneyExperienceItem {
     groups?: TimelineResponsibilityGroup[];
 }
 
-interface CareerHudMetric {
-    value: string;
-    label: string;
+function TimelineResponsibilities({ groups }: { groups?: TimelineResponsibilityGroup[] }) {
+    if (!groups?.length) return null;
+    return (
+        <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.01]">
+            {groups.map((group, gIdx) => (
+                <div key={gIdx} className="space-y-2.5">
+                    <div className="flex items-center gap-2 text-secondary font-semibold text-xs tracking-wider uppercase font-sans">
+                        <i aria-hidden="true" className={`${group.icon || 'fas fa-check-circle'} text-[11px]`} />
+                        <span>{group.title}</span>
+                    </div>
+                    <ul className="space-y-2">
+                        {group.items &&
+                            group.items.map((item, iIdx) => (
+                                <li
+                                    key={iIdx}
+                                    className="text-neutral-300 text-[13px] sm:text-sm leading-relaxed flex items-start gap-2"
+                                >
+                                    <span className="text-accent mt-1.5 text-[8px] shrink-0">•</span>
+                                    <span>
+                                        <HighlightedText text={item} />
+                                    </span>
+                                </li>
+                            ))}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    );
 }
 
-interface CareerMilestoneSlide {
-    id: string;
-    year: string;
-    stepLabel: string;
+/** Card de Experiência com Micro-tilt 3D Suave e Cantoneiras de Foco Ativo */
+const TimelineExperienceCard = memo(function TimelineExperienceCard({
+    company,
+    role,
+    period,
+    isCurrent,
+    techBadges,
+    groups,
+    lang,
+}: {
     company: string;
     role: string;
     period: string;
-    location: string;
-    statusLabel: string;
-    isCurrent: boolean;
-    summary: string;
-    metrics: [CareerHudMetric, CareerHudMetric];
-    techBadges: string[];
-    groups: TimelineResponsibilityGroup[];
-    archive: JourneyMilestoneArchive;
-}
-
-interface CareerFocusCardProps {
-    milestone: CareerMilestoneSlide;
-    index: number;
-    activeIndex: number;
-    smoothProgress: MotionValue<number>;
-    onInspectArchive: (archive: JourneyMilestoneArchive) => void;
-    onCardFocus: (index: number) => void;
-    presenting: boolean;
+    isCurrent?: boolean;
+    techBadges?: string[];
+    groups?: TimelineResponsibilityGroup[];
     lang: string;
-}
-
-/**
- * CareerFocusCard - Card 3D individual da Experiência Profissional no Palco em Foco.
- * Segue exatamente a mesma arquitetura compositor-only (`translate3d`, `scale`, `opacity`)
- * dos 3 Projetos em Destaque (`CylindricalCard`).
- */
-const CareerFocusCard = memo(function CareerFocusCard({
-    milestone,
-    index,
-    activeIndex,
-    smoothProgress,
-    onInspectArchive,
-    onCardFocus,
-    presenting,
-    lang,
-}: CareerFocusCardProps) {
-    const isCurrent = index === activeIndex;
-    const reducedMotion = useReducedMotion();
+}) {
     const cardRef = useRef<HTMLDivElement>(null);
+    const rectRef = useRef<DOMRect | null>(null);
+    const xPct = useMotionValue(0);
+    const yPct = useMotionValue(0);
 
-    useEffect(() => {
-        if (!isCurrent && cardRef.current?.contains(document.activeElement)) {
-            cardRef.current.closest<HTMLElement>('section')?.focus({ preventScroll: true });
-        }
-    }, [isCurrent]);
+    const springConfig = { damping: 24, stiffness: 200, mass: 0.4 };
+    const xSpring = useSpring(xPct, springConfig);
+    const ySpring = useSpring(yPct, springConfig);
 
-    const zIndex = isCurrent ? 50 : 20 - Math.abs(index - activeIndex);
+    const rotateX = useTransform(ySpring, [-0.5, 0.5], ['3deg', '-3deg']);
+    const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-3deg', '3deg']);
 
-    const translateX = useTransform(smoothProgress, (p: number) => `${(index - p) * 115}%`);
-    const rotateY = useTransform(smoothProgress, (p: number) => `${(index - p) * -24}deg`);
-    const translateZ = useTransform(smoothProgress, (p: number) => `${-Math.abs(index - p) * 220}px`);
-    const scale = useTransform(smoothProgress, (p: number) => Math.max(0.86, 1 - Math.abs(index - p) * 0.14));
-    const presentingScale = useTransform(smoothProgress, (p: number) => Math.max(0.935, 1 - Math.abs(index - p) * 0.065));
-    const opacity = useTransform(smoothProgress, (p: number) => Math.max(0.2, 1 - Math.abs(index - p) * 0.6));
-    const shadowOpacity = useTransform(smoothProgress, (p: number) => Math.max(0, 0.85 - Math.abs(index - p) * 0.45));
-
-    const handleCardContainerClick = () => {
-        if (!isCurrent) {
-            onCardFocus(index);
+    const handleMouseEnter = () => {
+        if (cardRef.current) {
+            rectRef.current = cardRef.current.getBoundingClientRect();
         }
     };
 
-    const formattedIndex = String(index + 1).padStart(2, '0');
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!cardRef.current) return;
+        if (!rectRef.current) {
+            rectRef.current = cardRef.current.getBoundingClientRect();
+        }
+        const rect = rectRef.current;
+        xPct.set((e.clientX - rect.left) / rect.width - 0.5);
+        yPct.set((e.clientY - rect.top) / rect.height - 0.5);
+    };
+
+    const handleMouseLeave = () => {
+        rectRef.current = null;
+        xPct.set(0);
+        yPct.set(0);
+    };
 
     return (
-        <motion.div
-            style={{
-                translateX,
-                rotateY: presenting ? 0 : rotateY,
-                translateZ: presenting ? 0 : translateZ,
-                scale: presenting ? presentingScale : scale,
-                opacity: presenting ? 1 : opacity,
-                zIndex,
-                isolation: 'isolate',
-                transformStyle: presenting ? 'flat' : 'preserve-3d',
-                transformOrigin: '50% 50%',
-            }}
-            onClick={handleCardContainerClick}
-            className={`career-focus-card absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[820px] lg:w-[920px] h-[720px] sm:h-[560px] md:h-[520px] will-change-transform select-none antialiased subpixel-antialiased ${
-                isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
-            }`}
-        >
-            <div
+        <div style={{ perspective: 1000 }} className="w-full">
+            <motion.div
                 ref={cardRef}
-                inert={!isCurrent}
-                className={`portfolio-surface portfolio-card-hover w-full h-full overflow-hidden flex flex-col md:flex-row relative group transition-colors duration-300 ${
-                    isCurrent
-                        ? 'border-white/20 pointer-events-auto'
-                        : 'border-white/5 pointer-events-none'
-                }`}
+                onMouseEnter={handleMouseEnter}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                    rotateX,
+                    rotateY,
+                    transformStyle: 'preserve-3d',
+                    transform: 'translateZ(0)',
+                }}
+                data-cursor-card="true"
+                className="portfolio-surface portfolio-card-hover career-experience-surface overflow-hidden group"
             >
-                {/* Cantoneiras Técnicas em L no card ativo */}
-                {isCurrent && (
-                    <div className="portfolio-hud-corners" aria-hidden="true">
-                        <span className="portfolio-hud-corner-bl" />
-                        <span className="portfolio-hud-corner-br" />
-                    </div>
-                )}
-
-                {/* ── Lado Esquerdo: Identidade Monumental do Ano, Preview Técnico & Métricas HUD ── */}
-                <div className="w-full md:w-[40%] h-52 sm:h-56 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-dashed border-white/15 shrink-0 flex flex-col justify-between">
-                    {/* Área Visual Superior (Imagem do Registro ou Diagrama Arquitetural) */}
-                    <div className="relative flex-1 min-h-[140px] overflow-hidden bg-[#07090e]">
-                        {milestone.archive.media === 'process' ? (
-                            <div className="w-full h-full flex items-center justify-center p-3 bg-[#07090e]">
-                                <JourneyMigrationDiagram language={lang} compact />
-                            </div>
-                        ) : (
-                            <img
-                                src={milestone.archive.image}
-                                alt={milestone.company}
-                                width={640}
-                                height={400}
-                                loading="lazy"
-                                decoding="async"
-                                className={`w-full h-full object-cover object-center transition-transform duration-500 ${
-                                    reducedMotion ? '' : 'group-hover:scale-[1.03]'
-                                }`}
-                            />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#06080D] via-[#06080D]/45 to-transparent pointer-events-none" />
-
-                        {/* Status Chip Superior */}
-                        <div className="portfolio-chip-dashed absolute top-3.5 left-3.5 z-10 flex items-center gap-2 bg-darker/95 pointer-events-none">
-                            <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                    milestone.isCurrent ? 'bg-emerald-400 animate-pulse' : 'bg-accent'
-                                }`}
-                            />
-                            <span className="text-[10px] font-mono text-secondary">
-                                {milestone.statusLabel}
-                            </span>
-                        </div>
-
-                        {/* Ano Escultural sobreposto na base da mídia */}
-                        <div className="absolute bottom-2.5 left-4 right-4 flex items-baseline justify-between pointer-events-none">
-                            <span
-                                style={{
-                                    WebkitTextStroke: '1.5px color-mix(in srgb, var(--color-secondary) 65%, rgba(255, 255, 255, 0.3))',
-                                    textShadow: '0 0 32px color-mix(in srgb, var(--color-accent) 28%, transparent)',
-                                }}
-                                className="text-4xl sm:text-5xl md:text-6xl font-mono font-black text-transparent tracking-tight leading-none select-none"
-                            >
-                                {milestone.year}
-                            </span>
-                            <span className="font-mono text-[10px] text-neutral-300 bg-black/70 px-2 py-0.5 rounded border border-white/10">
-                                {milestone.location}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Base Esquerda: Resumo Executivo + 2 Métricas HUD Emolduradas */}
-                    <div className="p-4 sm:p-5 bg-[#080b11] border-t border-dashed border-white/12 space-y-3">
-                        <p className="text-neutral-300 text-[11.5px] sm:text-xs font-sans leading-relaxed line-clamp-2">
-                            {milestone.summary}
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-2">
-                            {milestone.metrics.map((metric) => (
-                                <div key={metric.label} className="portfolio-hud-metric">
-                                    <span className="font-mono text-xs sm:text-[13px] font-semibold text-secondary block leading-tight">
-                                        {metric.value}
-                                    </span>
-                                    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-neutral-400 block mt-0.5 truncate">
-                                        {metric.label}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                {/* Cantoneiras Técnicas HUD que acendem quando o marco está em foco */}
+                <div className="portfolio-hud-corners career-focus-corners" aria-hidden="true">
+                    <span className="portfolio-hud-corner-bl" />
+                    <span className="portfolio-hud-corner-br" />
                 </div>
 
-                {/* ── Lado Direito: Empresa, Cargo, Frentes de Engenharia & Dossiê ── */}
-                <div className="p-5 sm:p-6 md:p-6 flex-1 flex flex-col justify-between overflow-hidden">
-                    <div className="min-h-0 flex-1 flex flex-col">
-                        {/* Cabeçalho Interno: Índice 01 + Ano + Período */}
-                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-1.5">
-                            <div className="flex items-baseline gap-2.5 min-w-0">
-                                <span className="font-mono text-lg sm:text-xl font-semibold text-secondary leading-none tracking-tight">
-                                    {formattedIndex}
+                {/* Cabeçalho do Card */}
+                <div data-career-card-header className="p-5 md:p-6 border-b border-white/[0.06] bg-white/[0.015]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-xl sm:text-2xl font-bold font-serif text-white group-hover:text-secondary transition-colors">
+                                {company}
+                            </h3>
+                            {isCurrent && (
+                                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300 font-mono text-[11px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    {lang === 'en'
+                                        ? 'Current Role'
+                                        : lang === 'es'
+                                        ? 'Puesto Actual'
+                                        : 'Cargo Atual'}
                                 </span>
-                                <span className="text-white/20 font-mono text-xs">/</span>
-                                <span className="font-serif italic text-xs sm:text-sm text-accent truncate">
-                                    {milestone.year} · {milestone.stepLabel}
-                                </span>
-                            </div>
-                            <span className="portfolio-chip-dashed flex items-center gap-1.5 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent/80" />
-                                {milestone.period}
-                            </span>
+                            )}
                         </div>
+                        <span className="portfolio-chip self-start sm:self-auto">{period}</span>
+                    </div>
 
-                        {/* Nome da Empresa / Instituição */}
-                        <h3 className="text-2xl sm:text-[26px] font-serif text-primary font-normal tracking-tight leading-tight mb-0.5 truncate">
-                            {milestone.company}
-                        </h3>
+                    <p className="text-secondary font-medium text-sm sm:text-base font-sans mb-4">{role}</p>
 
-                        {/* Cargo / Função */}
-                        <p className="text-secondary/90 text-xs sm:text-[13px] font-sans font-medium mb-3 truncate">
-                            {milestone.role}
-                        </p>
-
-                        {/* Frentes de Atuação & Entregas Técnicas */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 overflow-y-auto pr-1 scrollbar-none">
-                            {milestone.groups.slice(0, 2).map((group, gIdx) => (
-                                <div
-                                    key={gIdx}
-                                    className="p-3 rounded bg-white/[0.015] border border-dashed border-white/[0.1] space-y-1.5"
-                                >
-                                    <div className="flex items-center gap-1.5 text-secondary font-semibold text-[10.5px] tracking-wider uppercase font-mono">
-                                        <i aria-hidden="true" className={`${group.icon || 'fas fa-check-circle'} text-[10px] text-accent`} />
-                                        <span className="truncate">{group.title}</span>
-                                    </div>
-                                    <ul className="space-y-1">
-                                        {group.items.slice(0, 2).map((item, iIdx) => (
-                                            <li
-                                                key={iIdx}
-                                                className="text-neutral-300 text-[11.5px] leading-snug flex items-start gap-1.5 line-clamp-2"
-                                            >
-                                                <span className="text-accent mt-1 text-[7px] shrink-0">•</span>
-                                                <span>
-                                                    <HighlightedText text={item} />
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Badges de Stack Técnica com Borda Tracejada */}
-                        <div className="flex flex-wrap gap-1.5 mt-auto pb-2">
-                            {milestone.techBadges.slice(0, 7).map((badge) => (
-                                <span key={badge} className="portfolio-chip-dashed">
+                    {/* Tech Badges */}
+                    {techBadges && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                            {techBadges.map((badge, bIdx) => (
+                                <span key={bIdx} className="portfolio-chip-dashed select-none">
                                     {badge}
                                 </span>
                             ))}
                         </div>
-                    </div>
-
-                    {/* ── Rodapé Integrado: Ação Direta para Dossiê Técnico ── */}
-                    <div className="portfolio-hud-divider flex flex-wrap items-center justify-between gap-2.5 pt-3 mt-1 relative z-20">
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onInspectArchive(milestone.archive);
-                            }}
-                            data-cursor-morph="true"
-                            className="portfolio-button portfolio-button-primary flex-1 !min-h-[38px] !py-2 !px-4 font-semibold text-xs flex items-center justify-center gap-2 shadow-md relative z-30 cursor-pointer"
-                        >
-                            <i aria-hidden="true" className="fas fa-folder-open text-xs" />
-                            <span>
-                                {lang === 'en'
-                                    ? 'Inspect Technical Record & Evidence'
-                                    : lang === 'es'
-                                    ? 'Inspeccionar Registro Técnico'
-                                    : 'Inspecionar Registro Técnico & Evidências'}
-                            </span>
-                            <span aria-hidden="true">↗</span>
-                        </button>
-                    </div>
+                    )}
                 </div>
 
-                {/* Escurecimento compositor-only nos cards laterais inativos */}
-                <div
-                    aria-hidden="true"
-                    className="absolute inset-0 z-40 rounded-2xl bg-black pointer-events-none transition-opacity duration-300"
-                    style={{ opacity: isCurrent ? 0 : 0.6 }}
-                />
-            </div>
-
-            {/* Sombra de Profundidade Projetada no Solo - estritamente no card ativo */}
-            {isCurrent && (
-                <motion.div
-                    style={{
-                        opacity: shadowOpacity,
-                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,.68), transparent 70%)',
-                    }}
-                    className="absolute -bottom-12 left-12 right-12 h-16 rounded-full pointer-events-none"
-                    aria-hidden="true"
-                />
-            )}
-        </motion.div>
+                <TimelineResponsibilities groups={groups} />
+            </motion.div>
+        </div>
     );
 });
 
@@ -360,41 +197,58 @@ interface ProfessionalJourneyTimelineProps {
 
 export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelineProps> = ({
     experiences = [],
+    guidedIntro = false,
     entrancePillars,
 }) => {
-    const { lang = 'pt' } = useLanguage();
-    const reducedMotion = useReducedMotion();
-    const [activeIndex, setActiveIndex] = useState(0);
+    const { t, lang } = useLanguage();
+    const sceneRef = useRef<HTMLDivElement>(null);
     const [selectedArchive, setSelectedArchive] = useState<JourneyMilestoneArchive | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const { containerRef: sectionRef, isInView } = useSectionInView({ rootMargin: '200px 0px' });
+
+    useCareerMasterScene(sceneRef);
 
     // Métricas executivas da trajetória
-    const summaryStats = useMemo(
-        () => [
-            {
-                value: '10+ ' + (lang === 'en' ? 'Months' : 'Meses'),
-                label: lang === 'en' ? 'Production' : lang === 'es' ? 'Producción' : 'Em produção',
-                icon: 'fas fa-calendar-check',
-            },
-            {
-                value: '100+ ' + (lang === 'en' ? 'Users' : lang === 'es' ? 'Usuarios' : 'Usuários'),
-                label: lang === 'en' ? 'Daily on ERP' : lang === 'es' ? 'Diarios en ERP' : 'Diários no ERP',
-                icon: 'fas fa-users',
-            },
-            {
-                value: lang === 'en' ? '25% Fewer Bugs' : '25% Menos Bugs',
-                label: lang === 'en' ? 'Proactive QA' : lang === 'es' ? 'QA preventivo' : 'QA preventivo',
-                icon: 'fas fa-shield-alt',
-            },
-            {
-                value: lang === 'en' ? '4× Faster' : lang === 'es' ? '4× Más Rápido' : '4× Mais Rápido',
-                label: lang === 'en' ? 'SQL (<500ms)' : 'Queries (<500ms)',
-                icon: 'fas fa-bolt',
-            },
-        ],
-        [lang]
-    );
+    const summaryStats = [
+        {
+            value: '10+ ' + (lang === 'en' ? 'Months' : 'Meses'),
+            label:
+                lang === 'en'
+                    ? 'Production experience'
+                    : lang === 'es'
+                    ? 'Experiencia en producción'
+                    : 'Experiência em produção',
+            icon: 'fas fa-calendar-check',
+        },
+        {
+            value: '100+ ' + (lang === 'en' ? 'Users' : lang === 'es' ? 'Usuarios' : 'Usuários'),
+            label:
+                lang === 'en'
+                    ? 'Daily on ERP systems'
+                    : lang === 'es'
+                    ? 'Diarios en sistemas ERP'
+                    : 'Diários em sistemas ERP',
+            icon: 'fas fa-users',
+        },
+        {
+            value: lang === 'en' ? '25% Fewer Bugs' : '25% Menos Bugs',
+            label:
+                lang === 'en'
+                    ? 'Via proactive QA'
+                    : lang === 'es'
+                    ? 'Vía QA preventivo'
+                    : 'Via QA preventivo',
+            icon: 'fas fa-shield-alt',
+        },
+        {
+            value: lang === 'en' ? '4× Faster' : lang === 'es' ? '4× Más Rápido' : '4× Mais Rápido',
+            label:
+                lang === 'en'
+                    ? 'Optimized queries (<500ms)'
+                    : lang === 'es'
+                    ? 'Consultas optimizadas (<500ms)'
+                    : 'Queries otimizadas (<500ms)',
+            icon: 'fas fa-bolt',
+        },
+    ];
 
     const ARCHIVES: Record<string, JourneyMilestoneArchive> = useMemo(
         () => ({
@@ -607,648 +461,518 @@ export const ProfessionalJourneyTimeline: React.FC<ProfessionalJourneyTimelinePr
         [lang]
     );
 
-    const milestoneSlides: CareerMilestoneSlide[] = useMemo(() => {
-        const seteExp = experiences.find((e) => e.id === 2) || {
-            company: 'SETE Tecnologia',
-            role:
-                lang === 'en'
-                    ? 'Software Quality Assurance (QA) & Testing Analyst — Intern'
-                    : lang === 'es'
-                    ? 'Analista de Calidad de Software (QA) y Pruebas — Pasantía'
-                    : 'Analista de Qualidade de Software (QA) e Testes — Estágio',
-            period: lang === 'en' ? 'Jun 2026 — Present' : 'Jun 2026 — Presente',
-            techBadges: [
-                'QA',
-                'Testes de Regressão',
-                'Postman',
-                'APIs RESTful',
-                'SQL Server',
-                'Scrum / Kanban',
-                'Engenharia de Requisitos',
-            ],
-            groups: [
-                {
-                    title:
-                        lang === 'en'
-                            ? 'Quality Assurance & Requirements'
-                            : lang === 'es'
-                            ? 'Garantía de Calidad y Requisitos'
-                            : 'Garantia de Qualidade & Requisitos',
-                    icon: 'fas fa-shield-alt',
-                    items: [
-                        'Atuação em sistemas de missão crítica no setor logístico e portuário (ZPEs).',
-                        'Mapeamento de 100% dos requisitos operacionais e regras de negócio com múltiplos setores.',
-                    ],
-                },
-                {
-                    title:
-                        lang === 'en'
-                            ? 'API & SQL Validation'
-                            : lang === 'es'
-                            ? 'Validación de APIs y SQL'
-                            : 'Validação de APIs & SQL',
-                    icon: 'fas fa-database',
-                    items: [
-                        'Consumo e testes de integração de serviços RESTful com collections estruturadas no Postman.',
-                        'Execução de queries diagnósticas e validação de transações no core ePita com SQL Server.',
-                    ],
-                },
-            ],
-        };
-
-        const qualiExp = experiences.find((e) => e.id === 1) || {
-            company: 'Qualisoft Sistemas',
-            role:
-                lang === 'en'
-                    ? 'Full Stack Developer (React / TypeScript / PHP / Delphi / SQL) — Intern'
-                    : lang === 'es'
-                    ? 'Desarrollador Full Stack (React / TypeScript / PHP / Delphi / SQL) — Pasantía'
-                    : 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL) — Estágio',
-            period: lang === 'en' ? 'Aug 2025 — Jun 2026' : 'Ago 2025 — Jun 2026',
-            techBadges: [
-                'React',
-                'TypeScript',
-                'PHP / Laravel',
-                'Delphi 11',
-                'UniGui',
-                'MySQL',
-                'SQL Server',
-                'ACBr',
-            ],
-            groups: [
-                {
-                    title:
-                        lang === 'en'
-                            ? 'Full Stack & Web Modules'
-                            : lang === 'es'
-                            ? 'Full Stack y Módulos Web'
-                            : 'Full Stack & Módulos Web',
-                    icon: 'fas fa-laptop-code',
-                    items: [
-                        'Implementação em produção de React + TypeScript integrada a APIs RESTful em PHP / Laravel.',
-                        'Migração de monolito Delphi VCL para arquitetura Web moderna com Delphi 11 + UniGui.',
-                    ],
-                },
-                {
-                    title:
-                        lang === 'en'
-                            ? 'Database Tuning & Performance'
-                            : lang === 'es'
-                            ? 'Optimización SQL y Rendimiento'
-                            : 'Otimização de Banco & Performance',
-                    icon: 'fas fa-tachometer-alt',
-                    items: [
-                        'Refatoração de consultas SQL Server/MySQL reduzindo tempo de relatórios de 2s para <500ms.',
-                        'Criação de procedures, índices compostos e integração fiscal ACBr para 100+ usuários diários.',
-                    ],
-                },
-            ],
-        };
-
-        const tecnicoExp = {
-            company: 'EEEP Luiza de Teodoro Vieira',
-            role:
-                lang === 'en'
-                    ? 'Integrated High School & Technical IT Diploma'
-                    : lang === 'es'
-                    ? 'Bachillerato Integrado con Técnico en Informática'
-                    : 'Ensino Médio Integrado ao Técnico em Informática',
-            period: lang === 'en' ? 'Jan 2023 — Dec 2025' : lang === 'es' ? 'Ene 2023 — Dic 2025' : 'Jan 2023 — Dez 2025',
-            techBadges: [
-                'Python',
-                'Java',
-                'HTML5',
-                'CSS3',
-                'JavaScript',
-                'Robótica',
-                'UI/UX Design',
-                'Algoritmos',
-            ],
-            groups: [
-                {
-                    title:
-                        lang === 'en'
-                            ? 'Programming & Web Development'
-                            : lang === 'es'
-                            ? 'Programación y Desarrollo Web'
-                            : 'Programação & Desenvolvimento Web',
-                    icon: 'fas fa-code',
-                    items: [
-                        lang === 'en'
-                            ? 'Hands-on training in algorithmic logic, data structures, and OOP with Python and Java.'
-                            : lang === 'es'
-                            ? 'Formación práctica en lógica algorítmica, estructuras de datos y POO con Python y Java.'
-                            : 'Formação prática em lógica algorítmica, estruturas de dados e POO com Python e Java.',
-                        lang === 'en'
-                            ? 'Building semantic web interfaces with HTML5, modern CSS3, and interactive JavaScript.'
-                            : lang === 'es'
-                            ? 'Construcción de interfaces web semánticas con HTML5, CSS3 moderno y JavaScript.'
-                            : 'Construção de aplicações e interfaces web com HTML5 semântico, CSS3 e JavaScript.',
-                    ],
-                },
-                {
-                    title:
-                        lang === 'en'
-                            ? 'Design, Robotics & Applied Projects'
-                            : lang === 'es'
-                            ? 'Diseño, Robótica y Proyectos Prácticos'
-                            : 'Design, Robótica & Projetos Práticos',
-                    icon: 'fas fa-robot',
-                    items: [
-                        lang === 'en'
-                            ? 'Assembly of robotics projects integrating automation and programmable microcontrollers.'
-                            : lang === 'es'
-                            ? 'Montaje de proyectos prácticos de robótica integrando automatización y hardware.'
-                            : 'Montagem de projetos práticos de robótica integrando automação e hardware programável.',
-                        lang === 'en'
-                            ? 'Core UI/UX Design concepts, visual prototyping, and clean code principles.'
-                            : lang === 'es'
-                            ? 'Conceptos fundamentales de UI/UX Design, prototipado visual y código limpio.'
-                            : 'Conceitos fundamentais de UI/UX Design, prototipagem visual e princípios de código limpo.',
-                    ],
-                },
-            ],
-        };
-
-        return [
+    // Dados dinâmicos para cada um dos 3 marcos (2026, 2025, 2024)
+    const seteExp = experiences.find((e) => e.id === 2) || {
+        company: 'SETE Tecnologia',
+        role: 'Analista de Qualidade de Software (QA) e Testes — Estágio',
+        period: 'Junho de 2026 - Presente',
+        techBadges: [
+            'QA',
+            'Testes de Regressão',
+            'Postman',
+            'APIs RESTful',
+            'SQL Server',
+            'Scrum / Kanban',
+            'Engenharia de Requisitos',
+        ],
+        groups: [
             {
-                id: 'milestone-2026',
-                year: '2026',
-                stepLabel: 'SETE Tecnologia · QA',
-                company: seteExp.company,
-                role: seteExp.role,
-                period: ARCHIVES['2026'].date,
-                location: ARCHIVES['2026'].location,
-                statusLabel:
-                    lang === 'en'
-                        ? 'CURRENTLY IN PRODUCTION'
-                        : lang === 'es'
-                        ? 'ACTUALMENTE EN PRODUCCIÓN'
-                        : 'ATUALMENTE EM PRODUÇÃO',
-                isCurrent: true,
-                summary:
-                    lang === 'en'
-                        ? 'Quality assurance, operational rules mapping in FTZs, and transaction validation in the ePita core.'
-                        : lang === 'es'
-                        ? 'Aseguramiento de calidad, mapeo de reglas operacionales en ZPEs y validación de transacciones en el core ePita.'
-                        : 'Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.',
-                metrics: [
-                    {
-                        value: '25% Menos Bugs',
-                        label: lang === 'en' ? 'Proactive QA Shielding' : 'Blindagem Regressiva',
-                    },
-                    {
-                        value: '100+ Endpoints',
-                        label: lang === 'en' ? 'Postman & SQL Audits' : 'Auditados via Postman/SQL',
-                    },
+                title: 'Garantia de Qualidade & Requisitos',
+                icon: 'fas fa-shield-alt',
+                items: [
+                    'Atuação em sistemas de missão crítica no setor logístico e portuário (ZPEs).',
+                    'Mapeamento de 100% dos requisitos operacionais e regras de negócio com múltiplos setores.',
+                    'Execução de testes funcionais e de regressão ágeis blindando entregas de software.',
                 ],
-                techBadges: seteExp.techBadges || [],
-                groups: seteExp.groups || [],
-                archive: ARCHIVES['2026'],
             },
             {
-                id: 'milestone-2025',
-                year: '2025',
-                stepLabel: 'Qualisoft · Full Stack',
-                company: qualiExp.company,
-                role: qualiExp.role,
-                period: ARCHIVES['2025'].date,
-                location: ARCHIVES['2025'].location,
-                statusLabel:
-                    lang === 'en'
-                        ? 'SUCCESSFULLY COMPLETED'
-                        : lang === 'es'
-                        ? 'CONCLUIDO CON ÉXITO'
-                        : 'CONCLUÍDO COM SUCESSO',
-                isCurrent: false,
-                summary:
-                    lang === 'en'
-                        ? 'Legacy Desktop VCL monolith modernization to Web via UniGui, Laravel APIs, and query tuning from 2s to <500ms.'
-                        : lang === 'es'
-                        ? 'Modernización de monolito Desktop VCL a Web vía UniGui, APIs Laravel y optimización de consultas de 2s a <500ms.'
-                        : 'Modernização de monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para <500ms.',
-                metrics: [
-                    {
-                        value: '2s ➔ <500ms',
-                        label: lang === 'en' ? 'SQL Query Optimization' : 'Tuning de Queries SQL',
-                    },
-                    {
-                        value: '100+ Usuários',
-                        label: lang === 'en' ? 'Daily Active ERP Users' : 'Ativos Diários no ERP',
-                    },
+                title: 'Validação de APIs & SQL',
+                icon: 'fas fa-database',
+                items: [
+                    'Consumo e testes de integração de serviços RESTful com collections estruturadas no Postman.',
+                    'Execução de queries diagnósticas e validação de transações no core ePita com SQL Server.',
                 ],
-                techBadges: qualiExp.techBadges || [],
-                groups: qualiExp.groups || [],
-                archive: ARCHIVES['2025'],
+            },
+        ],
+    };
+
+    const qualiExp = experiences.find((e) => e.id === 1) || {
+        company: 'Qualisoft Sistemas',
+        role: 'Desenvolvedor Full Stack (React / TypeScript / PHP / Delphi / SQL) — Estágio',
+        period: 'Agosto de 2025 - Junho de 2026',
+        techBadges: [
+            'React',
+            'TypeScript',
+            'PHP / Laravel',
+            'Delphi 11',
+            'UniGui',
+            'MySQL',
+            'SQL Server',
+            'ACBr',
+            'RESTful APIs',
+            'FortesReport',
+        ],
+        groups: [
+            {
+                title: 'Desenvolvimento Full Stack & Módulos Web',
+                icon: 'fas fa-laptop-code',
+                items: [
+                    'Aprendizado prático e implementação em produção de React + TypeScript para interfaces reativas e módulos de retaguarda.',
+                    'Desenvolvimento de APIs RESTful estruturadas em PHP com Laravel aplicando arquitetura em camadas e autenticação Sanctum.',
+                ],
             },
             {
-                id: 'milestone-2024',
-                year: '2024',
-                stepLabel: 'EEEP · Base Técnica',
-                company: tecnicoExp.company,
-                role: tecnicoExp.role,
-                period: ARCHIVES['2024'].date,
-                location: ARCHIVES['2024'].location,
-                statusLabel:
-                    lang === 'en'
-                        ? 'TECHNICAL DIPLOMA · 2023–2025'
-                        : lang === 'es'
-                        ? 'DIPLOMA TÉCNICO · 2023–2025'
-                        : 'ENSINO MÉDIO & TÉCNICO',
-                isCurrent: false,
-                summary:
-                    lang === 'en'
-                        ? 'High School and Technical Diploma in IT: algorithmic logic with Python & Java, web interfaces, UI/UX design, and robotics.'
-                        : lang === 'es'
-                        ? 'Bachillerato y Técnico en Informática: programación con Python y Java, interfaces web, diseño UI/UX y robótica.'
-                        : 'Ensino Médio e Técnico em Informática: programação com Python e Java, web com HTML/CSS/JS, robótica e UI/UX Design.',
-                metrics: [
-                    {
-                        value: '3 Anos (Integrado)',
-                        label: lang === 'en' ? 'Algorithms & OOP Base' : 'Algoritmos & Base POO',
-                    },
-                    {
-                        value: 'Web & Robótica',
-                        label: lang === 'en' ? 'Applied IT Engineering' : 'Projetos Integradores',
-                    },
+                title: 'Otimização de Banco & Performance',
+                icon: 'fas fa-tachometer-alt',
+                items: [
+                    'Refatoração de consultas SQL Server/MySQL reduzindo tempo de relatórios de 2s para <500ms via índices compostos.',
+                    'Criação de procedures e views analíticas para ERP com centenas de operações diárias.',
                 ],
-                techBadges: tecnicoExp.techBadges,
-                groups: tecnicoExp.groups,
-                archive: ARCHIVES['2024'],
             },
-        ];
-    }, [experiences, lang, ARCHIVES]);
-
-    // ── Motion Values de Posição com Mola Amortecida & Inércia (Mesma Física dos 3 Projetos) ──
-    const progress = useMotionValue(0);
-    const smoothProgress = useSpring(progress, {
-        stiffness: 220,
-        damping: 26,
-        mass: 0.5,
-    });
-    const cardProgress = reducedMotion ? progress : smoothProgress;
-
-    const progressVelocity = useVelocity(smoothProgress);
-    const velocityRotateZ = useTransform(progressVelocity, [-8, 0, 8], [3.6, 0, -3.6]);
-    const velocitySkewX = useTransform(progressVelocity, [-8, 0, 8], [-2.2, 0, 2.2]);
-
-    const isDraggingRef = useRef(false);
-    const hasDraggedRef = useRef(false);
-    const startXRef = useRef(0);
-    const startProgressRef = useRef(0);
-    const lastXRef = useRef(0);
-    const lastTimeRef = useRef(0);
-    const velocityRef = useRef(0);
-
-    const totalSlides = milestoneSlides.length;
-    const { presenting, navigatePresentation } = useCareerPresentation(
-        sectionRef,
-        progress,
-        isDraggingRef,
-        totalSlides,
-        lang
-    );
-    const countProgress = useTransform(cardProgress, (value: number) => (value + 1) / totalSlides);
-
-    useEffect(() => {
-        if (!isInView) return;
-        const unsubscribe = cardProgress.on('change', (v: number) => {
-            const rounded = Math.round(v);
-            if (rounded >= 0 && rounded < totalSlides && rounded !== activeIndex) {
-                setActiveIndex(rounded);
-            }
-        });
-        return () => unsubscribe();
-    }, [cardProgress, activeIndex, totalSlides, isInView]);
-
-    const navigateTo = useCallback(
-        (targetIndex: number) => {
-            const clamped = Math.max(0, Math.min(totalSlides - 1, targetIndex));
-            if (!navigatePresentation(clamped)) {
-                progress.set(clamped);
-                setActiveIndex(clamped);
-            }
-            playTabSwitch();
-        },
-        [progress, totalSlides, navigatePresentation]
-    );
-
-    const handleCardFocus = useCallback(
-        (index: number) => {
-            if (!hasDraggedRef.current) navigateTo(index);
-        },
-        [navigateTo]
-    );
-
-    const handlePrev = useCallback(() => {
-        const current = Math.round(progress.get());
-        const prev = current > 0 ? current - 1 : totalSlides - 1;
-        navigateTo(prev);
-    }, [navigateTo, progress, totalSlides]);
-
-    const handleNext = useCallback(() => {
-        const current = Math.round(progress.get());
-        const next = current < totalSlides - 1 ? current + 1 : 0;
-        navigateTo(next);
-    }, [navigateTo, progress, totalSlides]);
-
-    const handlePointerDown = (e: React.PointerEvent) => {
-        if (!isInView) return;
-        hasDraggedRef.current = false;
-        if ((e.target as HTMLElement).closest('button, a, input')) return;
-        if (e.button !== undefined && e.button !== 0) return;
-        isDraggingRef.current = true;
-        startXRef.current = e.clientX;
-        startProgressRef.current = progress.get();
-        lastXRef.current = e.clientX;
-        lastTimeRef.current = performance.now();
-        velocityRef.current = 0;
-
-        window.addEventListener('pointermove', handlePointerMove);
-        window.addEventListener('pointerup', handlePointerUp);
-        window.addEventListener('pointercancel', handlePointerUp);
+            {
+                title: 'Modernização de Legados & Delphi',
+                icon: 'fas fa-sync-alt',
+                items: [
+                    'Engenharia de migração de monolito Delphi VCL para arquitetura Web moderna com Delphi 11 + UniGui.',
+                    'Integração de bibliotecas fiscais ACBr para emissão de NF-e/NFC-e e manutenção de relatórios.',
+                ],
+            },
+        ],
     };
 
-    const handlePointerMove = (e: PointerEvent) => {
-        if (!isDraggingRef.current) return;
-        const now = performance.now();
-        const dt = Math.max(now - lastTimeRef.current, 1);
-        const dx = e.clientX - lastXRef.current;
-        velocityRef.current = dx / dt;
-        lastXRef.current = e.clientX;
-        lastTimeRef.current = now;
-
-        const totalDeltaX = e.clientX - startXRef.current;
-        if (Math.abs(totalDeltaX) > 8) {
-            hasDraggedRef.current = true;
-        }
-
-        const DRAG_FACTOR = 460;
-        const targetProgress = startProgressRef.current - totalDeltaX / DRAG_FACTOR;
-        const bounded = Math.max(-0.25, Math.min(totalSlides - 0.75, targetProgress));
-        progress.set(bounded);
+    const tecnicoExp = {
+        company: 'EEEP Luiza de Teodoro Vieira',
+        role:
+            lang === 'en'
+                ? 'Integrated High School & Technical IT Diploma'
+                : lang === 'es'
+                ? 'Bachillerato Integrado con Técnico en Informática'
+                : 'Ensino Médio Integrado ao Técnico em Informática',
+        period:
+            lang === 'en'
+                ? 'January 2023 - December 2025'
+                : lang === 'es'
+                ? 'Enero de 2023 - Diciembre de 2025'
+                : 'Janeiro de 2023 - Dezembro de 2025',
+        techBadges: [
+            'Python',
+            'Java',
+            'HTML5',
+            'CSS3',
+            'JavaScript',
+            'Robótica',
+            'UI/UX Design',
+            'Algoritmos',
+            'Lógica de Programação',
+        ],
+        groups: [
+            {
+                title:
+                    lang === 'en'
+                        ? 'Programming & Web Development'
+                        : lang === 'es'
+                        ? 'Programación y Desarrollo Web'
+                        : 'Programação & Desenvolvimento Web',
+                icon: 'fas fa-code',
+                items: [
+                    lang === 'en'
+                        ? 'Hands-on training in algorithmic logic, data structures, and object-oriented programming with Python and Java.'
+                        : lang === 'es'
+                        ? 'Formación práctica en lógica algorítmica, estructuras de datos y programación orientada a objetos con Python y Java.'
+                        : 'Formação prática e contínua em lógica algorítmica, estruturas de dados e programação orientada a objetos com Python e Java.',
+                    lang === 'en'
+                        ? 'Building web applications and interfaces applying semantic HTML5, modern CSS3 styling, and JavaScript interactivity.'
+                        : lang === 'es'
+                        ? 'Construcción de aplicaciones e interfaces web aplicando estándares semánticos de HTML5, CSS3 moderno y dinamismo con JavaScript.'
+                        : 'Construção de aplicações e interfaces web aplicando padrões semânticos de HTML5, estilização moderna com CSS3 e dinamismo com JavaScript.',
+                ],
+            },
+            {
+                title:
+                    lang === 'en'
+                        ? 'Design, Robotics & Applied Projects'
+                        : lang === 'es'
+                        ? 'Diseño, Robótica y Proyectos Prácticos'
+                        : 'Design, Robótica & Projetos Práticos',
+                icon: 'fas fa-robot',
+                items: [
+                    lang === 'en'
+                        ? 'Hands-on assembly of robotics projects integrating automation and programmable microcontrollers.'
+                        : lang === 'es'
+                        ? 'Desarrollo y montaje de proyectos prácticos de robótica integrando automatización y hardware programable.'
+                        : 'Desenvolvimento e montagem de projetos práticos de robótica e circuitos integrando automação e hardware programável.',
+                    lang === 'en'
+                        ? 'Core UI/UX Design concepts, visual prototyping, and clean code principles.'
+                        : lang === 'es'
+                        ? 'Conceptos fundamentales de UI/UX Design, prototipado visual y principios de código limpio.'
+                        : 'Conceitos fundamentais de UI/UX Design, prototipagem visual e princípios de organização e código limpo.',
+                ],
+            },
+        ],
     };
-
-    const handlePointerUp = () => {
-        if (!isDraggingRef.current) return;
-        isDraggingRef.current = false;
-
-        window.removeEventListener('pointermove', handlePointerMove);
-        window.removeEventListener('pointerup', handlePointerUp);
-        window.removeEventListener('pointercancel', handlePointerUp);
-
-        const currentP = progress.get();
-        const v = velocityRef.current;
-        let targetIndex = Math.round(currentP - v * 0.22);
-        targetIndex = Math.max(0, Math.min(totalSlides - 1, targetIndex));
-
-        navigateTo(targetIndex);
-    };
-
-    const handleInspectArchive = useCallback((archive: JourneyMilestoneArchive) => {
-        if (hasDraggedRef.current) return;
-        playMechanicalClick();
-        setSelectedArchive(archive);
-    }, []);
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            handlePrev();
-        } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            handleNext();
-        }
-    };
-
-    const activeSlide = milestoneSlides[activeIndex] || milestoneSlides[0];
 
     return (
-        <CareerEntranceStage pillars={entrancePillars}>
-            {entrancePillars && <SectionDivider className="my-2 md:my-4" marker="+" />}
+        <div ref={sceneRef} className="career-scene-wrapper">
+            <CareerEntranceStage pillars={entrancePillars}>
+                {entrancePillars && <SectionDivider className="my-4 md:my-6" marker="+" />}
 
-            <section
-                ref={sectionRef}
-                id="experiencia"
-                tabIndex={0}
-                aria-labelledby="experience-heading"
-                onKeyDown={handleKeyDown}
-                className="career-focus-track bg-transparent focus:outline-none"
-            >
-                <div className="career-focus-frame">
-                    <div className="career-collection-source">
-                        <div className="career-focus-layout">
-                            <header className="career-focus-header">
-                                <div>
-                                    <span className="portfolio-eyebrow">
-                                        {lang === 'en'
-                                            ? 'CAREER & OPERATIONAL ENGINEERING'
-                                            : lang === 'es'
-                                            ? 'TRAYECTORIA E INGENIERÍA OPERACIONAL'
-                                            : 'TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
-                                    </span>
-                                    <h2 id="experience-heading" className="portfolio-title">
-                                        {lang === 'en' ? (
-                                            <>
-                                                Professional <em>experience.</em>
-                                            </>
-                                        ) : lang === 'es' ? (
-                                            <>
-                                                Experiencia <em>profesional.</em>
-                                            </>
-                                        ) : (
-                                            <>
-                                                Experiência <em>profissional.</em>
-                                            </>
-                                        )}
-                                    </h2>
-                                </div>
-
-                                <div className="career-focus-header-right">
-                                    {/* Strip de Métricas Executivas em Alta Densidade */}
-                                    <div className="career-focus-metrics-strip" aria-label="Métricas de impacto">
-                                        {summaryStats.map((stat, idx) => (
-                                            <div key={idx} className="career-focus-metric-pill">
-                                                <i
-                                                    aria-hidden="true"
-                                                    className={`${stat.icon} text-xs text-accent shrink-0`}
+                <section
+                    id="career-details"
+                    aria-labelledby="experience-heading"
+                    className="py-16 md:py-24 bg-transparent relative overflow-visible"
+                >
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+                        {/* ── 1. Cabeçalho da Trajetória Profissional ── */}
+                        <div className="career-heading-block">
+                            <ChapterHeading className="career-heading relative text-center mb-12">
+                                <div className="journey-intro">
+                                    <div id="experiencia" className="journey-heading-anchor">
+                                        <div
+                                            data-journey-guide-slot
+                                            className="journey-guide-slot flex justify-center mb-4"
+                                        >
+                                            {(!guidedIntro || entrancePillars !== undefined) && (
+                                                <TechCompanionCritter
+                                                    variant="sentinel-timeline"
+                                                    captionPosition="top"
+                                                    className="transition-transform duration-300 hover:scale-105"
                                                 />
-                                                <div className=" leading-tight">
-                                                    <span className="font-mono text-xs font-bold text-white block">
-                                                        {stat.value}
-                                                    </span>
-                                                    <span className="text-[10px] text-neutral-400 font-sans block">
-                                                        {stat.label}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Contador HUD & Barra de Progresso Contínua */}
-                                    <div
-                                        className="career-focus-count"
-                                        aria-label={
-                                            lang === 'en'
-                                                ? 'Current milestone'
-                                                : lang === 'es'
-                                                ? 'Hito actual'
-                                                : 'Marco atual'
-                                        }
-                                    >
-                                        <div className="career-focus-count-top">
-                                            <span aria-live="polite">
-                                                <strong>{String(activeIndex + 1).padStart(2, '0')}</strong> /{' '}
-                                                {String(totalSlides).padStart(2, '0')}
-                                            </span>
-                                            <span className="font-mono text-[10px] text-accent">
-                                                {activeSlide.year}
-                                            </span>
+                                            )}
                                         </div>
-                                        <div className="career-focus-progress-rail" aria-hidden="true">
-                                            <motion.div style={{ scaleX: countProgress }} />
+
+                                        <div className="journey-heading-motion">
+                                            <span className="portfolio-eyebrow mb-2 block">
+                                                {lang === 'en'
+                                                    ? 'CAREER & OPERATIONAL ENGINEERING'
+                                                    : lang === 'es'
+                                                    ? 'TRAYECTORIA E INGENIERÍA OPERACIONAL'
+                                                    : 'TRAJETÓRIA & ENGENHARIA OPERACIONAL'}
+                                            </span>
+                                            <h2 id="experience-heading" className="portfolio-title mb-4">
+                                                {t('experience.title') || 'Trajetória Profissional'}
+                                            </h2>
+                                            <p className="portfolio-lede max-w-2xl mx-auto">
+                                                {t('experience.subtitle') ||
+                                                    'Evolução técnica contínua: do domínio de engenharia e modernização de legados à garantia de qualidade em ambientes de missão crítica.'}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
-                            </header>
+                            </ChapterHeading>
+                        </div>
 
-                            <div className="career-focus-gallery">
+                        {/* ── 2. Strip de 4 Métricas Executivas com Entrada Sequencial em Cascata ── */}
+                        <div className="career-summary grid grid-cols-2 lg:grid-cols-4 gap-4 mb-20">
+                            {summaryStats.map((stat, idx) => (
                                 <div
-                                    ref={containerRef}
-                                    onPointerDown={handlePointerDown}
-                                    style={{
-                                        perspective: presenting ? undefined : '1400px',
-                                        perspectiveOrigin: '50% 50%',
-                                        isolation: 'isolate',
-                                        transformStyle: presenting ? 'flat' : 'preserve-3d',
-                                    }}
-                                    className="career-focus-stage w-full mx-auto min-h-[740px] sm:min-h-[580px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
+                                    key={idx}
+                                    data-career-metric={idx}
+                                    data-cursor-card="true"
+                                    className="portfolio-surface portfolio-card-hover flex items-center gap-3.5 p-4"
                                 >
-                                    <motion.div
-                                        style={{
-                                            rotateZ: presenting || reducedMotion ? 0 : velocityRotateZ,
-                                            skewX: presenting || reducedMotion ? 0 : velocitySkewX,
-                                            transformStyle: presenting ? 'flat' : 'preserve-3d',
-                                        }}
-                                        className="relative w-full h-full min-h-[720px] sm:min-h-[560px] lg:min-h-[520px]"
-                                    >
-                                        {milestoneSlides.map((milestone, idx) => (
-                                            <CareerFocusCard
-                                                key={milestone.id}
-                                                milestone={milestone}
-                                                index={idx}
-                                                activeIndex={activeIndex}
-                                                smoothProgress={cardProgress}
-                                                onInspectArchive={handleInspectArchive}
-                                                onCardFocus={handleCardFocus}
-                                                presenting={presenting}
-                                                lang={lang}
-                                            />
-                                        ))}
-                                    </motion.div>
+                                    <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-300 shrink-0">
+                                        <i aria-hidden="true" className={`${stat.icon} text-sm`} />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="font-mono text-base md:text-lg font-bold text-white tracking-tight">
+                                            {stat.value}
+                                        </span>
+                                        <span
+                                            className="text-[11px] text-neutral-400 font-sans truncate"
+                                            title={stat.label}
+                                        >
+                                            {stat.label}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* ══════════════════════════════════════════════════════════════════
+                            3. ESPINHA DORSAL CENTRAL UNIFICADA & TIMELINE ALTERNADA (ZIG-ZAG)
+                            Um único trilho de precisão milimétrica do centro de 2026 ao centro de 2024
+                            ══════════════════════════════════════════════════════════════════ */}
+                        <div className="career-timeline-master relative w-full max-w-5xl mx-auto py-4">
+                            {/* Trilho Mestre Contínuo (Desktop Central / Mobile Lateral) */}
+                            <div className="career-master-rail" aria-hidden="true">
+                                {/* Escala milimétrica técnica */}
+                                <div className="career-rail-ticks" />
+                                {/* Filamento guia base */}
+                                <div className="career-rail-base" />
+                                {/* Feixe energético contínuo (mesma coloração do início ao fim) */}
+                                <div data-career-beam-fill className="career-rail-beam" />
+                                {/* Núcleo óptico viajante único */}
+                                <div data-career-traveller className="career-rail-traveller">
+                                    <div className="career-rail-traveller-halo" />
+                                    <div className="career-rail-traveller-ring" />
+                                    <div className="career-rail-traveller-core" />
+                                    <span data-career-traveller-year className="career-rail-traveller-badge">
+                                        2026
+                                    </span>
                                 </div>
                             </div>
 
-                            <div className="career-focus-controls">
+                            {/* Grid de Marcos: 2026 -> 2025 -> 2024 */}
+                            <div className="space-y-24 md:space-y-36 pl-8 sm:pl-12 md:pl-0">
+                                {/* ══════════════════════════════════════════════════════════
+                                    MARCO 2026: SETE TECNOLOGIA (Analista de QA & Testes)
+                                    Desktop: Esquerda = Ano 2026 + Pasta | Direita = Card QA
+                                    ══════════════════════════════════════════════════════════ */}
                                 <div
-                                    className="career-focus-tabs scrollbar-none"
-                                    aria-label={
-                                        lang === 'en'
-                                            ? 'Career milestones'
-                                            : lang === 'es'
-                                            ? 'Hitos profesionales'
-                                            : 'Marcos da carreira'
-                                    }
+                                    data-career-row="2026"
+                                    data-career-active="true"
+                                    className="career-milestone-row relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
                                 >
-                                    {milestoneSlides.map((item, idx) => {
-                                        const isReached = idx <= activeIndex;
-                                        return (
-                                            <button
-                                                key={item.id}
-                                                type="button"
-                                                onClick={() => navigateTo(idx)}
-                                                aria-pressed={idx === activeIndex}
-                                                data-cursor-morph="true"
-                                                className="career-focus-tab cursor-pointer"
-                                            >
-                                                <span
-                                                    aria-hidden="true"
-                                                    className="w-2 h-2 rounded-full transition-colors duration-200"
-                                                    style={{
-                                                        backgroundColor: isReached
-                                                            ? 'var(--color-secondary)'
-                                                            : 'rgba(255,255,255,0.2)',
-                                                        boxShadow:
-                                                            idx === activeIndex
-                                                                ? '0 0 10px var(--color-accent)'
-                                                                : 'none',
-                                                    }}
-                                                />
+                                    {/* Feixe conector horizontal e Nó de Estação 2026 */}
+                                    <div data-career-branch="2026" className="career-station-branch" aria-hidden="true" />
+                                    <div data-career-node="2026" className="career-station-node" aria-hidden="true">
+                                        <div className="career-station-reticle" />
+                                        <div className="career-station-ring">
+                                            <div className="career-station-dot" />
+                                        </div>
+                                    </div>
+
+                                    {/* Lado Esquerdo: Ano Escultural Monumental + Pasta Técnica */}
+                                    <div
+                                        data-career-year-col="2026"
+                                        className="flex flex-col items-center md:items-end text-center md:text-right space-y-3"
+                                    >
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-green-500/10 text-green-400 border border-green-500/30">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                            <span>
+                                                {lang === 'en'
+                                                    ? 'CURRENTLY IN PRODUCTION'
+                                                    : lang === 'es'
+                                                    ? 'ACTUALMENTE EN PRODUCCIÓN'
+                                                    : 'ATUALMENTE EM PRODUÇÃO'}
+                                            </span>
+                                        </div>
+
+                                        <span className="career-monumental-year text-6xl sm:text-7xl md:text-8xl origin-center md:origin-right">
+                                            2026
+                                        </span>
+
+                                        <p className="text-xs font-mono text-gray-400 max-w-xs">
+                                            {lang === 'en'
+                                                ? 'Quality assurance, operational rules mapping in FTZs, and transaction validation in the ePita core.'
+                                                : lang === 'es'
+                                                ? 'Aseguramiento de calidad, mapeo de reglas operacionales en ZPEs y validación de transacciones en el core ePita.'
+                                                : 'Garantia de qualidade, mapeamento de regras operacionais em ZPEs e validação de transações no core ePita.'}
+                                        </p>
+
+                                        <button
+                                            type="button"
+                                            aria-label={ARCHIVES['2026'].archiveTitle}
+                                            onClick={() => setSelectedArchive(ARCHIVES['2026'])}
+                                            data-cursor-morph="true"
+                                            className="journey-record-thumbnail"
+                                        >
+                                            <img src={ARCHIVES['2026'].image} alt="" loading="lazy" />
+                                            <span className="journey-record-thumbnail-caption">
                                                 <span>
-                                                    {item.year} · {item.stepLabel}
+                                                    {lang === 'en'
+                                                        ? 'Quality assurance record'
+                                                        : lang === 'es'
+                                                        ? 'Registro de calidad'
+                                                        : 'Registro de qualidade'}
+                                                </span>
+                                                <span aria-hidden="true">↗</span>
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    {/* Lado Direito: Card Detalhado de QA */}
+                                    <div data-career-card-col="2026">
+                                        <TimelineExperienceCard
+                                            company={seteExp.company}
+                                            role={seteExp.role}
+                                            period={seteExp.period}
+                                            isCurrent={true}
+                                            techBadges={seteExp.techBadges}
+                                            groups={seteExp.groups}
+                                            lang={lang}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* ══════════════════════════════════════════════════════════
+                                    MARCO 2025: QUALISOFT SISTEMAS (Back-End / Fullstack)
+                                    Desktop: Esquerda = Card Qualisoft | Direita = Ano 2025 + Pasta
+                                    ══════════════════════════════════════════════════════════ */}
+                                <div
+                                    data-career-row="2025"
+                                    className="career-milestone-row relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
+                                >
+                                    {/* Feixe conector horizontal e Nó de Estação 2025 */}
+                                    <div data-career-branch="2025" className="career-station-branch" aria-hidden="true" />
+                                    <div data-career-node="2025" className="career-station-node" aria-hidden="true">
+                                        <div className="career-station-reticle" />
+                                        <div className="career-station-ring">
+                                            <div className="career-station-dot" />
+                                        </div>
+                                    </div>
+
+                                    {/* Lado Esquerdo (Desktop): Card Detalhado Qualisoft */}
+                                    <div data-career-card-col="2025" className="order-2 md:order-1">
+                                        <TimelineExperienceCard
+                                            company={qualiExp.company}
+                                            role={qualiExp.role}
+                                            period={qualiExp.period}
+                                            isCurrent={false}
+                                            techBadges={qualiExp.techBadges}
+                                            groups={qualiExp.groups}
+                                            lang={lang}
+                                        />
+                                    </div>
+
+                                    {/* Lado Direito (Desktop): Ano 2025 Monumental + Pasta Técnica */}
+                                    <div
+                                        data-career-year-col="2025"
+                                        className="order-1 md:order-2 flex flex-col items-center md:items-start text-center md:text-left space-y-3"
+                                    >
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-accent/10 text-secondary border border-accent/30">
+                                            <i aria-hidden="true" className="fas fa-check text-[10px]" />
+                                            <span>
+                                                {lang === 'en'
+                                                    ? 'SUCCESSFULLY COMPLETED'
+                                                    : lang === 'es'
+                                                    ? 'CONCLUIDO CON ÉXITO'
+                                                    : 'CONCLUÍDO COM SUCESSO'}
+                                            </span>
+                                        </div>
+
+                                        <span className="career-monumental-year text-6xl sm:text-7xl md:text-8xl origin-center md:origin-left">
+                                            2025
+                                        </span>
+
+                                        <p className="text-xs font-mono text-gray-400 max-w-xs">
+                                            {lang === 'en'
+                                                ? 'Legacy Desktop VCL monolith modernization to Web via UniGui, Laravel APIs, and query tuning from 2s to <500ms.'
+                                                : lang === 'es'
+                                                ? 'Modernización de monolito Desktop VCL a Web vía UniGui, APIs Laravel y optimización de consultas de 2s a <500ms.'
+                                                : 'Modernização monolito Desktop VCL para Web via UniGui, APIs Laravel e tuning de queries de 2s para <500ms.'}
+                                        </p>
+
+                                        <button
+                                            type="button"
+                                            aria-label={ARCHIVES['2025'].archiveTitle}
+                                            onClick={() => setSelectedArchive(ARCHIVES['2025'])}
+                                            data-cursor-morph="true"
+                                            className="journey-record-thumbnail"
+                                        >
+                                            <JourneyMigrationDiagram language={lang} compact />
+                                            <span className="journey-record-thumbnail-caption">
+                                                <span>
+                                                    {lang === 'en'
+                                                        ? 'Development record'
+                                                        : lang === 'es'
+                                                        ? 'Registro de desarrollo'
+                                                        : 'Registro de desenvolvimento'}
+                                                </span>
+                                                <span aria-hidden="true">↗</span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* ══════════════════════════════════════════════════════════
+                                    MARCO 2024: EEEP LUIZA DE TEODORO VIEIRA (Formação Técnica)
+                                    Desktop: Esquerda = Ano 2024 + Pasta | Direita = Card Acadêmico
+                                    ══════════════════════════════════════════════════════════ */}
+                                <div className="chapter-tail">
+                                    <div
+                                        data-career-row="2024"
+                                        className="career-milestone-row relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
+                                    >
+                                        {/* Feixe conector horizontal e Nó de Estação 2024 */}
+                                        <div
+                                            data-career-branch="2024"
+                                            className="career-station-branch"
+                                            aria-hidden="true"
+                                        />
+                                        <div data-career-node="2024" className="career-station-node" aria-hidden="true">
+                                            <div className="career-station-reticle" />
+                                            <div className="career-station-ring">
+                                                <div className="career-station-dot" />
+                                            </div>
+                                        </div>
+
+                                        {/* Lado Esquerdo: Ano 2024 Monumental + Pasta Técnica */}
+                                        <div
+                                            data-career-year-col="2024"
+                                            className="flex flex-col items-center md:items-end text-center md:text-right space-y-3"
+                                        >
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/5 text-primary border border-white/10">
+                                                <i aria-hidden="true" className="fas fa-graduation-cap text-[10px]" />
+                                                <span>
+                                                    {lang === 'en'
+                                                        ? 'HIGH SCHOOL & TECHNICAL DIPLOMA · 2023 – 2025'
+                                                        : lang === 'es'
+                                                        ? 'BACHILLERATO Y TÉCNICO · 2023 – 2025'
+                                                        : 'ENSINO MÉDIO & TÉCNICO · 2023 – 2025'}
+                                                </span>
+                                            </div>
+
+                                            <span className="career-monumental-year text-6xl sm:text-7xl md:text-8xl origin-center md:origin-right">
+                                                2024
+                                            </span>
+
+                                            <p className="text-xs font-mono text-gray-400 max-w-xs">
+                                                {lang === 'en'
+                                                    ? 'High School and Technical Diploma in IT at EEEP Luiza de Teodoro Vieira: Python, Java, web with HTML/CSS/JS, robotics, and design.'
+                                                    : lang === 'es'
+                                                    ? 'Bachillerato y Técnico en Informática en EEEP Luiza de Teodoro Vieira: programación con Python y Java, web con HTML/CSS/JS, robótica y diseño.'
+                                                    : 'Ensino Médio e Técnico em Informática na EEEP Luiza de Teodoro Vieira: programação com Python e Java, web com HTML/CSS/JS, robótica e design.'}
+                                            </p>
+
+                                            <button
+                                                type="button"
+                                                aria-label={ARCHIVES['2024'].archiveTitle}
+                                                onClick={() => setSelectedArchive(ARCHIVES['2024'])}
+                                                data-cursor-morph="true"
+                                                className="journey-record-thumbnail"
+                                            >
+                                                <img src={ARCHIVES['2024'].image} alt="" loading="lazy" />
+                                                <span className="journey-record-thumbnail-caption">
+                                                    <span>
+                                                        {lang === 'en'
+                                                            ? 'Technical IT class'
+                                                            : lang === 'es'
+                                                            ? 'Clase técnica en informática'
+                                                            : 'Turma técnica em informática'}
+                                                    </span>
+                                                    <span aria-hidden="true">↗</span>
                                                 </span>
                                             </button>
-                                        );
-                                    })}
-                                </div>
+                                        </div>
 
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <MagneticButton
-                                        onClick={handlePrev}
-                                        aria-label={
-                                            lang === 'en'
-                                                ? 'Previous Milestone'
-                                                : lang === 'es'
-                                                ? 'Hito anterior'
-                                                : 'Marco Anterior'
-                                        }
-                                        data-cursor-morph="true"
-                                        className="portfolio-control w-10 h-10 transition-colors"
-                                    >
-                                        <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
-                                    </MagneticButton>
-                                    <MagneticButton
-                                        onClick={handleNext}
-                                        aria-label={
-                                            lang === 'en'
-                                                ? 'Next Milestone'
-                                                : lang === 'es'
-                                                ? 'Siguiente hito'
-                                                : 'Próximo Marco'
-                                        }
-                                        data-cursor-morph="true"
-                                        className="portfolio-control w-10 h-10 transition-colors"
-                                    >
-                                        <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
-                                    </MagneticButton>
+                                        {/* Lado Direito: Card do Técnico em Informática EEEP */}
+                                        <div data-career-card-col="2024">
+                                            <TimelineExperienceCard
+                                                company={tecnicoExp.company}
+                                                role={tecnicoExp.role}
+                                                period={tecnicoExp.period}
+                                                isCurrent={false}
+                                                techBadges={tecnicoExp.techBadges}
+                                                groups={tecnicoExp.groups}
+                                                lang={lang}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <p className="career-focus-cue">
-                                {presenting
-                                    ? lang === 'en'
-                                        ? 'Scroll to explore career milestones · or use the arrows'
-                                        : lang === 'es'
-                                        ? 'Desplázate para explorar la trayectoria · o usa las flechas'
-                                        : 'Role para explorar a trajetória · ou use as setas'
-                                    : lang === 'en'
-                                    ? 'Drag to explore career milestones · or use the arrows'
-                                    : lang === 'es'
-                                    ? 'Arrastra para explorar la trayectoria · o usa las flechas'
-                                    : 'Arraste para explorar a trajetória · ou use as setas'}
-                            </p>
                         </div>
                     </div>
-                </div>
 
-                {/* Modal / Lightbox de Registro Operacional */}
-                <JourneyPhotoModal
-                    isOpen={Boolean(selectedArchive)}
-                    onClose={() => setSelectedArchive(null)}
-                    milestone={selectedArchive}
-                />
-            </section>
-        </CareerEntranceStage>
+                    {/* Modal / Lightbox de Registro Operacional */}
+                    <JourneyPhotoModal
+                        isOpen={Boolean(selectedArchive)}
+                        onClose={() => setSelectedArchive(null)}
+                        milestone={selectedArchive}
+                    />
+                </section>
+            </CareerEntranceStage>
+        </div>
     );
 };
 

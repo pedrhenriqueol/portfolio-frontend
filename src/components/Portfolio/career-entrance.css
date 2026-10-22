@@ -6,7 +6,7 @@
 .career-pillars-bridge {
     width: min(92%, 1720px);
     margin-inline: auto;
-    padding-top: 1.25rem;
+    padding-top: 1.5rem;
     padding-bottom: 2.5rem;
 }
 
@@ -20,239 +20,341 @@
     transform-origin: center center;
 }
 
-.career-focus-track {
-    position: relative;
-    isolation: isolate;
+.career-heading-block,
+[data-career-metric],
+[data-career-year-col],
+[data-career-card-col] {
+    will-change: transform, opacity;
 }
 
-.career-collection-source {
-    width: 100%;
-}
-
-.career-focus-frame {
-    padding-block: 3.5rem;
-    overflow: clip;
-}
-
-.career-focus-layout {
-    width: min(100%, 1480px);
-    margin-inline: auto;
-    padding-inline: 2rem;
-}
-
-/* Keep reading/navigation above the gallery's composited card surfaces. */
-.career-focus-header,
-.career-focus-controls,
-.career-focus-cue {
-    position: relative;
-    z-index: 2;
-}
-
-.career-focus-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.career-focus-header .portfolio-eyebrow {
-    display: block;
-    margin-bottom: 0.65rem;
-}
-
-.career-focus-header .portfolio-title {
-    margin-bottom: 0;
-}
-
-.career-focus-header-right {
-    display: flex;
-    align-items: stretch;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-.career-focus-metrics-strip {
-    display: none;
-    align-items: center;
-    gap: 0.65rem;
-}
-
-@media (min-width: 1200px) {
-    .career-focus-metrics-strip {
-        display: flex;
-    }
-}
-
-.career-focus-metric-pill {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.55rem 0.8rem;
-    border: 1px dashed rgba(255, 255, 255, 0.14);
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.018);
-}
-
-.career-focus-count {
-    flex: 0 0 12.5rem;
-    padding: 0.65rem 0.85rem;
-    border: 1px dashed rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.018);
-    font: 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
-    color: var(--portfolio-muted);
+/* ══════════════════════════════════════════════════════════════════════════
+   TRILHO CENTRAL UNIFICADO DE ALTA PRECISÃO (2026 ➔ 2025 ➔ 2024)
+   Começa estritamente no centro do nó 2026 e termina no centro do nó 2024
+   ══════════════════════════════════════════════════════════════════════════ */
+.career-timeline-master {
     position: relative;
 }
 
-.career-focus-count::before,
-.career-focus-count::after {
-    content: '';
+.career-master-rail {
     position: absolute;
-    width: 6px;
-    height: 6px;
-    border-color: color-mix(in srgb, var(--color-accent) 75%, var(--color-secondary) 25%);
-    border-style: solid;
+    left: 50%;
+    top: var(--career-rail-top, 140px);
+    height: var(--career-rail-height, calc(100% - 280px));
+    width: 24px;
+    transform: translateX(-50%);
     pointer-events: none;
+    z-index: 15;
 }
 
-.career-focus-count::before {
-    top: -1px;
-    left: -1px;
-    border-width: 1.5px 0 0 1.5px;
+/* Escala milimétrica técnica ao longo do eixo central */
+.career-rail-ticks {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 12px;
+    transform: translateX(-50%);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.13) 0px,
+        rgba(255, 255, 255, 0.13) 1px,
+        transparent 1px,
+        transparent 14px
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        #000 4%,
+        #000 96%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        #000 4%,
+        #000 96%,
+        transparent 100%
+    );
+    opacity: 0.65;
 }
 
-.career-focus-count::after {
-    bottom: -1px;
-    right: -1px;
-    border-width: 0 1.5px 1.5px 0;
+/* Filamento base contínuo */
+.career-rail-base {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
 }
 
-.career-focus-count-top {
+/* Feixe ativo contínuo com mesma coloração do início ao fim */
+.career-rail-beam {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2.5px;
+    margin-left: -1.25px;
+    background: var(--color-secondary);
+    box-shadow:
+        0 0 18px color-mix(in srgb, var(--color-accent) 75%, var(--color-secondary) 25%),
+        0 0 5px var(--color-secondary);
+    border-radius: 999px;
+    transform-origin: top center;
+    transform: scaleY(0);
+    will-change: transform;
+}
+
+/* Núcleo óptico viajante único na ponta do feixe */
+.career-rail-traveller {
+    position: absolute;
+    left: 50%;
+    top: 0%;
+    width: 44px;
+    height: 44px;
+    transform: translate3d(-50%, -50%, 0);
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    z-index: 35;
+    will-change: top, transform, opacity;
 }
 
-.career-focus-count strong {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-secondary, #f5ebe1);
+.career-rail-traveller-halo {
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--color-secondary) 60%, var(--color-accent) 40%) 0%,
+        transparent 70%
+    );
+    opacity: 0.72;
 }
 
-.career-focus-progress-rail {
+.career-rail-traveller-ring {
+    position: absolute;
+    inset: 4px;
+    border-radius: 999px;
+    border: 1px dashed color-mix(in srgb, var(--color-secondary) 65%, transparent);
+    animation: career-reticle-spin 10s linear infinite;
+}
+
+.career-rail-traveller-core {
     position: relative;
-    height: 2px;
-    margin-top: 0.65rem;
-    background: rgb(255 255 255 / 0.14);
-}
-
-.career-focus-progress-rail > div {
-    height: 100%;
-    background: var(--color-secondary, #f5ebe1);
-    transform-origin: left;
-}
-
-.career-focus-controls {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--color-secondary);
+    border: 2.5px solid #07090e;
+    box-shadow:
+        0 0 16px var(--color-accent),
+        0 0 6px var(--color-secondary);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    justify-content: center;
 }
 
-.career-focus-tabs {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    overflow-x: auto;
-    max-width: 100%;
+.career-rail-traveller-core::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: #07090e;
 }
 
-.career-focus-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.65rem 0.85rem;
-    border-bottom: 1px solid transparent;
+.career-rail-traveller-badge {
+    position: absolute;
+    left: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(7, 9, 14, 0.92);
+    border: 1px solid color-mix(in srgb, var(--color-secondary) 45%, transparent);
+    font: 600 9.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.08em;
+    color: var(--color-secondary);
     white-space: nowrap;
-    font: 11px ui-monospace, monospace;
-    color: var(--portfolio-muted);
-    transition: color 0.25s, border-color 0.25s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
 }
 
-.career-focus-tab[aria-pressed="true"] {
-    border-color: var(--color-accent, #d9d3c3);
-    color: var(--portfolio-ink);
-}
-
-.career-focus-cue {
-    margin-top: 1.15rem;
-    text-align: center;
-    font: 11px ui-monospace, monospace;
-    color: var(--portfolio-muted);
-}
-
-@media (min-width: 1024px) {
-    .career-focus-frame {
-        padding-block: 2.5rem;
+@keyframes career-reticle-spin {
+    from {
+        transform: rotate(0deg);
     }
-    .career-focus-layout {
-        padding-inline: 2.5rem;
-    }
-    .career-focus-stage {
-        min-height: calc(var(--career-card-height, 520px) + 40px);
-    }
-    .career-focus-stage > div {
-        min-height: var(--career-card-height, 520px);
-    }
-    .career-focus-card {
-        width: min(1180px, 88vw);
-        height: var(--career-card-height, 520px);
-    }
-    .career-focus-header {
-        margin-bottom: 1.75rem;
-    }
-    .career-focus-track[data-presentation="true"] {
-        height: calc(var(--career-frame-height) + var(--career-run));
-    }
-    .career-focus-track[data-presentation="true"] .career-focus-frame {
-        position: sticky;
-        top: 100px;
-        height: var(--career-frame-height);
-        padding: var(--career-stage-offset) 0 1rem;
-        display: flex;
-        align-items: flex-start;
+    to {
+        transform: rotate(360deg);
     }
 }
 
-@media (max-width: 639px) {
+/* ══════════════════════════════════════════════════════════════════════════
+   ESTAÇÕES DE MARCO (2026, 2025, 2024) & FEIXE CONECTOR HORIZONTAL
+   ══════════════════════════════════════════════════════════════════════════ */
+.career-milestone-row {
+    --station-ignition: 1;
+    --station-focus: 1;
+    position: relative;
+}
+
+/* Ponte horizontal de energia conectando o nó central ao Ano e ao Card */
+.career-station-branch {
+    position: absolute;
+    left: calc(50% - 3.75rem);
+    top: 50%;
+    width: 7.5rem;
+    height: 1.5px;
+    transform: translateY(-50%) scaleX(0);
+    transform-origin: center center;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 22%,
+        var(--color-secondary) 50%,
+        color-mix(in srgb, var(--color-secondary) 75%, var(--color-accent) 25%) 78%,
+        transparent 100%
+    );
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 55%, transparent);
+    pointer-events: none;
+    z-index: 20;
+    will-change: transform, opacity;
+}
+
+/* Nó da Estação no Eixo Central */
+.career-station-node {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 36px;
+    height: 36px;
+    transform: translate3d(-50%, -50%, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.career-station-reticle {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 1px dashed
+        color-mix(
+            in srgb,
+            var(--color-secondary) calc(var(--station-ignition, 0) * 65%),
+            rgba(255, 255, 255, 0.14)
+        );
+    opacity: calc(0.35 + var(--station-ignition, 0) * 0.65);
+    transition: border-color 0.25s ease, opacity 0.25s ease;
+}
+
+.career-station-ring {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #080a0f;
+    border: 2px solid
+        color-mix(
+            in srgb,
+            var(--color-secondary) calc(var(--station-ignition, 0) * 100%),
+            rgba(255, 255, 255, 0.22)
+        );
+    box-shadow: 0 0 calc(var(--station-ignition, 0) * 16px)
+        color-mix(in srgb, var(--color-accent) 80%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.career-station-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: color-mix(
+        in srgb,
+        var(--color-secondary) calc(var(--station-ignition, 0) * 100%),
+        rgba(255, 255, 255, 0.28)
+    );
+    transition: background-color 0.2s ease;
+}
+
+/* Realce de Foco Ativo no Card e no Ano Monumental */
+.career-milestone-row .career-experience-surface {
+    position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.career-milestone-row[data-career-active="true"] .career-experience-surface {
+    border-color: color-mix(in srgb, var(--color-secondary) 36%, rgba(255, 255, 255, 0.16));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 20px 50px -20px rgba(0, 0, 0, 0.85);
+}
+
+.career-milestone-row .career-focus-corners {
+    opacity: 0;
+    transition: opacity 0.28s ease;
+}
+
+.career-milestone-row[data-career-active="true"] .career-focus-corners,
+.career-milestone-row .career-experience-surface:hover .career-focus-corners {
+    opacity: 1;
+}
+
+.career-monumental-year {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 900;
+    color: transparent;
+    user-select: none;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    -webkit-text-stroke: 1.5px
+        color-mix(
+            in srgb,
+            var(--color-secondary) calc(28% + var(--station-focus, 1) * 52%),
+            rgba(255, 255, 255, 0.2)
+        );
+    text-shadow: 0 0 calc(20px + var(--station-focus, 1) * 28px)
+        color-mix(in srgb, var(--color-accent) calc(var(--station-focus, 1) * 32%), transparent);
+    transform: scale(calc(0.97 + var(--station-focus, 1) * 0.05));
+    transition: -webkit-text-stroke 0.25s ease, text-shadow 0.25s ease, transform 0.3s var(--portfolio-ease);
+}
+
+/* Adaptação Responsiva Mobile (< 768px) */
+@media (max-width: 767px) {
     .career-pillars-bridge {
         width: 100%;
         padding-inline: 1rem;
     }
-    .career-focus-layout {
-        padding-inline: 1rem;
+    .career-master-rail {
+        left: 1rem;
+        top: 2rem;
+        height: calc(100% - 4rem);
     }
-    .career-focus-header {
-        gap: 1rem;
-        align-items: center;
+    .career-station-node {
+        left: 1rem;
+        top: 2.5rem;
+        width: 28px;
+        height: 28px;
     }
-    .career-focus-count {
-        flex-basis: 8.5rem;
-        padding: 0.5rem 0.65rem;
+    .career-station-ring {
+        width: 18px;
+        height: 18px;
     }
-    .career-focus-controls {
-        flex-wrap: wrap;
-        gap: 0.5rem;
+    .career-station-dot {
+        width: 6px;
+        height: 6px;
     }
-    .career-focus-tabs {
-        width: 100%;
-    }
-    .career-focus-cue {
-        text-align: left;
-        line-height: 1.6;
+    .career-station-branch,
+    .career-rail-traveller-badge {
+        display: none;
     }
 }
