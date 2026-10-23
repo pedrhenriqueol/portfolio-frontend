@@ -7,10 +7,15 @@ import { createSceneStyles } from '../utils/sceneStyles';
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const ease = (n: number) => n * n * (3 - 2 * n);
 
-/** Native vertical travel drives the existing gallery; only the inner frame pins. */
+/** Native vertical travel drives the featured stage; only the inner frame pins.
+ * While connected it also owns the intro choreography (masked heading lines,
+ * Skills beam, rail draw and product-frame shutter). Disabling clears every
+ * written property, so the static CSS is always the readable final state. */
 export function useProjectPresentation(
     ref: RefObject<HTMLElement | null>, progress: MotionValue<number>,
     dragging: RefObject<boolean>, count: number, language: string,
+    /** Raw (un-eased) scroll position in slide units, for continuous effects such as the screenshot pan. */
+    travel?: MotionValue<number>,
 ) {
     const lenis = useLenis();
     const [presenting, setPresenting] = useState(false);
@@ -22,6 +27,10 @@ export function useProjectPresentation(
         const content = root.querySelector<HTMLElement>('.project-focus-layout')!;
         const gallery = root.querySelector<HTMLElement>('.project-focus-gallery')!;
         const skills = root.closest('main')?.querySelector<HTMLElement>('.career-skills-body .chapter-tail');
+        const introLines = [...root.querySelectorAll<HTMLElement>('[data-pf-intro-line]')];
+        const beam = root.querySelector<HTMLElement>('.pf-intro-beam');
+        const railBase = root.querySelector<HTMLElement>('.pf-rail-base');
+        const curtain = root.querySelector<HTMLElement>('.pf-curtain');
         const media = matchMedia('(min-width: 1024px) and (min-height: 700px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
         const layout = createSceneStyles();
         const motion = createSceneStyles();
@@ -50,31 +59,53 @@ export function useProjectPresentation(
             setProjectFocus(focused);
             // Focus navigation exposes the composition immediately, even on approach.
             const visible = content.contains(document.activeElement) ? 1 : reveal;
-            motion.set(content, 'opacity', String(.55 + visible * .45));
-            motion.set(gallery, 'transform', `translateY(${(1 - visible) * 32}px)`);
+            motion.set(content, 'opacity', String(.35 + Math.min(1, visible * 1.6) * .65));
+            // Intro choreography: masked heading lines rise in sequence, the beam
+            // descends from Skills into the stage rail and the product frame opens.
+            introLines.forEach((line, k) => {
+                const local = ease(clamp((visible - .08 - k * .1) / .42));
+                motion.set(line, 'transform', local >= 1 ? 'none' : `translate3d(0, ${((1 - local) * 112).toFixed(2)}%, 0)`);
+            });
+            if (beam) motion.set(beam, 'transform', `scaleY(${ease(clamp(visible / .55)).toFixed(4)})`);
+            if (railBase) motion.set(railBase, 'transform', `scaleY(${ease(clamp((visible - .4) / .5)).toFixed(4)})`);
+            if (curtain) motion.set(curtain, 'transform', `scaleY(${(1 - ease(clamp((visible - .28) / .58))).toFixed(4)})`);
+            if (travel && !dragging.current && !manualNavigation) {
+                const raw = Math.max(-.6, Math.min(count - .3, (scrollPosition - start - lead) / step));
+                if (raw !== travel.get()) travel.set(raw);
+            }
+            motion.set(gallery, 'transform', visible >= 1 ? 'none' : `translate3d(0, ${((1 - visible) * 56).toFixed(2)}px, 0)`);
             if (skills) {
                 const outgoing = ease(clamp((scrollPosition - start + innerHeight * .5) / (innerHeight * .5)));
                 motion.set(skills, 'opacity', String(1 - outgoing * .9));
                 motion.set(skills, 'transform', `translateY(${-outgoing * 20}px) scale(${1 - outgoing * .025})`);
             }
             if (dragging.current || manualNavigation) return;
-            const travel = Math.max(0, Math.min(count - 1, (scrollPosition - start - lead) / step));
-            const index = Math.floor(travel);
+            const slide = Math.max(0, Math.min(count - 1, (scrollPosition - start - lead) / step));
+            const index = Math.floor(slide);
             // Brief readable stops followed by a continuous, reversible move.
-            const value = Math.min(count - 1, index + ease(clamp((travel - index - .2) / .7)));
+            const value = Math.min(count - 1, index + ease(clamp((slide - index - .2) / .7)));
             if (value !== lastProgress || value !== progress.get()) {
                 lastProgress = value;
                 progress.set(value);
             }
         };
-        const schedulePaint = () => { if (!frame) frame = requestAnimationFrame(paint); };
+        const schedulePaint = () => { if (!disposed && !frame) frame = requestAnimationFrame(paint); };
         const measure = () => {
             measureFrame = 0;
             if (disposed) return;
             const zoom = root.getBoundingClientRect().width / root.offsetWidth || 1;
             const viewport = innerHeight / zoom;
             const height = viewport - 100;
-            layout.set(root, '--project-card-height', `${Math.max(480, Math.min(680, viewport - 420))}px`);
+            // The copy has different line breaks in each language and at each
+            // width. A fixed stage can otherwise clip its stack or action row
+            // while still passing the viewport fit check below.
+            const copyHeight = Math.max(0, ...[...root.querySelectorAll<HTMLElement>('.pf-copy')].map(copy => {
+                const top = copy.querySelector<HTMLElement>('.pf-copy-top');
+                const bottom = copy.querySelector<HTMLElement>('.pf-copy-bottom');
+                const gap = parseFloat(getComputedStyle(copy).rowGap) || 0;
+                return (top?.offsetHeight || 0) + (bottom?.offsetHeight || 0) + gap;
+            }));
+            layout.set(root, '--project-card-height', `${Math.max(470, Math.min(590, viewport - 520), Math.ceil(copyHeight))}px`);
             const contentHeight = content.offsetHeight;
             const next = media.matches && count > 1 && contentHeight + 32 < height;
             setPresenting(next);
@@ -82,7 +113,12 @@ export function useProjectPresentation(
             if (next !== enabled) {
                 enabled = next;
                 motion.clear();
-                if (!enabled) setProjectFocus(false);
+                if (!enabled) {
+                    setProjectFocus(false);
+                    const settled = Math.max(0, Math.min(count - 1, Math.round(progress.get())));
+                    progress.set(settled);
+                    travel?.set(settled);
+                }
             }
             layout.set(root, '--project-frame-height', `${height}px`);
             layout.set(root, '--project-stage-offset', `${Math.min(80, Math.max(16, (height - contentHeight) * .3))}px`);
@@ -108,9 +144,11 @@ export function useProjectPresentation(
             const token = ++navigationToken;
             manualNavigation = true;
             progress.set(index);
+            travel?.set(index);
             clearTimeout(navigationTimer);
             const finish = () => {
                 if (disposed || token !== navigationToken) return;
+                clearTimeout(navigationTimer);
                 manualNavigation = false;
                 lastProgress = NaN;
                 scrollPosition = window.scrollY;
@@ -128,6 +166,7 @@ export function useProjectPresentation(
             clearTimeout(navigationTimer);
             manualNavigation = false;
             lastProgress = NaN;
+            schedulePaint();
         };
         const observer = new ResizeObserver(scheduleMeasure);
         observer.observe(content);
@@ -139,7 +178,9 @@ export function useProjectPresentation(
         window.addEventListener('resize', scheduleMeasure);
         window.addEventListener('wheel', interruptNavigation, { passive: true });
         window.addEventListener('pointerdown', interruptNavigation, { passive: true });
-        window.addEventListener('keydown', interruptNavigation);
+        // Cancel the previous tween before React handles the key. In bubbling
+        // phase this listener also cancelled the new arrow-key selection.
+        window.addEventListener('keydown', interruptNavigation, true);
         media.addEventListener('change', scheduleMeasure);
         document.fonts.ready.then(scheduleMeasure);
         measure();
@@ -155,7 +196,7 @@ export function useProjectPresentation(
             window.removeEventListener('resize', scheduleMeasure);
             window.removeEventListener('wheel', interruptNavigation);
             window.removeEventListener('pointerdown', interruptNavigation);
-            window.removeEventListener('keydown', interruptNavigation);
+            window.removeEventListener('keydown', interruptNavigation, true);
             media.removeEventListener('change', scheduleMeasure);
             navigation.current = null;
             delete root.dataset.presentation;
@@ -163,7 +204,7 @@ export function useProjectPresentation(
             motion.clear();
             setProjectFocus(false);
         };
-    }, [ref, progress, dragging, count, language, lenis]);
+    }, [ref, progress, dragging, count, language, lenis, travel]);
 
     const navigatePresentation = useCallback((index: number) => navigation.current?.(index) || false, []);
     return { presenting, navigatePresentation };

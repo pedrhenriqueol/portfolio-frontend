@@ -28,6 +28,7 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
         const motion = createSceneStyles();
         let enabled = false;
         let raf = 0;
+        let measureFrame = 0;
         let disposed = false;
         let start = 0;
         let distance = 1;
@@ -85,10 +86,11 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             setSceneInert(credentials, credentialsReveal < .98);
             setSceneInert(metrics, metricsReveal < .98);
         };
-        const schedulePaint = () => { if (!raf) raf = requestAnimationFrame(paint); };
+        const schedulePaint = () => { if (!disposed && !raf) raf = requestAnimationFrame(paint); };
         const onNativeScroll = () => { scrollPosition = window.scrollY; schedulePaint(); };
         const onLenisScroll = (instance: { scroll: number }) => { scrollPosition = instance.scroll; schedulePaint(); };
         const measure = () => {
+            measureFrame = 0;
             if (disposed) return;
             cancelAnimationFrame(raf);
             raf = 0;
@@ -123,22 +125,27 @@ export function useHeroHandoff(ref: RefObject<HTMLElement | null>) {
             lastProgress = NaN;
             paint();
         };
-        const observer = new ResizeObserver(measure);
+        // This measurement changes the observed frame's layout through its
+        // ancestor. Defer it outside ResizeObserver delivery to avoid another
+        // resize notification in the same rendering cycle.
+        const scheduleMeasure = () => { if (!disposed && !measureFrame) measureFrame = requestAnimationFrame(measure); };
+        const observer = new ResizeObserver(scheduleMeasure);
         [frame, copy, profile, credentials, metrics].forEach(node => observer.observe(node));
         if (lenis) lenis.on('scroll', onLenisScroll);
         else window.addEventListener('scroll', onNativeScroll, { passive: true });
-        window.addEventListener('resize', measure);
-        media.addEventListener('change', measure);
-        document.fonts.ready.then(measure);
+        window.addEventListener('resize', scheduleMeasure);
+        media.addEventListener('change', scheduleMeasure);
+        document.fonts.ready.then(scheduleMeasure);
         measure();
         return () => {
             disposed = true;
             cancelAnimationFrame(raf);
+            cancelAnimationFrame(measureFrame);
             observer.disconnect();
             if (lenis) lenis.off('scroll', onLenisScroll);
             else window.removeEventListener('scroll', onNativeScroll);
-            window.removeEventListener('resize', measure);
-            media.removeEventListener('change', measure);
+            window.removeEventListener('resize', scheduleMeasure);
+            media.removeEventListener('change', scheduleMeasure);
             motion.clear();
             layout.clear();
             delete root.dataset.connected;

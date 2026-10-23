@@ -1,442 +1,316 @@
 import { useProjectPresentation } from '../../../hooks/useProjectPresentation';
 import '../projects-focus.css';
-import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useVelocity, useReducedMotion, type MotionValue } from 'framer-motion';
+import React, { useState, useRef, useEffect, useCallback, memo, type ReactNode } from 'react';
+import { motion, useMotionValue, useSpring, useTransform, useReducedMotion, type MotionValue } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
 import { playMechanicalClick, playTabSwitch } from '../../../lib/sound';
 import useSectionInView from '../../../hooks/useSectionInView';
 import { useLanguage } from '../../../context/LanguageContext';
+import { FLAGSHIP_CONFIGS, FLAGSHIP_CONFIGS_I18N, type FlagshipProject } from '../../../data/flagshipProjects';
 
-export interface ProjectHudMetric {
-    value: string;
-    label: string;
-}
+export { FLAGSHIP_CONFIGS, FLAGSHIP_CONFIGS_I18N };
+export type { FlagshipProject, ProjectHudMetric } from '../../../data/flagshipProjects';
 
-export interface FlagshipProject {
-    id: number;
-    title: string;
-    tagline: string;
-    stepLabel: string;
-    badge: string;
-    stat: string;
-    metrics: [ProjectHudMetric, ProjectHudMetric];
-    description: string;
-    image: string;
-    techs: string[];
-    url: string;
-    repo: string;
-}
+/* ──────────────────────────────────────────────────────────────────────────
+   Featured case-study stage
+   One continuous value (`stage`, 0…n-1) drives every layer:
+   - product frame: diagonal clip-path wipe + counter-zoom + light edge
+   - screenshot camera: horizontal pan driven by raw scroll travel
+   - copy: line-by-line masked exit/entry with stagger
+   - odometers (counter + background numeral) and the vertical rail/orb
+   Only transform, opacity and clip-path are animated.
+   ────────────────────────────────────────────────────────────────────────── */
 
-export const FLAGSHIP_CONFIGS: FlagshipProject[] = [
-    {
-        id: 101,
-        title: 'PayStream Gateway',
-        tagline: 'Motor Transacional de Pagamentos & Split de Liquidação',
-        stepLabel: 'Motor Transacional',
-        badge: 'Fintech de Alta Concorrência',
-        stat: 'Idempotência Atômica',
-        metrics: [
-            { value: 'P2002 ACID', label: 'Idempotência Atômica' },
-            { value: '100% Inteiro', label: 'Split em Centavos' },
-        ],
-        description: 'Gateway corporativo de pagamentos fintech com liquidação de split multipartes em centavos inteiros, idempotência atômica via restrição P2002 no PostgreSQL e webhooks assinados com HMAC-SHA256 com proteção contra timing attacks.',
-        image: '/projects/paystream-dash.png',
-        techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
-        url: 'https://paystream-gateaway.vercel.app',
-        repo: 'https://github.com/pedrhenriqueol/paystream-gateway',
-    },
-    {
-        id: 102,
-        title: 'PortLog OS',
-        tagline: 'Operações Portuárias & Telemetria Industrial',
-        stepLabel: 'Operações Portuárias',
-        badge: 'Logística Portuária & ZPEs',
-        stat: '100% FSM Válida',
-        metrics: [
-            { value: '100% FSM', label: 'Transições Válidas' },
-            { value: 'Multi-Tenant', label: 'Isolamento por Terminal' },
-        ],
-        description: 'Sistema operacional portuário com governança multi-tenant estrita por terminal, máquina de estados finita (FSM) no Kanban de manutenção de guindastes pesados (STS/RTG) e telemetria preditiva IoT em tempo real.',
-        image: '/projects/portlog-dash.png',
-        techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
-        url: 'https://portlog-os.vercel.app',
-        repo: 'https://github.com/pedrhenriqueol/portlog-os',
-    },
-    {
-        id: 103,
-        title: 'SPECTR TestOps',
-        tagline: 'Engenharia de Qualidade & Resiliência de APIs',
-        stepLabel: 'Engenharia de Qualidade',
-        badge: 'Observabilidade & TestOps',
-        stat: 'NIST Nearest Rank Math',
-        metrics: [
-            { value: 'p50–p99 NIST', label: 'Telemetria de Cauda' },
-            { value: 'Chaos Lab', label: 'Injeção de Falhas' },
-        ],
-        description: 'Plataforma corporativa de engenharia de testes com runner isolado, validação recursiva de esquemas OpenAPI/JSON Schema, testes de estresse no Chaos Lab e percentis de cauda p50/p90/p95/p99 padronizados pelo NIST.',
-        image: '/projects/spectr-workbench.png',
-        techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
-        url: 'https://spectr-testops.vercel.app',
-        repo: 'https://github.com/pedrhenriqueol/spectr-testops',
-    },
-];
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+const smooth = (n: number) => n * n * (3 - 2 * n);
+const easeInOut = (n: number) => (n < .5 ? 4 * n * n * n : 1 - Math.pow(-2 * n + 2, 3) / 2);
+const pad = (n: number) => String(n).padStart(2, '0');
+const LINE_STAGGER = .032;
+const WIPE_SKEW = 16;
 
-export const FLAGSHIP_CONFIGS_I18N: Record<string, FlagshipProject[]> = {
-    pt: FLAGSHIP_CONFIGS,
-    en: [
-        {
-            id: 101,
-            title: 'PayStream Gateway',
-            tagline: 'Transactional Payment Engine & Settlement Split',
-            stepLabel: 'Transaction Engine',
-            badge: 'High-Concurrency Fintech',
-            stat: 'Atomic Idempotency',
-            metrics: [
-                { value: 'P2002 ACID', label: 'Atomic Idempotency' },
-                { value: '100% Integer', label: 'Full-Cent Split' },
-            ],
-            description: 'Enterprise fintech payment gateway featuring full-cent multipart split settlement, atomic idempotency via PostgreSQL P2002 constraint, and HMAC-SHA256 signed webhooks protected against timing attacks.',
-            image: '/projects/paystream-dash.png',
-            techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
-            url: 'https://paystream-gateaway.vercel.app',
-            repo: 'https://github.com/pedrhenriqueol/paystream-gateway',
-        },
-        {
-            id: 102,
-            title: 'PortLog OS',
-            tagline: 'Port Operations & Industrial Telemetry',
-            stepLabel: 'Port Operations',
-            badge: 'Port Logistics & FTZ',
-            stat: '100% Valid FSM',
-            metrics: [
-                { value: '100% FSM', label: 'Valid State Transitions' },
-                { value: 'Multi-Tenant', label: 'Per-Terminal Isolation' },
-            ],
-            description: 'Port operating system with strict per-terminal multi-tenant governance, finite state machine (FSM) for heavy crane maintenance Kanban (STS/RTG), and real-time IoT predictive telemetry.',
-            image: '/projects/portlog-dash.png',
-            techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
-            url: 'https://portlog-os.vercel.app',
-            repo: 'https://github.com/pedrhenriqueol/portlog-os',
-        },
-        {
-            id: 103,
-            title: 'SPECTR TestOps',
-            tagline: 'API Quality Engineering & Resilience Platform',
-            stepLabel: 'Quality Engineering',
-            badge: 'Observability & TestOps',
-            stat: 'NIST Nearest Rank Math',
-            metrics: [
-                { value: 'p50–p99 NIST', label: 'Tail Latency Math' },
-                { value: 'Chaos Lab', label: 'Fault Injection' },
-            ],
-            description: 'Enterprise test engineering platform featuring isolated test runner, recursive OpenAPI/JSON Schema validation, Chaos Lab resilience testing, and NIST-standardized tail latency percentiles (p50/p90/p95/p99).',
-            image: '/projects/spectr-workbench.png',
-            techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
-            url: 'https://spectr-testops.vercel.app',
-            repo: 'https://github.com/pedrhenriqueol/spectr-testops',
-        },
-    ],
-    es: [
-        {
-            id: 101,
-            title: 'PayStream Gateway',
-            tagline: 'Motor Transaccional de Pagos y Split de Liquidación',
-            stepLabel: 'Motor Transaccional',
-            badge: 'Fintech de Alta Concurrencia',
-            stat: 'Idempotencia Atómica',
-            metrics: [
-                { value: 'P2002 ACID', label: 'Idempotencia Atómica' },
-                { value: '100% Entero', label: 'Split en Centavos' },
-            ],
-            description: 'Pasarela corporativa de pagos fintech con liquidación de split multipartes en centavos enteros, idempotencia atómica vía restricción P2002 en PostgreSQL y webhooks firmados con HMAC-SHA256 contra timing attacks.',
-            image: '/projects/paystream-dash.png',
-            techs: ['Fastify', 'TypeScript', 'Prisma', 'PostgreSQL', 'HMAC-SHA256'],
-            url: 'https://paystream-gateaway.vercel.app',
-            repo: 'https://github.com/pedrhenriqueol/paystream-gateway',
-        },
-        {
-            id: 102,
-            title: 'PortLog OS',
-            tagline: 'Operaciones Portuarias y Telemetría Industrial',
-            stepLabel: 'Operaciones Portuarias',
-            badge: 'Logística Portuaria y ZPEs',
-            stat: '100% FSM Válida',
-            metrics: [
-                { value: '100% FSM', label: 'Transiciones Válidas' },
-                { value: 'Multi-Tenant', label: 'Aislamiento por Terminal' },
-            ],
-            description: 'Sistema operativo portuario con gobernanza multi-tenant estricta por terminal, máquina de estados finitos (FSM) en Kanban de mantenimiento de grúas pesadas (STS/RTG) y telemetría predictiva IoT en tiempo real.',
-            image: '/projects/portlog-dash.png',
-            techs: ['React', 'TypeScript', 'Fastify', 'Prisma', 'Multi-tenant', 'FSM'],
-            url: 'https://portlog-os.vercel.app',
-            repo: 'https://github.com/pedrhenriqueol/portlog-os',
-        },
-        {
-            id: 103,
-            title: 'SPECTR TestOps',
-            tagline: 'Ingeniería de Calidad y Resiliencia de APIs',
-            stepLabel: 'Ingeniería de Calidad',
-            badge: 'Observabilidad y TestOps',
-            stat: 'NIST Nearest Rank Math',
-            metrics: [
-                { value: 'p50–p99 NIST', label: 'Telemetría de Cola' },
-                { value: 'Chaos Lab', label: 'Inyección de Fallos' },
-            ],
-            description: 'Plataforma corporativa de ingeniería de pruebas con ejecutor aislado, validación recursiva de esquemas OpenAPI/JSON Schema, pruebas de estrés en Chaos Lab y percentiles NIST p50/p90/p95/p99.',
-            image: '/projects/spectr-workbench.png',
-            techs: ['React 18', 'TypeScript', 'OpenAPI', 'Chaos Lab', 'p95 SLA Math'],
-            url: 'https://spectr-testops.vercel.app',
-            repo: 'https://github.com/pedrhenriqueol/spectr-testops',
-        },
-    ],
+const copyFor = (lang: string) => ({
+    eyebrow: lang === 'en' ? 'SELECTED WORK' : lang === 'es' ? 'PROYECTOS SELECCIONADOS' : 'PROJETOS SELECIONADOS',
+    current: lang === 'en' ? 'Current project' : lang === 'es' ? 'Proyecto actual' : 'Projeto atual',
+    nav: lang === 'en' ? 'Featured projects' : lang === 'es' ? 'Proyectos destacados' : 'Projetos em destaque',
+    caseLabel: lang === 'en' ? 'Case' : lang === 'es' ? 'Caso' : 'Case',
+    details: lang === 'en' ? 'Technical details' : lang === 'es' ? 'Detalles técnicos' : 'Detalhes técnicos',
+    demo: lang === 'en' ? 'Live demo' : lang === 'es' ? 'Demo en vivo' : 'Ver demonstração',
+    repo: lang === 'en' ? 'Source code on GitHub' : lang === 'es' ? 'Código fuente en GitHub' : 'Código-fonte no GitHub',
+    stack: lang === 'en' ? 'Stack' : 'Stack',
+    prev: lang === 'en' ? 'Previous project' : lang === 'es' ? 'Proyecto anterior' : 'Projeto anterior',
+    next: lang === 'en' ? 'Next project' : lang === 'es' ? 'Siguiente proyecto' : 'Próximo projeto',
+    cueScroll: lang === 'en' ? 'Scroll to explore · or use the arrows' : lang === 'es' ? 'Desplázate para explorar · o usa las flechas' : 'Role para explorar · ou use as setas',
+    cueDrag: lang === 'en' ? 'Drag to explore · or use the arrows' : lang === 'es' ? 'Arrastra para explorar · o usa las flechas' : 'Arraste para explorar · ou use as setas',
+    screenshot: lang === 'en' ? 'Interface preview' : lang === 'es' ? 'Vista previa de la interfaz' : 'Prévia da interface',
+    live: lang === 'en' ? 'live' : lang === 'es' ? 'en vivo' : 'online',
+});
+
+const hostOf = (url: string) => {
+    try { return new URL(url).host; } catch { return url; }
 };
 
-interface CylindricalCardProps {
-    project: FlagshipProject;
-    index: number;
-    activeIndex: number;
-    smoothProgress: MotionValue<number>;
-    onSelect: (project: FlagshipProject) => void;
-    onCardFocus: (index: number) => void;
-    presenting: boolean;
-    lang?: string;
-}
+/** Line mask: the line leaves upward while the next project's line rises from below. */
+const MaskLine = memo(function MaskLine({
+    stage, index, line, count, children, className = '',
+}: { stage: MotionValue<number>; index: number; line: number; count: number; children: ReactNode; className?: string }) {
+    const y = useTransform(stage, (raw: number) => {
+        const p = Math.max(0, Math.min(count - 1, raw));
+        const e = p - index;
+        const s = line * LINE_STAGGER;
+        if (e <= 0) return `${((1 - easeInOut(clamp01((e + .5 - s) / .3))) * 140).toFixed(2)}%`;
+        return `${(-easeInOut(clamp01((e - s) / .3)) * 140).toFixed(2)}%`;
+    });
+    return (
+        <span className={`pf-mask ${className}`}>
+            <motion.span className="pf-mask-inner" style={{ y }}>{children}</motion.span>
+        </span>
+    );
+});
 
-/**
- * CylindricalCard - Card 3D individual com isolamento de empilhamento estrito,
- * separação espacial calibrada, cantoneiras HUD e métricas emolduradas (Proposta D).
- */
-const CylindricalCard = memo(function CylindricalCard({
-    project,
-    index,
-    activeIndex,
-    smoothProgress,
-    onSelect,
-    onCardFocus,
-    presenting,
-    lang = 'pt',
-}: CylindricalCardProps) {
-    const isCurrent = index === activeIndex;
+/** Character scramble that settles into the real metric when the case becomes active. */
+const ScrambleText = memo(function ScrambleText({ text, active }: { text: string; active: boolean }) {
     const reducedMotion = useReducedMotion();
-    const cardRef = useRef<HTMLDivElement>(null);
+    const [output, setOutput] = useState(text);
     useEffect(() => {
-        // Keep keyboard navigation in the gallery when wheel movement retires a card.
-        if (!isCurrent && cardRef.current?.contains(document.activeElement)) {
-            cardRef.current.closest<HTMLElement>('section')?.focus({ preventScroll: true });
-        }
-    }, [isCurrent]);
+        if (!active || reducedMotion) { setOutput(text); return; }
+        const glyphs = '0123456789#%/<>_=+ABCDEFXZ';
+        let raf = 0;
+        let begin = 0;
+        const tick = (now: number) => {
+            if (!begin) begin = now;
+            const t = Math.min(1, (now - begin) / 720);
+            const settled = Math.floor(t * text.length);
+            let next = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                next += i < settled || char === ' ' ? char : glyphs[(Math.random() * glyphs.length) | 0];
+            }
+            setOutput(next);
+            if (t < 1) raf = requestAnimationFrame(tick);
+        };
+        const delay = window.setTimeout(() => { raf = requestAnimationFrame(tick); }, 240);
+        return () => { clearTimeout(delay); cancelAnimationFrame(raf); };
+    }, [active, text, reducedMotion]);
+    return (
+        <>
+            <span className="sr-only">{text}</span>
+            <span aria-hidden="true">{output}</span>
+        </>
+    );
+});
 
-    // ── 1. Gestão Estrita de Z-Index & Empilhamento ──
-    const zIndex = isCurrent ? 50 : 20 - Math.abs(index - activeIndex);
+/** Vertical reel of numbers; one reel step equals one em. */
+const Odometer = memo(function Odometer({ stage, count, className = '' }: { stage: MotionValue<number>; count: number; className?: string }) {
+    const y = useTransform(stage, (raw: number) => `${(-Math.max(0, Math.min(count - 1, raw)) * 100 / count).toFixed(3)}%`);
+    return (
+        <span className={`pf-odo ${className}`} aria-hidden="true">
+            <motion.span className="pf-odo-reel" style={{ y }}>
+                {Array.from({ length: count }, (_, i) => <span key={i}>{pad(i + 1)}</span>)}
+            </motion.span>
+        </span>
+    );
+});
 
-    // ── 2. Calibração Espacial Tridimensional ──
-    const translateX = useTransform(smoothProgress, (p: number) => `${(index - p) * 115}%`);
-    const rotateY = useTransform(smoothProgress, (p: number) => `${(index - p) * -24}deg`);
-    const translateZ = useTransform(smoothProgress, (p: number) => `${-Math.abs(index - p) * 220}px`);
-    const scale = useTransform(smoothProgress, (p: number) => Math.max(0.86, 1 - Math.abs(index - p) * 0.14));
-    const presentingScale = useTransform(smoothProgress, (p: number) => Math.max(0.935, 1 - Math.abs(index - p) * 0.065));
-    const opacity = useTransform(smoothProgress, (p: number) => Math.max(0.2, 1 - Math.abs(index - p) * 0.6));
-    const shadowOpacity = useTransform(smoothProgress, (p: number) => Math.max(0, 0.85 - Math.abs(index - p) * 0.45));
+/** One screenshot layer of the product frame. Layer i is wiped in while the stage moves from i-1 to i. */
+const MediaLayer = memo(function MediaLayer({
+    project, index, stage, travel, active, screenshotLabel,
+}: { project: FlagshipProject; index: number; stage: MotionValue<number>; travel: MotionValue<number>; active: boolean; screenshotLabel: string }) {
+    const imgRef = useRef<HTMLImageElement>(null);
+    const shift = useMotionValue(0);
+    const coverScale = useMotionValue(1);
+    const reducedMotion = useReducedMotion();
+    const reveal = (p: number) => (index === 0 ? 1 : clamp01(p - (index - 1)));
+    const clipPath = useTransform(stage, (p: number) => {
+        const r = reveal(p);
+        if (r >= 1) return 'none';
+        const left = (1 - easeInOut(r)) * (100 + WIPE_SKEW) - WIPE_SKEW;
+        return `polygon(${(left + WIPE_SKEW).toFixed(2)}% 0%, 100% 0%, 100% 100%, ${left.toFixed(2)}% 100%)`;
+    });
+    const layerX = useTransform(stage, (p: number) => `${(-easeInOut(clamp01(p - index)) * 7).toFixed(3)}%`);
+    const shade = useTransform(stage, (p: number) => easeInOut(clamp01(p - index)) * .72);
+    const edgeX = useTransform(stage, (p: number) => {
+        const left = (1 - easeInOut(reveal(p))) * (100 + WIPE_SKEW) - WIPE_SKEW;
+        return `${(left + WIPE_SKEW / 2).toFixed(2)}%`;
+    });
+    const edgeOpacity = useTransform(stage, (p: number) => (index === 0 ? 0 : Math.sin(Math.PI * reveal(p))));
+    const imageTransform = useTransform([stage, travel, shift, coverScale], ([p, t, s, cover]: number[]) => {
+        const zoom = cover * (reducedMotion ? 1 : 1.14 - .14 * easeInOut(reveal(p)));
+        const pan = reducedMotion ? .5 : smooth(clamp01((t - index + .6) / 1.3));
+        return `translate3d(${(-pan * s).toFixed(2)}px, 0, 0) scale(${zoom.toFixed(4)})`;
+    });
 
-    const handleCardContainerClick = () => {
-        if (!isCurrent) {
-            onCardFocus(index);
-        }
-    };
-
-    const formattedIndex = String(index + 1).padStart(2, '0');
+    useEffect(() => {
+        const img = imgRef.current;
+        const frame = img?.parentElement;
+        if (!img || !frame) return;
+        // Wider viewports must remain covered too. Use a top-left origin so
+        // the measured overflow and camera translation share one coordinate space.
+        const measure = () => {
+            const cover = Math.max(1, frame.offsetWidth / Math.max(1, img.offsetWidth));
+            coverScale.set(cover);
+            shift.set(Math.max(0, img.offsetWidth * cover - frame.offsetWidth));
+        };
+        const observer = new ResizeObserver(measure);
+        observer.observe(frame);
+        img.addEventListener('load', measure);
+        measure();
+        return () => { observer.disconnect(); img.removeEventListener('load', measure); };
+    }, [shift, coverScale]);
 
     return (
-        <motion.div
-            style={{
-                translateX,
-                rotateY: presenting ? 0 : rotateY,
-                translateZ: presenting ? 0 : translateZ,
-                scale: presenting ? presentingScale : scale,
-                opacity: presenting ? 1 : opacity,
-                zIndex,
-                isolation: 'isolate',
-                transformStyle: presenting ? 'flat' : 'preserve-3d',
-                transformOrigin: '50% 50%',
-            }}
-            onClick={handleCardContainerClick}
-            className={`project-focus-card absolute top-0 left-1/2 -translate-x-1/2 w-[96%] sm:w-[86vw] md:w-[780px] lg:w-[860px] h-[680px] sm:h-[520px] md:h-[500px] will-change-transform select-none antialiased subpixel-antialiased ${
-                isCurrent ? 'pointer-events-auto' : 'pointer-events-auto cursor-pointer'
-            }`}
-        >
-            {/* Card Tridimensional Principal em Escala Monumental */}
-            <div
-                ref={cardRef}
-                inert={!isCurrent}
-                className={`portfolio-surface portfolio-card-hover w-full h-full overflow-hidden flex flex-col md:flex-row relative group transition-colors duration-300 ${
-                    isCurrent
-                        ? 'border-white/20 pointer-events-auto'
-                        : 'border-white/5 pointer-events-none'
-                }`}
-            >
-                {/* Cantoneiras Técnicas em L no card ativo */}
-                {isCurrent && (
-                    <div className="portfolio-hud-corners" aria-hidden="true">
-                        <span className="portfolio-hud-corner-bl" />
-                        <span className="portfolio-hud-corner-br" />
-                    </div>
-                )}
+        <motion.div className="pf-media-layer" aria-hidden={!active} style={{ clipPath, x: layerX, zIndex: index + 1 }}>
+            <motion.img
+                ref={imgRef}
+                src={project.image}
+                alt={`${screenshotLabel} — ${project.title}`}
+                width={1024}
+                height={521}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                draggable={false}
+                className="pf-media-image"
+                style={{ transform: imageTransform, transformOrigin: 'top left' }}
+                onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.endsWith('/dashboard_placeholder.png')) target.src = '/dashboard_placeholder.png';
+                }}
+            />
+            <motion.span className="pf-media-shade" style={{ opacity: shade }} aria-hidden="true" />
+            <motion.span className="pf-wipe-edge" style={{ x: edgeX, opacity: edgeOpacity }} aria-hidden="true">
+                <span />
+            </motion.span>
+        </motion.div>
+    );
+});
 
-                {/* ── Lado Esquerdo: Área Visual e Preview Nítido ── */}
-                <div className="w-full md:w-[46%] h-44 sm:h-52 md:h-full relative overflow-hidden bg-[#06080D] border-b md:border-b-0 md:border-r border-dashed border-white/15 shrink-0 pointer-events-none">
-                    <img
-                        src={project.image}
-                        alt={project.title}
-                        width={640}
-                        height={400}
-                        loading="lazy"
-                        decoding="async"
-                        className={`w-full h-full object-cover object-left-top transition-transform duration-500 ${reducedMotion ? "" : "group-hover:scale-[1.025]"}`}
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = '/dashboard_placeholder.png';
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0C0F17] via-transparent to-transparent opacity-35 pointer-events-none" />
-                    
-                    {/* Badge de Categoria com Indicador de Status ao Vivo */}
-                    <div className="portfolio-chip-dashed absolute top-3.5 left-3.5 z-10 flex items-center gap-2 bg-darker/95 pointer-events-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                        <span className="text-[10px] font-mono text-secondary">
-                            {project.badge}
-                        </span>
-                    </div>
-                </div>
+interface CaseCopyProps {
+    project: FlagshipProject;
+    index: number;
+    count: number;
+    active: boolean;
+    stage: MotionValue<number>;
+    lang: string;
+    onInspect: (project: FlagshipProject) => void;
+}
 
-                {/* ── Lado Direito: Especificações Técnicas, Métricas HUD e Anatomia Integrada ── */}
-                <div className="p-5 sm:p-6 md:p-7 flex-1 flex flex-col justify-between overflow-hidden">
-                    <div>
-                        {/* Cabeçalho Interno: Índice 01 + Subtítulo Serif/Cursiva + Stat Chip */}
-                        <div className="portfolio-project-meta flex items-center justify-between gap-3 mb-2">
-                            <div className="flex items-baseline gap-2.5 min-w-0">
-                                <span className="font-mono text-lg sm:text-xl font-semibold text-secondary leading-none tracking-tight">
-                                    {formattedIndex}
-                                </span>
-                                <span className="text-white/20 font-mono text-xs">/</span>
-                                <span className="font-serif italic text-xs sm:text-sm text-accent truncate">
-                                    {project.badge}
-                                </span>
+/** Text column for one case; all cases share one grid cell and swap line by line. */
+const CaseCopy = memo(function CaseCopy({ project, index, count, active, stage, lang, onInspect }: CaseCopyProps) {
+    const words = copyFor(lang);
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        // Keep keyboard navigation in the gallery when scrolling retires a case.
+        if (!active && ref.current?.contains(document.activeElement)) {
+            ref.current.closest<HTMLElement>('section')?.focus({ preventScroll: true });
+        }
+    }, [active]);
+    const line = (n: number, children: ReactNode, className?: string) => (
+        <MaskLine stage={stage} index={index} line={n} count={count} className={className}>{children}</MaskLine>
+    );
+
+    return (
+        <div ref={ref} className="pf-copy" data-active={active} inert={!active} aria-hidden={!active}>
+            <div className="pf-copy-top">
+                {line(0, (
+                    <span className="pf-kicker">
+                        <span className="pf-kicker-index">{words.caseLabel} {pad(index + 1)}</span>
+                        <span className="pf-kicker-rule" aria-hidden="true" />
+                        <span className="pf-kicker-badge">{project.badge}</span>
+                    </span>
+                ))}
+                {line(1, <h3 className="pf-title">{project.title}</h3>, 'pf-mask--title')}
+                {line(2, <p className="pf-tagline">{project.tagline}</p>)}
+                {line(3, <p className="pf-description">{project.description}</p>)}
+            </div>
+
+            <div className="pf-copy-bottom">
+                {line(4, (
+                    <div className="pf-metrics">
+                        {project.metrics.map((metric, i) => (
+                            <div key={metric.label} className="pf-metric" style={{ '--metric-delay': `${i * 120 + 260}ms` } as React.CSSProperties}>
+                                <span className="pf-metric-value"><ScrambleText text={metric.value} active={active} /></span>
+                                <span className="pf-metric-label">{metric.label}</span>
+                                <span className="pf-metric-bar" aria-hidden="true" />
                             </div>
-                            <span className="portfolio-chip-dashed flex items-center gap-1.5 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent/80" />
-                                {project.stat}
-                            </span>
-                        </div>
-
-                        {/* Título do Sistema */}
-                        <h3 className="text-2xl sm:text-[28px] font-serif text-primary font-normal tracking-tight leading-tight mb-1 truncate">
-                            {project.title}
-                        </h3>
-
-                        {/* Tagline de Arquitetura */}
-                        <p className="text-secondary/90 text-xs sm:text-[13px] font-sans font-medium mb-2.5 truncate">
-                            {project.tagline}
-                        </p>
-
-                        {/* Descrição Detalhada da Arquitetura */}
-                        <p className="text-neutral-300 text-xs sm:text-[13px] leading-relaxed mb-3.5 font-sans line-clamp-2 md:line-clamp-3">
-                            {project.description}
-                        </p>
-
-                        {/* ── Proposta D: 2 Blocos de Métrica/Arquitetura Emoldurados com Cantoneiras e Borda Tracejada ── */}
-                        <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-                            {project.metrics.map((metric) => (
-                                <div key={metric.label} className="portfolio-hud-metric">
-                                    <span className="font-mono text-xs sm:text-[13px] font-semibold text-secondary block leading-tight">
-                                        {metric.value}
-                                    </span>
-                                    <span className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-neutral-400 block mt-0.5 truncate">
-                                        {metric.label}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Badges de Stack Técnica com Borda Tracejada */}
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                            {project.techs.map((tech) => (
-                                <span
-                                    key={tech}
-                                    className="portfolio-chip-dashed"
-                                >
-                                    {tech}
-                                </span>
-                            ))}
-                        </div>
+                        ))}
                     </div>
-
-                    {/* ── Rodapé Integrado: Ações Diretas no Card sem Interceptação ── */}
-                    <div className="portfolio-hud-divider flex flex-wrap items-center gap-2.5 pt-3.5 mt-auto relative z-20">
-                        {/* Botão Detalhes Técnicos */}
+                ))}
+                {line(5, (
+                    <div className="pf-stack">
+                        <span className="pf-stack-label">{words.stack}</span>
+                        <ul>
+                            {project.techs.map((tech, i) => (
+                                <li key={tech} className="pf-chip" style={{ '--chip-delay': `${i * 45 + 320}ms` } as React.CSSProperties}>{tech}</li>
+                            ))}
+                        </ul>
+                    </div>
+                ), 'pf-mask--roomy')}
+                {line(6, (
+                    <div className="pf-actions">
                         <button
                             type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSelect(project);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); onInspect(project); }}
                             data-cursor-morph="true"
-                            className="portfolio-control flex-1 min-w-[130px] py-2.5 px-3.5 font-semibold text-xs transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer relative z-30"
+                            className="portfolio-control pf-action pf-action--ghost"
                         >
                             <i aria-hidden="true" className="fas fa-microchip text-xs" />
-                            <span>{lang === 'en' ? 'Technical Details' : lang === 'es' ? 'Detalles Técnicos' : 'Detalhes Técnicos'}</span>
+                            <span>{words.details}</span>
                         </button>
-                        
-                        {/* Botão Acessar Demonstração */}
                         <a
                             href={project.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="portfolio-button portfolio-button-primary flex-1 min-w-[150px] !min-h-[38px] !py-2.5 !px-4 font-semibold flex items-center justify-center gap-1.5 shadow-md relative z-30 cursor-pointer"
+                            className="portfolio-button portfolio-button-primary pf-action pf-action--primary"
                         >
-                            <span>{lang === 'en' ? 'Live Demo' : lang === 'es' ? 'Demostración en Vivo' : 'Acessar Demonstração'}</span>
-                            <i aria-hidden="true" className="fas fa-external-link-alt text-[9px]" />
+                            <span>{words.demo}</span>
+                            <span className="pf-action-arrow" aria-hidden="true">↗</span>
                         </a>
-
-                        {/* Botão de Repositório GitHub */}
                         <a
                             href={project.repo}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             data-cursor-morph="true"
-                            className="portfolio-control p-2.5 flex items-center justify-center shrink-0 relative z-30 cursor-pointer"
-                            title={lang === 'en' ? 'Source Code on GitHub' : lang === 'es' ? 'Código Fuente en GitHub' : 'Código-Fonte no GitHub'}
-                            aria-label={lang === 'en' ? `${project.title} source code on GitHub` : `Código-fonte de ${project.title} no GitHub`}
+                            className="portfolio-control pf-action pf-action--icon"
+                            title={words.repo}
+                            aria-label={`${project.title} — ${words.repo}`}
                         >
                             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
                             </svg>
                         </a>
                     </div>
-                </div>
-                {/* Shade the side cards without filtering their entire 3D surface. */}
-                <div
-                    aria-hidden="true"
-                    className="absolute inset-0 z-40 rounded-2xl bg-black pointer-events-none transition-opacity duration-300"
-                    style={{ opacity: isCurrent ? 0 : .6 }}
-                />
+                ), 'pf-mask--roomy')}
             </div>
-
-            {/* Sombra de Profundidade Projetada no Solo - estritamente no card ativo */}
-            {isCurrent && (
-                <motion.div
-                    style={{ opacity: shadowOpacity, background: 'radial-gradient(ellipse at center, rgba(0,0,0,.68), transparent 70%)' }}
-                    className="absolute -bottom-12 left-12 right-12 h-16 rounded-full pointer-events-none"
-                    aria-hidden="true"
-                />
-            )}
-        </motion.div>
+        </div>
     );
 });
 
+/** Rail node: lights when the stage reaches it. */
+const RailNode = memo(function RailNode({
+    item, index, count, active, stage, onSelect,
+}: { item: FlagshipProject; index: number; count: number; active: boolean; stage: MotionValue<number>; onSelect: (i: number) => void }) {
+    const glow = useTransform(stage, (p: number) => clamp01(1 - Math.abs(p - index) * 1.6));
+    return (
+        <button
+            type="button"
+            className="pf-rail-node"
+            aria-pressed={active}
+            onClick={() => onSelect(index)}
+            data-cursor-morph="true"
+            style={{ '--node-pos': count > 1 ? index / (count - 1) : 0 } as React.CSSProperties}
+        >
+            <span className="pf-rail-dot" aria-hidden="true">
+                <motion.span className="pf-rail-dot-glow" style={{ opacity: glow, scale: glow }} />
+            </span>
+            <span className="pf-rail-text">
+                <span className="pf-rail-index">{pad(index + 1)}</span>
+                <span className="pf-rail-label">{item.stepLabel}</span>
+            </span>
+        </button>
+    );
+});
 
 interface Cylindrical3DShowcaseProps {
     onSelectProject?: (project: FlagshipProject | Record<string, unknown>) => void;
@@ -444,158 +318,152 @@ interface Cylindrical3DShowcaseProps {
 }
 
 /**
- * Cylindrical3DShowcase - Showcase Cilíndrico 3D em ESCALA MONUMENTAL
+ * Featured projects — case-study stage pinned to native scroll.
+ * Keeps the public contract used by the collection handoff:
+ * `.project-focus-track`, `.project-focus-frame`, `.project-collection-source`
+ * and `data-presentation` on the section.
  */
 export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }: Cylindrical3DShowcaseProps) {
     const { lang = 'pt' } = useLanguage();
+    const words = copyFor(lang);
     const reducedMotion = useReducedMotion();
     const flagshipItems = FLAGSHIP_CONFIGS_I18N[lang] || FLAGSHIP_CONFIGS;
+    const totalSlides = flagshipItems.length;
     const [activeIndex, setActiveIndex] = useState(0);
-    const containerRef = useRef<HTMLDivElement>(null);
     const { containerRef: sectionRef, isInView } = useSectionInView({ rootMargin: '200px 0px' });
 
-    // ── Motion Values de Posição com Mola Amortecida & Inércia (Jesper Landberg Physics) ──
     const progress = useMotionValue(0);
-    const smoothProgress = useSpring(progress, {
-        stiffness: 220,
-        damping: 26,
-        mass: 0.5,
-    });
-    const cardProgress = reducedMotion ? progress : smoothProgress;
+    const travel = useMotionValue(0);
+    const smoothProgress = useSpring(progress, { stiffness: 170, damping: 26, mass: .55 });
+    const stage = reducedMotion ? progress : smoothProgress;
 
-    // Velocity Skew nos eixos Z e X (inclinação orgânica proporcional à velocidade do arraste)
-    const progressVelocity = useVelocity(smoothProgress);
-    const velocityRotateZ = useTransform(progressVelocity, [-8, 0, 8], [3.6, 0, -3.6]);
-    const velocitySkewX = useTransform(progressVelocity, [-8, 0, 8], [-2.2, 0, 2.2]);
-
-    // Refs para arraste e inércia contínua
     const isDraggingRef = useRef(false);
-    const hasDraggedRef = useRef(false);
+    const pointerIdRef = useRef<number | null>(null);
+    const cancelledGestureRef = useRef(false);
     const startXRef = useRef(0);
+    const startYRef = useRef(0);
+    const dragDistanceRef = useRef(520);
     const startProgressRef = useRef(0);
     const lastXRef = useRef(0);
     const lastTimeRef = useRef(0);
     const velocityRef = useRef(0);
 
-    const totalSlides = flagshipItems.length;
-    const { presenting, navigatePresentation } = useProjectPresentation(sectionRef, progress, isDraggingRef, totalSlides, lang);
-    const countProgress = useTransform(cardProgress, (value: number) => (value + 1) / totalSlides);
+    const { presenting, navigatePresentation } = useProjectPresentation(sectionRef, progress, isDraggingRef, totalSlides, lang, travel);
 
-    // Atualiza o estado visual do índice ativo conforme o progresso da mola (apenas quando visível)
+    const railFill = useTransform(stage, (p: number) => clamp01(p / Math.max(1, totalSlides - 1)));
+    const orbY = useTransform(stage, (p: number) => `${(clamp01(p / Math.max(1, totalSlides - 1)) * 100).toFixed(3)}%`);
+    const countFill = useTransform(stage, (p: number) => clamp01((p + 1) / totalSlides));
+
     useEffect(() => {
         if (!isInView) return;
-        const unsubscribe = cardProgress.on('change', (v: number) => {
-            const rounded = Math.round(v);
-            if (rounded >= 0 && rounded < totalSlides && rounded !== activeIndex) {
-                setActiveIndex(rounded);
-            }
-        });
+        const syncActive = (v: number) => {
+            const rounded = Math.max(0, Math.min(totalSlides - 1, Math.round(v)));
+            setActiveIndex(prev => (prev === rounded ? prev : rounded));
+        };
+        syncActive(stage.get());
+        const unsubscribe = stage.on('change', syncActive);
         return () => unsubscribe();
-    }, [cardProgress, activeIndex, totalSlides, isInView]);
+    }, [stage, totalSlides, isInView]);
 
     const navigateTo = useCallback((targetIndex: number) => {
         const clamped = Math.max(0, Math.min(totalSlides - 1, targetIndex));
         if (!navigatePresentation(clamped)) {
             progress.set(clamped);
+            travel.set(clamped);
             setActiveIndex(clamped);
         }
         playTabSwitch();
-    }, [progress, totalSlides, navigatePresentation]);
-
-    const handleCardFocus = useCallback((index: number) => {
-        // A drag can end over the retiring card; its synthetic click must not undo the snap.
-        if (!hasDraggedRef.current) navigateTo(index);
-    }, [navigateTo]);
+    }, [progress, travel, totalSlides, navigatePresentation]);
 
     const handlePrev = useCallback(() => {
         const current = Math.round(progress.get());
-        const prev = current > 0 ? current - 1 : totalSlides - 1;
-        navigateTo(prev);
+        navigateTo(current > 0 ? current - 1 : totalSlides - 1);
     }, [navigateTo, progress, totalSlides]);
 
     const handleNext = useCallback(() => {
         const current = Math.round(progress.get());
-        const next = current < totalSlides - 1 ? current + 1 : 0;
-        navigateTo(next);
+        navigateTo(current < totalSlides - 1 ? current + 1 : 0);
     }, [navigateTo, progress, totalSlides]);
 
-    // ── Gestão de Arraste com Inércia & Momentum (Desativada quando fora do viewport) ──
+    const handlePointerMove = useCallback((e: PointerEvent) => {
+        if (pointerIdRef.current !== e.pointerId || cancelledGestureRef.current) return;
+        const totalDeltaX = e.clientX - startXRef.current;
+        const totalDeltaY = e.clientY - startYRef.current;
+        if (!isDraggingRef.current) {
+            if (Math.max(Math.abs(totalDeltaX), Math.abs(totalDeltaY)) <= 8) return;
+            // A vertical touch keeps its native page scroll and never selects a case.
+            if (Math.abs(totalDeltaY) >= Math.abs(totalDeltaX)) {
+                cancelledGestureRef.current = true;
+                return;
+            }
+            isDraggingRef.current = true;
+        }
+        const now = performance.now();
+        const dt = Math.max(now - lastTimeRef.current, 1);
+        velocityRef.current = (e.clientX - lastXRef.current) / dt;
+        lastXRef.current = e.clientX;
+        lastTimeRef.current = now;
+        const target = startProgressRef.current - totalDeltaX / dragDistanceRef.current;
+        progress.set(Math.max(-.2, Math.min(totalSlides - .8, target)));
+        travel.set(Math.max(0, Math.min(totalSlides - 1, target)));
+    }, [progress, travel, totalSlides]);
+
+    const handlePointerUp = useCallback((e: PointerEvent) => {
+        if (pointerIdRef.current !== e.pointerId) return;
+        pointerIdRef.current = null;
+        window.removeEventListener('pointermove', handlePointerMove);
+        window.removeEventListener('pointerup', handlePointerUp);
+        window.removeEventListener('pointercancel', handlePointerUp);
+        if (!isDraggingRef.current) return;
+        isDraggingRef.current = false;
+        const target = Math.round(progress.get() - velocityRef.current * .22);
+        navigateTo(Math.max(0, Math.min(totalSlides - 1, target)));
+    }, [handlePointerMove, navigateTo, progress, totalSlides]);
+
     const handlePointerDown = (e: React.PointerEvent) => {
         if (!isInView) return;
-        hasDraggedRef.current = false;
-        if ((e.target as HTMLElement).closest('button, a, input')) return;
-        if (e.button !== undefined && e.button !== 0) return;
-        isDraggingRef.current = true;
-        hasDraggedRef.current = false;
+        if ((e.target as HTMLElement).closest('button, a, input, select, textarea')) return;
+        if (!e.isPrimary || e.button !== 0 || pointerIdRef.current !== null) return;
+        pointerIdRef.current = e.pointerId;
+        cancelledGestureRef.current = false;
+        isDraggingRef.current = false;
         startXRef.current = e.clientX;
+        startYRef.current = e.clientY;
+        dragDistanceRef.current = Math.max(280, Math.min(520, e.currentTarget.clientWidth));
         startProgressRef.current = progress.get();
         lastXRef.current = e.clientX;
         lastTimeRef.current = performance.now();
         velocityRef.current = 0;
-
         window.addEventListener('pointermove', handlePointerMove);
         window.addEventListener('pointerup', handlePointerUp);
         window.addEventListener('pointercancel', handlePointerUp);
     };
 
-    const handlePointerMove = (e: PointerEvent) => {
-        if (!isDraggingRef.current) return;
-        const now = performance.now();
-        const dt = Math.max(now - lastTimeRef.current, 1);
-        const dx = e.clientX - lastXRef.current;
-        velocityRef.current = dx / dt; // px/ms
-        lastXRef.current = e.clientX;
-        lastTimeRef.current = now;
-
-        const totalDeltaX = e.clientX - startXRef.current;
-        if (Math.abs(totalDeltaX) > 8) {
-            hasDraggedRef.current = true;
-        }
-
-        // 460px de deslocamento correspondem a 1 slide completo
-        const DRAG_FACTOR = 460;
-        const targetProgress = startProgressRef.current - (totalDeltaX / DRAG_FACTOR);
-        const bounded = Math.max(-0.25, Math.min(totalSlides - 0.75, targetProgress));
-        progress.set(bounded);
-    };
-
-    const handlePointerUp = () => {
-        if (!isDraggingRef.current) return;
+    useEffect(() => () => {
         isDraggingRef.current = false;
-
+        pointerIdRef.current = null;
         window.removeEventListener('pointermove', handlePointerMove);
         window.removeEventListener('pointerup', handlePointerUp);
         window.removeEventListener('pointercancel', handlePointerUp);
+    }, [handlePointerMove, handlePointerUp]);
 
-        const currentP = progress.get();
-        const v = velocityRef.current; // px / ms
-
-        // Projeção com inércia contínua e desaceleração orgânica (Jesper Landberg Momentum)
-        let targetIndex = Math.round(currentP - v * 0.22);
-        targetIndex = Math.max(0, Math.min(totalSlides - 1, targetIndex));
-
-        navigateTo(targetIndex);
-    };
-
-    const handleInspect = (config: FlagshipProject) => {
-        if (hasDraggedRef.current) return;
+    const handleInspect = useCallback((config: FlagshipProject) => {
         playMechanicalClick();
         if (onSelectProject) {
             const fullProject = projects.find((p) => p.id === config.id) || config;
             onSelectProject(fullProject);
         }
+    }, [onSelectProject, projects]);
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]')) return;
+        if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrev(); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); handleNext(); }
+        else if (e.key === 'Home') { e.preventDefault(); navigateTo(0); }
+        else if (e.key === 'End') { e.preventDefault(); navigateTo(totalSlides - 1); }
     };
 
-    // Navegação por teclado acessível
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            handlePrev();
-        } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            handleNext();
-        }
-    };
+    const activeProject = flagshipItems[activeIndex] || flagshipItems[0];
 
     return (
         <section
@@ -606,74 +474,120 @@ export default function Cylindrical3DShowcase({ onSelectProject, projects = [] }
             onKeyDown={handleKeyDown}
             className="project-focus-track bg-transparent focus:outline-none"
         >
+            <span className="pf-intro-beam" aria-hidden="true" />
             <div className="project-focus-frame">
-            <div className="project-collection-source">
-            <div className="project-focus-layout">
-                <header className="project-focus-header">
-                    <div>
-                        <span className="portfolio-eyebrow">
-                            {lang === 'en' ? 'SELECTED WORK' : lang === 'es' ? 'PROYECTOS SELECCIONADOS' : 'PROJETOS SELECIONADOS'}
-                        </span>
-                        <h2 id="featured-projects-heading" className="portfolio-title">
-                            {lang === 'en' ? <>Featured <em>projects.</em></> : lang === 'es' ? <>Proyectos <em>destacados.</em></> : <>Projetos em <em>destaque.</em></>}
-                        </h2>
-                    </div>
-                    <div className="project-focus-count" aria-label={lang === 'en' ? 'Current project' : lang === 'es' ? 'Proyecto actual' : 'Projeto atual'}>
-                        <span aria-live="polite">
-                            <strong>{String(activeIndex + 1).padStart(2, '0')}</strong> / {String(totalSlides).padStart(2, '0')}
-                        </span>
-                        <div className="project-focus-progress-rail" aria-hidden="true">
-                            <motion.div style={{ scaleX: countProgress }} />
+                <div className="project-collection-source">
+                    <div className="project-focus-layout">
+                        <header className="project-focus-header">
+                            <div className="pf-heading">
+                                <span className="pf-intro-mask"><span data-pf-intro-line className="portfolio-eyebrow">{words.eyebrow}</span></span>
+                                <h2 id="featured-projects-heading" className="portfolio-title pf-heading-title">
+                                    <span className="pf-intro-mask pf-intro-mask--title">
+                                        <span data-pf-intro-line>
+                                            {lang === 'en' ? <>Featured <em>projects.</em></> : lang === 'es' ? <>Proyectos <em>destacados.</em></> : <>Projetos em <em>destaque.</em></>}
+                                        </span>
+                                    </span>
+                                </h2>
+                            </div>
+                            <div className="project-focus-count" aria-label={words.current}>
+                                <div className="project-focus-count-top">
+                                    <span className="project-focus-count-label">{words.caseLabel}</span>
+                                    <span className="pf-count-digits">
+                                        <span className="sr-only" aria-live="polite">{pad(activeIndex + 1)} / {pad(totalSlides)}</span>
+                                        <strong><Odometer stage={stage} count={totalSlides} /></strong>
+                                        <span aria-hidden="true"> / {pad(totalSlides)}</span>
+                                    </span>
+                                </div>
+                                <div className="project-focus-progress-rail" aria-hidden="true">
+                                    <motion.div style={{ scaleX: countFill }} />
+                                </div>
+                            </div>
+                        </header>
+
+                        <div className="project-focus-gallery">
+                            <div
+                                onPointerDown={handlePointerDown}
+                                className="project-focus-stage pf-stage"
+                                data-presenting={presenting}
+                                style={{ touchAction: 'pan-y pinch-zoom' }}
+                            >
+                                <nav className="pf-rail" aria-label={words.nav}>
+                                    <span className="pf-rail-track" aria-hidden="true">
+                                        <span className="pf-rail-base" />
+                                        <motion.span className="pf-rail-fill" style={{ scaleY: railFill }} />
+                                        <motion.span className="pf-rail-orb-lane" style={{ y: orbY }}>
+                                            <span className="pf-rail-orb" />
+                                        </motion.span>
+                                    </span>
+                                    {flagshipItems.map((item, idx) => (
+                                        <RailNode key={item.id} item={item} index={idx} count={totalSlides}
+                                            active={idx === activeIndex} stage={stage} onSelect={navigateTo} />
+                                    ))}
+                                </nav>
+
+                                <div className="pf-media" data-cursor-card="true">
+                                    <div className="pf-media-chrome" aria-hidden="true">
+                                        <span className="pf-media-dots"><i /><i /><i /></span>
+                                        <span className="pf-media-url">
+                                            <span className="pf-media-lock">●</span>
+                                            <span className="pf-media-host-stack">
+                                                {flagshipItems.map((item, idx) => (
+                                                    <MaskLine key={item.id} stage={stage} index={idx} line={0} count={totalSlides} className="pf-media-host">
+                                                        {hostOf(item.url)}
+                                                    </MaskLine>
+                                                ))}
+                                            </span>
+                                        </span>
+                                        <span className="pf-media-live"><span />{words.live}</span>
+                                    </div>
+                                    <div className="pf-media-viewport">
+                                        {flagshipItems.map((item, idx) => (
+                                            <MediaLayer key={item.id} project={item} index={idx} stage={stage} travel={travel}
+                                                active={idx === activeIndex} screenshotLabel={words.screenshot} />
+                                        ))}
+                                        <span className="pf-media-vignette" aria-hidden="true" />
+                                        <span className="pf-media-badge" aria-hidden="true">
+                                            <span className="pf-media-badge-dot" />
+                                            {activeProject.stat}
+                                        </span>
+                                    </div>
+                                    <span className="portfolio-hud-corners" aria-hidden="true">
+                                        <span className="portfolio-hud-corner-bl" />
+                                        <span className="portfolio-hud-corner-br" />
+                                    </span>
+                                    <span className="pf-curtain" aria-hidden="true" />
+                                </div>
+
+                                <div className="pf-copy-panel">
+                                    <Odometer stage={stage} count={totalSlides} className="pf-ghost-number" />
+                                    <div className="pf-copy-stack">
+                                        {flagshipItems.map((item, idx) => (
+                                            <CaseCopy key={item.id} project={item} index={idx} count={totalSlides}
+                                                active={idx === activeIndex} stage={stage} lang={lang} onInspect={handleInspect} />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="project-focus-controls">
+                            <p className="project-focus-cue">
+                                <span className="pf-cue-line" aria-hidden="true" />
+                                {presenting ? words.cueScroll : words.cueDrag}
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <MagneticButton onClick={handlePrev} aria-label={words.prev}
+                                    data-cursor-morph="true" className="portfolio-control w-10 h-10 transition-colors">
+                                    <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
+                                </MagneticButton>
+                                <MagneticButton onClick={handleNext} aria-label={words.next}
+                                    data-cursor-morph="true" className="portfolio-control w-10 h-10 transition-colors">
+                                    <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
+                                </MagneticButton>
+                            </div>
                         </div>
                     </div>
-                </header>
-
-                <div className="project-focus-gallery">
-                <div
-                    ref={containerRef}
-                    onPointerDown={handlePointerDown}
-                    style={{ perspective: presenting ? undefined : '1400px', perspectiveOrigin: '50% 50%', isolation: 'isolate', transformStyle: presenting ? 'flat' : 'preserve-3d' }}
-                    className="project-focus-stage w-full mx-auto min-h-[710px] sm:min-h-[560px] flex items-center justify-center relative overflow-visible cursor-grab active:cursor-grabbing select-none"
-                >
-                    <motion.div
-                        style={{ rotateZ: presenting || reducedMotion ? 0 : velocityRotateZ, skewX: presenting || reducedMotion ? 0 : velocitySkewX, transformStyle: presenting ? 'flat' : 'preserve-3d' }}
-                        className="relative w-full h-full min-h-[680px] sm:min-h-[520px] lg:min-h-[520px]"
-                    >
-                        {flagshipItems.map((project, idx) => (
-                            <CylindricalCard key={project.id} project={project} index={idx} activeIndex={activeIndex}
-                                smoothProgress={cardProgress} onSelect={handleInspect} onCardFocus={handleCardFocus} lang={lang} presenting={presenting} />
-                        ))}
-                    </motion.div>
                 </div>
-                </div>
-
-                <div className="project-focus-controls">
-                    <div className="project-focus-tabs scrollbar-none" aria-label={lang === 'en' ? 'Featured projects' : lang === 'es' ? 'Proyectos destacados' : 'Projetos em destaque'}>
-                        {flagshipItems.map((item, idx) => (
-                            <button key={item.id} onClick={() => navigateTo(idx)} aria-pressed={idx === activeIndex}
-                                className="project-focus-tab cursor-pointer" data-cursor-morph="true">
-                                {item.stepLabel}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <MagneticButton onClick={handlePrev} aria-label={lang === 'en' ? 'Previous Project' : lang === 'es' ? 'Proyecto anterior' : 'Projeto Anterior'}
-                            data-cursor-morph="true" className="portfolio-control w-10 h-10 transition-colors">
-                            <i aria-hidden="true" className="fas fa-chevron-left text-xs" />
-                        </MagneticButton>
-                        <MagneticButton onClick={handleNext} aria-label={lang === 'en' ? 'Next Project' : lang === 'es' ? 'Siguiente proyecto' : 'Próximo Projeto'}
-                            data-cursor-morph="true" className="portfolio-control w-10 h-10 transition-colors">
-                            <i aria-hidden="true" className="fas fa-chevron-right text-xs" />
-                        </MagneticButton>
-                    </div>
-                </div>
-                <p className="project-focus-cue">
-                    {presenting
-                        ? (lang === 'en' ? 'Scroll to explore · or use the arrows' : lang === 'es' ? 'Desplázate para explorar · o usa las flechas' : 'Role para explorar · ou use as setas')
-                        : (lang === 'en' ? 'Drag to explore · or use the arrows' : lang === 'es' ? 'Arrastra para explorar · o usa las flechas' : 'Arraste para explorar · ou use as setas')}
-                </p>
-            </div>
-            </div>
             </div>
         </section>
     );

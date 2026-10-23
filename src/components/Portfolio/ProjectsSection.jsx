@@ -7,6 +7,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useCorporateArrival } from '../../hooks/useCorporateArrival';
 import './corporate-arrival.css';
 import './project-collection-handoff.css';
+import './corporate-index.css';
 
 const FLAGSHIP_IDS = [101, 102, 103];
 
@@ -90,7 +91,7 @@ export default function ProjectsSection({ projects }) {
                                 <span className="corporate-arrival-marker" />
                             </div>
 
-                            {/* Esteira Cilíndrica 3D com Rotação Espacial e Filtros com layoutId */}
+                            {/* Índice editorial numerado e tabela de especificações. */}
                             <div className="corporate-arrival-body">
                                 <div className="chapter-tail">
                                     <CorporateProjectsShowcase
